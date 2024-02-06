@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Random Name Generator</title>
+</head>
+<body>
+    <h1>Random Name Generator</h1>
+
+    <!-- Enter Names Section -->
+    <section>
+        <h2>Enter names separated by semicolons:</h2>
+        <textarea id="names" rows="5" cols="40"></textarea><br><br>
+        <label for="csv-file">Or upload a CSV file:</label><br>
+        <input type="file" id="csv-file" accept=".csv"><br><br>
+        <button onclick="submitNames()">Submit</button>
+    </section>
+
+    <!-- Generated Names Section -->
+    <section style="display: none;">
+        <h2>Generated Names</h2>
+        <button onclick="generateRandomName()">Generate Random Name</button>
+        <p id="random-name"></p>
+        <button id="remove-button" onclick="removeCurrentName()" style="display: none;">Remove Name</button>
+        <div id="generated-names"></div>
+    </section>
+
+    <script>
+        var names = [];
+        var generatedNames = [];
+
+        function submitNames() {
+            var inputNames = document.getElementById("names").value.split(";");
+            if (document.getElementById("csv-file").files.length > 0) {
+                var file = document.getElementById("csv-file").files[0];
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var csvData = e.target.result;
+                    var parsedData = csvData.split("\n");
+                    parsedData.forEach(function(line) {
+                        var trimmedLine = line.trim();
+                        if (trimmedLine !== "") {
+                            inputNames.push(trimmedLine);
+                        }
+                    });
+                    processNames(inputNames);
+                };
+                reader.readAsText(file);
+            } else {
+                processNames(inputNames);
+            }
+        }
+
+        function processNames(inputNames) {
+            names = inputNames.map(function(name) {
+                return name.trim();
+            });
+            document.getElementsByTagName("section")[0].style.display = "none";
+            document.getElementsByTagName("section")[1].style.display = "block";
+        }
+
+        function generateRandomName() {
+            if (names.length === 0) return;
+            var randomIndex = Math.floor(Math.random() * names.length);
+            var randomName = names[randomIndex];
+            document.getElementById("random-name").innerText = randomName;
+            document.getElementById("remove-button").style.display = "block";
+            generatedNames.push(randomName);
+            displayGeneratedNames();
+        }
+
+        function removeCurrentName() {
+            var currentName = document.getElementById("random-name").innerText;
+            var index = names.indexOf(currentName);
+            if (index !== -1) {
+                names.splice(index, 1);
+                document.getElementById("random-name").innerText = "";
+                document.getElementById("remove-button").style.display = "none";
+                displayGeneratedNames();
+            }
+        }
+
+        function displayGeneratedNames() {
+            var generatedNamesDiv = document.getElementById("generated-names");
+            generatedNamesDiv.innerHTML = "";
+            generatedNames.forEach(function(name) {
+                var p = document.createElement("p");
+                p.innerText = name;
+                generatedNamesDiv.appendChild(p);
+            });
+        }
+    </script>
+</body>
+</html>
