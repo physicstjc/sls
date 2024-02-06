@@ -13,6 +13,7 @@
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 20px;
+        overflow-x: auto; /* Add horizontal scroll for small screens */
     }
 
     th, td {
@@ -20,6 +21,7 @@
         text-align: left;
         vertical-align: top;
         border-bottom: 1px solid #ddd;
+        word-wrap: break-word; /* Break long words to fit */
     }
 
     th {
@@ -40,6 +42,17 @@
         color: #dc3545;
         text-transform: uppercase;
     }
+
+    /* Adjustments for smaller screens */
+    @media screen and (max-width: 600px) {
+        table {
+            overflow-x: auto; /* Add horizontal scroll for small screens */
+        }
+
+        th, td {
+            font-size: 14px; /* Adjust font size for small screens */
+        }
+    }
 </style>
 </head>
 <body>
@@ -50,7 +63,7 @@
     <tr>
         <th class="header1">Screenshot</th>
         <th class="header1">Description</th>
-        <th class="header1" width=50%>Prompts</th>
+        <th class="header1">Prompts</th> <!-- Removed width attribute for responsiveness -->
     </tr>
     <tr>
         <td><a href="random-name-generator/"><img src="random-name-generator/random-name-generator.png"></a></td>
