@@ -4,33 +4,94 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Random Name Generator</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+    h1 {
+        text-align: center;
+    }
+    #first-page,
+    #second-page {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        text-align: center;
+    }
+    #second-page {
+        display: none;
+    }
+    #random-name {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007bff;
+        margin-top: 20px;
+    }
+    #remove-button {
+        display: none;
+        margin-top: 10px;
+        font-size: 16px;
+        background-color: #dc3545;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 16px;
+        cursor: pointer;
+    }
+    #name-generator {
+        margin-top: 10px;
+        font-size: 16px;
+        background-color: #808080;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 16px;
+        cursor: pointer;
+    }
+    #generated-names {
+        margin-top: 20px;
+        text-align: center;
+    }
+    #generated-names p {
+        margin: 5px 0;
+    }
+</style>
 </head>
 <body>
     <h1>Random Name Generator</h1>
 
-    <!-- Enter Names Section -->
-    <section>
-        <h2>Enter names separated by semicolons:</h2>
-        <textarea id="names" rows="5" cols="40"></textarea><br><br>
-        <label for="csv-file">Or upload a CSV file:</label><br>
-        <input type="file" id="csv-file" accept=".csv"><br><br>
-        <button onclick="submitNames()">Submit</button>
-    </section>
+    <!-- First Page -->
+    <div id="first-page">
+        <form id="name-form" onsubmit="submitNames(event)">
+            <label for="names">Enter names separated by semicolons:</label><br>
+            <textarea id="names" name="names" rows="5" cols="40"></textarea><br><br>
+            <label for="csv-file">Or upload a CSV file:</label><br>
+            <input type="file" id="csv-file" accept=".csv"><br><br>
+            <input type="submit" value="Submit">
+        </form>
+    </div>
 
-    <!-- Generated Names Section -->
-    <section style="display: none;">
-        <h2>Generated Names</h2>
-        <button onclick="generateRandomName()">Generate Random Name</button>
+    <!-- Second Page -->
+    <div id="second-page">
+        <button id="name-generator" onclick="generateRandomName()">Generate Random Name</button>
         <p id="random-name"></p>
-        <button id="remove-button" onclick="removeCurrentName()" style="display: none;">Remove Name</button>
-        <div id="generated-names"></div>
-    </section>
+        <p align="center"><button id="remove-button" onclick="removeCurrentName()">Remove Name</button></p>
+    </div>
+
+    <!-- Generated Names -->
+    <div id="generated-names"></div>
 
     <script>
         var names = [];
         var generatedNames = [];
 
-        function submitNames() {
+        function submitNames(event) {
+            event.preventDefault();
             var inputNames = document.getElementById("names").value.split(";");
             if (document.getElementById("csv-file").files.length > 0) {
                 var file = document.getElementById("csv-file").files[0];
@@ -56,8 +117,9 @@
             names = inputNames.map(function(name) {
                 return name.trim();
             });
-            document.getElementsByTagName("section")[0].style.display = "none";
-            document.getElementsByTagName("section")[1].style.display = "block";
+            document.getElementById("first-page").style.display = "none";
+            document.getElementById("second-page").style.display = "block";
+            displayGeneratedNames();
         }
 
         function generateRandomName() {
