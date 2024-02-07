@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspiring Exam Preparation Quotes</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+    #quote-container {
+        text-align: center;
+    }
+    #quote {
+        font-size: 24px;
+        font-style: italic;
+        margin-bottom: 20px;
+    }
+    #source {
+        font-size: 18px;
+    }
+</style>
+</head>
+<body>
+<div id="quote-container">
+    <p id="quote"></p>
+    <p id="source"></p>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Array of quotes with their attributed sources
+    var quotes = [
+        { quote: "Success is not final, failure is not fatal: It is the courage to continue that counts.", source: "- Winston Churchill" },
+        { quote: "The future belongs to those who believe in the beauty of their dreams.", source: "- Eleanor Roosevelt" },
+        { quote: "Don’t watch the clock; do what it does. Keep going.", source: "- Sam Levenson" },
+        { quote: "You are never too old to set another goal or to dream a new dream.", source: "- C.S. Lewis" },
+        { quote: "Believe you can and you're halfway there.", source: "- Theodore Roosevelt" },
+        { quote: "The only limit to our realization of tomorrow will be our doubts of today.", source: "- Franklin D. Roosevelt" },
+        { quote: "Success is not the key to happiness. Happiness is the key to success. If you love what you are doing, you will be successful.", source: "- Albert Schweitzer" },
+        { quote: "You don’t have to be great to start, but you have to start to be great.", source: "- Zig Ziglar" },
+        { quote: "Success is stumbling from failure to failure with no loss of enthusiasm.", source: "- Winston S. Churchill" },
+        { quote: "The secret of success is to do the common thing uncommonly well.", source: "- John D. Rockefeller Jr." },
+        { quote: "Success is not how high you have climbed, but how you make a positive difference to the world.", source: "- Roy T. Bennett" },
+        { quote: "Do not wait to strike till the iron is hot, but make it hot by striking.", source: "- William Butler Yeats" },
+        { quote: "I find that the harder I work, the more luck I seem to have.", source: "- Thomas Jefferson" },
+        { quote: "The only place where success comes before work is in the dictionary.", source: "- Vidal Sassoon" },
+        { quote: "The only way to do great work is to love what you do.", source: "- Steve Jobs" },
+        { quote: "Success is not in what you have, but who you are.", source: "- Bo Bennett" },
+        { quote: "Your limitation—it’s only your imagination.", source: "- Unknown" },
+        { quote: "The harder you work for something, the greater you’ll feel when you achieve it.", source: "- Unknown" },
+        { quote: "Dream it. Believe it. Build it.", source: "- Unknown" },
+        { quote: "Don’t stop when you’re tired. Stop when you’re done.", source: "- Unknown" },
+        { quote: "Wake up with determination. Go to bed with satisfaction.", source: "- Unknown" }
+    ];
+
+    // Select a random quote from the array
+    var randomIndex = Math.floor(Math.random() * quotes.length);
+    var randomQuote = quotes[randomIndex];
+
+    // Update HTML elements with the randomly selected quote and its source
+    document.getElementById('quote').innerText = randomQuote.quote;
+    document.getElementById('source').innerText = randomQuote.source;
+});
+</script>
+</body>
+</html>
