@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tRAT Quiz</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
+    }
+    h1 {
+        margin-bottom: 20px;
+    }
+    #question-container {
+        margin-bottom: 20px;
+    }
+    .option {
+        width: 100px;
+        height: 100px;
+        background-color: #ccc;
+        display: inline-block;
+        margin: 10px;
+        font-size: 24px;
+        line-height: 100px;
+        cursor: pointer;
+    }
+    #score-container {
+        margin-bottom: 20px;
+    }
+    #buttons-container {
+        margin-bottom: 20px;
+    }
+</style>
+</head>
+<body>
+    <h1>tRAT Quiz</h1>
+    <div id="question-container">
+        <div id="question"></div>
+        <div id="options-container"></div>
+    </div>
+    <div id="score-container">
+        <p id="score">Score: 0</p>
+    </div>
+    <div id="buttons-container">
+        <button id="previous-button" onclick="previousQuestion()">Previous</button>
+        <button id="next-button" onclick="nextQuestion()">Next</button>
+    </div>
+
+    <script>
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let questions = [];
+
+        // Load questions from CSV file
+        fetch('questions.csv')
+          .then(response => response.text())
+          .then(data => {
+            let rows = data.split('\n');
+            rows.forEach(row => {
+              let [questionNumber, answer] = row.split(',');
+              questions.push({ questionNumber: questionNumber.trim(), answer: answer.trim() });
+            });
+            displayQuestion();
+          });
+
+        function displayQuestion() {
+          let currentQuestion = questions[currentQuestionIndex];
+          document.getElementById('question').innerText = `Question ${currentQuestion.questionNumber}`;
+          document.getElementById('options-container').innerHTML = `
+            <div class="option" onclick="chooseOption(A)">A</div>
+            <div class="option" onclick="chooseOption(B)">B</div>
+            <div class="option" onclick="chooseOption(C)">C</div>
+            <div class="option" onclick="chooseOption(D)">D</div>
+          `;
+        }
+
+        function chooseOption(option) {
+          let currentQuestion = questions[currentQuestionIndex];
+          let chosenOption = document.querySelector(`.option[data-value="${option}"]`);
+          if (option === currentQuestion.answer) {
+            score += 4;
+            chosenOption.style.backgroundColor = 'lightgreen';
+          } else {
+            chosenOption.style.backgroundColor = 'grey';
+            let remainingOptions = document.querySelectorAll('.option:not([style*="background-color: grey"])');
+            remainingOptions.forEach(opt => opt.removeEventListener('click', chooseOption));
+            if (currentQuestionIndex < questions.length - 1) {
+              setTimeout(nextQuestion, 1000);
+            }
+          }
+          document.getElementById('score').innerText = `Score: ${score}`;
+        }
+
+        function previousQuestion() {
+          if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            displayQuestion();
+          }
+        }
+
+        function nextQuestion() {
+          if (currentQuestionIndex < questions.length - 1) {
+            currentQuestionIndex++;
+            displayQuestion();
+          }
+        }
+    </script>
+</body>
+</html>
