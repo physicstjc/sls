@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Countdown Timer</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        text-align: center;
+    }
+    h1 {
+        margin-top: 20px;
+    }
+    #countdown {
+        font-size: 72px;
+        margin-top: 20px;
+    }
+    #controls {
+        margin-top: 20px;
+    }
+    button {
+        font-size: 16px;
+        margin: 0 5px;
+        padding: 10px 10px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+</style>
+</head>
+<body>
+    <h1>Countdown Timer</h1>
+    <div id="countdown">00:00:00</div>
+    <div id="controls">
+        <button onclick="adjustTime('hours', 1)">+H</button>
+        <button onclick="adjustTime('hours', -1)">-H</button>
+        <button onclick="adjustTime('minutes', 1)">+M</button>
+        <button onclick="adjustTime('minutes', -1)">-M</button>
+        <button onclick="adjustTime('seconds', 1)">+S</button>
+        <button onclick="adjustTime('seconds', -1)">-S</button>
+    </div>
+
+    <div id="controls">
+    <audio id="audio" src="alarm.mp3"></audio>
+    <button id="startBtn" onclick="startCountdown()">Start</button>
+    <button id="restBtn" onclick="resetCountdown()">Reset</button>
+    <button id="muteBtn" onclick="toggleMute()">Mute</button>
+    </div>
+    
+    <script>
+        var hours = 0;
+        var minutes = 0;
+        var seconds = 0;
+        var timer;
+        var countdownActive = false;
+        var audio = document.getElementById('audio');
+
+        function adjustTime(unit, amount) {
+            if (countdownActive) return;
+
+            if (unit === 'hours') {
+                hours += amount;
+                if (hours < 0) hours = 0;
+            } else if (unit === 'minutes') {
+                minutes += amount;
+                if (minutes < 0) {
+                    if (hours > 0) {
+                        hours--;
+                        minutes = 59;
+                    } else {
+                        minutes = 0;
+                    }
+                } else if (minutes > 59) {
+                    if (hours < 99) {
+                        hours++;
+                        minutes = 0;
+                    } else {
+                        minutes = 59;
+                    }
+                }
+            } else if (unit === 'seconds') {
+                seconds += amount;
+                if (seconds < 0) {
+                    if (minutes > 0) {
+                        minutes--;
+                        seconds = 59;
+                    } else {
+                        seconds = 0;
+                    }
+                } else if (seconds > 59) {
+                    if (minutes < 59) {
+                        minutes++;
+                        seconds = 0;
+                    } else {
+                        seconds = 59;
+                    }
+                }
+            }
+
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('countdown').innerText = formatTime(hours) + ':' + formatTime(minutes) + ':' + formatTime(seconds);
+        }
+
+        function formatTime(time) {
+            return time < 10 ? '0' + time : time;
+        }
+
+        function startCountdown() {
+            if (!countdownActive) {
+                timer = setInterval(updateTimer, 1000);
+                countdownActive = true;
+                document.getElementById('startBtn').innerText = 'Pause';
+            } else {
+                clearInterval(timer);
+                countdownActive = false;
+                document.getElementById('startBtn').innerText = 'Resume';
+            }
+        }
+
+        function resetCountdown() {
+            clearInterval(timer);
+            countdownActive = false;
+            document.getElementById('startBtn').innerText = 'Start';
+            hours = 0;
+            minutes = 0;
+            seconds = 0;
+            updateDisplay();
+        }
+
+        function updateTimer() {
+            if (hours === 0 && minutes === 0 && seconds === 0) {
+                clearInterval(timer);
+                countdownActive = false;
+                document.getElementById('startBtn').innerText = 'Start';
+                playSound();
+                return;
+            }
+
+            if (seconds === 0) {
+                if (minutes > 0) {
+                    minutes--;
+                    seconds = 59;
+                } else if (hours > 0) {
+                    hours--;
+                    minutes = 59;
+                    seconds = 59;
+                }
+            } else {
+                seconds--;
+            }
+
+            updateDisplay();
+        }
+
+        function playSound() {
+            audio.play();
+            audio.onended = function() {
+                document.getElementById('muteBtn').style.display = 'inline-block';
+            };
+        }
+
+        function toggleMute() {
+            if (audio.muted) {
+                audio.muted = false;
+                document.getElementById('muteBtn').innerText = 'Mute';
+            } else {
+                audio.muted = true;
+                document.getElementById('muteBtn').innerText = 'Unmute';
+            }
+        }
+    </script>
+</body>
+</html>
