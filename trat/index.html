@@ -27,6 +27,13 @@
         line-height: 100px;
         cursor: pointer;
     }
+    .selected {
+        background-color: lightgreen !important;
+    }
+    .incorrect {
+        background-color: grey !important;
+        pointer-events: none;
+    }
     #score-container {
         margin-bottom: 20px;
     }
@@ -70,23 +77,21 @@
           let currentQuestion = questions[currentQuestionIndex];
           document.getElementById('question').innerText = `Question ${currentQuestion.questionNumber}`;
           document.getElementById('options-container').innerHTML = `
-            <div class="option" onclick="chooseOption(A)">A</div>
-            <div class="option" onclick="chooseOption(B)">B</div>
-            <div class="option" onclick="chooseOption(C)">C</div>
-            <div class="option" onclick="chooseOption(D)">D</div>
+            <div class="option" onclick="chooseOption('A')">A</div>
+            <div class="option" onclick="chooseOption('B')">B</div>
+            <div class="option" onclick="chooseOption('C')">C</div>
+            <div class="option" onclick="chooseOption('D')">D</div>
           `;
         }
 
         function chooseOption(option) {
           let currentQuestion = questions[currentQuestionIndex];
-          let chosenOption = document.querySelector(`.option[data-value="${option}"]`);
+          let selectedOption = document.querySelector(`.option[data-value="${option}"]`);
           if (option === currentQuestion.answer) {
+            selectedOption.classList.add('selected');
             score += 4;
-            chosenOption.style.backgroundColor = 'lightgreen';
           } else {
-            chosenOption.style.backgroundColor = 'grey';
-            let remainingOptions = document.querySelectorAll('.option:not([style*="background-color: grey"])');
-            remainingOptions.forEach(opt => opt.removeEventListener('click', chooseOption));
+            selectedOption.classList.add('incorrect');
             if (currentQuestionIndex < questions.length - 1) {
               setTimeout(nextQuestion, 1000);
             }
