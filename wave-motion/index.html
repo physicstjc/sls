@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oscillating Particles Simulation</title>
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  #container {
+    position: relative;
+    width: 640px;
+    height: 480px;
+    background-color: #f0f0f0;
+    overflow: hidden;
+  }
+
+  .particle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #3498db;
+    border-radius: 50%;
+  }
+
+  #sliderContainer {
+    width: 100%;
+    position: absolute;
+    bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #speedRange {
+    width: 400px;
+    margin: 0 10px;
+  }
+</style>
+</head>
+<body>
+  <div id="container"></div>
+  <div id="sliderContainer">
+    <input type="range" min="1" max="10" value="1" step="0.1" id="speedRange">
+  </div>
+  <script>
+    const container = document.getElementById('container');
+    const speedRange = document.getElementById('speedRange');
+
+    for (let i = 0; i < 50; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      if (i === 30) { // Set one particle near the middle to red color
+        particle.style.backgroundColor = 'red';
+      }
+      container.appendChild(particle);
+    }
+
+    const particles = document.querySelectorAll('.particle');
+
+    function staggerParticles() {
+      const width = container.offsetWidth;
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].style.left = `${(width / 51) * (i + 1)}px`;
+      }
+    }
+
+    staggerParticles(); // Call the function initially
+
+    function updatePositions() {
+      const time = performance.now();
+      const amplitude = 100; // Set amplitude of oscillation
+      const period = speedRange.value; // Get period from slider
+      const phaseIncrement = 10; // Difference in phase between particles
+      for (let i = 0; i < particles.length; i++) {
+        const phaseShift = (i * phaseIncrement) * Math.PI * 2; // Phase shift for each particle
+        const offsetY = amplitude * Math.sin(((time + phaseShift) / 1000) * (2 * Math.PI / period));
+        const y = 240 + offsetY; // Center y position
+        particles[i].style.top = `${y}px`;
+      }
+    }
+
+    setInterval(updatePositions, 50);
+
+    // Update positions when slider value changes
+    speedRange.addEventListener('input', () => {
+      updatePositions();
+    });
+  </script>
+</body>
+</html>
