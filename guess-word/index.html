@@ -38,8 +38,7 @@
         let words = ["IMPULSE", "MOMENTUM", "INELASTIC"];
         let currentWord = '';
         let score = 0;
-        let incorrectGuesses = 0;
-        const maxIncorrectGuesses = 6;
+        let guessedLetters = new Set();
 
         // Function to get the next word
         function getNextWord() {
@@ -75,6 +74,13 @@
                 return;
             }
 
+            if (guessedLetters.has(letter)) {
+                alert('You have already guessed this letter.');
+                return;
+            }
+
+            guessedLetters.add(letter);
+
             let displayedWord = document.getElementById('hangman-word').textContent;
             let newDisplayedWord = '';
             let correctGuess = false;
@@ -89,10 +95,9 @@
             }
 
             if (!correctGuess) {
-                incorrectGuesses++;
-                updateScore(-1);
+                score--;
             } else {
-                updateScore(1);
+                score++;
             }
 
             document.getElementById('hangman-word').textContent = newDisplayedWord.trim();
@@ -100,14 +105,12 @@
             if (newDisplayedWord === currentWord.replace(/./g, '$& ')) {
                 celebrate();
                 getNextWord();
-            } else if (incorrectGuesses === maxIncorrectGuesses) {
-                getNextWord();
             }
+            updateScore();
         }
 
         // Function to update the score
-        function updateScore(points) {
-            score += points;
+        function updateScore() {
             document.getElementById('score').textContent = score;
         }
 
