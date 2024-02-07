@@ -3,13 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hangman Game</title>
+<title>Hangman Game - Physics Keywords</title>
 <style>
     body {
         font-family: Arial, sans-serif;
     }
-    #hangman-word {
+h1 {
         font-size: 24px;
+
+}	
+    #hangman-word {
+        font-size: 32px;
         margin-bottom: 20px;
     }
     #hangman-input {
@@ -18,26 +22,18 @@
 </style>
 </head>
 <body>
-    <h1>Hangman Game</h1>
+    <h1>Hangman Game - Physics Keywords</h1>
     <div id="hangman-word"></div>
     <input type="text" id="hangman-input" placeholder="Enter a letter">
     <button onclick="guessLetter()">Guess</button>
     <p>Score: <span id="score">0</span></p>
 
     <script>
-        let words = [];
+        let words = ["IMPULSE", "MOMENTUM", "INELASTIC"];
         let currentWord = '';
         let score = 0;
         let incorrectGuesses = 0;
         const maxIncorrectGuesses = 6;
-
-        // Function to fetch words from CSV file
-        async function fetchWords() {
-            const response = await fetch('words.csv');
-            const data = await response.text();
-            words = data.split(',');
-            getNextWord();
-        }
 
         // Function to get the next word
         function getNextWord() {
@@ -56,7 +52,7 @@
                 if (letter === ' ') {
                     displayedWord += ' ';
                 } else {
-                    displayedWord += '_';
+                    displayedWord += '_ ';
                 }
             }
             document.getElementById('hangman-word').textContent = displayedWord;
@@ -79,10 +75,10 @@
 
             for (let i = 0; i < currentWord.length; i++) {
                 if (currentWord[i] === letter) {
-                    newDisplayedWord += letter;
+                    newDisplayedWord += letter + ' ';
                     correctGuess = true;
                 } else {
-                    newDisplayedWord += displayedWord[i];
+                    newDisplayedWord += displayedWord[2 * i] + ' ';
                 }
             }
 
@@ -93,9 +89,10 @@
                 updateScore(1);
             }
 
-            document.getElementById('hangman-word').textContent = newDisplayedWord;
+            document.getElementById('hangman-word').textContent = newDisplayedWord.trim();
 
-            if (newDisplayedWord === currentWord) {
+            if (newDisplayedWord === currentWord.replace(/./g, '$& ')) {
+                celebrate();
                 getNextWord();
             } else if (incorrectGuesses === maxIncorrectGuesses) {
                 getNextWord();
@@ -108,8 +105,13 @@
             document.getElementById('score').textContent = score;
         }
 
-        // Fetch words on page load
-        window.onload = fetchWords;
+        // Function to celebrate completion of word
+        function celebrate() {
+            alert('Congratulations! You guessed the word correctly!');
+        }
+
+        // Call getNextWord to start the game
+        getNextWord();
     </script>
 </body>
 </html>
