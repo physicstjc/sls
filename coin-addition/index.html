@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coin Value Quiz</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        text-align: center;
+    }
+    h1, h2 {
+        text-align: center;
+    }
+    #coin-images {
+        text-align: center;
+        margin-top: 20px;
+    }
+    .coin-image {
+        display: inline-block;
+        margin: 0 5px;
+    }
+    #value-input {
+        margin-top: 20px;
+        display: inline;
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
+    }
+    #submit-button {
+        display: block;
+        margin-top: 20px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    #message {
+        margin-top: 20px;
+        font-weight: bold;
+    }
+    #new-question-button {
+        margin-top: 20px;
+    }
+</style>
+</head>
+<body>
+    <h1>Coin Addition Practice</h1>
+
+    <div id="coin-images"></div>
+
+    $ <input type="text" id="value-input" placeholder="Enter value in dollars" style="text-align: center;">
+    <button id="submit-button" onclick="checkValue()">Submit</button>
+    <p id="message"></p>
+    <button id="new-question-button" onclick="generateProblem()">New Question</button>
+
+    <script>
+        var coins = [
+            { value: 0.05, image: "TS5c.jpg" },
+            { value: 0.1, image: "TS10c.jpg" },
+            { value: 0.2, image: "TS20c.jpg" },
+            { value: 0.5, image: "TS50c.jpg" },
+            { value: 1.0, image: "TS1d.jpg" }
+        ];
+
+        function generateProblem() {
+            var coinImagesDiv = document.getElementById("coin-images");
+            coinImagesDiv.innerHTML = "";
+            var totalValue = 0;
+
+            // Generate random number of coins for the problem
+            var randomNumCoins = Math.floor(Math.random() * 5) + 1; // Generate between 1 and 5 coins
+            for (var i = 0; i < randomNumCoins; i++) {
+                var randomIndex = Math.floor(Math.random() * coins.length);
+                var randomCoin = coins[randomIndex];
+                totalValue += randomCoin.value;
+                var coinImage = document.createElement("img");
+                coinImage.src = randomCoin.image;
+                coinImage.className = "coin-image";
+                coinImagesDiv.appendChild(coinImage);
+            }
+
+            coinImagesDiv.dataset.totalValue = totalValue.toFixed(2);
+            document.getElementById("value-input").value = "";
+            document.getElementById("message").innerText = "";
+        }
+
+        function checkValue() {
+            var userValue = parseFloat(document.getElementById("value-input").value);
+            var totalValue = parseFloat(document.getElementById("coin-images").dataset.totalValue);
+            var message = document.getElementById("message");
+            message.style.color = "black";
+
+            if (isNaN(userValue)) {
+                message.innerText = "Please enter a valid number.";
+            } else if (userValue === totalValue) {
+                message.innerText = "Correct! You've added the correct value.";
+                message.style.color = "green";
+            } else {
+                message.innerText = "Incorrect! Try again.";
+                message.style.color = "red";
+            }
+        }
+
+        // Generate initial problem on page load
+        window.onload = generateProblem;
+    </script>
+</body>
+</html>
