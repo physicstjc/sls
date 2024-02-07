@@ -1,1 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hangman Game</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+    #hangman-word {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+    #hangman-input {
+        margin-bottom: 10px;
+    }
+</style>
+</head>
+<body>
+    <h1>Hangman Game</h1>
+    <div id="hangman-word"></div>
+    <input type="text" id="hangman-input" placeholder="Enter a letter">
+    <button onclick="guessLetter()">Guess</button>
+    <p>Score: <span id="score">0</span></p>
 
+    <script>
+        let words = [];
+        let currentWord = '';
+        let score = 0;
+        let incorrectGuesses = 0;
+        const maxIncorrectGuesses = 6;
+        let hangmanParts = ['head', 'body', 'left-arm', 'right-arm', 'left-leg', 'right-leg'];
+
+        // Function to fetch words from CSV file
+        async function fetchWords() {
+            const response = await fetch('words.csv');
+            const data = await response.text();
+            words = data.split(',');
+            getNextWord();
+        }
+
+        // Function to get the next word
+        function getNextWord() {
+            if (words.length > 0) {
+                currentWord = words.pop().trim().toUpperCase();
+                displayWord(currentWord);
+            } else {
+                alert('Game Over! Final Score: ' + score);
+            }
+        }
+
+        // Function to display the word with blanks for missing letters
+        function displayWord(word) {
+            let displayedWord = '';
+            for (let letter of word) {
+                if (letter === ' ') {
+                    displayedWord += ' ';
+                } else {
+                    displayedWord += '_';
+                }
+            }
+            document.getElementById('hangman-word').textContent = displayedWord;
+        }
+
+        // Function to handle letter guesses
+        function guessLetter() {
+            const inputElement = document.getElementById('hangman-input');
+            const letter = inputElement.value.trim().toUpperCase();
+            inputElement.value = '';
+
+            if (letter.length !== 1 || !letter.match(/[A-Z]/)) {
+                alert('Please enter a valid single letter.');
+                return;
+            }
+
+            let displayedWord = document.getElementById('hangman-word').textContent;
+            let newDisplayedWord = '';
+            let correctGuess = false;
+
+            for (let i = 0; i < currentWord.length; i++) {
+                if (currentWord[i] === letter) {
+                    newDisplayedWord += letter;
+                    correctGuess = true;
+                } else {
+                    newDisplayedWord += displayedWord[i];
+                }
+            }
+
+            if (!correctGuess) {
+                incorrectGuesses++;
+                displayHangman(incorrectGuesses);
+            }
+
+            document.getElementById('hangman-word').textContent = newDisplayedWord;
+
+            if (newDisplayedWord === currentWord) {
+                score++;
+                document.getElementById('score').textContent = score;
+                getNextWord();
+            } else if (incorrectGuesses === maxIncorrectGuesses) {
+                alert('Game Over! Final Score: ' + score);
+            }
+        }
+
+        // Function to display the hangman based on the number of incorrect guesses
+        function displayHangman(incorrectGuesses) {
+            for (let i = 0; i < incorrectGuesses; i++) {
+                document.getElementById(hangmanParts[i]).style.display = 'block';
+            }
+        }
+
+        // Fetch words on page load
+        window.onload = fetchWords;
+    </script>
+    <svg height="250" width="200" style="display:none">
+        <!-- Hangman Parts -->
+        <line x1="60" y1="20" x2="140" y2="20" id="head" style="stroke:rgb(0,0,0);stroke-width:2;display:none" />
+        <line x1="100" y1="20" x2="100" y2="50" id="body" style="stroke:rgb(0,0,0);stroke-width:2;display:none" />
+        <line x1="100" y1="30" x2="80" y2="40" id="left-arm" style="stroke:rgb(0,0,0);stroke-width:2;display:none" />
+        <line x1="100" y1="30" x2="120" y2="40" id="right-arm" style="stroke:rgb(0,0,0);stroke-width:2;display:none" />
+        <line x1="100" y1="50" x2="80" y2="70" id="left-leg" style="stroke:rgb(0,0,0);stroke-width:2;display:none" />
+        <line x1="100" y1="50" x2="120" y2="70" id="right-leg" style="stroke:rgb(0,0,0);stroke-width:2;display:none" />
+    </svg>
+</body>
+</html>
