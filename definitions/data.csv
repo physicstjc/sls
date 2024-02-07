@@ -1,0 +1,55 @@
+﻿topic,term,definition
+Measurement,Base quantities,Base quantities are quantities that can be accurately and easily reproduced and are unchanging with time.
+Measurement,Derived quantities,Derived quantities are quantities that are obtained from the multiplication or division of base quantities.
+Measurement,Homogeneous equation,Any equation where each term has the same base units is said to be homogeneous. 
+Measurement,Systematic error,"A systematic error will result in all readings being either above or below the accepted value. The error may be reduced by improving the experimental techniques, or making corrections for it if its cause is known."
+Measurement,Random error ,A random error will result in readings being scattered around the accepted value. The error may be reduced by taking the mean of several measurements or by plotting a graph and drawing a best-fit line. 
+Measurement,Accuracy,The accuracy of an experiment is a measure of how close the experimental result is to the true value or accepted value. Accuracy depends on how well we can control or compensate for the systematic errors. Accurate measurement has a small systematic error.
+Measurement,Precision,The precision of an experiment is a measure of how exactly the experimental result is determined. It is also a measure of how close the experimental results are to each other. Precision depends on how well we can reduce the random errors. Precise measurement has a small random error.
+Measurement,Scalar quantity,A scalar quantity has magnitude only. 
+Measurement,Vector quantity,A vector quantity has both magnitude and direction.
+Kinematics,Distance,Distance is the length of the path taken. 
+Kinematics,Displacement,Displacement is the distance travelled along a specified direction.
+Kinematics,Speed,Speed is the rate of change of distance.
+Kinematics,Velocity,Velocity is the rate of change of displacement.
+Kinematics,Acceleration,Acceleration is the rate of change of velocity.
+Kinematics,Free Fall,An object is said to be in free fall if the only force acting on it is the gravitational force of the Earth.
+Dynamics,Newton's first law of motion,Newton's first law of motion states that a body will remain in its state of rest or uniform motion in a straight line unless acted upon by a resultant force.
+Dynamics,Newton's second law of motion,Newton's second law of motion states that the rate of change of momentum of a body is proportional to the resultant force acting on it and the change takes place in the direction of the resultant force.
+Dynamics,Newton's third law of motion,"Newton's third law of motion states that if body A exerts a force on body B, then body B exerts an equal and opposite force on body A."
+Dynamics,Mass,Mass of a body is a measure of its inertia.
+Dynamics,Inertia,Inertia is the property of a body that resists change in motion.
+Dynamics,Linear momentum,Llinear momentum of a body is defined as the product of its mass and its velocity.
+Dynamics,One newton,"One newton is defined as the force which, when acting on a 1 kilogram mass, produces an acceleration of 1 m s-2."
+Dynamics,Impulse,Impulse is defined as the product of the force acting on a body and the time interval during which the force is exerted. It is equal to the change in momentum of the body.
+Dynamics,Principle of conservation of momentum,The principle of conservation of momentum states that the total momentum of a system remains constant if no resultant external force acts on the system.
+Dynamics,Elastic collision,Elastic collision is a collision in which both momentum and kinetic energy are conserved.
+Dynamics,Inelastic collision,Inelastic collision is a collision in which momentum is conserved but kinetic energy is not.
+Dynamics,Completely inelastic collision,Completely inelastic collision is a collision in which momentum is conserved and the particles stick together after collision so that their final velocities are the same
+Forces,Hooke’s law,"Hooke’s law states that within the limit of proportionality, the extension x produced in a material is directly proportional to the load F applied. "
+Forces,,F = kx where k is the force constant.
+Forces,Moment of a force,The moment of a force is defined as the product of the force and the perpendicular distance of the line of action of the force from the pivot.
+Forces,Couple,A couple consists of two equal forces acting in opposite directions whose lines of action do not coincide. It tends to produce rotation only. 
+Forces,Torque,The torque of a couple is the product of one of the forces and the perpendicular distance between the lines of action of the forces.
+Forces,Principle of moments,"The principle of moments states that when a body is in equilibrium, the sum of the anticlockwise moment about a point is equal to the sum of the clockwise moment about the same point. "
+Forces,Equilibrium,An object is said to be in equilibrium if the resultant force acting on it is zero and the resultant torque acting on the object about every point is zero.
+Forces,Stable equilibrium,An object is in stable equilibrium if it returns to its original position after it has been displaced slightly. 
+Forces,Unstable equilibrium,An object is in unstable equilibrium if any displacement from its original position lowers its centre of gravity. Toppling occurs when the centre of gravity of an object falls outside its base. 
+Forces,Conditions for equilibrium,(i)   The sum of the forces in any direction must be zero.
+Forces,,(ii)  The sum of the moments of the forces about any point must be zero.
+Forces,Rigid body,A rigid body is one that does not change its shape appreciably when undergoing acceleration.
+Forces,Centre of mass,"The centre of mass of a body is the point at which the entire mass of the body can be considered to act. If a body is symmetrical and of uniform composition, the centre of mass is at the geometrical centre of the body."
+Forces,Centre of gravity,The centre of gravity of a body is the point at which the entire weight of the body may be considered to act. 
+Forces,Upthrust,Upthrust is the upward force acing on a body by the fluid due to the fluid displaced.
+Forces,Archimedes’ Principle,Archimedes’ Principle states that Upthrust is equal in magnitude and opposite in direction to the weight of the fluid displaced by a submerged or floating object.
+Forces,Principle of Flotation,"Principle of Flotation states for an object floating in equilibrium, the upthrust is equal in magnitude and opposite in direction to the weight of the object. "
+"Work, Energy and Power",Work done ,Work done by a force is defined as the product of the force and the displacement in the direction of the force. 
+"Work, Energy and Power",One joule,One joule is defined as the work done by a force of 1 newton when its point of application moves through a distance of 1 metre in the direction of the force.
+"Work, Energy and Power",Energy,Energy is defined as the stored ability to do work.
+"Work, Energy and Power",Principle of Conservation of Energy,The Principle of Conservation of Energy states that energy can neither be created nor destroyed in any process. It can be transformed from one form to another.
+"Work, Energy and Power",Kinetic energy,Kinetic energy is defined as the energy of a body by virtue of its motion.  
+"Work, Energy and Power",Potential energy,Potential energy is defined as the energy of a body by virtue of its position.
+"Work, Energy and Power",Internal energy,Internal energy is determined by the state of the system. It is can be expressed as the sum of a random distribution of kinetic and potential energies associated with the molecules of a system.
+"Work, Energy and Power",Work energy theorem,The Work-Energy Theorem states that the net work done by external forces acting on a particle is equal to the change in kinetic energy of the particle.
+"Work, Energy and Power",Principle of conservation of mechanical energy,"When work is done by conservative forces, the total mechanical energy (ie. total kinetic energy and potential energy) of a system is conserved. In other words, the gain in kinetic energy is equal to the loss in potential energy for the conservative system and vice versa."
+"Work, Energy and Power",Power,Power is defined as the work done per unit time.
