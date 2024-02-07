@@ -1,1 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revision Page</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 10px;
+    border: 1px solid #ccc;
+  }
+
+  .filter {
+    margin-bottom: 10px;
+  }
+
+  .term-display {
+    margin-bottom: 20px;
+  }
+
+  .definition {
+    display: none;
+    margin-top: 20px;
+  }
+
+  .definition.show {
+    display: block;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="filter">
+      <label for="topicFilter">Filter by Topic:</label>
+      <select id="topicFilter"></select>  
+    </div>
+    <div class="content">
+      <div class="term-display">
+        <button id="prevBtn">&lt; Prev</button>
+        <span id="term"></span>
+        <button id="nextBtn">Next &gt;</button>
+      </div>
+      <div class="definition">
+        <button id="definitionBtn">Show Definitions</button>  
+        <p id="definition"></p>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const topicFilter = document.getElementById('topicFilter');
+      const termDisplay = document.getElementById('term');
+      const definitionDisplay = document.getElementById('definition');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const definitionBtn = document.getElementById('definitionBtn');
+
+      let revisionData = []; // Array to store CSV data
+      let currentIndex = 0; // Current index of term being displayed
+      let showDefinition = false; // Flag to track if definition is shown or hidden
+
+      // Load CSV data
+      fetch('data.csv')
+        .then(response => response.text())
+        .then(data => {
+          const rows = data.trim().split('\n');
+          rows.forEach(row => {
+            const columns = row.split(',');
+            revisionData.push({
+              topic: columns[0],
+              term: columns[1],
+              definition: columns[2]
+            });
+          });
+          populateTopicFilter();
+          displayTerm();
+        });
+
+      // Populate topic filter dropdown
+      function populateTopicFilter() {
+        const topics = [...new Set(revisionData.map(item => item.topic))];
+        topics.forEach(topic => {
+          const option = document.createElement('option');
+          option.textContent = topic;
+          option.value = topic;
+          topicFilter.appendChild(option);
+        });
+        topicFilter.addEventListener('change', filterTerms);
+      }
+
+      // Filter terms based on selected topic
+      function filterTerms() {
+        currentIndex = 0; // Reset index when changing topic
+        displayTerm();
+      }
+
+      // Display term and definition
+      function displayTerm() {
+        const selectedTopic = topicFilter.value;
+        const filteredTerms = revisionData.filter(item => item.topic === selectedTopic);
+        if (filteredTerms.length === 0) {
+          termDisplay.textContent = 'No terms found';
+          definitionDisplay.textContent = '';
+        } else {
+          const term = filteredTerms[currentIndex].term;
+          const definition = filteredTerms[currentIndex].definition;
+          termDisplay.textContent = term;
+          definitionDisplay.textContent = showDefinition ? definition : '';
+        }
+      }
+
+      // Toggle definition display
+      definitionBtn.addEventListener('click', function() {
+        showDefinition = !showDefinition;
+        displayTerm();  
+        definitionDisplay.classList.toggle('show', showDefinition);
+        definitionBtn.textContent = showDefinition ? 'Hide Definitions' : 'Show Definitions';
+      });
+
+      // Display previous term
+      prevBtn.addEventListener('click', function() {
+        const selectedTopic = topicFilter.value;
+        const filteredTerms = revisionData.filter(item => item.topic === selectedTopic);
+        if (currentIndex > 0) {
+          currentIndex--;
+          displayTerm();
+        }
+      });
+
+      // Display next term
+      nextBtn.addEventListener('click', function() {
+        const selectedTopic = topicFilter.value;
+        const filteredTerms = revisionData.filter(item => item.topic === selectedTopic);
+        if (currentIndex < filteredTerms.length - 1) {
+          currentIndex++;
+          displayTerm();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
 
