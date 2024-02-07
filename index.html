@@ -223,12 +223,12 @@
 
         <div class="col-md-4">
             <div class="card mb-4">
-                <img class="card-img-top" src="countdown-timer/countdown-timer.png" alt="Countdown Timer Screenshot">
+                <img class="card-img-top" src="trat/trat.png" alt="Team-based learning">
                     <div class="card-body">
-                        <h3 class="card-title">Number 8</h3>
-                        <p class="card-text">For use in class. Set a duration and start the timer. When the time is up, an alarm will sound.</p>
-                        <a href="countdown-timer/index.html" class="btn btn-primary">Test it out</a>
-                        <a href="countdown-timer/countdown-timer.zip" class="btn btn-secondary">Download for SLS</a>
+                        <h3 class="card-title">tRAT Assessment Tool</h3>
+                        <p class="card-text">For use in class for team-based learning. Students will work in groups to come up with a consensus to answer questions. They will get multiple tries in each multiple-choice question, with decreasing rewards for retries.</p>
+                        <a href="trat/index.html" class="btn btn-primary">Test it out</a>
+                        <a href="trat/trat.zip" class="btn btn-secondary">Download for SLS</a>
                         <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse8" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
                         <div class="collapse" id="promptsCollapse8">
                             <div class="card mt-3">
@@ -236,14 +236,15 @@
                                     <h3 class="header1">Prompts</h3>
                                     <p>Provide the code for the following in a single html file:</p>
                                     <ol>
-<li>Create a webpage: This is a basic instruction to start building a webpage.</li>
-<li>Add a countdown timer: We want to include a timer that counts down from a specified time.</li>
-<li>Allow setting hours, minutes, and seconds: Users should be able to input the duration of the countdown by setting the hours, minutes, and seconds individually.</li>
-<li>Include buttons for adjustment: Add buttons labeled with "+H", "-H", "+M", "-M", "+S", and "-S" for users to increase or decrease the hours, minutes, and seconds as they desire.</li>
-<li>Styling the webpage: Use CSS to style the webpage for a visually appealing appearance. This includes setting fonts, colors, and layout.</li>
-<li>Add functionality for starting, pausing, and resetting the timer: Implement JavaScript functions for starting, pausing, and resetting the countdown timer. These functions should be triggered by clicking corresponding buttons.</li>
-<li>Incorporate sound: When the timer reaches zero, play a sound from an audio file (alarm.mp3).</li>
-<li>Include a mute button: After the sound starts playing, display a button labeled "Mute" that allows users to mute or unmute the sound.</li>
+                                        <li>Create a website for users to key in their answers to a tRAT quiz for checking.</li>
+                                        <li>The answers will be referenced from a csv file containing the question number in the first column and the answer to the multiple choice question (A, B, C or D) in the second column.</li>
+                                        <li>The quiz will display the question number and 4 options: A, B, C and D. The user will choose the answer from the 4 options.</li>
+                                        <li>If the first option is the correct answer, the letter will become light green and 4 marks will be added to the overall score. If it is the wrong answer, the letter will become dark grey and no marks will be added.</li>
+                                        <li>The user will get to try a second time for the same question. If the second option is the correct answer, the letter will become light green and 2 marks will be added to the overall score. If it is the wrong answer, the letter will become dark grey and no marks will be added.</li>
+                                        <li>The user will get to try a third time for the same question. If the third option is the correct answer, the letter will become light green and 1 mark will be added to the overall score. If it is the wrong answer, the letter will become dark grey and no marks will be added. There will not be a fourth time for the same question.</li>
+                                        <li>Getting it correct on the second try should only get 2 marks added. On the third try, only 1 mark will be added if correct.</li>
+                                        <li>The total score will be shown at the bottom of the page.</li>
+                                        <li>There will be two other buttons to move to the next question or back to the previous question. Don't jump to the next question automatically.</li>
                                     </ol>
                                 </div>
                             </div>
