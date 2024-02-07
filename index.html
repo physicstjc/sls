@@ -3,281 +3,115 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Generating Javascript Applications for SLS using ChatGPT</title>
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<title>tRAT Quiz</title>
 <style>
     body {
         font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
     }
-
-    .header1 {
-        color: #008CBA;
-        font-weight: bold;
+    h1 {
+        margin-bottom: 20px;
     }
-
-    .header2 {
-        color: #4CAF50;
-        font-style: italic;
+    #question-container {
+        margin-bottom: 20px;
     }
-
-    h3 {
-        color: #dc3545;
-        text-transform: uppercase;
+    .option {
+        width: 100px;
+        height: 100px;
+        background-color: #ccc;
+        display: inline-block;
+        margin: 10px;
+        font-size: 24px;
+        line-height: 100px;
+        cursor: pointer;
+    }
+    .selected {
+        background-color: lightgreen !important;
+    }
+    .incorrect {
+        background-color: grey !important;
+        pointer-events: none;
+    }
+    #score-container {
+        margin-bottom: 20px;
+    }
+    #buttons-container {
+        margin-bottom: 20px;
     }
 </style>
 </head>
 <body>
-
-<div class="container">
-    <h2 class="mt-4 mb-4">AI-Generated Apps for Student Learning Space</h2>
-
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="random-name-generator/random-name-generator.png" alt="Random Name Generator Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Random Name Generator</h3>
-                        <p class="card-text">For use in class. Either enter the names with semi-colons as separators or upload a classlist (consisting only of names, not index number, etc) in csv form.</p>
-                        <a href="random-name-generator/index.html" class="btn btn-primary">Test it out</a>
-                        <a href="random-name-generator/random-name-generator.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse1" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse1">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Provide the code for the following in a single html file:</p>
-                                    <ol>
-                                        <li>This web page lets you generate random names from a list of names you provide.</li>
-                                        <li>There's a section labeled "Enter names separated by semicolons."</li>
-                                        <li>You can type or paste a list of names into a box provided. Each name should be separated by a semicolon.</li>
-                                        <li>Alternatively, you can upload a file containing a list of names in CSV format using the "Or upload a CSV file" option.</li>
-                                        <li>Once you've entered the names or uploaded the file, click the "Submit" button.</li>
-                                        <li>After submitting, the page will display another section.</li>
-                                        <li>In this new section, there's a button labeled "Generate Random Name."</li>
-                                        <li>When you click this button, a random name from the list you provided will appear on the page.</li>
-                                        <li>Below the "Generate Random Name" button, there's a paragraph displaying the randomly generated name.</li>
-                                        <li>If you want to remove the displayed name from the list, you can click the "Remove Name" button below the displayed name.</li>
-                                        <li>Any names that you've generated will be listed below the "Generated Names" section.</li>
-                                        <li>Each generated name will appear on a separate line.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="countdown-timer/countdown-timer.png" alt="Countdown Timer Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Countdown Timer</h3>
-                        <p class="card-text">For use in class. Set a duration and start the timer. When the time is up, an alarm will sound.</p>
-                        <a href="countdown-timer/index.html" class="btn btn-primary">Test it out</a>
-                        <a href="countdown-timer/countdown-timer.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse2" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse2">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Provide the code for the following in a single html file:</p>
-                                    <ol>
-<li>Create a webpage: This is a basic instruction to start building a webpage.</li>
-<li>Add a countdown timer: We want to include a timer that counts down from a specified time.</li>
-<li>Allow setting hours, minutes, and seconds: Users should be able to input the duration of the countdown by setting the hours, minutes, and seconds individually.</li>
-<li>Include buttons for adjustment: Add buttons labeled with "+H", "-H", "+M", "-M", "+S", and "-S" for users to increase or decrease the hours, minutes, and seconds as they desire.</li>
-<li>Styling the webpage: Use CSS to style the webpage for a visually appealing appearance. This includes setting fonts, colors, and layout.</li>
-<li>Add functionality for starting, pausing, and resetting the timer: Implement JavaScript functions for starting, pausing, and resetting the countdown timer. These functions should be triggered by clicking corresponding buttons.</li>
-<li>Incorporate sound: When the timer reaches zero, play a sound from an audio file (alarm.mp3).</li>
-<li>Include a mute button: After the sound starts playing, display a button labeled "Mute" that allows users to mute or unmute the sound.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-        
-
-    <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="definitions/definitions.png" alt="Definitions Flashcards Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Digital Flashcards</h3>
-                        <p class="card-text">For use online. Teacher can include a csv file of key terms and their corresponding definitions into the same folder as the index file. Students can filter by topic and use this to test their recall of definitions of selected key terms.</p>
-                        <a href="definitions/index.html" class="btn btn-primary">Test it out</a>
-                        <a href="definitions/definitions.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse3" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse3">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Create a revision webpage using html, javascript and css that references a csv file in the same folder with three columns: "topic", "term" and "definition". There should be a filter for the "topic" field. Each term in the "term" field will be displayed in turn using a left and right button. Another button labelled "Definition" will be used to show or hide the corresponding "definition" field at the bottom. Put all the script and style codes in the html file.</p>
-    
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
+    <h1>tRAT Quiz</h1>
+    <div id="question-container">
+        <div id="question"></div>
+        <div id="options-container"></div>
+    </div>
+    <div id="score-container">
+        <p id="score">Score: 0</p>
+    </div>
+    <div id="buttons-container">
+        <button id="previous-button" onclick="previousQuestion()">Previous</button>
+        <button id="next-button" onclick="nextQuestion()">Next</button>
     </div>
 
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="quotations/random-quotes.png" alt="Random Quote Generator Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Random Quote Generator</h3>
-                        <p class="card-text">Can be used to automatically show a different inspirational quote each time a student visits a site. These quotes will be random and therefore, different for each student. The list of quotes is coded into the html. You can change it from there.</p>
-                        <a href="quotations/index.html" class="btn btn-primary">Test it out</a>
-                        <a href="quotations/random-quotes.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse4" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse4">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Create a html webpage with a randomly generated quote with the attributed source each time it loads. The quotes should be aimed at inspiring students to put in their best effort in their exam preparations. The quote will be chosen from a list of twenty quotes.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
+    <script>
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let questions = [];
 
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="guess-word/guess-word.png" alt="Hangman Game">
-                    <div class="card-body">
-                        <h3 class="card-title">Hangman</h3>
-                        <p class="card-text">Can be used in-class, online or even as part of a virtual escape room. Open the HTML file in a web browser to play the game. The game will present physics keywords for the user to guess one word at a time. Teachers can edit the html to add new words into the list.</p>
-                        <a href="guess-word/index.html" class="btn btn-primary">Test it out</a>
-                        <a href="guess-word/guess-word.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse5" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse5">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p><ol><li>Create a hangman game based on keywords in physics such as "impulse", "momentum" and "inelastic" for the user to guess one word at a time.</li>
-                                    <li>The number of blanks that are shown is the number of letters in the selected word. </li>
-                                    <li>Leave a space between each blank. </li>
-                                    <li>The guessing is done letter by letter.</li>
-                                    <li>For each correct guess, add one point to the score</li>
-                                    <li>For each incorrect guess, deduct one point. Keep score until all the words are completed. </li>
-                                    <li>Display the score. Put all the codes in one html file. Celebrate the completion of each word.</li></ol></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
+        // Load questions from CSV file
+        fetch('questions.csv')
+          .then(response => response.text())
+          .then(data => {
+            let rows = data.split('\n');
+            rows.forEach(row => {
+              let [questionNumber, answer] = row.split(',');
+              questions.push({ questionNumber: questionNumber.trim(), answer: answer.trim() });
+            });
+            displayQuestion();
+          });
 
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="wave-motion/wave-motion.gif" alt="Wave Motion Animation">
-                    <div class="card-body">
-                        <h3 class="card-title">Wave Motion Interactive Animation</h3>
-                        <p class="card-text">This animation can be used to demonstrate the effect of changes in period on wavelength of a wave. It also highlights a particular particle to show the perpendicular motion to the direction of wave propagation.</p>
-                        <a href="wave-motion/index.html" class="btn btn-primary">Test it out</a>
-                        <a href="wave-motion/wave-motion.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse6" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse6">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Create a simulation of particles moving vertically with simple harmonic motion. The simulation should display 25 particles arranged horizontally, each oscillating vertically at a different phase. The horizontal motion of the particles should simulate simple harmonic motion, with their positions following a sine wave pattern. The amplitude of oscillation should be set to 100 pixels, and the period of oscillation should be controlled by a slider input with a range from 0.1 to 5 seconds. The particles should be confined within a container with a fixed width of 640 pixels and a height of 480 pixels. The slider input should be positioned at the bottom of the container. The simulation should update the positions of the particles at regular intervals to create the illusion of continuous motion. One of the particles near the middle should be red in colour.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-    
-    </div>
+        function displayQuestion() {
+          let currentQuestion = questions[currentQuestionIndex];
+          document.getElementById('question').innerText = `Question ${currentQuestion.questionNumber}`;
+          document.getElementById('options-container').innerHTML = `
+            <div class="option" onclick="chooseOption('A')">A</div>
+            <div class="option" onclick="chooseOption('B')">B</div>
+            <div class="option" onclick="chooseOption('C')">C</div>
+            <div class="option" onclick="chooseOption('D')">D</div>
+          `;
+        }
 
-        <div class="row">
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="coin-addition/coin-addition.png" alt="Coin Addition Practice Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Coin Addition</h3>
-                        <p class="card-text">For self-practice or in class learning. Users will be shown a number of Singapore coins. They will need to key in the total value for checking.</p>
-                        <a href="coin-addition/index.html" class="btn btn-primary">Test it out</a>
-                        <a href="coin-addition/coin-addition.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse7" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse7">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a quiz website on how to add values of coins.</li>
-                                        <li>Use a button to generate a new problem with a random number of coins of varying values such as 5 cents (represented by image file "TS5c.jpg"), 10 cents (represented by image file "TS10c.jpg"), 20 cents (represented by image file "TS20c.jpg"), 50 cents (represented by image file "TS50c.jpg") and 1 dollar (represented by image file "TS1d.jpg").</li>
-                                        <li>Display the number of coins as required by duplicating the images. Use an input box with a submit button to check the value of coins added in terms of dollars.</li>
-                                        <li>Put a dollar sign in front of the input box. Centralise all the messages and elements. Use a button to generate a new question.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
+        function chooseOption(option) {
+          let currentQuestion = questions[currentQuestionIndex];
+          let selectedOption = document.querySelector(`.option[data-value="${option}"]`);
+          if (option === currentQuestion.answer) {
+            selectedOption.classList.add('selected');
+            score += 4;
+          } else {
+            selectedOption.classList.add('incorrect');
+            if (currentQuestionIndex < questions.length - 1) {
+              setTimeout(nextQuestion, 1000);
+            }
+          }
+          document.getElementById('score').innerText = `Score: ${score}`;
+        }
 
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="countdown-timer/countdown-timer.png" alt="Countdown Timer Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Number 8</h3>
-                        <p class="card-text">For use in class. Set a duration and start the timer. When the time is up, an alarm will sound.</p>
-                        <a href="countdown-timer/index.html" class="btn btn-primary">Test it out</a>
-                        <a href="countdown-timer/countdown-timer.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse8" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse8">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Provide the code for the following in a single html file:</p>
-                                    <ol>
-<li>Create a webpage: This is a basic instruction to start building a webpage.</li>
-<li>Add a countdown timer: We want to include a timer that counts down from a specified time.</li>
-<li>Allow setting hours, minutes, and seconds: Users should be able to input the duration of the countdown by setting the hours, minutes, and seconds individually.</li>
-<li>Include buttons for adjustment: Add buttons labeled with "+H", "-H", "+M", "-M", "+S", and "-S" for users to increase or decrease the hours, minutes, and seconds as they desire.</li>
-<li>Styling the webpage: Use CSS to style the webpage for a visually appealing appearance. This includes setting fonts, colors, and layout.</li>
-<li>Add functionality for starting, pausing, and resetting the timer: Implement JavaScript functions for starting, pausing, and resetting the countdown timer. These functions should be triggered by clicking corresponding buttons.</li>
-<li>Incorporate sound: When the timer reaches zero, play a sound from an audio file (alarm.mp3).</li>
-<li>Include a mute button: After the sound starts playing, display a button labeled "Mute" that allows users to mute or unmute the sound.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-        
+        function previousQuestion() {
+          if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            displayQuestion();
+          }
+        }
 
-    <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="definitions/definitions.png" alt="Definitions Flashcards Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Number 9</h3>
-                        <p class="card-text">For use online. Teacher can include a csv file of key terms and their corresponding definitions into the same folder as the index file. Students can filter by topic and use this to test their recall of definitions of selected key terms.</p>
-                        <a href="definitions/index.html" class="btn btn-primary">Test it out</a>
-                        <a href="definitions/definitions.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse9" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse9">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Create a revision webpage using html, javascript and css that references a csv file in the same folder with three columns: "topic", "term" and "definition". There should be a filter for the "topic" field. Each term in the "term" field will be displayed in turn using a left and right button. Another button labelled "Definition" will be used to show or hide the corresponding "definition" field at the bottom. Put all the script and style codes in the html file.</p>
-    
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-    </div>
-
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        function nextQuestion() {
+          if (currentQuestionIndex < questions.length - 1) {
+            currentQuestionIndex++;
+            displayQuestion();
+          }
+        }
+    </script>
 </body>
 </html>
