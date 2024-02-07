@@ -15,21 +15,21 @@
         margin-bottom: 20px;
     }
     .option {
-        width: 100px;
-        height: 100px;
+        width: 50px;
+        height: 50px;
         background-color: #ccc;
         display: inline-block;
         margin: 10px;
         font-size: 24px;
-        line-height: 100px;
+        line-height: 50px;
         cursor: pointer;
+        border: none;
     }
     .correct {
         background-color: lightgreen !important;
     }
     .incorrect {
-        background-color: grey !important;
-        pointer-events: none;
+        background-color: darkgrey !important;
     }
     #score-container {
         margin-bottom: 20px;
@@ -74,10 +74,10 @@
           let currentQuestion = questions[currentQuestionIndex];
           document.getElementById('question').innerText = `Question ${currentQuestion.questionNumber}`;
           document.getElementById('options-container').innerHTML = `
-            <div class="option" onclick="chooseOption('A')">A</div>
-            <div class="option" onclick="chooseOption('B')">B</div>
-            <div class="option" onclick="chooseOption('C')">C</div>
-            <div class="option" onclick="chooseOption('D')">D</div>
+            <button class="option" onclick="chooseOption('A')" data-value="A">A</button>
+            <button class="option" onclick="chooseOption('B')" data-value="B">B</button>
+            <button class="option" onclick="chooseOption('C')" data-value="C">C</button>
+            <button class="option" onclick="chooseOption('D')" data-value="D">D</button>
           `;
         }
 
