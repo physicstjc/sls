@@ -86,7 +86,13 @@
           let selectedOption = document.querySelector(`.option[data-value="${option}"]`);
           if (option === currentQuestion.answer) {
             selectedOption.classList.add('correct');
-            score += 4;
+            if (currentQuestion.attempts === undefined) {
+              score += 4;
+            } else if (currentQuestion.attempts === 1) {
+              score += 2;
+            } else if (currentQuestion.attempts === 2) {
+              score += 1;
+            }
             document.getElementById('score').innerText = `Score: ${score}`;
           } else {
             selectedOption.classList.add('incorrect');
