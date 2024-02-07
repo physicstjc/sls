@@ -7,13 +7,17 @@
 <style>
     body {
         font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
     }
-h1 {
-        font-size: 24px;
-
-}	
+    #game-container {
+        text-align: center;
+    }
     #hangman-word {
-        font-size: 32px;
+        font-size: 24px;
         margin-bottom: 20px;
     }
     #hangman-input {
@@ -22,11 +26,13 @@ h1 {
 </style>
 </head>
 <body>
-    <h1>Hangman Game - Physics Keywords</h1>
-    <div id="hangman-word"></div>
-    <input type="text" id="hangman-input" placeholder="Enter a letter">
-    <button onclick="guessLetter()">Guess</button>
-    <p>Score: <span id="score">0</span></p>
+    <div id="game-container">
+        <h1>Hangman Game - Physics Keywords</h1>
+        <div id="hangman-word"></div>
+        <input type="text" id="hangman-input" placeholder="Enter a letter">
+        <button onclick="guessLetter()">Guess</button>
+        <p>Score: <span id="score">0</span></p>
+    </div>
 
     <script>
         let words = ["IMPULSE", "MOMENTUM", "INELASTIC"];
