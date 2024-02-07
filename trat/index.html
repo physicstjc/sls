@@ -87,27 +87,54 @@
           if (option === currentQuestion.answer) {
             selectedOption.classList.add('correct');
             score += 4;
+            document.getElementById('score').innerText = `Score: ${score}`;
           } else {
             selectedOption.classList.add('incorrect');
-            if (currentQuestionIndex < questions.length - 1) {
-              setTimeout(nextQuestion, 1000);
+            if (currentQuestion.attempts === undefined) {
+              currentQuestion.attempts = 1;
+            } else if (currentQuestion.attempts === 1) {
+              currentQuestion.attempts = 2;
+            } else {
+              currentQuestion.attempts = 3;
+            }
+            if (currentQuestion.attempts === 3) {
+              disableOptions();
             }
           }
-          document.getElementById('score').innerText = `Score: ${score}`;
         }
 
-        function previousQuestion() {
-          if (currentQuestionIndex > 0) {
-            currentQuestionIndex--;
-            displayQuestion();
-          }
+        function disableOptions() {
+          document.querySelectorAll('.option').forEach(option => {
+            option.disabled = true;
+            if (!option.classList.contains('correct')) {
+              option.classList.add('incorrect');
+            }
+          });
         }
 
         function nextQuestion() {
-          if (currentQuestionIndex < questions.length - 1) {
-            currentQuestionIndex++;
-            displayQuestion();
+          currentQuestionIndex++;
+          if (currentQuestionIndex >= questions.length) {
+            currentQuestionIndex = questions.length - 1;
           }
+          resetOptions();
+          displayQuestion();
+        }
+
+        function previousQuestion() {
+          currentQuestionIndex--;
+          if (currentQuestionIndex < 0) {
+            currentQuestionIndex = 0;
+          }
+          resetOptions();
+          displayQuestion();
+        }
+
+        function resetOptions() {
+          document.querySelectorAll('.option').forEach(option => {
+            option.classList.remove('correct', 'incorrect');
+            option.disabled = false;
+          });
         }
     </script>
 </body>
