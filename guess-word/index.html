@@ -30,7 +30,6 @@
         let score = 0;
         let incorrectGuesses = 0;
         const maxIncorrectGuesses = 6;
-        let hangmanParts = ['head', 'body', 'left-arm', 'right-arm', 'left-leg', 'right-leg'];
 
         // Function to fetch words from CSV file
         async function fetchWords() {
@@ -89,38 +88,28 @@
 
             if (!correctGuess) {
                 incorrectGuesses++;
-                displayHangman(incorrectGuesses);
+                updateScore(-1);
+            } else {
+                updateScore(1);
             }
 
             document.getElementById('hangman-word').textContent = newDisplayedWord;
 
             if (newDisplayedWord === currentWord) {
-                score++;
-                document.getElementById('score').textContent = score;
                 getNextWord();
             } else if (incorrectGuesses === maxIncorrectGuesses) {
-                alert('Game Over! Final Score: ' + score);
+                getNextWord();
             }
         }
 
-        // Function to display the hangman based on the number of incorrect guesses
-        function displayHangman(incorrectGuesses) {
-            for (let i = 0; i < incorrectGuesses; i++) {
-                document.getElementById(hangmanParts[i]).style.display = 'block';
-            }
+        // Function to update the score
+        function updateScore(points) {
+            score += points;
+            document.getElementById('score').textContent = score;
         }
 
         // Fetch words on page load
         window.onload = fetchWords;
     </script>
-    <svg height="250" width="200" style="display:none">
-        <!-- Hangman Parts -->
-        <line x1="60" y1="20" x2="140" y2="20" id="head" style="stroke:rgb(0,0,0);stroke-width:2;display:none" />
-        <line x1="100" y1="20" x2="100" y2="50" id="body" style="stroke:rgb(0,0,0);stroke-width:2;display:none" />
-        <line x1="100" y1="30" x2="80" y2="40" id="left-arm" style="stroke:rgb(0,0,0);stroke-width:2;display:none" />
-        <line x1="100" y1="30" x2="120" y2="40" id="right-arm" style="stroke:rgb(0,0,0);stroke-width:2;display:none" />
-        <line x1="100" y1="50" x2="80" y2="70" id="left-leg" style="stroke:rgb(0,0,0);stroke-width:2;display:none" />
-        <line x1="100" y1="50" x2="120" y2="70" id="right-leg" style="stroke:rgb(0,0,0);stroke-width:2;display:none" />
-    </svg>
 </body>
 </html>
