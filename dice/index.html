@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6-Sided Dice Simulator</title>
+    <style>
+        .container {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .dice {
+            width: 80px;
+            height: 80px;
+            display: inline-block;
+            margin: 20px;
+            cursor: pointer;
+            background-size: cover;
+        }
+
+        .results-container {
+            margin-top: 50px;
+        }
+
+        ul {
+            list-style-type: none;
+        }
+
+        canvas {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="dice" id="dice1" onclick="rollDice()"></div>
+        <div class="dice" id="dice2" style="display: none;" onclick="rollDice()"></div>
+        <br><button onclick="toggleDice()">Toggle Dice</button>
+        <button onclick="castDice()">Cast Dice</button>
+        <div class="results-container">
+            <canvas id="chart" width="400" height="200"></canvas>
+            <ul id="results-list"></ul>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let results = [];
+        let diceCount = 1;
+        let chart;
+
+        function rollDice() {
+            let total = 0;
+            for (let i = 0; i < diceCount; i++) {
+                let result = Math.floor(Math.random() * 6) + 1;
+                document.getElementById(`dice${i + 1}`).style.backgroundImage = `url('dice${result}.png')`;
+                total += result;
+            }
+            results.push(total);
+            updateResultsList();
+            updateChart();
+        }
+
+        function castDice() {
+            rollDice();
+        }
+
+        function updateResultsList() {
+            let list = document.getElementById('results-list');
+            list.innerHTML = '';
+            results.forEach((result, index) => {
+                let listItem = document.createElement('li');
+                listItem.textContent = `Roll ${index + 1}: ${result}`;
+                list.appendChild(listItem);
+            });
+        }
+
+        function updateChart() {
+            let counts = Array(diceCount * 6 + 1).fill(0);
+            results.forEach(result => counts[result]++);
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            let ctx = document.getElementById('chart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Array.from({ length: diceCount * 6 + 1 }, (_, i) => i),
+                    datasets: [{
+                        label: 'Frequency',
+                        data: counts
+                    }]
+                },
+                options: {
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }]
+                    }
+                }
+            });
+        }
+
+        function toggleDice() {
+            results = [];
+            updateResultsList();
+            if (chart) {
+                chart.destroy();
+            }
+            diceCount = diceCount === 1 ? 2 : 1;
+            document.getElementById('dice2').style.display = diceCount === 2 ? 'inline-block' : 'none';
+            rollDice(); // Immediately roll the correct number of dice
+        }
+    </script>
+</body>
+</html>
