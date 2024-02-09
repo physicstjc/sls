@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Video Player</title>
+<style>
+    /* CSS styles for video container */
+    #video-container {
+        position: relative;
+        width: 640px;
+        height: 360px;
+    }
+
+    /* CSS styles for multiple choice question container */
+    .question-container {
+        position: absolute;
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        display: none; /* Hidden by default */
+    }
+
+    /* CSS styles for video element */
+    video {
+        width: 100%;
+        height: 100%;
+    }
+</style>
+</head>
+<body>
+
+<div id="video-container">
+    <video id="my-video" controls>
+        <source src="pizza.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <div id="question-container1" class="question-container">
+        <p>Question 1: How many people are eating pizza?</p>
+        <label><input type="radio" name="answer1" value="incorret"> 1</label><br>
+        <label><input type="radio" name="answer1" value="correct"> 2</label><br>
+        <label><input type="radio" name="answer1" value="incorrect"> 3</label><br>
+        <button onclick="checkAnswer(1)">Submit</button>
+    </div>
+
+<!-- Feel free to add new questions by copying and pasting --> 
+
+    <div id="question-container2" class="question-container">
+        <p>Question 2: Are they enjoying it?</p>
+        <label><input type="radio" name="answer2" value="correct"> Yes</label><br>
+        <label><input type="radio" name="answer2" value="incorrect"> No</label><br>
+        <button onclick="checkAnswer(2)">Submit</button>
+    </div>
+</div>
+
+<script>
+    const video = document.getElementById('my-video');
+    const questionContainers = document.querySelectorAll('.question-container');
+    const questions = [
+        { timestamp: 10, question: 'question-container1' }, // Question 1 at 10 seconds
+        { timestamp: 20, question: 'question-container2' }  // Question 2 at 20 seconds
+    ];
+
+    let currentQuestionIndex = 0;
+
+    // Function to check the answer
+    function checkAnswer(questionIndex) {
+        const selectedAnswer = document.querySelector(`input[name="answer${questionIndex}"]:checked`);
+        if (selectedAnswer && selectedAnswer.value === 'correct') {
+            // Correct answer
+            questionContainers[questionIndex - 1].style.display = 'none'; // Hide the question container
+            video.play(); // Continue playing the video
+            currentQuestionIndex++; // Move to the next question
+        } else {
+            // Incorrect answer
+            alert('Incorrect answer! Please try again.');
+        }
+    }
+
+    // Event listener for timeupdate event of the video
+    video.addEventListener('timeupdate', function() {
+        const currentQuestion = questions[currentQuestionIndex];
+        if (currentQuestion && video.currentTime >= currentQuestion.timestamp) {
+            // Pause the video
+            video.pause();
+            // Show the question container
+            document.getElementById(currentQuestion.question).style.display = 'block';
+        }
+    });
+</script>
+
+</body>
+</html>

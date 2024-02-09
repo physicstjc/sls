@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Velocity vs. Time Graph</title>
+<!-- Include Chart.js library -->
+<script src="chart.js"></script>
+<style>
+    canvas {
+        display: block;
+        margin: 0 auto;
+ }
+</style>
+</head>
+<body>
+<div style="text-align:center;">
+    <canvas id="velocityChart" width="400" height="200"></canvas>
+    <input type="range" id="horizontalLineSlider" min="0" max="10" step="0.1" value="5">
+    <button onclick="takeScreenshot()">Take Screenshot</button>
+</div>
+
+<script>
+// Get the canvas element
+var ctx = document.getElementById('velocityChart').getContext('2d');
+
+// Initial position of the blue horizontal line
+var initialHorizontalLineValue = 3;
+
+// Create the velocity vs. time chart
+var velocityChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['0s', '1s', '2s', '3s', '4s', '5s', '6s', '7s', '8s'],
+        datasets: [{
+            label: 'Velocity',
+            data: [0, 1.25, 2.5, 3.75, 5, 6.25, 7.5, 8.75, 10],
+            fill: false,
+            borderColor: '#FF7F7F',
+            tension: 0.1
+        }, {
+            label: 'Horizontal Line',
+            data: Array(9).fill(initialHorizontalLineValue),
+            fill: false,
+            borderColor: '#00d2ff',
+            borderDash: [5, 5],
+            tension: 0.1
+        }]
+    },
+    options: {
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Time (s)'
+                },
+                min: 0,
+                max: 8
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Velocity (m/s)'
+                },
+                min: 0,
+                max: 10
+            }
+        }
+    }
+});
+
+// Update the blue horizontal line based on slider value
+document.getElementById('horizontalLineSlider').addEventListener('input', function(event) {
+    var newValue = parseFloat(event.target.value);
+    velocityChart.data.datasets[1].data = Array(9).fill(newValue);
+    velocityChart.update();
+});
+
+// Function to take a screenshot of the graph
+function takeScreenshot() {
+    var canvas = document.getElementById('velocityChart');
+    var image = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+    var link = document.createElement('a');
+    link.download = 'velocity_graph.png';
+    link.href = image;
+    link.click();
+}
+</script>
+
+</body>
+</html>

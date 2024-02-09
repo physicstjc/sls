@@ -263,7 +263,7 @@
                     <div class="card-body">
                         <h3 class="card-title">Dice Simulator</h3>
                         <p class="card-text">This can be used to teach the math concept of probability. User can choose between the use of one or two dice. The results will be charted.</p>
-                        <p class="card-text">Note: external scripts cannot be referenced from SLS's iframe, the javascript from https://cdn.jsdelivr.net/npm/chart.js had to be saved as a separate file in the folder and the path was changed to directly refers to it.</p>
+                        <p class="card-text">Note: External scripts cannot be referenced when uploaded into SLS's so the javascript from https://cdn.jsdelivr.net/npm/chart.js had to be saved as a separate file in the folder and the path was changed to directly refer to it.</p>
                         <a href="dice/index.html" class="btn btn-primary">Test it out</a>
                         <a href="dice/dice.zip" class="btn btn-secondary">Download for SLS</a>
                         <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse9" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
@@ -289,6 +289,73 @@
                     </div>
             </div>
         </div>
+
+    </div>
+    
+    
+            <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="interactive-video/interactive-video.png" alt="Interactive Video Screenshot">
+                    <div class="card-body">
+                        <h3 class="card-title">Interactive Video</h3>
+                        <p class="card-text">Engage students with questions at chosen timing during the playing of a video. The teacher can edit the timing and questions using the html code. </p><p>Change the video name in the line that says 'source src="pizza.mp4" type="video/mp4'</p>
+                        <a href="interactive-video/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="interactive-video/interactive-video.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse10" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
+                        <div class="collapse" id="promptsCollapse10">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Make a webpage using html, javascript and css and put a video player on it. Also, create a space where questions can appear later.</li>
+                                        <li>Make the webpage look nice by adding styles to arrange the video and question areas.</li>
+                                        <li>Add some special instructions for the webpage to make it interactive:
+                                            <ul><li>Keep track of the video and where it's paused or playing.</li>
+                                                <li>Plan out when the questions should pop up during the video.</li>
+                                                <li>Keep track of which question is currently being asked.</li>
+                                                <li>Set up rules for when to show the questions and what happens when you answer them.</li>
+                                                <li>Make sure the video pauses when a question appears, so you can't watch until you answer.</li>
+                                                <li>Update the webpage to include the question boxes with options to choose from and a button to submit your answer. </li>
+                                            </ul></li>
+
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="interactive-graph/interactive-graph.png" alt="Interactive Graph">
+                    <div class="card-body">
+                        <h3 class="card-title">Interactive Graph</h3>
+                        <p class="card-text">The user can use sliders to manipulate variables that affect a graph.</p>
+                        <p class="card-text">A screenshot of the graph will be taken with a button and saved into the computer. This can then be uploaded later in a free-response question in SLS for checking.</p>
+                         <p class="card-text">Note: External scripts cannot be referenced when uploaded into SLS's so the javascript from https://cdn.jsdelivr.net/npm/chart.js had to be saved as a separate file in the folder and the path was changed to directly refer to it.</p>
+                        <a href="interactive-graph/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="interactive-graph/interactive-graph.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse11" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
+                        <div class="collapse" id="promptsCollapse11">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <p>Provide the code for the following in a single html file:</p>
+                                    <ol>
+                                        <li>Create a html webpage that has a graph with a vertical axis labelled "velocity" and horizontal axis labelled "time". The range of values for the vertical axis is from zero to 10 m/s while the range of values for the horizontal axis is 0 to 8 seconds.</li>
+                                        <li>A red line representing a change in velocity from zero to 10 m/s in 8 seconds is shown.</li>
+                                        <li>A blue horizontal line is at a height that is variable, adjustable using a slider to change the variable.</li>
+                                        <li>There should be a button for a screenshot of the graph to be taken and downloaded.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+
 
     </div>
 
