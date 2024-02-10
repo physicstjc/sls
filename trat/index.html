@@ -37,6 +37,9 @@
     #buttons-container {
         margin-bottom: 20px;
     }
+    #selected-options {
+        list-style-type: none;
+    }bu
 </style>
 </head>
 <body>
@@ -51,6 +54,10 @@
     <div id="buttons-container">
         <button id="previous-button" onclick="previousQuestion()">Previous</button>
         <button id="next-button" onclick="nextQuestion()">Next</button>
+    </div>
+    <div id="selected-options-container">
+      <p>Selected Options:</p>
+      <ul id="selected-options"></ul>
     </div>
 
     <script>
@@ -84,16 +91,31 @@
         function chooseOption(option) {
           let currentQuestion = questions[currentQuestionIndex];
           let selectedOption = document.querySelector(`.option[data-value="${option}"]`);
+
+          // Check if the current question has already been answered correctly
+          if (currentQuestion.answeredCorrectly) {
+            return; // Exit the function if the question has already been answered correctly
+          }
+
+          // Update the list of selected options
+          let selectedOptionsList = document.getElementById('selected-options');
+          let listItem = document.createElement('li');
+          listItem.textContent = `Question ${currentQuestion.questionNumber}: Option ${option}`;
+
           if (option === currentQuestion.answer) {
             selectedOption.classList.add('correct');
             if (currentQuestion.attempts === undefined) {
               score += 4;
+              listItem.textContent += ` (Correct, Earned 4 points)`;
             } else if (currentQuestion.attempts === 1) {
               score += 2;
+              listItem.textContent += ` (Correct, Earned 2 points)`;
             } else if (currentQuestion.attempts === 2) {
               score += 1;
+              listItem.textContent += ` (Correct, Earned 1 point)`;
             }
             document.getElementById('score').innerText = `Score: ${score}`;
+            currentQuestion.answeredCorrectly = true; // Mark the question as answered correctly
           } else {
             selectedOption.classList.add('incorrect');
             if (currentQuestion.attempts === undefined) {
@@ -107,8 +129,9 @@
               disableOptions();
             }
           }
-        }
 
+          selectedOptionsList.appendChild(listItem);
+        }
         function disableOptions() {
           document.querySelectorAll('.option').forEach(option => {
             option.disabled = true;
