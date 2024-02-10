@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tRAT Quiz</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
+    }
+    h1 {
+        margin-bottom: 20px;
+    }
+    .option {
+        width: 50px;
+        height: 50px;
+        background-color: #FFF157;
+        display: inline-block;
+        margin: 10px;
+        font-size: 24px;
+        line-height: 50px;
+        cursor: pointer;
+        border: none;
+    }
+    .correct {
+        background-color: lightgreen !important;
+    }
+    .incorrect {
+        background-color: darkgrey !important;
+    }
+    #score-container {
+        margin-bottom: 20px;
+    }
+    #buttons-container {
+        margin-bottom: 20px;
+    }
+    #selected-options {
+        list-style-type: none;
+    }
+</style>
+</head>
+<body>
+    <h1>tRAT Quiz</h1>
+    <div id="question-container">
+        <div id="question"></div>
+        <div id="options-container"></div>
+    </div>
+    <div id="score-container">
+        <p id="score">Score: 0</p>
+    </div>
+    <div id="buttons-container">
+        <button id="previous-button" onclick="previousQuestion()">Previous</button>
+        <button id="next-button" onclick="nextQuestion()">Next</button>
+    </div>
+    <div id="selected-options-container">
+      <p>Selected Options:</p>
+      <ul id="selected-options"></ul>
+    </div>
+
+    <script>
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let questions = [];
+        let selectedOptions = {};
+
+        // Load questions from CSV file
+        fetch('questions.csv')
+          .then(response => response.text())
+          .then(data => {
+            let rows = data.split('\n');
+            rows.forEach(row => {
+              let [questionNumber, answer] = row.split(',');
+              questions.push({ questionNumber: questionNumber.trim(), answer: answer.trim() });
+            });
+            displayQuestion();
+          });
+
+        function displayQuestion() {
+          let currentQuestion = questions[currentQuestionIndex];
+          document.getElementById('question').innerText = `Question ${currentQuestion.questionNumber}`;
+          document.getElementById('options-container').innerHTML = `
+            <button class="option" onclick="chooseOption('A')" data-value="A">A</button>
+            <button class="option" onclick="chooseOption('B')" data-value="B">B</button>
+            <button class="option" onclick="chooseOption('C')" data-value="C">C</button>
+            <button class="option" onclick="chooseOption('D')" data-value="D">D</button>
+          `;
+
+          // Restore background color of selected option if any
+          let selectedOptionInfo = selectedOptions[currentQuestion.questionNumber];
+          if (selectedOptionInfo) {
+            let selectedOption = document.querySelector(`.option[data-value="${selectedOptionInfo.option}"]`);
+            selectedOption.style.backgroundColor = selectedOptionInfo.backgroundColor;
+          }
+        }
+
+        function chooseOption(option) {
+          let currentQuestion = questions[currentQuestionIndex];
+          let selectedOption = document.querySelector(`.option[data-value="${option}"]`);
+          let selectedOptionInfo = selectedOptions[currentQuestion.questionNumber];
+
+          if (selectedOptionInfo) {
+            let prevSelectedOption = document.querySelector(`.option[data-value="${selectedOptionInfo.option}"]`);
+            prevSelectedOption.style.backgroundColor = selectedOptionInfo.backgroundColor;
+          }
+
+          if (selectedOption.classList.contains('selected')) {
+            selectedOption.classList.remove('selected');
+          } else {
+            selectedOption.classList.add('selected');
+            selectedOptions[currentQuestion.questionNumber] = {
+              option: option,
+              backgroundColor: selectedOption.style.backgroundColor
+            };
+          }
+        }
+
+        function nextQuestion() {
+          currentQuestionIndex++;
+          if (currentQuestionIndex >= questions.length) {
+            currentQuestionIndex = questions.length - 1;
+          }
+          resetOptions();
+          displayQuestion();
+        }
+
+        function previousQuestion() {
+          currentQuestionIndex--;
+          if (currentQuestionIndex < 0) {
+            currentQuestionIndex = 0;
+          }
+          resetOptions();
+          displayQuestion();
+        }
+
+        function resetOptions() {
+          let selectedOptionInfo = selectedOptions[currentQuestion.questionNumber];
+          if (selectedOptionInfo) {
+            let selectedOption = document.querySelector(`.option[data-value="${selectedOptionInfo.option}"]`);
+            selectedOption.style.backgroundColor = '';
+          }
+        }
+    </script>
+</body>
+</html>
