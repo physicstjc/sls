@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>成语游戏</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  #game-container {
+    position: relative;
+    width: 600px;
+    height: 300px;
+    border: 2px solid #000;
+    overflow: hidden;
+  }
+  #instructions {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    text-align: left;
+  }
+  .bubble {
+    background-color: #3498db;
+    border-radius: 70%;
+    color: #fff;
+    display: inline-block;
+    padding: 15px 20px;
+    position: absolute;
+    cursor: pointer;
+    animation: moveBubble 5s linear infinite;
+  }
+  #score {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+  }
+  @keyframes moveBubble {
+    0% {
+      transform: translate(0, 0);
+    }
+    50% {
+      transform: translate(600px, 300px);
+    }
+    100% {
+      transform: translate(0, 0);
+    }
+  }
+</style>
+</head>
+<body>
+<div id="instructions">
+  <h1>成语游戏</h1>
+  <p>点击正确的泡泡以完成成语</p>
+</div>
+<div id="score">Score: 0</div>
+<div id="game-container"></div>
+
+<script>
+const idioms = [
+  { idiom: "十全十___", missingWord: "美", options: ["美", "完", "全", "分"] },
+  { idiom: "一鸣___人", missingWord: "惊", options: ["飞", "天", "耳", "惊"] },
+  { idiom: "画龙___睛", missingWord: "点", options: ["点", "尾", "头", "身"] },
+  { idiom: "一日三___", missingWord: "秋", options: ["夏", "春", "秋", "冬"] },
+  { idiom: "名落孙___", missingWord: "山", options: ["山", "水", "河", "湖"] },
+  { idiom: "守株待___", missingWord: "兔", options: ["狗", "鸟", "兔", "猫"] },
+  { idiom: "愚公移___", missingWord: "山", options: ["土", "地", "山", "水"] },
+  { idiom: "青出于___", missingWord: "蓝", options: ["红", "白", "黄", "蓝"] },
+  { idiom: "出口成___", missingWord: "章", options: ["文", "诗", "歌", "章"] },
+  { idiom: "画蛇添___", missingWord: "足", options: ["头", "尾", "腿", "足"] },
+  { idiom: "班门弄___", missingWord: "斧", options: ["刀", "斧", "剑", "枪"] },
+  { idiom: "飞黄腾___", missingWord: "达", options: ["旺", "升", "达", "发"] },
+  { idiom: "抛砖引___", missingWord: "玉", options: ["瓦", "玉", "石", "水"] },
+];
+
+let score = 0;
+const scoreElement = document.getElementById("score");
+scoreElement.textContent = `Score: ${score}`;
+
+function startGame() {
+  const idiomData = idioms.shift();
+
+  const gameContainer = document.getElementById("game-container");
+  gameContainer.innerHTML = `<p>${idiomData.idiom.replace(idiomData.missingWord, '___')}</p>`;
+
+  idiomData.options.forEach((option) => {
+    const bubble = document.createElement("div");
+    bubble.classList.add("bubble");
+    bubble.textContent = option;
+    bubble.style.top = `${Math.random() * 250}px`;
+    bubble.style.left = `${Math.random() * 500}px`;
+    bubble.addEventListener("click", () => {
+      if (option === idiomData.missingWord) {
+        score += 1; // Add 1 point for correct guess
+        scoreElement.textContent = `Score: ${score}`;
+      }
+      startGame(); // Start the next stage of the game
+    });
+    gameContainer.appendChild(bubble);
+    const bubbleAnimation = bubble.animate([
+      { transform: `translate(0, 0)` },
+      { transform: `translate(${getRandomTranslate()}, ${getRandomTranslate()})` },
+      { transform: `translate(0, 0)` }
+    ], {
+      duration: 5000,
+      iterations: Infinity
+    });
+  });
+}
+
+function getRandomTranslate() {
+  const randomSign = Math.random() < 0.5 ? -1 : 1;
+  return `${Math.random() * 200 * randomSign}px`;
+}
+
+startGame();
+</script>
+</body>
+</html>
