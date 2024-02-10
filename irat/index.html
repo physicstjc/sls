@@ -22,7 +22,7 @@
     .option.selected {
         background-color: lightblue;
     }
-    #screenshotBtn {
+    #exportBtn {
         margin-top: 20px;
         padding: 10px 20px;
         background-color: #007bff;
@@ -33,43 +33,107 @@
 </style>
 </head>
 <body>
-    <h1>Multiple Choice Questions</h1>
-    <div id="questionsContainer">
-        <div class="question">
-            <!-- Question 1 -->
-            <button class="option" onclick="toggleOption(this)">A</button>
-            <button class="option" onclick="toggleOption(this)">B</button>
-            <button class="option" onclick="toggleOption(this)">C</button>
-            <button class="option" onclick="toggleOption(this)">D</button>
-        </div>
+    <h1>iRAT Quiz</h1>
+    <ol id="questions">
+        <!-- Question 1 -->
+        <li class="question">
+            <button class="option" onclick="toggleOption(this, 1)">A</button>
+            <button class="option" onclick="toggleOption(this, 1)">B</button>
+            <button class="option" onclick="toggleOption(this, 1)">C</button>
+            <button class="option" onclick="toggleOption(this, 1)">D</button>
+        </li>
         <!-- Repeat the above structure for each question (total 10 questions) -->
-    </div>
-    <button id="screenshotBtn" onclick="takeScreenshot()">Take Screenshot</button>
+                <li class="question">
+            <button class="option" onclick="toggleOption(this, 2)">A</button>
+            <button class="option" onclick="toggleOption(this, 2)">B</button>
+            <button class="option" onclick="toggleOption(this, 2)">C</button>
+            <button class="option" onclick="toggleOption(this, 2)">D</button>
+        </li>
+                <li class="question">
+            <button class="option" onclick="toggleOption(this, 3)">A</button>
+            <button class="option" onclick="toggleOption(this, 3)">B</button>
+            <button class="option" onclick="toggleOption(this, 3)">C</button>
+            <button class="option" onclick="toggleOption(this, 3)">D</button>
+        </li>
+                <li class="question">
+            <button class="option" onclick="toggleOption(this, 4)">A</button>
+            <button class="option" onclick="toggleOption(this, 4)">B</button>
+            <button class="option" onclick="toggleOption(this, 4)">C</button>
+            <button class="option" onclick="toggleOption(this, 4)">D</button>
+        </li>
+                <li class="question">
+            <button class="option" onclick="toggleOption(this, 5)">A</button>
+            <button class="option" onclick="toggleOption(this, 5)">B</button>
+            <button class="option" onclick="toggleOption(this, 5)">C</button>
+            <button class="option" onclick="toggleOption(this, 5)">D</button>
+        </li>
+                <li class="question">
+            <button class="option" onclick="toggleOption(this, 6)">A</button>
+            <button class="option" onclick="toggleOption(this, 6)">B</button>
+            <button class="option" onclick="toggleOption(this, 6)">C</button>
+            <button class="option" onclick="toggleOption(this, 6)">D</button>
+        </li>
+                <li class="question">
+            <button class="option" onclick="toggleOption(this, 7)">A</button>
+            <button class="option" onclick="toggleOption(this, 7)">B</button>
+            <button class="option" onclick="toggleOption(this, 7)">C</button>
+            <button class="option" onclick="toggleOption(this, 7)">D</button>
+        </li>
+                <li class="question">
+            <button class="option" onclick="toggleOption(this, 8)">A</button>
+            <button class="option" onclick="toggleOption(this, 8)">B</button>
+            <button class="option" onclick="toggleOption(this, 8)">C</button>
+            <button class="option" onclick="toggleOption(this, 8)">D</button>
+        </li>
+                <li class="question">
+            <button class="option" onclick="toggleOption(this, 9)">A</button>
+            <button class="option" onclick="toggleOption(this, 9)">B</button>
+            <button class="option" onclick="toggleOption(this, 9)">C</button>
+            <button class="option" onclick="toggleOption(this, 91)">D</button>
+        </li>
+                <li class="question">
+            <button class="option" onclick="toggleOption(this, 10)">A</button>
+            <button class="option" onclick="toggleOption(this, 10)">B</button>
+            <button class="option" onclick="toggleOption(this, 10)">C</button>
+            <button class="option" onclick="toggleOption(this, 10)">D</button>
+        </li>
+    </ol>
+    <button id="exportBtn" onclick="exportToCSV()">Export to CSV</button>
 
 <script>
-    function toggleOption(option) {
+    // Array to store chosen options for each question
+    var chosenOptions = [];
+
+    // Initialize chosenOptions array with empty strings
+    for (var i = 0; i < 10; i++) {
+        chosenOptions.push("");
+    }
+
+    function toggleOption(option, questionIndex) {
         // Toggle 'selected' class on the clicked option
         option.classList.toggle('selected');
+
+        // Update chosenOptions array with the chosen option
+        var optionIndex = Array.from(option.parentNode.children).indexOf(option);
+        chosenOptions[questionIndex - 1] = String.fromCharCode(65 + optionIndex);
     }
 
-    function takeScreenshot() {
-        html2canvas(document.getElementById('questionsContainer')).then(function(canvas) {
-            // Convert canvas to blob
-            canvas.toBlob(function(blob) {
-                // Create a temporary link element
-                var link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = 'screenshot.png';
+    function exportToCSV() {
+        // Create CSV content
+        var csvContent = "Question,Chosen Option\n";
+        for (var i = 0; i < 10; i++) {
+            csvContent += "Question " + (i + 1) + "," + chosenOptions[i] + "\n";
+        }
 
-                // Trigger a click event on the link to prompt download
-                link.click();
+        // Create Blob object and create a temporary link element
+        var blob = new Blob([csvContent], { type: 'text/csv' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'responses.csv';
 
-                // Release the object URL
-                URL.revokeObjectURL(link.href);
-            });
-        });
+        // Trigger a click event on the link to prompt download
+        link.click();
     }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
 </body>
 </html>
