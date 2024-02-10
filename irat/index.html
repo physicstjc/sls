@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multiple Choice Questions</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+    .question {
+        margin-bottom: 20px;
+    }
+    .option {
+        display: inline-block;
+        padding: 10px;
+        margin: 5px;
+        background-color: lightgrey;
+        border: none;
+        cursor: pointer;
+    }
+    .option.selected {
+        background-color: lightblue;
+    }
+    #screenshotBtn {
+        margin-top: 20px;
+        padding: 10px 20px;
+        background-color: #007bff;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+    <h1>Multiple Choice Questions</h1>
+    <div id="questionsContainer">
+        <div class="question">
+            <!-- Question 1 -->
+            <button class="option" onclick="toggleOption(this)">A</button>
+            <button class="option" onclick="toggleOption(this)">B</button>
+            <button class="option" onclick="toggleOption(this)">C</button>
+            <button class="option" onclick="toggleOption(this)">D</button>
+        </div>
+        <!-- Repeat the above structure for each question (total 10 questions) -->
+    </div>
+    <button id="screenshotBtn" onclick="takeScreenshot()">Take Screenshot</button>
+
+<script>
+    function toggleOption(option) {
+        // Toggle 'selected' class on the clicked option
+        option.classList.toggle('selected');
+    }
+
+    function takeScreenshot() {
+        html2canvas(document.getElementById('questionsContainer')).then(function(canvas) {
+            // Convert canvas to blob
+            canvas.toBlob(function(blob) {
+                // Create a temporary link element
+                var link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'screenshot.png';
+
+                // Trigger a click event on the link to prompt download
+                link.click();
+
+                // Release the object URL
+                URL.revokeObjectURL(link.href);
+            });
+        });
+    }
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+</body>
+</html>
