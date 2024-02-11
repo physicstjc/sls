@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Graph Plotter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        
+        h1 {
+            margin-top: 20px;
+        }
+        
+        #graphContainer {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Graph Plotter</h1>
+    <input type="file" id="csvFileInput" accept=".csv">
+    <div id="graphContainer">
+        <canvas id="graphCanvas"></canvas>
+    </div>
+    <button id="screenshotButton">Take Screenshot</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script>
+        document.getElementById('csvFileInput').addEventListener('change', function() {
+            const file = this.files[0];
+            Papa.parse(file, {
+                complete: function(results) {
+                    const data = results.data;
+                    processData(data);
+                }
+            });
+        });
+
+        function processData(data) {
+            const xAxisLabel = data[0][0].trim();
+            const yAxisLabel = data[0][1].trim();
+            const values = data.slice(1).map(row => [parseFloat(row[0]), parseFloat(row[1])]);
+
+            // Plot graph
+            const ctx = document.getElementById('graphCanvas').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Data Points',
+                        data: values,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: xAxisLabel
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: yAxisLabel
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Perform linear regression
+            const x = values.map(point => point[0]);
+            const y = values.map(point => point[1]);
+            const regression = linearRegression(x, y);
+            const m = regression.slope;
+            const b = regression.intercept;
+
+            // Calculate line points
+            const minX = Math.min(...x);
+            const maxX = Math.max(...x);
+            const minY = minX * m + b;
+            const maxY = maxX * m + b;
+
+            // Add best-fit straight line to the graph
+            chart.data.datasets.push({
+                label: `Best Fit Line: y = ${m.toFixed(2)}x + ${b.toFixed(2)}`,
+                data: [{ x: minX, y: minY }, { x: maxX, y: maxY }],
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 2,
+                fill: false,
+                type: 'line' // Use line chart for the best-fit line
+            });
+
+            chart.update();
+        }
+
+        function linearRegression(x, y) {
+            const n = x.length;
+            let sumX = 0;
+            let sumY = 0;
+            let sumXY = 0;
+            let sumX2 = 0;
+
+            for (let i = 0; i < n; i++) {
+                sumX += x[i];
+                sumY += y[i];
+                sumXY += x[i] * y[i];
+                sumX2 += x[i] ** 2;
+            }
+
+            const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX ** 2);
+            const intercept = (sumY - slope * sumX) / n;
+
+            return { slope, intercept };
+        }
+
+        document.getElementById('screenshotButton').addEventListener('click', function() {
+            const canvas = document.getElementById('graphCanvas');
+            const dataURL = canvas.toDataURL(); // Get the base64-encoded PNG image
+
+            // Create a temporary link element to download the image
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = 'graph.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
+</body>
+</html>
