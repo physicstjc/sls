@@ -427,7 +427,10 @@
                     <div class="card-body">
                         <h3 class="card-title">Graph Plotter</h3>
                         <p class="card-text">User can upload a csv file consisting of data from an experiment, with the column header being the labels of the axes. The first column of the data will be the horizontal axis while the second column will be the vertical axis. A best-fit straight line will be plotted, along with the equation of the line being shown.</p>
-                        <p class="card-text">A sample data set can be downloaded <a href="./graph-plotter/data.csv">here</a> for testing.</p>
+                        <p class="card-text">This is especially useful for when students are doing lab work and the teacher does not want the students to bother too much with configure the graph. If done on SLS, the screenshot can be uploaded as the submission for a free-response question.</p>
+                        <p class="card-text">A sample data set can be downloaded <a href="./graph-plotter/data.csv">here</a> for testing.
+                        <p class="card-text">
+                        Note: External scripts cannot be referenced when uploaded into SLS's so the javascript from https://cdn.jsdelivr.net/npm/chart.js and https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js had to be saved as separate files in the folder and the path was changed to directly refer to them.</p>
                         <a href="graph-plotter/index.html" class="btn btn-primary" target="_blank">Test it out</a>
                         <a href="graph-plotter/graph-plotter.zip" class="btn btn-secondary">Download for SLS</a>
                         <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse13" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
