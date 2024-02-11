@@ -94,15 +94,15 @@
             const maxY = maxX * m + b;
 
             // Add best-fit straight line to the graph
+            // Add best-fit straight line to the graph
             chart.data.datasets.push({
-                label: `Best Fit Line: y = ${m.toFixed(2)}x + ${b.toFixed(2)}`,
+                label: `Best Fit Line: y = ${m.toFixed(3)}x + ${b.toFixed(3)}`,
                 data: [{ x: minX, y: minY }, { x: maxX, y: maxY }],
                 borderColor: 'rgba(255, 99, 132, 1)',
                 borderWidth: 2,
                 fill: false,
                 type: 'line' // Use line chart for the best-fit line
             });
-
             chart.update();
         }
 
