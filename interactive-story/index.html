@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Story</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+    }
+    h1 {
+        text-align: center;
+    }
+    p {
+        margin-bottom: 10px;
+    }
+    .choices {
+        text-align: center;
+    }
+    button {
+        margin: 5px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+
+<h1>Interactive Story</h1>
+
+<section id="start">
+    <p align="center"><img id="storyboard" src="boy-facing-crossroads.png"></p>
+    <p align="center">You wandered off on your own one day as your family was out on a hike on an island. After a while, you lost your way. There are two paths in front of you. Choose your path:</p>
+    <div class="choices">
+        <button onclick="goToPath('path1')">Path 1</button>
+        <button onclick="goToPath('path2')">Path 2</button>
+    </div>
+</section>
+
+<section id="path1" style="display: none;">
+    <p align="center">You chose path 1.</p>
+    <p align="center"><img id="storyboard" src="cave-entrance.png"></p>    
+    <p align="center">Following path 1, you stumble upon a hidden cave. Do you:</p>
+    <div class="choices">
+        <button onclick="goToPath('path1a')">Enter the cave</button>
+        <button onclick="goToPath('end')">Ignore the cave</button>
+    </div>
+</section>
+
+<section id="path1a" style="display: none;">
+    <p align="center"><img id="storyboard" src="boy-found-treasure.png"></p>    
+    <p align="center">Entering the cave, you discover a treasure chest filled with gold coins. Congratulations, you've found some hidden treasure! You can't wait to go back to your parents to let them know.</p>
+    <div class="choices">
+        <button onclick="goToPath('end')">Next</button>
+    </div>
+</section>
+
+<section id="path1b" style="display: none;">
+    <p align="center"><img id="storyboard" src="boy-sees-wolves.png"></p>    
+    <p>You chose the right path.</p>
+    <p align="center">Following the right path, you encounter a pack of wolves blocking your way. Do you:</p>
+    <div class="choices">
+        <button onclick="goToPath('end')">Fight the wolves</button>
+        <button onclick="goToPath('path1b1')">Find an alternate route</button>
+    </div>
+</section>
+
+<section id="path1b1" style="display: none;">
+    <p align="center"><img id="storyboard" src="boy-bypasses-wolves.png"></p>   
+    <p align="center">You found an alternate route and safely bypassed the pack of wolves.</p>
+    <div class="choices">
+        <button onclick="goToPath('end')">Next</button>
+    </div>
+</section>
+
+<section id="path2" style="display: none;">
+    <p align="center">You chose Path 2.</p>
+    <p align="center"><img id="storyboard" src="boy-on-beach.png"></p>       
+    <p align="center">As you walked out of the forest, you came across a beach. There is an unmanned boat in the water. Do you:</p>
+    <div class="choices">
+        <button onclick="goToPath('path2a')">Try to get on the boat and sail around the island.</button>
+        <button onclick="goToPath('path2b')">Turn back and try to find your way back.</button>
+    </div>
+</section>
+    
+<section id="path2a" style="display: none;">
+    <p align="center"><img id="storyboard" src="storm-approaches-boat.png"></p>       
+    <p align="center">As you sail off from the beach, a storm suddenly approaches. Do you:</p>
+    <div class="choices">
+        <button onclick="goToPath('path2a1')">Brace for the storm</button>
+        <button onclick="goToPath('path2b')">Return to shore</button>
+    </div>
+</section>
+
+<section id="path2a1" style="display: none;">
+    <p align="center"><img id="storyboard" src="boat-in-calm-water.png"></p>     
+    <p align="center">You chose to brace for the storm.</p>
+    <p align="center">The storm passes, and you emerge unscathed.</p>
+    <div class="choices">
+        <button onclick="goToPath('end')">Next</button>
+    </div>
+</section>
+
+<section id="path2b" style="display: none;">
+    <p align="center"><img id="storyboard" src="boy-running-on-beach.png"></p>    
+    <p align="center">You chose to return to shore.</p>
+    <p align="center">Since sailing around the island is too dangerous, you decided to run around the island on the beach.</p>
+    <div class="choices">
+        <button onclick="goToPath('end')">Next</button>
+    </div>
+</section>
+
+<section id="end" style="display: none;">
+    <p align="center"><img id="storyboard" src="boy-on-road.png"></p>    
+    <p align="center">You found your way back on the main road, found your parents and told them everything! The end of the story.</p>
+    <div class="choices">
+        <button onclick="goToPath('start')">Start Over</button>
+    </div>
+</section>
+
+
+<p align="center"><button onclick="speakStory()">Read Story</button></p>
+
+<script>
+function goToPath(pathId) {
+    // Hide all sections
+    document.querySelectorAll('section').forEach(section => {
+        section.style.display = 'none';
+    });
+    // Show the selected section
+    document.getElementById(pathId).style.display = 'block';
+}
+
+function speakStory() {
+    let storyText = '';
+    document.querySelectorAll('section').forEach(section => {
+        if (section.style.display !== 'none') {
+            storyText += section.innerText;
+        }
+    });
+    // Use text-to-speech API or alert as a fallback
+    if ('speechSynthesis' in window) {
+        let speech = new SpeechSynthesisUtterance(storyText);
+        window.speechSynthesis.speak(speech);
+    } else {
+        alert(storyText);
+    }
+}
+</script>
+
+</body>
+</html>
