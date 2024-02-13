@@ -29,7 +29,6 @@
         <button id="downloadBtn">Download CSV</button>
         <button id="resetBtn">Reset Data</button>
     </div>
-    <video id="cameraView" autoplay></video>
     <ul id="brightnessRecords"></ul>
     
     <script>
@@ -44,7 +43,6 @@
         const brightnessRecordsList = document.getElementById('brightnessRecords');
         const downloadBtn = document.getElementById('downloadBtn');
         const resetBtn = document.getElementById('resetBtn');
-        const cameraView = document.getElementById('cameraView');
 
         startBtn.addEventListener('click', startSampling);
         stopBtn.addEventListener('click', stopSampling);
