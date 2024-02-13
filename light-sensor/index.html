@@ -8,9 +8,8 @@
         #brightnessValue {
             font-size: 24px;
         }
-        #cameraView {
-            width: 100%;
-            height: auto;
+        p,h1,#brightnessValue {
+            font-family: sans-serif
         }
     </style>
 </head>
@@ -19,9 +18,8 @@
     <div>
         <button id="startBtn">Start Sampling</button>
         <button id="stopBtn" disabled>Stop Sampling</button>
-        <p>
-        <label for="samplingRate">Sampling Rate (seconds):</label>
-        <input type="range" id="samplingRate" min="0.5" max="600" step="0.5" value="0.5">
+        <p>Sampling Rate (seconds):
+        <input type="range" id="samplingRate" min="0.5" max="60" step="0.5" value="0.5">
         <span id="samplingRateValue">0.5</span> seconds</p>
     </div>
     <div id="brightnessValue">Relative Brightness: <span id="brightness">0</span></div>
@@ -30,7 +28,7 @@
         <button id="resetBtn">Reset Data</button>
     </div>
     <ul id="brightnessRecords"></ul>
-    
+
     <script>
         let brightnessRecords = [];
         let intervalId = null;
@@ -73,7 +71,9 @@
         function updateBrightness() {
             navigator.mediaDevices.getUserMedia({ video: true })
             .then(function(stream) {
-                cameraView.srcObject = stream;
+                const video = document.createElement('video');
+                video.srcObject = stream;
+                video.play();
 
                 const track = stream.getVideoTracks()[0];
                 const imageCapture = new ImageCapture(track);
