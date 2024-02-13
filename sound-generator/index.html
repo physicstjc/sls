@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sound Generator</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+    #frequencyLabel {
+        font-size: 18px;
+        margin-top: 20px;
+    }
+    #frequencySlider {
+        width: 300px;
+        margin-top: 10px;
+    }
+    #frequencyInput {
+        width: 60px;
+        margin-left: 10px;
+    }
+    .button {
+        margin-top: 20px;
+        font-size: 16px;
+        padding: 10px 20px;
+        cursor: pointer;
+    }
+    #frequencyInput{
+        height:40px;
+        width:120px;
+        font-size:24px;
+    }
+</style>
+</head>
+<body>
+<h2>Sound Generator</h2>
+<p>Use the slider or input box to control the frequency of the generated sound.</p>
+Frequency: <input type="number" id="frequencyInput" min="1" max="40000" value="440"> Hz
+<br>
+<input type="range" id="frequencySlider" min="1" max="40000" value="440">
+<br>
+<button id="playButton" class="button">Play</button>
+<button id="stopButton" class="button">Stop</button>
+
+<script>
+    const frequencySlider = document.getElementById('frequencySlider');
+    const frequencyInput = document.getElementById('frequencyInput');
+    const playButton = document.getElementById('playButton');
+    const stopButton = document.getElementById('stopButton');
+
+    let oscillator;
+    let isPlaying = false;
+
+    function startSound() {
+        const frequency = parseInt(frequencyInput.value);
+        oscillator = audioContext.createOscillator();
+        oscillator.type = 'sine'; // You can change the waveform type here (sine, square, sawtooth, triangle)
+        oscillator.frequency.value = frequency;
+        oscillator.connect(audioContext.destination);
+        oscillator.start();
+        isPlaying = true;
+    }
+
+    function stopSound() {
+        if (oscillator) {
+            oscillator.stop();
+            isPlaying = false;
+        }
+    }
+
+
+    frequencySlider.addEventListener('input', function() {
+        const frequency = parseInt(this.value);
+        frequencyInput.value = frequency;
+        if (isPlaying) {
+            stopSound();
+            startSound();
+        }
+    });
+
+    frequencyInput.addEventListener('input', function() {
+        const frequency = parseInt(this.value);
+        if (frequency >= parseInt(frequencySlider.min) && frequency <= parseInt(frequencySlider.max)) {
+            frequencySlider.value = frequency;
+            if (isPlaying) {
+                stopSound();
+                startSound();
+            }
+        }
+    });
+
+    playButton.addEventListener('click', function() {
+        if (!isPlaying) {
+            startSound();
+            playButton.disabled = true;
+            stopButton.disabled = false;
+        }
+    });
+
+    stopButton.addEventListener('click', function() {
+        if (isPlaying) {
+            stopSound();
+            playButton.disabled = false;
+            stopButton.disabled = true;
+        }
+    });
+
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+</script>
+</body>
+</html>

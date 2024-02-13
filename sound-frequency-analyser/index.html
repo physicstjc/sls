@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sound Frequency Analyzer</title>
+<style>
+    body {
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        height: 100vh;
+        margin: 0;
+    }
+    #container {
+        text-align: center;
+    }
+    canvas {
+        border: 1px solid black;
+    }
+    #sensitivity {
+        width: 200px;
+        display: block;
+        margin: 10px auto;
+    }
+    #dominantFrequency,h2 {
+        font-size: 18px;
+        font-family: sans-serif
+    }
+</style>
+</head>
+<body>
+    
+<h2>Sound Frequency Analyser</h2>
+<div id="container">
+    <canvas id="frequencyCanvas" width="400" height="200"></canvas>
+    <input type="range" id="sensitivity" min="1" max="100" step="1" value="50">
+    <div id="dominantFrequency"></div>
+</div>
+
+<script>
+navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(function(stream) {
+        const audioContext = new AudioContext();
+        const microphone = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048;
+        microphone.connect(analyser);
+
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        const canvas = document.getElementById('frequencyCanvas');
+        const canvasCtx = canvas.getContext('2d');
+
+        const sensitivityInput = document.getElementById('sensitivity');
+        sensitivityInput.addEventListener('input', updateSensitivity);
+
+        const dominantFrequencyElement = document.getElementById('dominantFrequency');
+
+        function updateSensitivity() {
+            const sensitivity = sensitivityInput.value / 100;
+            analyser.maxDecibels = -20 + 40 * sensitivity;
+        }
+
+        function draw() {
+            const WIDTH = canvas.width;
+            const HEIGHT = canvas.height;
+
+            analyser.getByteFrequencyData(dataArray);
+
+            canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+            canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+
+            const barWidth = (WIDTH / bufferLength) * 2.5;
+            let x = 0;
+
+            let maxAmplitude = 0;
+            let dominantFrequency = 0;
+
+            for (let i = 0; i < bufferLength; i++) {
+                const barHeight = dataArray[i];
+                if (barHeight > maxAmplitude) {
+                    maxAmplitude = barHeight;
+                    dominantFrequency = i;
+                }
+
+                canvasCtx.fillStyle = 'rgb(' + (barHeight + 100) + ',50,50)';
+                canvasCtx.fillRect(x, HEIGHT - barHeight / 2, barWidth, barHeight / 2);
+
+                x += barWidth + 1;
+            }
+
+            const frequency = dominantFrequency * audioContext.sampleRate / analyser.fftSize;
+            dominantFrequencyElement.textContent = `Dominant Frequency: ${frequency.toFixed(2)} Hz`;
+
+            requestAnimationFrame(draw);
+        }
+
+        updateSensitivity();
+        draw();
+    })
+    .catch(function(error) {
+        console.error('Error accessing microphone:', error);
+    });
+</script>
+</body>
+</html>
