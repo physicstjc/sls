@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sound Level Meter</title>
+<style>
+    body {
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family: sans-serif
+    }
+    #container {
+        text-align: center;
+    }
+    #meter {
+        width: 500px;
+        height: 300px;
+        border: 1px solid black;
+        position: relative;
+        display: inline-block;
+    }
+    #needle {
+        width: 2px;
+        height: 200px;
+        background-color: red;
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform-origin: bottom center;
+        transform: translateX(-50%) rotate(0deg);
+    }
+    #sensitivity {
+        width: 200px;
+        display: inline;
+        margin: 10px auto;
+    }
+</style>
+</head>
+<body>
+<div id="container">
+    <h3>Sound Level Meter</h3>
+    <div id="meter">
+        <div id="needle"></div>
+    </div>
+    <br>Range: <input type="range" id="sensitivity" min="1" max="100" step="1" value="50">
+</div>
+
+<script>
+navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(function(stream) {
+        const audioContext = new AudioContext();
+        const microphone = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        microphone.connect(analyser);
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        const sensitivityInput = document.getElementById('sensitivity');
+        sensitivityInput.addEventListener('input', updateSensitivity);
+
+        function updateSensitivity() {
+            const sensitivity = sensitivityInput.value / 100;
+            analyser.maxDecibels = -20 + 40 * sensitivity;
+        }
+
+        function updateMeter() {
+            analyser.getByteFrequencyData(dataArray);
+            const maxVolume = Math.max(...dataArray);
+            const percentage = maxVolume / 255 * 100;
+            const angle = percentage * 180 / 100 - 90;
+            document.getElementById('needle').style.transform = `translateX(-50%) rotate(${angle}deg)`;
+            requestAnimationFrame(updateMeter);
+        }
+
+        updateSensitivity();
+        updateMeter();
+    })
+    .catch(function(error) {
+        console.error('Error accessing microphone:', error);
+    });
+</script>
+</body>
+</html>
