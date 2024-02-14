@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audio Recorder with Waveform</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+    #container {
+        text-align: center;
+        margin-top: 50px;
+    }
+    canvas {
+        border: 1px solid black;
+    }
+    .slider-container {
+        margin-top: 20px;
+    }
+    .slider-label {
+        display: inline-block;
+        width: 150px;
+        text-align: right;
+        margin-right: 10px;
+    }
+    .slider {
+        width: 300px;
+        margin-bottom: 10px;
+    }
+    #buttons {
+        margin-top: 20px;
+    }
+    .button {
+        margin: 0 5px;
+    }
+</style>
+</head>
+<body>
+<div id="container">
+    <canvas id="waveformCanvas" width="800" height="200"></canvas>
+    <div class="slider-container">
+        <label for="timeRangeSlider" class="slider-label">Time Range:</label>
+        <input type="range" id="timeRangeSlider" class="slider" min="0.2" max="100" step="0.1" value="10">
+    </div>
+    <div class="slider-container">
+        <label for="spreadSlider" class="slider-label">Spread:</label>
+        <input type="range" id="spreadSlider" class="slider" min="0.1" max="200" step="0.1" value="100">
+    </div>
+    <div id="buttons">
+        <button id="startButton" class="button">Start Recording</button>
+        <button id="stopButton" class="button" disabled>Stop Recording</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('waveformCanvas');
+    const canvasCtx = canvas.getContext('2d');
+    const timeRangeSlider = document.getElementById('timeRangeSlider');
+    const spreadSlider = document.getElementById('spreadSlider');
+    const startButton = document.getElementById('startButton');
+    const stopButton = document.getElementById('stopButton');
+
+    let audioContext;
+    let mediaRecorder;
+    let chunks = [];
+    let recording = false;
+
+    startButton.addEventListener('click', startRecording);
+    stopButton.addEventListener('click', stopRecording);
+
+    async function startRecording() {
+        chunks = [];
+        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioContext = new AudioContext();
+            const source = audioContext.createMediaStreamSource(stream);
+
+            const analyser = audioContext.createAnalyser();
+            analyser.fftSize = 2048;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            source.connect(analyser);
+
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = function(event) {
+                chunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = function() {
+                const blob = new Blob(chunks, { type: 'audio/wav' });
+                const audioURL = URL.createObjectURL(blob);
+
+                const audio = new Audio(audioURL);
+                audio.controls = true;
+                document.body.appendChild(audio);
+
+                recording = false;
+                startButton.disabled = false;
+                stopButton.disabled = true;
+            };
+
+            mediaRecorder.start();
+
+            recording = true;
+            startButton.disabled = true;
+            stopButton.disabled = false;
+
+            function draw() {
+                if (!recording) return;
+
+                requestAnimationFrame(draw);
+
+                analyser.getByteTimeDomainData(dataArray);
+
+                canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                canvasCtx.lineWidth = 2;
+                canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+
+                const bufferDuration = chunks.length * bufferLength / audioContext.sampleRate;
+                const timeInterval = bufferDuration / canvas.width;
+
+                canvasCtx.beginPath();
+
+                const sliceWidth = canvas.width * 1.0 / bufferLength;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = v * canvas.height / 2;
+
+                    if (i === 0) {
+                        canvasCtx.moveTo(x, y);
+                    } else {
+                        canvasCtx.lineTo(x, y);
+                    }
+
+                    x += sliceWidth;
+                }
+
+                canvasCtx.lineTo(canvas.width, canvas.height / 2);
+                canvasCtx.stroke();
+
+                // Draw grid lines and labels
+                canvasCtx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+                canvasCtx.lineWidth = 1;
+
+                for (let i = 0; i <= canvas.width; i += 50) {
+                    canvasCtx.beginPath();
+                    canvasCtx.moveTo(i, 0);
+                    canvasCtx.lineTo(i, canvas.height);
+                    canvasCtx.stroke();
+
+                    const timeValue = (i / canvas.width) * bufferDuration;
+                    canvasCtx.fillStyle = 'black';
+                    canvasCtx.fillText(timeValue.toExponential(2) + 's', i, canvas.height - 5);
+                }
+            }
+
+            draw();
+        } catch (error) {
+            console.error('Error accessing microphone:', error);
+        }
+    }
+
+    function stopRecording() {
+        if (mediaRecorder) {
+            mediaRecorder.stop();
+        }
+    }
+</script>
+</body>
+</html>
