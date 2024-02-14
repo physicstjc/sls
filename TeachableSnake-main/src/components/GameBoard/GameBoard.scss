@@ -1,0 +1,56 @@
+#GameBoard {
+  max-width: 100vw;
+		min-height: 100vh;
+		max-height: 100vh;
+	display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-direction: column;
+	padding: 8vh 10vw 12vh 10vw;
+		box-sizing: border-box;
+	margin: 0 auto;
+}
+
+.info-bar {
+	width: 100%;
+	display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+
+	& .game-title {
+		color: var(--c_light);
+		font-size: 7vw;
+		font-weight: 900;
+		margin: 0;
+		transform: translate3d(0, -8px, 0);
+	}
+}
+
+.btm-bar {
+	width: 100%;
+	font-size: .7vw;
+	color: #c9c9c9;
+
+	.infos {
+		display: flex;
+		margin: 0;
+		padding: 0;
+
+		.info {
+			list-style: none;
+
+			a {
+				color: white;
+				text-decoration: none;
+
+				&:hover {
+					color: var(--c_orange);
+				}
+			}
+
+			&:not(:last-child) {
+				margin-right: 1vw;
+			}
+		}
+	}
+}

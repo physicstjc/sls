@@ -1,0 +1,58 @@
+#InfoBoard {
+	height: 100%;
+	padding: 0 8vw;
+}
+
+.tutorial {
+	display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+	height: 100%;
+	margin: 0 auto;
+
+	.top {
+		.indication {
+			font-size: 1.5vw;
+			text-align: center;
+			width: 100%;
+			padding: 40px 0;
+		}
+	}
+
+	.image {
+		text-align: center;
+		max-width: 25vh;
+			height: 25vh;
+			max-height: 25vh;
+			margin: 0 auto;
+		overflow: hidden;
+
+		.sprite {
+			height: 100%;
+			background: url(../../assets/icons/sprite.png) left center;
+				background-size: cover;
+			animation: sprite 3s steps(4) infinite;
+		}
+	}
+	.steps {
+		text-align: center;
+		font-size: 2vw;
+		font-weight: 700;
+
+		.step {
+			&:not(:last-child) {
+				&:after {
+					content: '>';
+					margin: 0 12px 0 16px;
+				}
+			}
+		}
+	}
+}
+
+@keyframes sprite {
+	100% {
+		background-position: -100vh;
+	}
+}
