@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Distance Tracker</title>
+    <style>
+        /* Add your CSS styles here */
+    </style>
+</head>
+<body>
+    <h1>GPS Distance Tracker</h1>
+    <button id="startBtn">Start</button>
+    <button id="stopBtn">Stop</button>
+    <button id="downloadBtn">Download Log</button>
+    <div id="distanceDisplay">Distance: 0 meters</div>
+
+    <script>
+        // Array to store GPS readings
+        let gpsReadings = [];
+
+        // Function to calculate distance between two GPS coordinates using Haversine formula
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            // Haversine formula implementation
+            // Returns distance in meters
+        }
+
+        // Function to handle click on the Start button
+        function handleStart() {
+            // Placeholder function to simulate capturing GPS coordinates
+            const simulateGPS = () => ({
+                latitude: Math.random() * 90,
+                longitude: Math.random() * 180,
+            });
+
+            // Start capturing GPS readings periodically (every 5 seconds in this example)
+            const captureInterval = setInterval(() => {
+                const currentGPS = simulateGPS(); // Replace with actual GPS data
+                gpsReadings.push({ timestamp: new Date().toISOString(), coordinates: currentGPS });
+
+                // Update distance display (assuming you have a current and previous GPS reading)
+                // const distance = calculateDistance(prevGPS.latitude, prevGPS.longitude, currentGPS.latitude, currentGPS.longitude);
+                // document.getElementById('distanceDisplay').innerText = `Distance: ${distance} meters`;
+
+                // Update previous GPS reading for the next iteration
+                // prevGPS = currentGPS;
+            }, 5000);
+        }
+
+        // Function to handle click on the Stop button
+        function handleStop() {
+            // Stop capturing GPS readings (clear the interval)
+            clearInterval(captureInterval);
+        }
+
+        // Function to handle click on the Download button
+        function handleDownload() {
+            // Convert gpsReadings array to a string (e.g., JSON)
+            const data = JSON.stringify(gpsReadings);
+
+            // Create a Blob object with the data
+            const blob = new Blob([data], { type: 'application/json' });
+
+            // Create a link element
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+
+            // Set the link's attributes
+            link.href = url;
+            link.download = 'gps_log.json';
+
+            // Append the link to the body and trigger a click event to start the download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Attach event listeners to buttons
+        document.getElementById('startBtn').addEventListener('click', handleStart);
+        document.getElementById('stopBtn').addEventListener('click', handleStop);
+        document.getElementById('downloadBtn').addEventListener('click', handleDownload);
+    </script>
+</body>
+</html>
