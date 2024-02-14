@@ -3,169 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accelerometer Data Logging</title>
-    <!-- Include Chart.js library -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Device Orientation</title>
 </head>
 <body>
-    <h1>Accelerometer Data Logging</h1>
-    <button id="startLoggingBtn">Start Logging</button>
-    <canvas id="xChart" width="400" height="200"></canvas>
-    <canvas id="yChart" width="400" height="200"></canvas>
-    <canvas id="zChart" width="400" height="200"></canvas>
+    <h1>Device Orientation</h1>
+    <p>Alpha: <span id="alphaValue"></span></p>
+    <p>Beta: <span id="betaValue"></span></p>
+    <p>Gamma: <span id="gammaValue"></span></p>
 
     <script>
-        const xCtx = document.getElementById('xChart').getContext('2d');
-        const yCtx = document.getElementById('yChart').getContext('2d');
-        const zCtx = document.getElementById('zChart').getContext('2d');
+        window.addEventListener('deviceorientation', (event) => {
+            const alpha = event.alpha;
+            const beta = event.beta;
+            const gamma = event.gamma;
 
-        const xChart = new Chart(xCtx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'X Direction',
-                    data: [],
-                    borderColor: 'rgb(255, 99, 132)',
-                    borderWidth: 1,
-                    fill: false
-                }]
-            },
-            options: {
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Time (seconds)'
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Accelerometer Value'
-                        }
-                    }
-                }
-            }
-        });
-
-        const yChart = new Chart(yCtx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Y Direction',
-                    data: [],
-                    borderColor: 'rgb(54, 162, 235)',
-                    borderWidth: 1,
-                    fill: false
-                }]
-            },
-            options: {
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Time (seconds)'
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Accelerometer Value'
-                        }
-                    }
-                }
-            }
-        });
-
-        const zChart = new Chart(zCtx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Z Direction',
-                    data: [],
-                    borderColor: 'rgb(75, 192, 192)',
-                    borderWidth: 1,
-                    fill: false
-                }]
-            },
-            options: {
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Time (seconds)'
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Accelerometer Value'
-                        }
-                    }
-                }
-            }
-        });
-
-        let startTime = null;
-        let isLogging = false;
-        const duration = 20 * 1000; // 20 seconds in milliseconds
-        const samplingInterval = 10; // Sampling interval in milliseconds
-
-        document.getElementById('startLoggingBtn').addEventListener('click', () => {
-            if (!isLogging) {
-                isLogging = true;
-                startTime = null;
-
-                xChart.data.labels = [];
-                yChart.data.labels = [];
-                zChart.data.labels = [];
-
-                xChart.data.datasets[0].data = [];
-                yChart.data.datasets[0].data = [];
-                zChart.data.datasets[0].data = [];
-
-                xChart.update();
-                yChart.update();
-                zChart.update();
-
-                if ('Accelerometer' in window) {
-                    const sensor = new Accelerometer({ frequency: samplingInterval });
-
-                    sensor.addEventListener('reading', () => {
-                        if (startTime === null) {
-                            startTime = Date.now();
-                        }
-
-                        const elapsedTime = Date.now() - startTime;
-                        const timeInSeconds = elapsedTime / 1000;
-
-                        if (timeInSeconds <= duration / 1000) {
-                            xChart.data.labels.push(timeInSeconds.toFixed(2));
-                            yChart.data.labels.push(timeInSeconds.toFixed(2));
-                            zChart.data.labels.push(timeInSeconds.toFixed(2));
-
-                            xChart.data.datasets[0].data.push(sensor.x);
-                            yChart.data.datasets[0].data.push(sensor.y);
-                            zChart.data.datasets[0].data.push(sensor.z);
-
-                            xChart.update();
-                            yChart.update();
-                            zChart.update();
-                        } else {
-                            sensor.stop();
-                            isLogging = false;
-                        }
-                    });
-
-                    sensor.start();
-                } else {
-                    console.error('Accelerometer not supported');
-                    isLogging = false;
-                }
-            }
+            document.getElementById('alphaValue').textContent = alpha !== null ? alpha.toFixed(2) : 'N/A';
+            document.getElementById('betaValue').textContent = beta !== null ? beta.toFixed(2) : 'N/A';
+            document.getElementById('gammaValue').textContent = gamma !== null ? gamma.toFixed(2) : 'N/A';
         });
     </script>
 </body>
