@@ -7,12 +7,27 @@
 </head>
 <body>
     <h1>Device Orientation</h1>
+    <button id="startBtn">Start Displaying</button>
     <p>Alpha: <span id="alphaValue"></span></p>
     <p>Beta: <span id="betaValue"></span></p>
     <p>Gamma: <span id="gammaValue"></span></p>
 
     <script>
-        window.addEventListener('deviceorientation', (event) => {
+        // Function to start displaying device orientation values
+        function startDisplayingOrientation() {
+            window.addEventListener('deviceorientation', handleOrientation);
+        }
+
+        // Function to stop displaying device orientation values
+        function stopDisplayingOrientation() {
+            window.removeEventListener('deviceorientation', handleOrientation);
+            document.getElementById('alphaValue').textContent = 'N/A';
+            document.getElementById('betaValue').textContent = 'N/A';
+            document.getElementById('gammaValue').textContent = 'N/A';
+        }
+
+        // Function to handle device orientation event
+        function handleOrientation(event) {
             const alpha = event.alpha;
             const beta = event.beta;
             const gamma = event.gamma;
@@ -20,7 +35,10 @@
             document.getElementById('alphaValue').textContent = alpha !== null ? alpha.toFixed(2) : 'N/A';
             document.getElementById('betaValue').textContent = beta !== null ? beta.toFixed(2) : 'N/A';
             document.getElementById('gammaValue').textContent = gamma !== null ? gamma.toFixed(2) : 'N/A';
-        });
+        }
+
+        // Add event listener to start button
+        document.getElementById('startBtn').addEventListener('click', startDisplayingOrientation);
     </script>
 </body>
 </html>
