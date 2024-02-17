@@ -11,7 +11,7 @@
     }
 
     .calculator {
-        width: 300px;
+        width: 320px;
         margin: 50px auto;
         background-color: #fff;
         border-radius: 5px;
@@ -58,8 +58,9 @@
         <br>
         <input type="button" value="C" onclick="clearDisplay()">
         <input type="button" value="0" onclick="addToDisplay('0')">
-        <input type="button" value="=" onclick="calculate()">
+        <input type="button" value="." onclick="addToDisplay('.')">
         <input type="button" value="+" onclick="addToDisplay('+')">
+        <input type="button" value="=" onclick="calculate()">
     </div>
 
     <script>
@@ -84,7 +85,7 @@
             const key = event.key;
             if (key >= '0' && key <= '9') {
                 addToDisplay(key);
-            } else if (key === '+' || key === '-' || key === '*' || key === '/') {
+            } else if (key === '+' || key === '-' || key === '*' || key === '/' || key === '.') {
                 addToDisplay(key);
             } else if (key === 'Enter' || key === '=') {
                 calculate();
