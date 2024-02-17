@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acoustic Stopwatch</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+    #thresholdLabel, #delayLabel {
+        margin-right: 10px;
+    }
+
+</style>
+</head>
+<body>
+    <h1>Acoustic Stopwatch</h1>
+    <div>
+        <label for="threshold">Threshold:</label>
+        <input type="range" id="threshold" min="0" max="500" value="150">
+        <span id="thresholdLabel">150</span>
+    </div>
+    <br>
+    <div>
+        <label for="delay">Minimum Delay (ms):</label>
+        <input type="range" id="delay" min="0" max="5000" value="1000">
+        <span id="delayLabel">1000</span>
+    </div>
+    <br>
+    <button id="startStopButton">Start</button>
+    <p id="timerDisplay"></p>
+
+    <script>
+        let thresholdValue = 150;
+        let delayValue = 1000;
+        let isListening = false;
+        let startTime = null;
+        let stopTime = null;
+        let timerInterval = null;
+
+        const thresholdSlider = document.getElementById('threshold');
+        const delaySlider = document.getElementById('delay');
+        const thresholdLabel = document.getElementById('thresholdLabel');
+        const delayLabel = document.getElementById('delayLabel');
+        const startStopButton = document.getElementById('startStopButton');
+        const timerDisplay = document.getElementById('timerDisplay');
+
+        thresholdSlider.addEventListener('input', () => {
+            thresholdValue = parseInt(thresholdSlider.value);
+            thresholdLabel.textContent = thresholdValue;
+        });
+
+        delaySlider.addEventListener('input', () => {
+            delayValue = parseInt(delaySlider.value);
+            delayLabel.textContent = delayValue;
+        });
+
+        function startListening() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                const audioContext = new AudioContext();
+                const source = audioContext.createMediaStreamSource(stream);
+                const analyser = audioContext.createAnalyser();
+                source.connect(analyser);
+                analyser.fftSize = 2048;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+
+                analyser.getByteTimeDomainData(dataArray);
+
+                isListening = true;
+
+                startStopButton.textContent = 'Stop';
+
+                startTime = null;
+                stopTime = null;
+
+                timerInterval = setInterval(() => {
+                    analyser.getByteTimeDomainData(dataArray);
+                    let max = 0;
+                    for (let i = 0; i < bufferLength; i++) {
+                        max = Math.max(max, dataArray[i]);
+                    }
+
+                    if (max > thresholdValue && !startTime && isListening) {
+                        startTime = Date.now();
+                        timerDisplay.textContent = 'Timing...';
+                    }
+
+                    if (max > thresholdValue && startTime && !stopTime) {
+                        const currentTime = Date.now();
+                        if (currentTime - startTime >= delayValue && !stopTime) {
+                            stopTime = currentTime;
+                            clearInterval(timerInterval);
+                            const elapsedTime = stopTime - startTime;
+                            const seconds = Math.floor(elapsedTime / 1000);
+                            const milliseconds = elapsedTime % 1000;
+                            timerDisplay.textContent = `Time: ${seconds}.${milliseconds} seconds`;
+                            isListening = false;
+                            startStopButton.textContent = 'Start';
+                        }
+                    }
+                }, 100);
+            })
+            .catch(err => console.error('Error:', err));
+        }
+
+        startStopButton.addEventListener('click', () => {
+            if (!isListening) {
+                isListening = true;
+                startListening();
+            }
+        });
+    </script>
+</body>
+</html>

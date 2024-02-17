@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projectile Motion Simulation</title>
+<style>
+    canvas {
+        border: 1px solid black;
+    }
+</style>
+</head>
+<body>
+<canvas id="simulationCanvas" width="600" height="400"></canvas><br>
+<label for="velocity">Horizontal Velocity (m/s):</label>
+<input type="range" min="0" max="60" value="30" id="velocity"><br>
+<label for="verticalVelocity">Vertical Launch Velocity (m/s):</label>
+<input type="range" min="0" max="80" value="50" id="verticalVelocity"><br>
+<button onclick="startCart()">Start Cart</button>
+<button onclick="launchProjectile()">Launch Projectile</button>
+<button onclick="resetSimulation()">Reset</button>
+
+<script>
+    const canvas = document.getElementById("simulationCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let horizontalVelocity = 30; // Initial horizontal velocity
+    let verticalVelocity = 50; // Initial vertical velocity (increased)
+    let cartPosition = 0; // Initial position of the cart
+    let projectilePositions = []; // Store positions of the projectile
+    let initialProjectileX; // Initial horizontal position of the projectile
+    let cartInterval;
+    let startTime; // Time when launch button is pressed
+
+    function drawCart() {
+        // Draw main body of the cart
+        ctx.fillStyle = "gray";
+        ctx.fillRect(cartPosition, canvas.height - 50, 50, 30);
+
+        // Draw left wheel
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.arc(cartPosition + 10, canvas.height - 15, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw right wheel
+        ctx.beginPath();
+        ctx.arc(cartPosition + 40, canvas.height - 15, 5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    function drawProjectile() {
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(cartPosition + 25, canvas.height - 50 - projectilePositions[projectilePositions.length - 1], 5, 0, Math.PI * 2); // Draw projectile
+        ctx.fill();
+    }
+
+    function startCart() {
+        clearInterval(cartInterval);
+        cartInterval = setInterval(moveCart, 50);
+    }
+
+    function moveCart() {
+        cartPosition += horizontalVelocity * 0.05; // Update cart position
+        redrawCanvas();
+    }
+
+    function launchProjectile() {
+        verticalVelocity = parseInt(document.getElementById("verticalVelocity").value);
+        projectilePositions = []; // Reset projectile positions
+        initialProjectileX = cartPosition + 25; // Store initial horizontal position of the projectile
+        startTime = Date.now();
+
+        let projectileInterval = setInterval(function() {
+            let t = (Date.now() - startTime) / 1000; // Calculate elapsed time since launch in seconds
+            let y = verticalVelocity * t - 0.5 * 9.8 * t * t;
+            projectilePositions.push(y);
+            redrawCanvas();
+
+            if (y <= 0) {
+                clearInterval(projectileInterval);
+                redrawCanvas();
+            }
+        }, 50);
+    }
+
+    function resetSimulation() {
+        clearInterval(cartInterval);
+        cartPosition = 0;
+        projectilePositions = [];
+        horizontalVelocity = 10;
+        verticalVelocity = 20;
+        redrawCanvas();
+    }
+
+    function redrawCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawCart();
+        drawProjectile();
+        drawTrajectory();
+    }
+
+    function drawTrajectory() {
+        ctx.strokeStyle = "rgba(255, 0, 0, 0.3)";
+        ctx.beginPath();
+        ctx.moveTo(initialProjectileX, canvas.height - 50 - projectilePositions[0]);
+        for (let i = 1; i < projectilePositions.length; i++) {
+            let x = initialProjectileX + horizontalVelocity * (i * 0.05);
+            let y = canvas.height - 50 - projectilePositions[i];
+            ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+    }
+
+    document.getElementById("velocity").addEventListener("input", function() {
+        horizontalVelocity = parseInt(this.value);
+    });
+
+    document.getElementById("verticalVelocity").addEventListener("input", function() {
+        verticalVelocity = parseInt(this.value);
+    });
+
+    drawCart();
+    drawProjectile();
+    drawTrajectory();
+</script>
+</body>
+</html>

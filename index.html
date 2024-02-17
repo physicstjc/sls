@@ -38,6 +38,7 @@
                     <div class="card-body">
                         <h3 class="card-title">Random Name Generator</h3>
                         <p class="card-text">For use in class. Either enter the names with semi-colons as separators or upload a classlist (consisting only of names, not index number, etc) in csv form.</p>
+                        <p class="card-text">If you want to remove the displayed name from the list, you can click the "Remove Name" button below the displayed name. The list of names drawn will appear in a list below.</p>
                         <a href="random-name-generator/index.html" class="btn btn-primary" target="_blank">Test it out</a>
                         <a href="random-name-generator/random-name-generator.zip" class="btn btn-secondary">Download for SLS</a>
                         <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse1" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
@@ -56,7 +57,7 @@
                                         <li>In this new section, there's a button labeled "Generate Random Name."</li>
                                         <li>When you click this button, a random name from the list you provided will appear on the page.</li>
                                         <li>Below the "Generate Random Name" button, there's a paragraph displaying the randomly generated name.</li>
-                                        <li>If you want to remove the displayed name from the list, you can click the "Remove Name" button below the displayed name.</li>
+                                        <li>If the user wants to remove the displayed name from the list, you can click the "Remove Name" button below the displayed name.</li>
                                         <li>Any names that you've generated will be listed below the "Generated Names" section.</li>
                                         <li>Each generated name will appear on a separate line.</li>
                                     </ol>
@@ -73,6 +74,8 @@
                     <div class="card-body">
                         <h3 class="card-title">Countdown Timer</h3>
                         <p class="card-text">For use in class. Set a duration and start the timer. When the time is up, an alarm will sound.</p>
+                        <p class="card-text">For use in SLS, provided the student does not go from one page to another, a timer can be set up to help student manage the time on an activity.</p>
+                        <p class="card-text">Replace the alarm with something more soothing if you like.</p>
                         <a href="countdown-timer/index.html" class="btn btn-primary" target="_blank">Test it out</a>
                         <a href="countdown-timer/countdown-timer.zip" class="btn btn-secondary">Download for SLS</a>
                         <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse2" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
@@ -519,6 +522,7 @@
                     <div class="card-body">
                         <h3 class="card-title">Sound Frequency Analyser</h3>
                         <p class="card-text">This sound frequency analyser is able to pick up the dominant frequency from the microphone. Students can use it to investigate the effect on the frequency of sound by factors such as length or tension of a guitar string.</p>
+                        <p>For higher level Physics students, they can observe the frequencies of higher harmonics.</p>
                         <a href="sound-frequency-analyser/" class="btn btn-primary" target="_blank">Test it out</a>
                         <a href="sound-frequency-analyser/sound-frequency-analyser.zip" class="btn btn-secondary">Download for SLS</a>
                         <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse17" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
@@ -564,6 +568,107 @@
         </div>
           
     </div>
+    
+    
+     <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="acoustic-stopwatch/acoustic-stopwatch.png" alt="Acoustic Stopwatch">
+                    <div class="card-body">
+                        <h3 class="card-title">Acoustic Stopwatch</h3>
+                        <p class="card-text">Instead of using buttons to start and stop a timer, hands can be freed by using loud sounds to trigger the starting and stopping.</p>
+                        <p class="card-text">Acoustic stopwatches can be used in various scientific experiments where precise timing is required, such as in physics experiments involving the measurement of sound propagation or timing of a student completing a lap using a clap as start and stop triggers.</p>
+                        <p class="card-text">A slider can be used to adjust the threshold of the sound used to trigger the stopwatch. A default value to use is 150 (This is a relative unit and not a physical unit). The timing is displayed up to 1 millisecond.</p>
+                        <a href="acoustic-stopwatch/" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="acoustic-stopwatch/acoustic-stopwatch.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse19" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
+                        <div class="collapse" id="promptsCollapse19">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a webpage with javascript and html that serves as an acoustic stopwatch.</li>
+                                        <li>A start button will be used to begin listening for the first loud sound in order to start the timing.</li>
+                                        <li>The timer will start only when a sound louder than a predetermined threshold is detected by the microphone of the device after pressing the start button.</li>
+                                        <li>It will stop when a second sound that is louder than the same threshold is detected. </li>
+                                        <li>Use a slider to vary the threshold of sound.</li>
+                                        <li>Use another slider to adjust the minimum delay before the timer will stop with the second sound.</li>
+                                        <li>Display the time in seconds and milliseconds.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+          
+          
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="camera-brightness-recorder/camera-brightness-recorder.png" alt="Camera Brightness Recorder">
+                    <div class="card-body">
+                        <h3 class="card-title">Camera Brightness Recorder</h3>
+                        <p class="card-text">This can be used as a datalogger of the brightness detected by a camera.</p>
+                        <p class="card-text">Note that the camera needs to be enabled for your browser. This app will probably not work with iOS devices due to their privacy policies.</p>
+                        <p class="card-text">The brightness value calculated is not based on a specific unit such as lux or candela per square meter, which are commonly used units for measuring brightness in physical light measurements. It is a result of averaging the intensity values of the red, green, and blue color channels of each pixel in the captured frame.</p>
+                        <p class="card-text">It's important to note that the value is relative and may vary depending on factors such as ambient light conditions, camera settings, and image processing algorithms. Therefore, it should be interpreted as a relative measure of brightness rather than an absolute physical measurement.</p>
+                        <a href="camera-brightness-recorder/" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="camera-brightness-recorder/camera-brightness-recorder.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse20" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
+                        <div class="collapse" id="promptsCollapse20">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a webpage with html and javascript that obtains information from the computer's sensors such as brightness.</li>
+                                        <li>Display the brightness information.</li>
+                                        <li>Use a start and stop button to being and end the sampling. </li>
+                                        <li>Use a slider to control the sampling rate.</li>
+                                        <li>Record the brightness data in a list at the bottom with the timestamp.</li>
+                                        <li>Create a button to download the data in csv format.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+          
+          
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="projectile-simulator/projectile-simulator.png" alt="Projectile Simulator">
+                    <div class="card-body">
+                        <h3 class="card-title">Projectile Simulator</h3>
+                        <p class="card-text">This simulation is used for JC physics students to visualise the independence of horizontal and vertical components of velocity in a projectile launched vertically from a cart moving at constant velocity.</p>
+                        <a href="projectile-simulator/" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="projectile-simulator/projectile-simulator.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse21" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
+                        <div class="collapse" id="promptsCollapse21">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a simulation to demonstrate the independence of the horizontal and vertical velocities of a projectile and visually represent the cart and projectile movements.</li>
+                                        <li>When the launch button is pressed, a projectile will be shot upward from a cart that is moving from left to right on wheels.</li>
+                                        <li>The horizontal velocity of the projectile will remain constant while the vertical velocity will change with time according to gravitational acceleration. </li>
+                                        <li>In the end, the projectile will land on the same spot relative to the moving cart.</li>
+                                        <li>Use a slider to change the horizontal velocity of the cart. Use a button to start the cart and another button to launch the projectile.</li>
+                                        <li>Use a slider to change the initial vertical launch velocity of the projectile. Before the launch button is pressed, the vertical velocity of the projectile is zero.</li>
+                                        <li>Add two wheels below the cart's rectangle.</li>
+                                        <li>Add a button to reset everything.</li>
+                                        <li>Use time = zero at the time when the launch button is pressed.</li>
+                                        <li>Trace the path of the ball after the launch in the canvas with a dotted curve line.</li>
+                                        <li>Create a variable to store the initial horizontal position of the projectile as the launch button is pressed. Use it to determine the starting point of the trace.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+          
+    </div>    
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
