@@ -51,7 +51,6 @@
 </style>
 </head>
 <body>
-<table><tr><td>
     <h2>DELIGHT - electrifying fun</h2> 
 <div class="grid-container">
     <!-- Creating 4x4 grid with squares as placeholders -->
@@ -72,10 +71,18 @@
     <div class="grid-item" onclick="placeImage(this)"></div>
     <div class="grid-item" id="negative"><img src="negative.png"></div>
 </div>
-    <br><button onclick="undo()">Undo</button>
-    </td><td width="20"></td>
-    <td width="240">
+    <p align="left"><button onclick="undo()">Undo</button></p>
+
 <div class="turn">
+    <img src="cross-wires.png" onclick="selectImage(this)">
+    <img src="r-wires-0.png" onclick="selectImage(this)">
+    <img src="t-wires-0.png" onclick="selectImage(this)">
+    <img src="straight-wire-0.png" onclick="selectImage(this)">
+    <br>
+    <img src="yellow-light-0.png" onclick="selectImage(this)">
+    <img src="red-light-0.png" onclick="selectImage(this)">
+    <br>
+</div>
     <h3>Rules</h3>
     <ol>
     <li>The aim is to light up as many bulbs of your colour as possible.</li>
@@ -84,16 +91,8 @@
     <li>Players can choose to use up to two turns at any point in the game to rotate any piece that had been placed by any player.</li>
     <li>In other words, each player has 9 turns: 7 placement turns and 2 rotation turns.</li>
     </ol>
-    <img src="cross-wires.png" onclick="selectImage(this)">
-    <img src="r-wires-0.png" onclick="selectImage(this)"><br>
-    <img src="t-wires-0.png" onclick="selectImage(this)">
-    <img src="straight-wire-0.png" onclick="selectImage(this)">
-        <br>
-    <img src="yellow-light-0.png" onclick="selectImage(this)">
-    <img src="red-light-0.png" onclick="selectImage(this)">
-    <br>
-</div></td>
-</tr></table>
+    
+    
 <script>
     let currentPlayer = 1; // 1 for player 1, 2 for player 2
     let images = ["cross-wires.png", "r-wires-0.png", "t-wires-0.png", "straight-wire-0.png", "yellow-light-0.png", "red-light-0.png"];
