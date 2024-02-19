@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pomodoro Timer</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.timer {
+  text-align: center;
+}
+
+.buttons {
+  margin-top: 20px;
+}
+
+input[type="text"] {
+  padding: 10px;
+  font-size: 16px;
+  font-family: monospace;
+  width: 500px;
+  text-align: center;  
+}
+
+button {
+  padding: 10px 20px;
+  margin: 0 5px;
+  font-size: 16px;
+  cursor: pointer; 
+}
+
+.focus-timer {
+  background-color: #79d70f;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.break-timer {
+  background-color: #ADD8E6;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 20px;
+}
+    
+.break-image {    
+  display: none;
+  margin-top: 20px;
+  max-width: 100%; 
+  
+}
+    
+    
+</style>
+</head>
+<body>
+<div class="timer">
+  <input type="text" id="focusInput" placeholder="Focus: ">
+  <h1 id="timerDisplay" class="focus-timer">25:00</h1>
+  <p align="center"><img src="break-image.png" alt="Break Time" id="breakImage" class="break-image"></p>
+  <div class="buttons">
+    <button onclick="startTimer()">Start</button>
+    <button onclick="togglePauseResume()" id="pauseResumeButton">Pause</button>
+    <button onclick="toggleMusic()" id="musicButton">Music</button>
+  </div>
+</div>
+
+<audio id="musicPlayer" loop>
+  <source src="" type="audio/mpeg">
+</audio>
+
+<script>
+let focusTimer;
+let breakTimer;
+let isPaused = false;
+let isMusicPlaying = false;
+const musicFiles = ['music1.mp3', 'music2.mp3', 'music3.mp3', 'music4.mp3', 'music5.mp3'];
+
+function startTimer() {
+  clearInterval(focusTimer);
+  clearInterval(breakTimer);
+  timeLeft = 25 * 60;
+  focusTimer = setInterval(updateFocusTimer, 1000);
+}
+
+function togglePauseResume() {
+  isPaused = !isPaused;
+  const button = document.getElementById('pauseResumeButton');
+  button.innerText = isPaused ? 'Resume' : 'Pause';
+}
+
+function updateFocusTimer() {
+  if (!isPaused) {
+    const minutes = Math.floor(timeLeft / 60);
+    let seconds = timeLeft % 60;
+    seconds = seconds < 10 ? '0' + seconds : seconds;
+    document.getElementById('timerDisplay').innerText = `${minutes}:${seconds}`;
+    
+    if (timeLeft <= 0) {
+      clearInterval(focusTimer);
+      timeLeft = 5 * 60;
+      document.getElementById('timerDisplay').classList.remove('focus-timer');
+      document.getElementById('timerDisplay').classList.add('break-timer');
+      document.getElementById('breakImage').style.display = 'block';
+      breakTimer = setInterval(updateBreakTimer, 1000);
+    }
+    
+    timeLeft--;
+  }
+}
+
+function updateBreakTimer() {
+  if (!isPaused) {
+    const minutes = Math.floor(timeLeft / 60);
+    let seconds = timeLeft % 60;
+    seconds = seconds < 10 ? '0' + seconds : seconds;
+    document.getElementById('timerDisplay').innerText = `${minutes}:${seconds}`;
+    
+    if (timeLeft <= 0) {
+      clearInterval(breakTimer);
+      document.getElementById('timerDisplay').classList.remove('break-timer');
+      document.getElementById('timerDisplay').classList.add('focus-timer');
+      document.getElementById('breakImage').style.display = 'none';
+      startTimer();
+    }
+    
+    timeLeft--;
+  }
+}
+
+function toggleMusic() {
+  isMusicPlaying = !isMusicPlaying;
+  const button = document.getElementById('musicButton');
+  const musicPlayer = document.getElementById('musicPlayer');
+  
+  if (isMusicPlaying) {
+    const randomIndex = Math.floor(Math.random() * musicFiles.length);
+    const musicFile = musicFiles[randomIndex];
+    musicPlayer.src = musicFile;
+    musicPlayer.play();
+    button.innerText = 'Mute';
+  } else {
+    musicPlayer.pause();
+    button.innerText = 'Music';
+  }
+}
+</script>
+</body>
+</html>
