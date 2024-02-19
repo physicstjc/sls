@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flash Card</title>
+<style>
+  body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  .container {
+    max-width: 500px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+  }
+  #definition {
+    display: block;
+    margin: 20px auto;
+    font-family:monospace;
+    font-size: 15pt;   
+    color: darkcyan
+  }
+  #term {
+    display: inline;
+    padding-left: 20px;
+    padding-right: 20px;  
+    font-family:monospace;
+    font-size: 20pt;   
+    color: red;
+  }    
+  #instructions{
+    font-size: 10pt;  
+    }    
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Flashcards</h2>
+<hr>
+<p align="center"><button onclick="previousTerm()">Previous</button>
+  <span id="term"></span>
+  <button onclick="nextTerm()">Next</button></p>
+  <br><br>
+  <button onclick="toggleDefinition()">Definition?</button>
+    
+  <div id="definition"></div>
+<hr>
+   <p id="instructions" align="left">Upload a CSV file (<a href="sample.csv">link to sample</a>) with the terms and definitions: <input type="file" id="csvFile" accept=".csv"></p>
+
+    </div>
+
+<script>
+  let terms = [];
+  let definitions = [];
+  let currentIndex = 0;
+
+  document.getElementById('csvFile').addEventListener('change', function() {
+    const file = this.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+      const lines = e.target.result.split('\n').map(line => line.split(','));
+      terms = lines.map(line => line[0].trim());
+      definitions = lines.map(line => line[1].trim());
+      displayTerm(currentIndex);
+    };
+
+    reader.readAsText(file);
+  });
+
+  function displayTerm(index) {
+    document.getElementById('term').textContent = terms[index];
+    document.getElementById('definition').textContent = definitions[index];
+  }
+
+  function previousTerm() {
+    if (currentIndex > 0) {
+      currentIndex--;
+      displayTerm(currentIndex);
+    }
+  }
+
+  function nextTerm() {
+    if (currentIndex < terms.length - 1) {
+      currentIndex++;
+      displayTerm(currentIndex);
+    }
+  }
+
+  function toggleDefinition() {
+    const definitionDiv = document.getElementById('definition');
+    definitionDiv.style.display = (definitionDiv.style.display === 'none') ? 'block' : 'none';
+  }
+
+    
+</script>
+
+</body>
+</html>
