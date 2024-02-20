@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metronome</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+    canvas {
+        border: 1px solid black;
+        margin-top: 20px;
+    }
+    #frequencyDisplay {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+</style>
+</head>
+<body>
+    <h1>Metronome</h1>
+    <div>
+        <label for="frequencyRange">Frequency (BPM):</label>
+        <input type="range" id="frequencyRange" min="40" max="220" value="120">
+        <span id="frequencyDisplay">60 BPM</span>
+    </div>
+    <canvas id="metronomeCanvas" width="200" height="200"></canvas>
+    <br>
+    <button id="startButton">Start</button>
+    <button id="stopButton" style="display:none;">Stop</button>
+    
+    <script>
+        let intervalId;
+        let isPlaying = false;
+        let beatCount = 0;
+
+        const frequencyRange = document.getElementById('frequencyRange');
+        const frequencyDisplay = document.getElementById('frequencyDisplay');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const canvas = document.getElementById('metronomeCanvas');
+        const ctx = canvas.getContext('2d');
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height;
+        const pendulumLength = 60;
+        const pendulumWidth = 5;
+        const angle = Math.PI / 4; // Initial angle for the pendulum
+
+        startButton.addEventListener('click', startMetronome);
+        stopButton.addEventListener('click', stopMetronome);
+        frequencyRange.addEventListener('input', updateFrequency);
+
+        function updateFrequency() {
+            frequencyDisplay.textContent = `${frequencyRange.value} BPM`;
+            if (isPlaying) {
+                clearInterval(intervalId);
+                startMetronome();
+            }
+        }
+
+        function startMetronome() {
+            isPlaying = true;
+            const frequency = 60000 / frequencyRange.value;
+            intervalId = setInterval(tick, frequency);
+            startButton.style.display = 'none';
+            stopButton.style.display = 'inline';
+            tick(); // Start the metronome immediately
+        }
+
+        function stopMetronome() {
+            isPlaying = false;
+            clearInterval(intervalId);
+            startButton.style.display = 'inline';
+            stopButton.style.display = 'none';
+        }
+
+        function drawPendulum(angle) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const x = centerX + pendulumLength * Math.sin(angle);
+            const y = centerY - 4*pendulumLength * Math.cos(angle);
+
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(x, y);
+            ctx.lineWidth = pendulumWidth;
+            ctx.strokeStyle = "#44AA99";
+            ctx.stroke();
+        }
+
+        function tick() {
+            beatCount++;
+            const angleIncrement = Math.PI / 4; // Adjust this value for the swing speed
+            const maxAngle = Math.PI / 4; // Maximum swing angle
+
+
+            if (beatCount % 2 === 0) {
+                const currentAngle = angle;
+                drawPendulum(currentAngle);// Play sound
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+                oscillator.connect(audioCtx.destination);
+                oscillator.start();
+                setTimeout(() => {
+                    oscillator.stop();
+                }, 100);
+            }
+            if (beatCount % 2 === 1) {
+                const currentAngle = -angle;
+                drawPendulum(currentAngle);// Play sound
+                // Play sound
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+                oscillator.connect(audioCtx.destination);
+                oscillator.start();
+                setTimeout(() => {
+                    oscillator.stop();
+                }, 100);
+            }
+
+        }
+    </script>
+</body>
+</html>
