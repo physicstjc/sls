@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Displacement Graph</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+</head>
+<body>
+  <div style="width: 80%; margin: auto;">
+    <canvas id="displacementChart"></canvas>
+    <label for="initialVelocitySlider">Initial Velocity (m/s): </label>
+    <input id="initialVelocitySlider" type="range" min="0" max="2" step="0.01" value="0">
+    <br>
+    <label for="accelerationSlider">Acceleration (m/s<sup>2</sup>): </label>
+    <input id="accelerationSlider" type="range" min="-2" max="2" step="0.01" value="0">
+    <br>
+    <label for="verticalAxisSelector">Vertical Axis: </label>
+    <select id="verticalAxisSelector">
+      <option value="displacement">Displacement (m)</option>
+      <option value="velocity">Velocity (m/s)</option>
+      <option value="acceleration">Acceleration (m/s<sup>2</sup>)</option>
+    </select>
+  </div>
+
+  <script>
+    var ctx = document.getElementById('displacementChart').getContext('2d');
+    var displacementChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Displacement (m)',
+          data: [],
+          borderColor: 'blue',
+          borderWidth: 2,
+          fill: false
+        }]
+      },
+      options: {
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Time (s)'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Displacement (m)'
+            }
+          }
+        }
+      }
+    });
+
+    function calculateDisplacement(initialVelocity, acceleration) {
+      let displacement = [];
+      for (let t = 0; t <= 10; t++) { // Change the range as needed
+        displacement.push(0.5 * acceleration * t * t + initialVelocity * t);
+      }
+      return displacement;
+    }
+
+    function calculateVelocity(initialVelocity, acceleration) {
+      let velocity = [];
+      for (let t = 0; t <= 10; t++) { // Change the range as needed
+        velocity.push(initialVelocity + acceleration * t);
+      }
+      return velocity;
+    }
+
+    function calculateAcceleration() {
+      // Acceleration is constant, so return an array of constant values
+      const acceleration = parseFloat(document.getElementById('accelerationSlider').value);
+      return Array.from({ length: 11 }, () => acceleration);
+    }
+
+    function updateGraph() {
+      const initialVelocity = parseFloat(document.getElementById('initialVelocitySlider').value);
+      const acceleration = parseFloat(document.getElementById('accelerationSlider').value);
+      const verticalAxis = document.getElementById('verticalAxisSelector').value;
+      let data;
+      
+      switch (verticalAxis) {
+        case 'displacement':
+          data = calculateDisplacement(initialVelocity, acceleration);
+          displacementChart.options.scales.y.title.text = 'Displacement (m)';
+          break;
+        case 'velocity':
+          data = calculateVelocity(initialVelocity, acceleration);
+          displacementChart.options.scales.y.title.text = 'Velocity (m/s)';
+          break;
+        case 'acceleration':
+          data = calculateAcceleration();
+          displacementChart.options.scales.y.title.text = 'Acceleration (m/s^2)';
+          break;
+        default:
+          data = calculateDisplacement(initialVelocity, acceleration);
+          break;
+      }
+      
+      displacementChart.data.labels = Array.from({ length: data.length }, (_, i) => i);
+      displacementChart.data.datasets[0].data = data;
+      displacementChart.update();
+    }
+
+    document.getElementById('initialVelocitySlider').addEventListener('input', updateGraph);
+    document.getElementById('accelerationSlider').addEventListener('input', updateGraph);
+    document.getElementById('verticalAxisSelector').addEventListener('change', updateGraph);
+
+    // Initial update
+    updateGraph();
+  </script>
+</body>
+</html>
