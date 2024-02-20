@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Earth and Moon System with Moon Rotation</title>
+    <style>
+        canvas {
+            display: block;
+            margin: auto;
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="600" height="480"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const earthRadius = 100;
+        const moonRadius = 30;
+        const moonOrbitRadius = earthRadius + 100;
+
+        let moonAngle = 0;
+        let moonRotationAngle = 0;
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Earth
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, earthRadius, 0, Math.PI * 2);
+            ctx.fillStyle = '#74a662';
+            ctx.fill();
+            ctx.closePath();
+            
+           // Draw Earth label
+            ctx.fillStyle = '#000000';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Earth', canvas.width / 2, canvas.height / 2);
+
+            // Calculate Moon's position
+            const moonX = canvas.width / 2 + Math.cos(moonAngle) * moonOrbitRadius;
+            const moonY = canvas.height / 2 + Math.sin(moonAngle) * moonOrbitRadius;
+
+            // Draw Moon's orbit path
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, moonOrbitRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = '#aaaaaa';
+            ctx.stroke();
+            ctx.closePath();
+
+            // Draw Moon
+            ctx.save();
+            ctx.translate(moonX, moonY);
+            ctx.rotate(moonRotationAngle);
+            
+            // Draw bright side of the Moon
+            ctx.beginPath();
+            ctx.arc(0, 0, moonRadius, Math.PI/2, 3*Math.PI/2);
+            ctx.fillStyle = '#595959';
+            ctx.fill();
+            ctx.closePath();
+
+            // Draw dark side of the Moon
+            ctx.beginPath();
+            ctx.arc(0, 0, moonRadius, 3*Math.PI/2, Math.PI/2);
+            ctx.fillStyle = '#333333';
+            ctx.fill();
+            ctx.closePath();
+            
+            ctx.restore();
+            
+            // Draw Moon label
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Moon', moonX, moonY);
+            // Update moon angles for rotation and orbit
+            moonAngle += 0.01;
+            moonRotationAngle += 0.01;
+
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>
