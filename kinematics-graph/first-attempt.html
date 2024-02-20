@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambient Pressure and Temperature</title>
+</head>
+<body>
+    <h1>Ambient Pressure and Temperature</h1>
+    <div>
+        <p>Ambient Pressure: <span id="ambientPressure"></span> hPa</p>
+        <p>Ambient Temperature: <span id="ambientTemperature"></span> °C</p>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            if ('AmbientLightSensor' in window) {
+                const sensor = new AmbientLightSensor();
+                sensor.onreading = () => {
+                    document.getElementById('ambientPressure').textContent = sensor.illuminance;
+                };
+                sensor.onerror = (event) => {
+                    console.error('Error reading ambient light:', event.error);
+                };
+                sensor.start();
+            } else {
+                console.error('AmbientLightSensor not supported');
+            }
+
+            if ('LinearAccelerationSensor' in window) {
+                const sensor = new LinearAccelerationSensor();
+                sensor.onreading = () => {
+                    document.getElementById('ambientTemperature').textContent = sensor.z;
+                };
+                sensor.onerror = (event) => {
+                    console.error('Error reading linear acceleration:', event.error);
+                };
+                sensor.start();
+            } else {
+                console.error('LinearAccelerationSensor not supported');
+            }
+        });
+    </script>
+</body>
+</html>
