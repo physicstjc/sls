@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transverse Waves Visualization</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    canvas {
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+    }
+</style>
+</head>
+<body>
+<div style="width: 75%; margin: 0 auto;">
+    <canvas id="waveChart"></canvas>
+    <div style="margin-top: 20px;">
+        <label for="periodSlider">Period of Oscillation (ms):</label>
+        <input id="periodSlider" type="range" min="1000" max="01000" value="5000" step="1">
+    </div>
+    <div style="margin-top: 10px;">
+        <label for="wavelengthSlider">Wavelength (pixels):</label>
+        <input id="wavelengthSlider" type="range" min="10" max="100" value="20" step="1">
+    </div>
+</div>
+
+<script>
+    var ctx = document.getElementById('waveChart').getContext('2d');
+
+    var periodSlider = document.getElementById('periodSlider');
+    var wavelengthSlider = document.getElementById('wavelengthSlider');
+    var canvasWidth = ctx.canvas.width;
+
+    var waveChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Wave 1',
+                borderColor: 'blue',
+                data: [],
+                fill: false,
+                pointRadius: 0 // hide points
+            }, {
+                label: 'Wave 2',
+                borderColor: 'red',
+                data: [],
+                fill: false,
+                pointRadius: 0 // hide points
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom'
+                },
+                y: {
+                    type: 'linear',
+                    position: 'left'
+                }
+            }
+        }
+    });
+
+    function updateChart() {
+        var period = parseInt(periodSlider.value);
+        var wavelength = parseInt(wavelengthSlider.value);
+        var time = performance.now();
+
+        waveChart.data.labels = [];
+        waveChart.data.datasets[0].data = [];
+        waveChart.data.datasets[1].data = [];
+
+        for (var i = 0; i < canvasWidth; i++) {
+            var x = i;
+            var y1 = Math.sin(2 * Math.PI * x / wavelength - 2 * Math.PI * time / period);
+            var y2 = Math.sin(2 * Math.PI * x / wavelength + 2 * Math.PI * time / period);
+
+            waveChart.data.labels.push(x);
+            waveChart.data.datasets[0].data.push(y1);
+            waveChart.data.datasets[1].data.push(y2);
+        }
+
+        waveChart.update();
+    }
+
+    periodSlider.addEventListener('input', updateChart);
+    wavelengthSlider.addEventListener('input', updateChart);
+
+    setInterval(updateChart, 20); // Update chart every 20 milliseconds
+</script>
+</body>
+</html>

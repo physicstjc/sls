@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stationary Transverse Waves Visualization</title>
+<script src="plotly-latest.min.js"></script>
+<style>
+    .plotly-graph-div {
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .slider-container {
+        margin-top: 10px;
+    }
+
+    .slider-container label {
+        display: block;
+        width: 180px;
+        text-align: right;
+        margin-right: 10px;
+    }
+
+    .slider-container input[type="range"] {
+        width: 200px;
+        margin-right: 10px;
+    }
+
+    .slider-container span {
+        display: inline-block;
+        width: 40px;
+    }
+</style>
+</head>
+<body>
+<div class="plotly-graph-div" id="waveChart"></div>
+<div class="slider-container">
+    <p>Wave 1</p>
+    <label for="amplitudeSlider1">Amplitude:</label>
+    <input id="amplitudeSlider1" type="range" min="1" max="4" value="1" step="1">
+    <span id="amplitudeValue1">1</span>
+    <label for="periodSlider1">Period (ms):</label>
+    <input id="periodSlider1" type="range" min="1000" max="10000" value="5000" step="1">
+    <span id="periodValue1">5000</span>
+    <label for="wavelengthSlider1">Wavelength (pixels):</label>
+    <input id="wavelengthSlider1" type="range" min="100" max="1000" value="200" step="1">
+    <span id="wavelengthValue1">200</span>
+</div>
+<div class="slider-container">
+        <p>Wave 2</p>
+    <label for="amplitudeSlider2">Amplitude:</label>
+    <input id="amplitudeSlider2" type="range" min="1" max="4" value="1" step="1">
+    <span id="amplitudeValue2">1</span>
+    <label for="periodSlider2">Period (ms):</label>
+    <input id="periodSlider2" type="range" min="1000" max="10000" value="5000" step="1">
+    <span id="periodValue2">5000</span>
+    <label for="wavelengthSlider2">Wavelength (pixels):</label>
+    <input id="wavelengthSlider2" type="range" min="100" max="1000" value="200" step="1">
+    <span id="wavelengthValue2">200</span>
+</div>
+<div style="margin-top: 20px;">
+    <button id="pauseResumeBtn">Pause</button>
+    <button id="showThirdWaveBtn">Show Third Wave</button>
+</div>
+    
+<p><a href="index.html">Back</a></p>    
+
+<script>
+    var waveChart = document.getElementById('waveChart');
+    var pauseResumeBtn = document.getElementById('pauseResumeBtn');
+    var showThirdWaveBtn = document.getElementById('showThirdWaveBtn');
+
+    var amplitudeSlider1 = document.getElementById('amplitudeSlider1');
+    var periodSlider1 = document.getElementById('periodSlider1');
+    var wavelengthSlider1 = document.getElementById('wavelengthSlider1');
+
+    var amplitudeSlider2 = document.getElementById('amplitudeSlider2');
+    var periodSlider2 = document.getElementById('periodSlider2');
+    var wavelengthSlider2 = document.getElementById('wavelengthSlider2');
+
+    var amplitudeValue1 = document.getElementById('amplitudeValue1');
+    var periodValue1 = document.getElementById('periodValue1');
+    var wavelengthValue1 = document.getElementById('wavelengthValue1');
+
+    var amplitudeValue2 = document.getElementById('amplitudeValue2');
+    var periodValue2 = document.getElementById('periodValue2');
+    var wavelengthValue2 = document.getElementById('wavelengthValue2');
+
+    var isPaused = false;
+
+    var thirdWaveVisible = false;
+
+    function updateChart() {
+        var amplitude1 = parseInt(amplitudeSlider1.value);
+        var period1 = parseInt(periodSlider1.value);
+        var wavelength1 = parseInt(wavelengthSlider1.value);
+
+        var amplitude2 = parseInt(amplitudeSlider2.value);
+        var period2 = parseInt(periodSlider2.value);
+        var wavelength2 = parseInt(wavelengthSlider2.value);
+
+        amplitudeValue1.textContent = amplitude1;
+        periodValue1.textContent = period1;
+        wavelengthValue1.textContent = wavelength1;
+
+        amplitudeValue2.textContent = amplitude2;
+        periodValue2.textContent = period2;
+        wavelengthValue2.textContent = wavelength2;
+
+        var x = [];
+        var y1 = [];
+        var y2 = [];
+        var y3 = [];
+
+        for (var i = 0; i < 500; i++) {
+            x.push(i);
+            y1.push(amplitude1 * Math.sin(2 * Math.PI * i / wavelength1 - 2 * Math.PI * Date.now() / period1));
+            y2.push(amplitude2 * Math.sin(2 * Math.PI * i / wavelength2 + 2 * Math.PI * Date.now() / period2));
+            y3.push(y1[i] + y2[i]);
+        }
+
+        var maxAmplitudeWave1 = Math.max.apply(null, y1.map(Math.abs));
+        var maxAmplitudeWave2 = Math.max.apply(null, y2.map(Math.abs));
+        var maxPossibleAmplitudeThirdWave = maxAmplitudeWave1 + maxAmplitudeWave2;
+
+        var data = [
+            {
+                x: x,
+                y: y1,
+                mode: 'lines',
+                line: {
+                    color: 'blue'
+                },
+                name: 'Wave 1'
+            },
+            {
+                x: x,
+                y: y2,
+                mode: 'lines',
+                line: {
+                    color: 'red'
+                },
+                name: 'Wave 2'
+            }
+        ];
+
+        if (thirdWaveVisible) {
+            data.push({
+                x: x,
+                y: y3,
+                mode: 'lines',
+                line: {
+                    color: 'green'
+                },
+                name: 'Wave 3 (Sum of Waves 1 and 2)'
+            });
+        }
+
+        var layout = {
+            title: 'Explore Conditions for Stationary Wave Formation',
+            xaxis: {
+                title: 'Distance Moved by the Wave'
+            },
+            yaxis: {
+                title: 'Displacement of Wave Particles',
+                range: [-maxPossibleAmplitudeThirdWave - 0.2, maxPossibleAmplitudeThirdWave + 0.5]
+            },
+            legend: {
+                orientation: 'h',
+                y: 1.05
+            },
+            width: 640,
+            height: 500
+        };
+
+        Plotly.newPlot(waveChart, data, layout);
+    }
+
+    amplitudeSlider1.addEventListener('input', updateChart);
+    periodSlider1.addEventListener('input', updateChart);
+    wavelengthSlider1.addEventListener('input', updateChart);
+
+    amplitudeSlider2.addEventListener('input', updateChart);
+    periodSlider2.addEventListener('input', updateChart);
+    wavelengthSlider2.addEventListener('input', updateChart);
+
+    setInterval(function () {
+        if (!isPaused) {
+            updateChart();
+        }
+    }, 20);
+
+    pauseResumeBtn.addEventListener('click', function () {
+        isPaused = !isPaused;
+        pauseResumeBtn.textContent = isPaused ? 'Resume' : 'Pause';
+    });
+
+    showThirdWaveBtn.addEventListener('click', function () {
+        thirdWaveVisible = !thirdWaveVisible;
+        showThirdWaveBtn.textContent = thirdWaveVisible ? 'Hide Third Wave' : 'Show Third Wave';
+        updateChart();
+    });
+
+    updateChart(); // Initial chart update
+</script>
+</body>
+</html>

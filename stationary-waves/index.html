@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stationary Transverse Waves Visualization</title>
+<script src="plotly-latest.min.js"></script>
+<style>
+    .plotly-graph-div {
+        margin: 0 auto;
+        width: 100%;
+    }
+    .slider-container {
+        display: flex;
+        align-items: center;
+    }
+
+</style>
+</head>
+<body>
+<div class="plotly-graph-div" id="waveChart"></div>
+    
+<div style="margin-top: 0px;">
+    <label for="periodSlider">Period of Oscillation (ms):</label>
+    <input id="periodSlider" type="range" min="1000" max="10000" value="5000" step="1">
+</div>
+<div style="margin-top: 10px;">
+    <label for="wavelengthSlider">Wavelength (pixels):</label>
+    <input id="wavelengthSlider" type="range" min="100" max="1000" value="200" step="1">
+</div>
+
+<div style="margin-top: 20px;">
+    <button id="pauseResumeBtn">Pause</button>
+    <button id="showThirdWaveBtn">Show Third Wave</button>
+</div>
+    
+<p><a href="different-waves.html">What if the waves were different?</a></p>
+     
+<script>
+    var waveChart = document.getElementById('waveChart');
+    var pauseResumeBtn = document.getElementById('pauseResumeBtn');
+    var showThirdWaveBtn = document.getElementById('showThirdWaveBtn');
+
+    var periodSlider = document.getElementById('periodSlider');
+    var wavelengthSlider = document.getElementById('wavelengthSlider');
+    var isPaused = false;
+
+    var thirdWaveVisible = false;
+
+    function updateChart() {
+        var period = parseInt(periodSlider.value);
+        var wavelength = parseInt(wavelengthSlider.value);
+
+        var x = [];
+        var y1 = [];
+        var y2 = [];
+        var y3 = [];
+
+        for (var i = 0; i < 640; i++) {
+            x.push(i);
+            y1.push(Math.sin(2 * Math.PI * i / wavelength - 2 * Math.PI * Date.now() / period));
+            y2.push(Math.sin(2 * Math.PI * i / wavelength + 2 * Math.PI * Date.now() / period));
+            y3.push(y1[i] + y2[i]);
+        }
+
+        var maxAmplitudeWave1 = Math.max.apply(null, y1.map(Math.abs));
+        var maxAmplitudeWave2 = Math.max.apply(null, y2.map(Math.abs));
+        var maxPossibleAmplitudeThirdWave = maxAmplitudeWave1 + maxAmplitudeWave2;
+
+        var data = [
+            {
+                x: x,
+                y: y1,
+                mode: 'lines',
+                line: {
+                    color: 'blue'
+                },
+                name: 'Wave 1'
+            },
+            {
+                x: x,
+                y: y2,
+                mode: 'lines',
+                line: {
+                    color: 'red'
+                },
+                name: 'Wave 2'
+            }
+        ];
+
+        if (thirdWaveVisible) {
+            data.push({
+                x: x,
+                y: y3,
+                mode: 'lines',
+                line: {
+                    color: 'green'
+                },
+                name: 'Wave 3 (Sum of Waves 1 and 2)'
+            });
+        }
+
+var layout = {
+            title: 'Formation of Stationary Transverse Waves',
+            xaxis: {
+                title: 'Distance',
+                range: [0, 640] // Fixed range for the horizontal axis
+            },
+            yaxis: {
+                title: 'Displacement of Wave Particles',
+                range: [-maxPossibleAmplitudeThirdWave - 0.1, maxPossibleAmplitudeThirdWave + 0.5]
+            },
+            legend: {
+                orientation: 'h', // Display legend horizontally
+                y: 1.05 // Position legend slightly above the chart
+            },
+            width: 640, // Fixed width for the chart
+            height: 480 // Fixed height for the chart
+        };
+        Plotly.newPlot(waveChart, data, layout);
+    }
+
+    periodSlider.addEventListener('input', updateChart);
+    wavelengthSlider.addEventListener('input', updateChart);
+
+    setInterval(function () {
+        if (!isPaused) {
+            updateChart();
+        }
+    }, 20);
+
+    pauseResumeBtn.addEventListener('click', function () {
+        isPaused = !isPaused;
+        pauseResumeBtn.textContent = isPaused ? 'Resume' : 'Pause';
+    });
+
+    showThirdWaveBtn.addEventListener('click', function () {
+        thirdWaveVisible = !thirdWaveVisible;
+        showThirdWaveBtn.textContent = thirdWaveVisible ? 'Hide Third Wave' : 'Show Third Wave';
+        updateChart();
+    });
+
+    updateChart(); // Initial chart update
+</script>
+</body>
+</html>
