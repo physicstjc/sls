@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Electric Potential of Two Charges</title>
+<script src="plotly-latest.min.js"></script>
+<style>
+    body {
+        font-family: sans-serif;
+        font-size: 
+    }
+    #graph {
+        width: 640px;
+        height: 500px;
+    }
+</style>
+</head>
+<body>
+
+<h2>Electric Potential of Two Charges</h2>
+    
+<div id="graph"></div>
+<div>
+    <label for="charge1">Charge of Particle 1:</label>
+    <input type="range" id="charge1" min="-10" max="10" value="5" step="0.1" onchange="updateGraph(); updateCharge1Value()">
+    <span id="charge1Value">5</span>
+</div>
+
+<div>
+    <label for="charge2">Charge of Particle 2:</label>
+    <input type="range" id="charge2" min="-10" max="10" value="-5" step="0.1" onchange="updateGraph(); updateCharge2Value()">
+    <span id="charge2Value">-5</span>
+</div>
+
+<div>
+    <label for="distance">Distance between Particles:</label>
+    <input type="range" id="distance" min="1" max="10" value="5" step="0.1" onchange="updateGraph(); updateDistanceValue()">
+    <span id="distanceValue">5</span>
+</div>
+
+<div>
+    <label for="showTotal">Show Total Potential:</label>
+    <input type="checkbox" id="showTotal" onchange="updateGraph()">
+</div>
+
+
+<script>
+    function updateGraph() {
+        const charge1 = parseFloat(document.getElementById("charge1").value);
+        const charge2 = parseFloat(document.getElementById("charge2").value);
+        const distance = parseFloat(document.getElementById("distance").value);
+        const showTotal = document.getElementById("showTotal").checked;
+
+        const xValues = [];
+        const potential1Values = [];
+        const potential2Values = [];
+
+        const step = 0.1;
+        for (let x = -10; x <= 10; x += step) {
+            const potential1 = k * charge1 / Math.abs(x + distance/2);
+            const potential2 = k * charge2 / Math.abs(x - distance/2);
+            xValues.push(x);
+            potential1Values.push(potential1);
+            potential2Values.push(potential2);
+        }
+
+        const totalValues = potential1Values.map((val, index) => val + potential2Values[index]);
+
+        const data = [{
+            x: xValues,
+            y: potential1Values,
+            mode: 'lines',
+            name: 'Potential 1',
+            line: {shape: 'spline'}
+        }, {
+            x: xValues,
+            y: potential2Values,
+            mode: 'lines',
+            name: 'Potential 2',
+            line: {shape: 'spline'}
+        }];
+
+        if (showTotal) {
+            data.push({
+                x: xValues,
+                y: totalValues,
+                mode: 'lines',
+                name: 'Total Potential',
+                line: {shape: 'spline'}
+            });
+        }
+
+        const layout = {
+            xaxis: {title: 'Displacement from Midpoint', range: [-10, 10]},
+            yaxis: {title: 'Electric Potential', range: [-10, 10]},
+            legend: {
+                orientation: 'h',
+                y: -0.25
+            },
+        };
+
+        // Add scatter points for the particles
+        const particle1X = -distance/2;
+        const particle1Y = 0;
+        data.push({
+            x: [particle1X],
+            y: [particle1Y],
+            mode: 'markers',
+            marker: {size: 10, color: 'blue'},
+            name: 'Particle 1'
+        });
+        
+        const particle2X = distance/2;
+        const particle2Y = 0;
+        data.push({
+            x: [particle2X],
+            y: [particle2Y],
+            mode: 'markers',
+            marker: {size: 10, color: 'orange'},
+            name: 'Particle 2'
+        });
+        
+        Plotly.newPlot('graph', data, layout);
+    }
+
+    function updateCharge1Value() {
+        document.getElementById("charge1Value").textContent = document.getElementById("charge1").value;
+    }
+
+    function updateCharge2Value() {
+        document.getElementById("charge2Value").textContent = document.getElementById("charge2").value;
+    }
+
+    function updateDistanceValue() {
+        document.getElementById("distanceValue").textContent = document.getElementById("distance").value;
+    }
+
+    const k = 1; // Coulomb's constant
+
+    updateGraph(); // Initial update
+    updateCharge1Value();
+    updateCharge2Value();
+    updateDistanceValue();
+</script>
+
+</body>
+</html>
+
+
+<!--
+Prompts used for ChatGPT
+
+1. Create a web app to represent the electric potential of two charged particles.
+2. The two particles should be represented as dots along a straight line, with the midpoint being x=0.
+3. The electric potential for each particle should be drawn using plotly.js. The vertical axis of the graph should be that of electric potential. The horizontal axis is the distance from the centre of the first particle.
+4. The sum of the two electric potentials should be represented on the same axes as well. 
+5. Show all the codes in one html file.
+6. Make the curve smooth. 
+7. Use sliders to change the charge of each particle separately (both negative and positive values)
+8. Use a sliider to change the distance between the two particles.
+9. Update the curves with the sliders.
+10. Keep the range of values in the axes fixed.
+11. Use a checkbox to toggle the visibility of the total potential graph.
+
+-->
