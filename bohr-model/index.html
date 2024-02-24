@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bohr's Model of Atoms</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+    canvas {
+        border: 2px solid black;
+    }
+</style>
+</head>
+<body>
+    <h1>Bohr Model of Atoms</h1>
+    <label for="element">Choose an element:</label>
+    <select id="element">
+        <option value="1">Hydrogen</option>
+        <option value="2">Helium</option>
+        <option value="3">Lithium</option>
+        <option value="4">Beryllium</option>
+        <option value="5">Boron</option>
+        <option value="6">Carbon</option>
+        <option value="7">Nitrogen</option>
+        <option value="8">Oxygen</option>
+        <option value="9">Fluorine</option>
+        <option value="10">Neon</option>
+        <option value="11">Sodium</option>
+        <option value="12">Magnesium</option>
+        <option value="13">Aluminum</option>
+        <option value="14">Silicon</option>
+        <option value="15">Phosphorus</option>
+        <option value="16">Sulfur</option>
+        <option value="17">Chlorine</option>
+        <option value="18">Argon</option>
+        <option value="19">Potassium</option>
+        <option value="20">Calcium</option>
+    </select><br>
+    <canvas id="canvas" width="400" height="400"></canvas>
+
+    <script>
+        const elements = [
+            { symbol: 'H', name: 'Hydrogen', protons: 1, neutrons: 0, shells: [1], electrons: [1] },
+            { symbol: 'He', name: 'Helium', protons: 2, neutrons: 2, shells: [1], electrons: [2] },
+            { symbol: 'Li', name: 'Lithium', protons: 3, neutrons: 4, shells: [1,2], electrons: [2, 1] },
+            { symbol: 'Be', name: 'Beryllium', protons: 4, neutrons: 5, shells: [1,2], electrons: [2, 2] },
+            { symbol: 'B', name: 'Boron', protons: 5, neutrons: 6, shells: [1,2], electrons: [2, 3] },
+            { symbol: 'C', name: 'Carbon', protons: 6, neutrons: 6, shells: [1,2], electrons: [2, 4] },
+            { symbol: 'N', name: 'Nitrogen', protons: 7, neutrons: 7, shells: [1,2], electrons: [2, 5] },
+            { symbol: 'O', name: 'Oxygen', protons: 8, neutrons: 8, shells: [1,2], electrons: [2, 6] },
+            { symbol: 'F', name: 'Fluorine', protons: 9, neutrons: 10, shells: [1,2], electrons: [2, 7] },
+            { symbol: 'Ne', name: 'Neon', protons: 10, neutrons: 10, shells: [1,2], electrons: [2, 8] },
+            { symbol: 'Na', name: 'Sodium', protons: 11, neutrons: 12, shells: [1,2,3], electrons: [2, 8, 1] },
+            { symbol: 'Mg', name: 'Magnesium', protons: 12, neutrons: 12, shells: [1,2,3], electrons: [2, 8, 2] },
+            { symbol: 'Al', name: 'Aluminum', protons: 13, neutrons: 14, shells: [1,2,3], electrons: [2, 8, 3] },
+            { symbol: 'Si', name: 'Silicon', protons: 14, neutrons: 14, shells: [1,2,3], electrons: [2, 8, 4] },
+            { symbol: 'P', name: 'Phosphorus', protons: 15, neutrons: 16, shells: [1,2,3], electrons: [2, 8, 5] },
+            { symbol: 'S', name: 'Sulfur', protons: 16, neutrons: 16, shells: [1,2,3], electrons: [2, 8, 6] },
+            { symbol: 'Cl', name: 'Chlorine', protons: 17, neutrons: 18, shells: [1,2,3], electrons: [2, 8, 7] },
+            { symbol: 'Ar', name: 'Argon', protons: 18, neutrons: 22, shells: [1,2,3], electrons: [2, 8, 8] },
+            { symbol: 'K', name: 'Potassium', protons: 19, neutrons: 20, shells: [1,2,3,4], electrons: [2, 8, 8, 1] },
+            { symbol: 'Ca', name: 'Calcium', protons: 20, neutrons: 20, shells: [1,2,3,4], electrons: [2, 8, 8, 2] }
+        ];
+const elementSelect = document.getElementById('element');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        elementSelect.addEventListener('change', drawAtom);
+
+        function drawAtom() {
+            const index = parseInt(elementSelect.value) - 1;
+            const element = elements[index];
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+// Draw nucleus
+            const nucleusSize = 20;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, nucleusSize, 0, Math.PI * 2);
+            ctx.fillStyle = 'yellow';
+            ctx.fill();
+            ctx.stroke();
+
+            // Write number of protons and neutrons
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${element.protons}p`, centerX, centerY-4);
+            ctx.fillText(`${element.neutrons}n`, centerX, centerY+6);
+
+
+            // Draw shells and electrons
+            let radius = 40;
+            for (let i = 0; i < element.shells.length; i++) {
+                const shellElectrons = element.electrons[i];
+                radius += i === 0 ? 0 : 40; // Increment radius for each shell after the first one
+                drawShell(centerX, centerY, radius);
+                drawElectrons(centerX, centerY, radius, shellElectrons);
+            }
+        }
+
+        function drawShell(centerX, centerY, radius) {
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+        }
+
+        function drawElectrons(centerX, centerY, radius, electrons) {
+            const angleStep = Math.PI * 2 / electrons;
+            let angle = 0;
+
+            for (let i = 0; i < electrons; i++) {
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+
+                // Draw electron
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = i < 2 ? 'blue' : 'red'; // First two electrons are blue, others are red
+                ctx.fill();
+
+                angle += angleStep;
+            }
+        }
+
+        // Initial draw
+        drawAtom();
+    </script>
+</body>
+</html>
