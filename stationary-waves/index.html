@@ -8,13 +8,15 @@
 <style>
     .plotly-graph-div {
         margin: 0 auto;
-        width: 100%;
+        width: 100vw;
     }
     .slider-container {
         display: flex;
         align-items: center;
     }
-
+    body {
+        width:100%;
+    }
 </style>
 </head>
 <body>
@@ -99,26 +101,25 @@
                 name: 'Wave 3 (Sum of Waves 1 and 2)'
             });
         }
+        var config = {responsive: true}
+        var layout = {
+                title: 'Formation of Stationary Transverse Waves',
+                xaxis: {
+                    title: 'Distance',
+                    range: [0, 640] // Fixed range for the horizontal axis
+                },
+                yaxis: {
+                    title: 'Displacement of Wave Particles',
+                    range: [-maxPossibleAmplitudeThirdWave - 0.1, maxPossibleAmplitudeThirdWave + 0.5]
+                },
+                legend: {
+                    orientation: 'h', // Display legend horizontally
+                    y: 1.05 // Position legend slightly above the chart
+                }
 
-var layout = {
-            title: 'Formation of Stationary Transverse Waves',
-            xaxis: {
-                title: 'Distance',
-                range: [0, 640] // Fixed range for the horizontal axis
-            },
-            yaxis: {
-                title: 'Displacement of Wave Particles',
-                range: [-maxPossibleAmplitudeThirdWave - 0.1, maxPossibleAmplitudeThirdWave + 0.5]
-            },
-            legend: {
-                orientation: 'h', // Display legend horizontally
-                y: 1.05 // Position legend slightly above the chart
-            },
-            width: 640, // Fixed width for the chart
-            height: 480 // Fixed height for the chart
-        };
-        Plotly.newPlot(waveChart, data, layout);
-    }
+            };
+            Plotly.newPlot(waveChart, data, layout);
+        }
 
     periodSlider.addEventListener('input', updateChart);
     wavelengthSlider.addEventListener('input', updateChart);
