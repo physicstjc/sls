@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Electric Potential of Two Charges</title>
+<title>Electric Field Strength of Two Charges</title>
 <script src="plotly-latest.min.js"></script>
 <style>
     body {
@@ -11,14 +11,14 @@
         font-size: 
     }
     #graph {
-        width: 100vw;
+        width: 100vm;
         height: 500px;
     }
 </style>
 </head>
 <body>
 
-<h2>Electric Potential of Two Charges</h2>
+<h2>Electric Field Strength of Two Charges</h2>
     
 <div id="graph"></div>
 <div>
@@ -40,12 +40,12 @@
 </div>
 
 <div>
-    <label for="showTotal">Show Total Potential:</label>
+    <label for="showTotal">Show Total Field Strength:</label>
     <input type="checkbox" id="showTotal" onchange="updateGraph()">
 </div>
 
-<p><a href="field-strength.html">Graph of Electric Field Strength</a></p>
-    
+<p><a href="index.html">Return to Potential Graph</a></p>
+
 <script>
     function updateGraph() {
         const charge1 = parseFloat(document.getElementById("charge1").value);
@@ -54,47 +54,75 @@
         const showTotal = document.getElementById("showTotal").checked;
 
         const xValues = [];
-        const potential1Values = [];
-        const potential2Values = [];
-
+        const field1Values = [];
+        const field2Values = [];
+    
+        
         const step = 0.1;
-        for (let x = -10; x <= 10; x += step) {
-            const potential1 = k * charge1 / Math.abs(x + distance/2);
-            const potential2 = k * charge2 / Math.abs(x - distance/2);
+        for (let x = -10; x <= (- distance/2 - 0.01); x += step) {
+            const field1 = k * charge1 * (x + distance/2)/ (Math.abs(x + distance/2))**3;
             xValues.push(x);
-            potential1Values.push(potential1);
-            potential2Values.push(potential2);
-        }
+            field1Values.push(field1);
+        };
+        for (let x = (- distance/2 - 0.01); x <= (- distance/2 + 0.01); x += step) {
+            const field1 = null;
+            xValues.push(x);
+            field1Values.push(field1);
+        };
+        for (let x = (- distance/2 + 0.01); x <= 10; x += step) {
+            const field1 = k * charge1 * (x + distance/2)/ (Math.abs(x + distance/2))**3;
+            xValues.push(x);
+            field1Values.push(field1);
+        };
+        
+        for (let x = -10; x <= (distance/2 - 0.01); x += step) {
+            const field2 = k * charge2 * (x - distance/2)/ (Math.abs(x - distance/2))**3;
+            xValues.push(x);
+            field2Values.push(field2);
+        };
+        
+        for (let x = (distance/2 - 0.01); x <= (distance/2 + 0.01); x += step) {
+            const field2 = null;
+            xValues.push(x);
+            field2Values.push(field2);
+        };
+        
+        for (let x = (distance/2 + 0.1); x <= 10; x += step) {
+            const field2 = k * charge2 * (x - distance/2)/ (Math.abs(x - distance/2))**3;
+            xValues.push(x);
+            field2Values.push(field2);
+        };
 
-        const totalValues = potential1Values.map((val, index) => val + potential2Values[index]);
-
+        const totalValues = field1Values.map((val, index) => val + field2Values[index]);
+        
         const data = [{
             x: xValues,
-            y: potential1Values,
+            y: field1Values,
             mode: 'lines',
-            name: 'Potential 1',
+            name: 'Field 1',
             line: {shape: 'spline'}
         }, {
             x: xValues,
-            y: potential2Values,
+            y: field2Values,
             mode: 'lines',
-            name: 'Potential 2',
+            name: 'Field 2',
             line: {shape: 'spline'}
         }];
 
+        
         if (showTotal) {
             data.push({
                 x: xValues,
                 y: totalValues,
                 mode: 'lines',
-                name: 'Total Potential',
+                name: 'Total Field',
                 line: {shape: 'spline'}
             });
         }
 
         const layout = {
             xaxis: {title: 'Displacement from Midpoint', range: [-10, 10]},
-            yaxis: {title: 'Electric Potential', range: [-10, 10]},
+            yaxis: {title: 'Electric Field', range: [-10, 10]},
             legend: {
                 orientation: 'h',
                 y: 1.2
@@ -147,21 +175,3 @@
 
 </body>
 </html>
-
-
-<!--
-Prompts used for ChatGPT
-
-1. Create a web app to represent the electric potential of two charged particles.
-2. The two particles should be represented as dots along a straight line, with the midpoint being x=0.
-3. The electric potential for each particle should be drawn using plotly.js. The vertical axis of the graph should be that of electric potential. The horizontal axis is the distance from the centre of the first particle.
-4. The sum of the two electric potentials should be represented on the same axes as well. 
-5. Show all the codes in one html file.
-6. Make the curve smooth. 
-7. Use sliders to change the charge of each particle separately (both negative and positive values)
-8. Use a sliider to change the distance between the two particles.
-9. Update the curves with the sliders.
-10. Keep the range of values in the axes fixed.
-11. Use a checkbox to toggle the visibility of the total potential graph.
-
--->
