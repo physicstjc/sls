@@ -6,6 +6,7 @@
 <title>Generating Javascript Applications for SLS using ChatGPT</title>
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 <style>
+    /* Your CSS styles here */
     body {
         font-family: Arial, sans-serif;
     }
@@ -24,203 +25,94 @@
         color: #dc3545;
         font-size: 20pt;
     }
+    
+    h2 {
+        color: #ffffff;
+        font-size: 20pt;
+        display: inline;
+    }
+    
+    .menu {
+        background-color: #333;
+    }
+
+    .menu ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .menu li {
+        float: left;
+    }
+
+    .menu li a {
+        display: block;
+        color: white;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+    }
+
+    .menu li a:hover {
+        background-color: #555;
+    }
+    
+    .container-header {
+        background-color: #333;
+        color: white;
+        padding: 10px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    #backlink {
+        color: #d3d3d3;
+    }
+    
+    a.btn.btn-secondary, a.btn.btn-primary, button.btn.btn-secondary {
+        font-size: 14px;
+        margin-top: 4px;
+    }
+    
+
+
 </style>
 </head>
 <body>
+    
+<nav class="menu" id="top">
+      <ul>
+        <li><a href="index.html#top">Home</a></li>
+        <li><a href="#General">General Tools</a></li>
+        <li><a href="#Games">Games</a></li>        
+        <li><a href="#Assessment">Assessment</a></li>  
+        <li><a href="#Graphs-and-Simulations">Graphs and Simulations</a></li>
+        <li><a href="#Sensors">Sensors</a></li>    
+        <li><a href="https://physicslens.com">Blog</a></li>
+      </ul>
+    </nav>
 
 <div class="container">
-    <h2 class="mt-4 mb-4">AI-Generated Apps for Student Learning Space</h2>
+    <h1 class="mt-4 mb-4">AI-Generated Apps for Student Learning Space</h1>
     
     <p>This is a series of apps that were produced using codes given by <a href="https://chat.openai.com/" target="_blank">ChatGPT 3.5 (the free version)</a>. You can do so with other GAI like <a href="https://copilot.microsoft.com/" target="_blank">Microsoft Copilot</a> too. The apps are usable directly from here or can be downloaded and included into an SLS package.</p><p>The prompts given to ChatGPT are provided for your reference. However, you may still have to refine the prompts as the output may not always be consistent. While it is possible to generate a working app without any changes to the code, you can customise the app much faster if you know a bit of html or javascript. You may even ask ChatGPT to teach you how to do so!</p>
     
     <p>Check out the step-by-step guide to produce and deploy your app.</p>
     <p>How to: <a href="how-to.html">Generate your own apps</a> | <a href="https://www.learning.moe.edu.sg/teacher-user-guide/author/insert-media-objects/" target="_blank">Upload to SLS as Media Objects</a></p>
 
-    
-       
-     <div class="row">
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="kinematics-graph/kinematics-graph.png" alt="Kinematics Graphs">
-                    <div class="card-body">
-                        <h3 class="card-title">Kinematics Graphs</h3>
-                        <p class="card-text">The user gets to explore the changes in the shape of a displacement or velocity graph by changing the values of initial velocity and acceleration.</p>
-                        <a href="kinematics-graph/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="kinematics-graph/kinematics-graph.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse28" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse28">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a graph using chart.js with vertical axis being "displacement / m" and horizontal axis being "time / s".</li>
-                                        <li>There should be a slider for the initial velocity value ranging from 0 to 2 m/s, a slider for the acceleration value ranging from -2 m/s^2 to 2 m/s^2.</li>
-                                        <li>The displacement will start from zero and will follow a function dependent on the initial velocity and acceleration values from the slider. </li>
-                                        <li>Draw the line of the displacement on the graph. Update the graph whenever the sliders are moved. Draw the function of the displacement graph with a smooth curve instead of connecting the dots.</li>
-                                        <li>Show the values of the velocity and acceleration, along with the units</li>
-                                        <li>Use A drop-down list to change the vertical axis to velocity or acceleration, updating the axis each time and the curve as well.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-         
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="stationary-waves/stationary-waves.gif" alt="Formation of Stationary Waves">
-                    <div class="card-body">
-                        <h3 class="card-title">Formation of Stationary Waves</h3>
-                        <p class="card-text">Meant for A-level Physics, students can observe how two waves moving in opposite directions can come together to produce a stationary wave.</p>
-                        <p class="card-text">A second page allows students to explore what happens when the conditions (wavelength, period, amplitude) of both waves are not identical.</p>
-                        <p class="card-text">Note: The plotly.js file must remain in the same folder as the html files if uploading as a zip file into SLS.</p>
-                        <a href="stationary-waves/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="stationary-waves/stationary-waves.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse29" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse29">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>For the index page:</p>
-                                    <ol>
-                                        <li>Create a graph using plotly.js with a vertical axis for displacement of wave particles and a horizontal axis for distance moved by a wave. .</li>
-                                        <li>Draw the curve of an infinitely long transverse wave moving along the horizontal axis.</li>
-                                        <li>Create another infinitely long transverse wave of the same wavelength moving in the opposite direction along the same horizontal axis. Represent them in different colours. </li>
-                                        <li>Use a slider to change the period of oscillation of both waves and another slider to change the wavelength of the waves.</li>
-                                        <li>Each wave should have the same wavelength.</li>
-                                        <li><i>Revised prompt: Keep the vertical axis fixed in height, equal to the maximum possible amplitude of the third wave.</i></li>
-                                         <li><i>Revised prompt: Keeep the legend of the chart to the bottom so that the horizontal axis length is fixed at 640 pixels</i></li>
-                                    </ol>
-                                    <p>For the second page:</p>
-                                    <ol><li>Have separate sliders for the amplitudes, periods and wavelengths of wave 1 and wave 2.</li>
-                                        <li>Display the values of the sliders next to them.</li></ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-         
-         <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="electric-potential/electric-potential.png" alt="Electric Potential of Two Charges">
-                    <div class="card-body">
-                        <h3 class="card-title">Electric Potential of Two Charges</h3>
-                        <p class="card-text">Meant for A-level Physics, the variation of electric potential due to two charge particles can be observed.</p>
-                        <p class="card-text">Sliders allow user to change the magnitude and signs of the charges and the distance apart.</p>
-                        <p class="card-text">Note: The plotly.js file must remain in the same folder as the html files if uploading as a zip file into SLS.</p>
-                        <a href="electric-potential/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="electric-potential/electric-potential.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse30" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse30">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                    <li>Create a web app to represent the electric potential of two charged particles.</li>
-                                    <li>The two particles should be represented as dots along a straight line, with the midpoint being x=0.
-                                    </li>
-                                    <li>The electric potential for each particle should be drawn using plotly.js. The vertical axis of the graph should be that of electric potential. The horizontal axis is the distance from the centre of the first particle.</li>
-                                    <li>The sum of the two electric potentials should be represented on the same axes as well.</li>
-                                    <li>Show all the codes in one html file.</li>
-                                    <li>Make the curve smooth.</li>
-                                    <li>Use sliders to change the charge of each particle separately (both negative and positive values)</li>
-                                    <li>Use a sliider to change the distance between the two particles.</li>
-                                    <li>Update the curves with the sliders.</li>
-                                    <li>Keep the range of values in the axes fixed.</li>
-                                    <li>Use a checkbox to toggle the visibility of the total potential graph.</li>
-                                    
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div> 
-    </div>
-      <div class="row">
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="sound-level-meter/sound-level-meter.png" alt="Sound Level Meter">
-                    <div class="card-body">
-                        <h3 class="card-title">Sound Level Meter</h3>
-                        <p class="card-text">Use this sound level meter to measure the noise level in your class. The slider allows you to change the sensitivity of the meter. The sensitivity value ranges from -20 dB to 20 dB.</p>
-                        <a href="sound-level-meter/" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="sound-level-meter/sound-level-meter.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse16" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse16">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a html and javascript page that senses the sound from the computer's microphone and indicates the loudness on a needle to simulate a sound level meter.</li>
-                                        <li>Use the slider to change the sensitivity of the sound level meter.</li>
-                                        <li>Centralise everything horizontally.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-          
-          
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="sound-frequency-analyser/sound-frequency-analyser.png" alt="Sound Frequency Analyser">
-                    <div class="card-body">
-                        <h3 class="card-title">Sound Frequency Analyser</h3>
-                        <p class="card-text">This sound frequency analyser is able to pick up the dominant frequency from the microphone. Students can use it to investigate the effect on the frequency of sound by factors such as length or tension of a guitar string.</p>
-                        <p>For higher level Physics students, they can observe the frequencies of higher harmonics.</p>
-                        <a href="sound-frequency-analyser/" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="sound-frequency-analyser/sound-frequency-analyser.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse17" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse17">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Process the data from the microphone to determine the dominant frequency or frequency spectrum of the sound signal.</li>
-                                        <li>Display the value for the dominant frequency.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-          
-          
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="sound-generator/sound-generator.png" alt="Sound Generator">
-                    <div class="card-body">
-                        <h3 class="card-title">Sound Generator</h3>
-                        <p class="card-text">The sound generator can be used to demonstrate the effect of frequency on the pitch of a sound. It can also be used to determine the audible frequency range of an individual.</p>
-                        <a href="sound-generator/" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="sound-generator/sound-generator.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse18" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse18">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a website that generates sound at the highest possible volume with a frequency control slider from 10 Hz to 40000 Hz.</li>
-                                        <li>Use a play and stop button.</li>
-                                        <li>Add an input box too for the frequency to work together with the slider.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-          
     </div>
     
+<div class="container" id="General">
+<header class="container-header">    
+<h2>General Tools</h2><a href="#top" id="backlink">Back to Top</a>
+</header> 
     
-        <div class="row">
+    <div class="row">
+        
         <div class="col-md-4">
             <div class="card mb-4">
                 <img class="card-img-top" src="calculator/calculator.png" alt="Basic Calculator">
@@ -230,8 +122,8 @@
                         <p class="card-text">Keyboard entries are taken as alternative input method.</p>
                         <a href="calculator/" class="btn btn-primary" target="_blank">Test it out</a>
                         <a href="calculator/calculator.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse22" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse22">
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA1" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA1">
                             <div class="card mt-3">
                                 <div class="card-body">
                                     <h3 class="header1">Prompts</h3>
@@ -245,38 +137,8 @@
                     </div>
             </div>
         </div>
-         
-         <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="delight/delight.png" alt="Delight">
-                    <div class="card-body">
-                        <h3 class="card-title">Delight - A Turn-Based Board Game on Electricity</h3>
-                        <p class="card-text">Players will take turns to connect their own bulbs to the terminals while trying to sabotage their opponent's bulbs.</p>
-                        <p class="card-text">At lower levels, students can compete to see who has the most lit bulbs. However, they will need to be able to identify which light bulbs are lit.</p>
-                        <p class="card-text">Do watch out for short-circuits.</p>
-                        <p class="card-text">At higher levels, students can compete to see whose light bulbs has the most total electrical power, with some calculations involved.</p>
-                        <a href="delight/" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="delight/delight.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse23" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse23">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a game board using 16 squares in a 4-by-4 grid with html and javascript. In each square, there is a space of 100 pixels by 100 pixels where an image can be placed. The squares will be the placeholders for the images.</li>
-                                        <li>On the top left corner, the image file "positive.png" is shown. On the bottom right corner, the image file "negative.png" is shown.</li>
-                                        <li>Below the 4 by 4 grid, there is a line if images two users can take turns to choose from: "cross-wires.png", "r-wires-0.png", "t-wires-0.png", "straight-wire-0.png", "yellow-light-0.png" and "red-light-0.png".</li>
-                                        <li>Change the css such that when an image is chosen, it will grey out slightly</li>
-                                        <li>Upon clicking an image that had been placed in the grids, the image will rotate by 90 degrees clockwise.</li>
-                                        <li>Include an undo button to reverse the last step.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-         <div class="col-md-4">
+        
+        <div class="col-md-4">
             <div class="card mb-4">
                 <img class="card-img-top" src="pomodoro-timer/pomodoro-timer.png" alt="Delight">
                     <div class="card-body">
@@ -286,8 +148,8 @@
                         <p class="card-text">The user can also key in a task to focus on during the 25 minutes.</p>
                         <a href="pomodoro-timer/index.html" class="btn btn-primary" target="_blank">Test it out</a>
                         <a href="pomodoro-timer/pomodoro-timer.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse24" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse24">
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA2" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA2">
                             <div class="card mt-3">
                                 <div class="card-body">
                                     <h3 class="header1">Prompts</h3>
@@ -307,194 +169,43 @@
                     </div>
             </div>
         </div>
-         
+    
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="countdown-timer/countdown-timer.png" alt="Countdown Timer Screenshot">
+                    <div class="card-body">
+                        <h3 class="card-title">Countdown Timer</h3>
+                        <p class="card-text">For use in class. Set a duration and start the timer. When the time is up, an alarm will sound.</p>
+                        <p class="card-text">For use in SLS, provided the student does not go from one page to another, a timer can be set up to help student manage the time on an activity.</p>
+                        <p class="card-text">Replace the alarm with something more soothing if you like.</p>
+                        <a href="countdown-timer/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="countdown-timer/countdown-timer.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA3" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA3">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <p>Provide the code for the following in a single html file:</p>
+                                    <ol>
+                                        <li>Create a webpage: This is a basic instruction to start building a webpage.</li>
+                                        <li>Add a countdown timer: We want to include a timer that counts down from a specified time.</li>
+                                        <li>Allow setting hours, minutes, and seconds: Users should be able to input the duration of the countdown by setting the hours, minutes, and seconds individually.</li>
+                                        <li>Include buttons for adjustment: Add buttons labeled with "+H", "-H", "+M", "-M", "+S", and "-S" for users to increase or decrease the hours, minutes, and seconds as they desire.</li>
+                                        <li>Styling the webpage: Use CSS to style the webpage for a visually appealing appearance. This includes setting fonts, colors, and layout.</li>
+                                        <li>Add functionality for starting, pausing, and resetting the timer: Implement JavaScript functions for starting, pausing, and resetting the countdown timer. These functions should be triggered by clicking corresponding buttons.</li>
+                                        <li>Incorporate sound: When the timer reaches zero, play a sound from an audio file (alarm.mp3).</li>
+                                        <li>Include a mute button: After the sound starts playing, display a button labeled "Mute" that allows users to mute or unmute the sound.</li>
+                                                                            </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
     </div>
-    
-   
     <div class="row">
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="student-flashcards/student-flashcards.png" alt="Student Flashcards">
-                    <div class="card-body">
-                        <h3 class="card-title">Student Flashcards</h3>
-                        <p class="card-text">This is the second flashcard app in this collection. The main difference is that students get to upload their own terms and definitions in the form of a csv file.</p>
-                        <p class="card-text">Keyboard entries are taken as alternative input method.</p>
-                        <a href="student-flashcards/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="student-flashcards/student-flashcards.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse25" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse25">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a revision webpage using html, javascript and css that references a csv file in the same folder with two columns: "term" and "definition".</li>
-                                        <li>The csv file is to be uploaded by the user.</li>
-                                        <li>Each term in the "term" field will be displayed in turn using a left and right button. Another button labelled "Definition" will be used to show or hide the corresponding "definition" field at the bottom. Put all the script and style codes in the html file.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="metronome/metronome.png" alt="Metronome">
-                    <div class="card-body">
-                        <h3 class="card-title">Metronome</h3>
-                        <p class="card-text">This digital metronome can be used to keep timing using audio cues.</p>
-                        <p class="card-text">The frequency of oscillation is adjustable.</p>
-                        <a href="metronome/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="metronome/metronome.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse26" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse26">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Make a metronome website with javascript with adjustable frequency.</li>
-                                        <li>Produce a midi sound of 440 Hz every half an oscillation.</li>
-                                        <li>Represent it like an inverted pendulum with one end of the pendulum fixed at the bottom of the canvas.</li>
-                                        <li>Have a start and stop button for the ticking.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
         
-         <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="earth-moon-system/earth-moon-system.png" alt="Earth-Moon System">
-                    <div class="card-body">
-                        <h3 class="card-title">Earth-Moon System</h3>
-                        <p class="card-text">This animation is intended to show the rate of rotation of the Moon being equal to the rate of its revolution around the Earth.</p>
-                        <p class="card-text">The result is that half of the Moon is always not visible from Earth.</p>
-                        <a href="earth-moon-system/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="earth-moon-system/earth-moon-system.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse27" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse27">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a 2D animation of the revolution of the Moon around the Earth.</li>
-                                        <li>The Earth is drawn as a green circle at the center of the canvas.</li>
-                                        <li>Show the rotation of the moon about its own axis with the same time as it takes to move one round around the earth.</li>
-                                        <li> Use two coloured hemispheres to represent the Moon, with the darker hemisphere facing away from the Earth.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-        
-    </div> 
-    
-    
-    
-     <div class="row">
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="acoustic-stopwatch/acoustic-stopwatch.png" alt="Acoustic Stopwatch">
-                    <div class="card-body">
-                        <h3 class="card-title">Acoustic Stopwatch</h3>
-                        <p class="card-text">Instead of using buttons to start and stop a timer, hands can be freed by using loud sounds to trigger the starting and stopping.</p>
-                        <p class="card-text">Acoustic stopwatches can be used in various scientific experiments where precise timing is required, such as in physics experiments involving the measurement of sound propagation or timing of a student completing a lap using a clap as start and stop triggers.</p>
-                        <p class="card-text">A slider can be used to adjust the threshold of the sound used to trigger the stopwatch. A default value to use is 150 (This is a relative unit and not a physical unit). The timing is displayed up to 1 millisecond.</p>
-                        <a href="acoustic-stopwatch/" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="acoustic-stopwatch/acoustic-stopwatch.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse19" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse19">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a webpage with javascript and html that serves as an acoustic stopwatch.</li>
-                                        <li>A start button will be used to begin listening for the first loud sound in order to start the timing.</li>
-                                        <li>The timer will start only when a sound louder than a predetermined threshold is detected by the microphone of the device after pressing the start button.</li>
-                                        <li>It will stop when a second sound that is louder than the same threshold is detected. </li>
-                                        <li>Use a slider to vary the threshold of sound.</li>
-                                        <li>Use another slider to adjust the minimum delay before the timer will stop with the second sound.</li>
-                                        <li>Display the time in seconds and milliseconds.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-          
-          
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="camera-brightness-recorder/camera-brightness-recorder.png" alt="Camera Brightness Recorder">
-                    <div class="card-body">
-                        <h3 class="card-title">Camera Brightness Recorder</h3>
-                        <p class="card-text">This can be used as a datalogger of the brightness detected by a camera.</p>
-                        <p class="card-text">Note that the camera needs to be enabled for your browser. This app will probably not work with iOS devices due to their privacy policies.</p>
-                        <p class="card-text">The brightness value calculated is not based on a specific unit such as lux or candela per square meter, which are commonly used units for measuring brightness in physical light measurements. It is a result of averaging the intensity values of the red, green, and blue color channels of each pixel in the captured frame.</p>
-                        <p class="card-text">It's important to note that the value is relative and may vary depending on factors such as ambient light conditions, camera settings, and image processing algorithms. Therefore, it should be interpreted as a relative measure of brightness rather than an absolute physical measurement.</p>
-                        <a href="camera-brightness-recorder/" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="camera-brightness-recorder/camera-brightness-recorder.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse20" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse20">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a webpage with html and javascript that obtains information from the computer's sensors such as brightness.</li>
-                                        <li>Display the brightness information.</li>
-                                        <li>Use a start and stop button to being and end the sampling. </li>
-                                        <li>Use a slider to control the sampling rate.</li>
-                                        <li>Record the brightness data in a list at the bottom with the timestamp.</li>
-                                        <li>Create a button to download the data in csv format.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-          
-          
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="projectile-simulator/projectile-simulator.png" alt="Projectile Simulator">
-                    <div class="card-body">
-                        <h3 class="card-title">Projectile Simulator</h3>
-                        <p class="card-text">This simulation is used for JC physics students to visualise the independence of horizontal and vertical components of velocity in a projectile launched vertically from a cart moving at constant velocity.</p>
-                        <a href="projectile-simulator/" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="projectile-simulator/projectile-simulator.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse21" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse21">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a simulation to demonstrate the independence of the horizontal and vertical velocities of a projectile and visually represent the cart and projectile movements.</li>
-                                        <li>When the launch button is pressed, a projectile will be shot upward from a cart that is moving from left to right on wheels.</li>
-                                        <li>The horizontal velocity of the projectile will remain constant while the vertical velocity will change with time according to gravitational acceleration. </li>
-                                        <li>In the end, the projectile will land on the same spot relative to the moving cart.</li>
-                                        <li>Use a slider to change the horizontal velocity of the cart. Use a button to start the cart and another button to launch the projectile.</li>
-                                        <li>Use a slider to change the initial vertical launch velocity of the projectile. Before the launch button is pressed, the vertical velocity of the projectile is zero.</li>
-                                        <li>Add two wheels below the cart's rectangle.</li>
-                                        <li>Add a button to reset everything.</li>
-                                        <li>Use time = zero at the time when the launch button is pressed.</li>
-                                        <li>Trace the path of the ball after the launch in the canvas with a dotted curve line.</li>
-                                        <li>Create a variable to store the initial horizontal position of the projectile as the launch button is pressed. Use it to determine the starting point of the trace.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-          
-    </div>    
-    <div class="row">
         <div class="col-md-4">
             <div class="card mb-4">
                 <img class="card-img-top" src="random-name-generator/random-name-generator.png" alt="Random Name Generator Screenshot">
@@ -504,8 +215,8 @@
                         <p class="card-text">If you want to remove the displayed name from the list, you can click the "Remove Name" button below the displayed name. The list of names drawn will appear in a list below.</p>
                         <a href="random-name-generator/index.html" class="btn btn-primary" target="_blank">Test it out</a>
                         <a href="random-name-generator/random-name-generator.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse1" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse1">
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA4" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA4">
                             <div class="card mt-3">
                                 <div class="card-body">
                                     <h3 class="header1">Prompts</h3>
@@ -530,158 +241,30 @@
                     </div>
             </div>
         </div>
-
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="countdown-timer/countdown-timer.png" alt="Countdown Timer Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Countdown Timer</h3>
-                        <p class="card-text">For use in class. Set a duration and start the timer. When the time is up, an alarm will sound.</p>
-                        <p class="card-text">For use in SLS, provided the student does not go from one page to another, a timer can be set up to help student manage the time on an activity.</p>
-                        <p class="card-text">Replace the alarm with something more soothing if you like.</p>
-                        <a href="countdown-timer/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="countdown-timer/countdown-timer.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse2" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse2">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Provide the code for the following in a single html file:</p>
-                                    <ol>
-<li>Create a webpage: This is a basic instruction to start building a webpage.</li>
-<li>Add a countdown timer: We want to include a timer that counts down from a specified time.</li>
-<li>Allow setting hours, minutes, and seconds: Users should be able to input the duration of the countdown by setting the hours, minutes, and seconds individually.</li>
-<li>Include buttons for adjustment: Add buttons labeled with "+H", "-H", "+M", "-M", "+S", and "-S" for users to increase or decrease the hours, minutes, and seconds as they desire.</li>
-<li>Styling the webpage: Use CSS to style the webpage for a visually appealing appearance. This includes setting fonts, colors, and layout.</li>
-<li>Add functionality for starting, pausing, and resetting the timer: Implement JavaScript functions for starting, pausing, and resetting the countdown timer. These functions should be triggered by clicking corresponding buttons.</li>
-<li>Incorporate sound: When the timer reaches zero, play a sound from an audio file (alarm.mp3).</li>
-<li>Include a mute button: After the sound starts playing, display a button labeled "Mute" that allows users to mute or unmute the sound.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
         
-
-    <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="definitions/definitions.png" alt="Definitions Flashcards Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Digital Flashcards</h3>
-                        <p class="card-text">For use online. Teacher can include a csv file of key terms and their corresponding definitions into the same folder as the index file. Students can filter by topic and use this to test their recall of definitions of selected key terms.</p>
-                        <a href="definitions/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="definitions/definitions.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse3" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse3">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Create a revision webpage using html, javascript and css that references a csv file in the same folder with three columns: "topic", "term" and "definition". There should be a filter for the "topic" field. Each term in the "term" field will be displayed in turn using a left and right button. Another button labelled "Definition" will be used to show or hide the corresponding "definition" field at the bottom. Put all the script and style codes in the html file.</p>
-    
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
         <div class="col-md-4">
             <div class="card mb-4">
-                <img class="card-img-top" src="quotations/random-quotes.png" alt="Random Quote Generator Screenshot">
+                <img class="card-img-top" src="acoustic-stopwatch/acoustic-stopwatch.png" alt="Acoustic Stopwatch">
                     <div class="card-body">
-                        <h3 class="card-title">Random Quote Generator</h3>
-                        <p class="card-text">Can be used to automatically show a different inspirational quote each time a student visits a site. These quotes will be random and therefore, different for each student. The list of quotes is coded into the html. You can change it from there.</p>
-                        <a href="quotations/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="quotations/random-quotes.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse4" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse4">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Create a html webpage with a randomly generated quote with the attributed source each time it loads. The quotes should be aimed at inspiring students to put in their best effort in their exam preparations. The quote will be chosen from a list of twenty quotes.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="guess-word/guess-word.png" alt="Hangman Game">
-                    <div class="card-body">
-                        <h3 class="card-title">Hangman</h3>
-                        <p class="card-text">Can be used in-class, online or even as part of a virtual escape room. Open the HTML file in a web browser to play the game. The game will present physics keywords for the user to guess one word at a time. Teachers can edit the html to add new words into the list.</p>
-                        <a href="guess-word/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="guess-word/guess-word.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse5" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse5">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p><ol><li>Create a hangman game based on keywords in physics such as "impulse", "momentum" and "inelastic" for the user to guess one word at a time.</li>
-                                    <li>The number of blanks that are shown is the number of letters in the selected word. </li>
-                                    <li>Leave a space between each blank. </li>
-                                    <li>The guessing is done letter by letter.</li>
-                                    <li>For each correct guess, add one point to the score</li>
-                                    <li>For each incorrect guess, deduct one point. Keep score until all the words are completed. </li>
-                                    <li>Display the score. Put all the codes in one html file. Celebrate the completion of each word.</li></ol></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="wave-motion/wave-motion.gif" alt="Wave Motion Animation">
-                    <div class="card-body">
-                        <h3 class="card-title">Wave Motion Interactive Animation</h3>
-                        <p class="card-text">This animation can be used to demonstrate the effect of changes in period on wavelength of a wave. It also highlights a particular particle to show the perpendicular motion to the direction of wave propagation.</p>
-                        <a href="wave-motion/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="wave-motion/wave-motion.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse6" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse6">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Create a simulation of particles moving vertically with simple harmonic motion. The simulation should display 25 particles arranged horizontally, each oscillating vertically at a different phase. The horizontal motion of the particles should simulate simple harmonic motion, with their positions following a sine wave pattern. The amplitude of oscillation should be set to 100 pixels, and the period of oscillation should be controlled by a slider input with a range from 0.1 to 5 seconds. The particles should be confined within a container with a fixed width of 640 pixels and a height of 480 pixels. The slider input should be positioned at the bottom of the container. The simulation should update the positions of the particles at regular intervals to create the illusion of continuous motion. One of the particles near the middle should be red in colour.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-    
-    </div>
-
-        <div class="row">
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="coin-addition/coin-addition.png" alt="Coin Addition Practice Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Coin Addition</h3>
-                        <p class="card-text">For self-practice or in class learning. Users will be shown a number of Singapore coins. They will need to key in the total value for checking.</p>
-                        <a href="coin-addition/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="coin-addition/coin-addition.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse7" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse7">
+                        <h3 class="card-title">Acoustic Stopwatch</h3>
+                        <p class="card-text">Instead of using buttons to start and stop a timer, hands can be freed by using loud sounds to trigger the starting and stopping.</p>
+                        <p class="card-text">Acoustic stopwatches can be used in various scientific experiments where precise timing is required, such as in physics experiments involving the measurement of sound propagation or timing of a student completing a lap using a clap as start and stop triggers.</p>
+                        <p class="card-text">A slider can be used to adjust the threshold of the sound used to trigger the stopwatch. A default value to use is 150 (This is a relative unit and not a physical unit). The timing is displayed up to 1 millisecond.</p>
+                        <a href="acoustic-stopwatch/" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="acoustic-stopwatch/acoustic-stopwatch.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA5" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA5">
                             <div class="card mt-3">
                                 <div class="card-body">
                                     <h3 class="header1">Prompts</h3>
                                     <ol>
-                                        <li>Create a quiz website on how to add values of coins.</li>
-                                        <li>Use a button to generate a new problem with a random number of coins of varying values such as 5 cents (represented by image file "TS5c.jpg"), 10 cents (represented by image file "TS10c.jpg"), 20 cents (represented by image file "TS20c.jpg"), 50 cents (represented by image file "TS50c.jpg") and 1 dollar (represented by image file "TS1d.jpg").</li>
-                                        <li>Display the number of coins as required by duplicating the images.</li>
-                                        <li>Use an input box with a submit button to check the value of coins added in terms of dollars.</li>
-                                        <li>Put a dollar sign in front of the input box.</li>
-                                        <li>Centralise all the messages and elements.</li>
-                                        <li>Use a button to generate a new question.</li>
+                                        <li>Create a webpage with javascript and html that serves as an acoustic stopwatch.</li>
+                                        <li>A start button will be used to begin listening for the first loud sound in order to start the timing.</li>
+                                        <li>The timer will start only when a sound louder than a predetermined threshold is detected by the microphone of the device after pressing the start button.</li>
+                                        <li>It will stop when a second sound that is louder than the same threshold is detected. </li>
+                                        <li>Use a slider to vary the threshold of sound.</li>
+                                        <li>Use another slider to adjust the minimum delay before the timer will stop with the second sound.</li>
+                                        <li>Display the time in seconds and milliseconds.</li>
                                     </ol>
                                 </div>
                             </div>
@@ -689,77 +272,6 @@
                     </div>
             </div>
         </div>
-
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="trat/trat.png" alt="Team-based learning">
-                    <div class="card-body">
-                        <h3 class="card-title">tRAT Assessment Tool</h3>
-                        <p class="card-text">For use in class for <a href="https://www.youtube.com/watch?v=aZd4GBdiwY4" target="_blank">team-based learning</a>. Students will work in groups to come up with a consensus to answer questions. They will get multiple tries in each multiple-choice question, with decreasing rewards for retries.</p>
-                        <p>Teacher will have to edit the csv file with the answers. Do not change the relative position of the csv file.</p>
-                        <a href="trat/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="trat/trat.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse8" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse8">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Provide the code for the following in a single html file:</p>
-                                    <ol>
-                                        <li>Create a website for users to key in their answers to a tRAT quiz for checking.</li>
-                                        <li>The answers will be referenced from a csv file containing the question number in the first column and the answer to the multiple choice question (A, B, C or D) in the second column.</li>
-                                        <li>The quiz will display the question number and 4 options: A, B, C and D. The user will choose the answer from the 4 options.</li>
-                                        <li>If the first option is the correct answer, the letter will become light green and 4 marks will be added to the overall score. If it is the wrong answer, the letter will become dark grey and no marks will be added.</li>
-                                        <li>The user will get to try a second time for the same question. If the second option is the correct answer, the letter will become light green and 2 marks will be added to the overall score. If it is the wrong answer, the letter will become dark grey and no marks will be added.</li>
-                                        <li>The user will get to try a third time for the same question. If the third option is the correct answer, the letter will become light green and 1 mark will be added to the overall score. If it is the wrong answer, the letter will become dark grey and no marks will be added. There will not be a fourth time for the same question.</li>
-                                        <li>Getting it correct on the second try should only get 2 marks added. On the third try, only 1 mark will be added if correct.</li>
-                                        <li>The total score will be shown at the bottom of the page.</li>
-                                        <li>There will be two other buttons to move to the next question or back to the previous question. Don't jump to the next question automatically.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-            
-            <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="dice/dice.png" alt="Dice Simulator">
-                    <div class="card-body">
-                        <h3 class="card-title">Dice Simulator</h3>
-                        <p class="card-text">This can be used to teach the math concept of probability. User can choose between the use of one or two dice. The results will be charted.</p>
-                        <p class="card-text">Note: External scripts cannot be referenced when uploaded into SLS's so the javascript from https://cdn.jsdelivr.net/npm/chart.js had to be saved as a separate file in the folder and the path was changed to directly refer to it.</p>
-                        <a href="dice/index.html" class="btn btn-primary">Test it out</a>
-                        <a href="dice/dice.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse9" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse9">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Provide the code for the following in a single html file:</p>
-                                    <ol>
-                                        <li>Create a 6-sided dice simulator where the user can click on the image of a dice, the dice image will change randomly and the final result will be shown on the image.</li>
-                                        <li>The dice image will be represented by the file "dice1.png" for the number 1, "dice2.png" for number 2, "dice3.png" for number 3 and so on. The image size is 80 pixels by 80 pixels.</li>
-                                        <li>The default setting shows one dice. The initial image shown is "dice1.png". </li>
-                                        <li>Create a button to cast the dice.</li>
-                                        <li>Create a bar chart with 6 vertical columns at the bottom that shows the frequency of the numbers obtained by the dice. Adjust the bar chart to show all 6 possible outcomes.</li>
-                                        <li>Each time the dice is cast and the result is shown, it is added to a list shown below the chart.</li>
-                                        <li>Create a button for an option to toggle between the use of one dice or two die. When this button is clicked, the list of results and the bar chart is cleared. The initial images shown are both "dice1.png". If two die are used, both die will be shown side by side.</li>
-                                        <li>Both die will be cast when clicking on either dice. The bar chart now shows the frequency of the total of the numbers obtained by the die. Adjust the bar chart such that it now has 12 vertical columns show all 12 possible outcomes.</li>
-                                        <li>The total number for each toss will be shown in the list.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-
-    </div>
-    
-    
-    <div class="row">
         <div class="col-md-4">
             <div class="card mb-4">
                 <img class="card-img-top" src="interactive-video/interactive-video.png" alt="Interactive Video Screenshot">
@@ -768,8 +280,8 @@
                         <p class="card-text">Engage students with questions at chosen timing during the playing of a video. The teacher can edit the timing and questions using the html code. </p><p>Change the video name in the line that says 'source src="pizza.mp4" type="video/mp4'</p>
                         <a href="interactive-video/index.html" class="btn btn-primary" target="_blank">Test it out</a>
                         <a href="interactive-video/interactive-video.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse10" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse10">
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA6" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA6">
                             <div class="card mt-3">
                                 <div class="card-body">
                                     <h3 class="header1">Prompts</h3>
@@ -792,28 +304,77 @@
                     </div>
             </div>
         </div>
-
+        
+        
+    </div> 
+    
+    <div class="row">
+        <div class="col-md-4">
+                <div class="card mb-4">
+                    <img class="card-img-top" src="interactive-story/interactive-story.png" alt="Interactive Story">
+                        <div class="card-body">
+                            <h3 class="card-title">Interactive Story</h3>
+                            <p class="card-text">A story line is decided by the user based on the branches designed by the teacher. ChatGPT can help to create the story too. AI image generators like Dall-E can be used to create images for the story.</p>
+                            <p class="card-text">However, quite a bit of work is needed to insert the pictures in the right sections and to indicate the path to be taken by each button.</p>
+                            <a href="interactive-story/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                            <a href="interactive-story/interactive-story.zip" class="btn btn-secondary">Download for SLS</a>
+                            <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA7" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                            <div class="collapse" id="promptsCollapseA7">
+                                <div class="card mt-3">
+                                    <div class="card-body">
+                                        <h3 class="header1">Prompts</h3>
+                                        <ol>
+                                            <li>Create a single html page where an interactive story with multiple story arcs can be presented. Users can choose to go to one page or another.</li>
+                                            <li>Add a button for the function to read out the text in the story.</li>
+                                            <li>Create a sample story.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+        </div>
+        
         <div class="col-md-4">
             <div class="card mb-4">
-                <img class="card-img-top" src="interactive-graph/interactive-graph.png" alt="Interactive Graph">
+                <img class="card-img-top" src="definitions/definitions.png" alt="Definitions Flashcards Screenshot">
                     <div class="card-body">
-                        <h3 class="card-title">Interactive Graph</h3>
-                        <p class="card-text">The user can use sliders to manipulate variables that affect a graph.</p>
-                        <p class="card-text">A screenshot of the graph will be taken with a button and saved into the computer. This can then be uploaded later in a free-response question in SLS for checking.</p>
-                         <p class="card-text">Note: External scripts cannot be referenced when uploaded into SLS's so the javascript from https://cdn.jsdelivr.net/npm/chart.js had to be saved as a separate file in the folder and the path was changed to directly refer to it.</p>
-                        <a href="interactive-graph/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="interactive-graph/interactive-graph.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse11" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse11">
+                        <h3 class="card-title">Digital Flashcards</h3>
+                        <p class="card-text">For use online. Teacher can include a csv file of key terms and their corresponding definitions into the same folder as the index file. Students can filter by topic and use this to test their recall of definitions of selected key terms.</p>
+                        <a href="definitions/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="definitions/definitions.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA8" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA8">
                             <div class="card mt-3">
                                 <div class="card-body">
                                     <h3 class="header1">Prompts</h3>
-                                    <p>Provide the code for the following in a single html file:</p>
+                                    <p>Create a revision webpage using html, javascript and css that references a csv file in the same folder with three columns: "topic", "term" and "definition". There should be a filter for the "topic" field. Each term in the "term" field will be displayed in turn using a left and right button. Another button labelled "Definition" will be used to show or hide the corresponding "definition" field at the bottom. Put all the script and style codes in the html file.</p>
+    
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </div>
+            
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="student-flashcards/student-flashcards.png" alt="Student Flashcards">
+                    <div class="card-body">
+                        <h3 class="card-title">Student Flashcards</h3>
+                        <p class="card-text">This is the second flashcard app in this collection. The main difference is that students get to upload their own terms and definitions in the form of a csv file.</p>
+                        <p class="card-text">Keyboard entries are taken as alternative input method.</p>
+                        <a href="student-flashcards/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="student-flashcards/student-flashcards.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA9" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA9">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
                                     <ol>
-                                        <li>Create a html webpage that has a graph with a vertical axis labelled "velocity" and horizontal axis labelled "time". The range of values for the vertical axis is from zero to 10 m/s while the range of values for the horizontal axis is 0 to 8 seconds.</li>
-                                        <li>A red line representing a change in velocity from zero to 10 m/s in 8 seconds is shown.</li>
-                                        <li>A blue horizontal line is at a height that is variable, adjustable using a slider to change the variable.</li>
-                                        <li>There should be a button for a screenshot of the graph to be taken and downloaded.</li>
+                                        <li>Create a revision webpage using html, javascript and css that references a csv file in the same folder with two columns: "term" and "definition".</li>
+                                        <li>The csv file is to be uploaded by the user.</li>
+                                        <li>Each term in the "term" field will be displayed in turn using a left and right button. Another button labelled "Definition" will be used to show or hide the corresponding "definition" field at the bottom. Put all the script and style codes in the html file.</li>
                                     </ol>
                                 </div>
                             </div>
@@ -821,7 +382,133 @@
                     </div>
             </div>
         </div>
-                
+    </div>
+    
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="quotations/random-quotes.png" alt="Random Quote Generator Screenshot">
+                    <div class="card-body">
+                        <h3 class="card-title">Random Quote Generator</h3>
+                        <p class="card-text">Can be used to automatically show a different inspirational quote each time a student visits a site. These quotes will be random and therefore, different for each student. The list of quotes is coded into the html. You can change it from there.</p>
+                        <a href="quotations/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="quotations/random-quotes.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapse4" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapse4">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <p>Create a html webpage with a randomly generated quote with the attributed source each time it loads. The quotes should be aimed at inspiring students to put in their best effort in their exam preparations. The quote will be chosen from a list of twenty quotes.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="latex-renderer/latex-renderer.png" alt="LaTeX Renderer">
+                    <div class="card-body">
+                        <h3 class="card-title">LaTeX Renderer</h3>
+                        <p class="card-text">Generate Math equations using LaTeX. The image rendered can be downloaded as a scalable vector graphics (SVG) file for inserting into presentation slides or for display of working in SLS.</p>
+                        <p class="card-text">Note: If uploading into SLS, the javascript files must be at the same level as the index.html file in the zip folder.</p>
+                        <a href="latex-renderer/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="latex-renderer/latex-renderer.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapse32" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapse32">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a website with a large input box to input latex and render it as a SVG file</li>
+                                        <li>Add a button to download the rendered SVG image with transparent background.</li>
+                                        <li>Add a button to convert the SVG image into png with a transparent background for download.</li>
+                                        <li>Suggest a file name for the downloaded image based on the first 20 characters of the input.</li>
+                                    
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+    
+    
+</div>
+    
+    
+    
+    
+    
+<div class="container" id="Games">
+
+<header class="container-header">    
+<h2>Games</h2><a href="#top" id="backlink">Back to Top</a>
+</header>    
+    
+    <div class="row">
+    
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="delight/delight.png" alt="Delight">
+                    <div class="card-body">
+                        <h3 class="card-title">Delight - A Turn-Based Board Game on Electricity</h3>
+                        <p class="card-text">Players will take turns to connect their own bulbs to the terminals while trying to sabotage their opponent's bulbs.</p>
+                        <p class="card-text">At lower levels, students can compete to see who has the most lit bulbs. However, they will need to be able to identify which light bulbs are lit.</p>
+                        <p class="card-text">Do watch out for short-circuits.</p>
+                        <p class="card-text">At higher levels, students can compete to see whose light bulbs has the most total electrical power, with some calculations involved.</p>
+                        <a href="delight/" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="delight/delight.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB2" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseB2">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a game board using 16 squares in a 4-by-4 grid with html and javascript. In each square, there is a space of 100 pixels by 100 pixels where an image can be placed. The squares will be the placeholders for the images.</li>
+                                        <li>On the top left corner, the image file "positive.png" is shown. On the bottom right corner, the image file "negative.png" is shown.</li>
+                                        <li>Below the 4 by 4 grid, there is a line if images two users can take turns to choose from: "cross-wires.png", "r-wires-0.png", "t-wires-0.png", "straight-wire-0.png", "yellow-light-0.png" and "red-light-0.png".</li>
+                                        <li>Change the css such that when an image is chosen, it will grey out slightly</li>
+                                        <li>Upon clicking an image that had been placed in the grids, the image will rotate by 90 degrees clockwise.</li>
+                                        <li>Include an undo button to reverse the last step.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="guess-word/guess-word.png" alt="Hangman Game">
+                    <div class="card-body">
+                        <h3 class="card-title">Hangman</h3>
+                        <p class="card-text">Can be used in-class, online or even as part of a virtual escape room. Open the HTML file in a web browser to play the game. The game will present physics keywords for the user to guess one word at a time. Teachers can edit the html to add new words into the list.</p>
+                        <a href="guess-word/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="guess-word/guess-word.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB2" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseB2">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol><li>Create a hangman game based on keywords in physics such as "impulse", "momentum" and "inelastic" for the user to guess one word at a time.</li>
+                                    <li>The number of blanks that are shown is the number of letters in the selected word. </li>
+                                    <li>Leave a space between each blank. </li>
+                                    <li>The guessing is done letter by letter.</li>
+                                    <li>For each correct guess, add one point to the score</li>
+                                    <li>For each incorrect guess, deduct one point. Keep score until all the words are completed. </li>
+                                    <li>Display the score. Put all the codes in one html file. Celebrate the completion of each word.</li></ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+
         <div class="col-md-4">
             <div class="card mb-4">
                 <img class="card-img-top" src="chinese-word-game/chinese-word-game.png" alt="Chinese Word Game">
@@ -831,8 +518,8 @@
                         <p class="card-text">Teacher can edit the quiz questions in the html file.</p>
                         <a href="chinese-word-game/index.html" class="btn btn-primary" target="_blank">Test it out</a>
                         <a href="chinese-word-game/chinese-word-game.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse12" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse12">
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB3" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseB3">
                             <div class="card mt-3">
                                 <div class="card-body">
                                     <h3 class="header1">Prompts</h3>
@@ -855,11 +542,47 @@
                     </div>
             </div>
         </div>
-
-
+    
     </div>
+</div>
+    
+<div class="container" id="Assessment">
 
+<header class="container-header">    
+<h2>Assessment</h2><a href="#top" id="backlink">Back to Top</a>
+</header>    
+    
     <div class="row">
+    
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="coin-addition/coin-addition.png" alt="Coin Addition Practice Screenshot">
+                    <div class="card-body">
+                        <h3 class="card-title">Coin Addition</h3>
+                        <p class="card-text">For self-practice or in class learning. Users will be shown a number of Singapore coins. They will need to key in the total value for checking.</p>
+                        <a href="coin-addition/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="coin-addition/coin-addition.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseC1" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseC1">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a quiz website on how to add values of coins.</li>
+                                        <li>Use a button to generate a new problem with a random number of coins of varying values such as 5 cents (represented by image file "TS5c.jpg"), 10 cents (represented by image file "TS10c.jpg"), 20 cents (represented by image file "TS20c.jpg"), 50 cents (represented by image file "TS50c.jpg") and 1 dollar (represented by image file "TS1d.jpg").</li>
+                                        <li>Display the number of coins as required by duplicating the images.</li>
+                                        <li>Use an input box with a submit button to check the value of coins added in terms of dollars.</li>
+                                        <li>Put a dollar sign in front of the input box.</li>
+                                        <li>Centralise all the messages and elements.</li>
+                                        <li>Use a button to generate a new question.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    
         <div class="col-md-4">
             <div class="card mb-4">
                 <img class="card-img-top" src="irat/irat.png" alt="Interactive Video Screenshot">
@@ -868,8 +591,8 @@
                         <p class="card-text">A series of multiple-choice options that do not automark but upon completion, student will download a csv file of their responses to be used for the next step of <a href="https://www.youtube.com/watch?v=aZd4GBdiwY4" target="_blank">team-based learning</a>, which is the tRAT.</p>
                         <a href="irat/index.html" class="btn btn-primary" target="_blank">Test it out</a>
                         <a href="irat/irat.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse13" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse13">
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseC2" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseC2">
                             <div class="card mt-3">
                                 <div class="card-body">
                                     <h3 class="header1">Prompts</h3>
@@ -886,94 +609,71 @@
                     </div>
             </div>
         </div>
-        
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="graph-plotter/graph-plotter.png" alt="Graph Plotter">
-                    <div class="card-body">
-                        <h3 class="card-title">Graph Plotter</h3>
-                        <p class="card-text">User can upload a csv file consisting of data from an experiment, with the column header being the labels of the axes. The first column of the data will be the horizontal axis while the second column will be the vertical axis. A best-fit straight line will be plotted, along with the equation of the line being shown.</p>
-                        <p class="card-text">This is especially useful for when students are doing lab work and the teacher does not want the students to bother too much with configure the graph. If done on SLS, the screenshot can be uploaded as the submission for a free-response question.</p>
-                        <p class="card-text">A sample data set can be downloaded <a href="./graph-plotter/data.csv">here</a> for testing.
-                        <p class="card-text">
-                        Note: External scripts cannot be referenced when uploaded into SLS's so the javascript from https://cdn.jsdelivr.net/npm/chart.js and https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js had to be saved as separate files in the folder and the path was changed to directly refer to them.</p>
-                        <a href="graph-plotter/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="graph-plotter/graph-plotter.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse14" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse14">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a website using html and javascript for users to plot a graph using data from a csv file.</li>
-                                        <li>The user can upload a csv file with the first column being the horizontal axis and the second column being the vertical axis.</li>
-                                        <li>The column headers, which is the first set of values in the csv file, will form the labels for the axes of the graph.</li>
-                                        <li>Plot the points with the data in the csv file and use linear regression to obtain the best-fit straight line of the data.</li>
-                                        <li>The best fit line should be a line joining two red dots.</li>
-                                        <li>Indicate the gradient and intercept of the best-fit line.</li>
-                                        <li>Add a button at the bottom for users to take a screenshot of the graph.</li>
-                                        <li>Put all the codes in one html file.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-        
-        
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="interactive-story/interactive-story.png" alt="Interactive Story">
-                    <div class="card-body">
-                        <h3 class="card-title">Interactive Story</h3>
-                        <p class="card-text">A story line is decided by the user based on the branches designed by the teacher. ChatGPT can help to create the story too. AI image generators like Dall-E can be used to create images for the story.</p>
-                        <p class="card-text">However, quite a bit of work is needed to insert the pictures in the right sections and to indicate the path to be taken by each button.</p>
-                        <a href="interactive-story/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="interactive-story/interactive-story.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse15" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse15">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a single html page where an interactive story with multiple story arcs can be presented. Users can choose to go to one page or another.</li>
-                                        <li>Add a button for the function to read out the text in the story.</li>
-                                        <li>Create a sample story.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-        
-    </div>
     
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="trat/trat.png" alt="Team-based learning">
+                    <div class="card-body">
+                        <h3 class="card-title">tRAT Assessment Tool</h3>
+                        <p class="card-text">For use in class for <a href="https://www.youtube.com/watch?v=aZd4GBdiwY4" target="_blank">team-based learning</a>. Students will work in groups to come up with a consensus to answer questions. They will get multiple tries in each multiple-choice question, with decreasing rewards for retries.</p>
+                        <p>Teacher will have to edit the csv file with the answers. Do not change the relative position of the csv file.</p>
+                        <a href="trat/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="trat/trat.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseC3" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseC3">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <p>Provide the code for the following in a single html file:</p>
+                                    <ol>
+                                        <li>Create a website for users to key in their answers to a tRAT quiz for checking.</li>
+                                        <li>The answers will be referenced from a csv file containing the question number in the first column and the answer to the multiple choice question (A, B, C or D) in the second column.</li>
+                                        <li>The quiz will display the question number and 4 options: A, B, C and D. The user will choose the answer from the 4 options.</li>
+                                        <li>If the first option is the correct answer, the letter will become light green and 4 marks will be added to the overall score. If it is the wrong answer, the letter will become dark grey and no marks will be added.</li>
+                                        <li>The user will get to try a second time for the same question. If the second option is the correct answer, the letter will become light green and 2 marks will be added to the overall score. If it is the wrong answer, the letter will become dark grey and no marks will be added.</li>
+                                        <li>The user will get to try a third time for the same question. If the third option is the correct answer, the letter will become light green and 1 mark will be added to the overall score. If it is the wrong answer, the letter will become dark grey and no marks will be added. There will not be a fourth time for the same question.</li>
+                                        <li>Getting it correct on the second try should only get 2 marks added. On the third try, only 1 mark will be added if correct.</li>
+                                        <li>The total score will be shown at the bottom of the page.</li>
+                                        <li>There will be two other buttons to move to the next question or back to the previous question. Don't jump to the next question automatically.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>    
+        
+    
+<div class="container" id="Graphs-and-Simulations">
+
+<header class="container-header">    
+<h2>Graphs and Simulations</h2><a href="#top" id="backlink">Back to Top</a>
+</header>    
     
     <div class="row">
+    
         <div class="col-md-4">
             <div class="card mb-4">
-                <img class="card-img-top" src="bohr-model/bohr-model.png" alt="Bohr's Model of the Atom">
+                <img class="card-img-top" src="kinematics-graph/kinematics-graph.png" alt="Kinematics Graphs">
                     <div class="card-body">
-                        <h3 class="card-title">Bohr's Model of the Atom</h3>
-                        <p class="card-text">This interactive app will show the number of electrons in the shells of an atom based on the Bohr's model.</p>
-                        <a href="bohr-model/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="bohr-model/bohr-model.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse31" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse31">
+                        <h3 class="card-title">Kinematics Graphs</h3>
+                        <p class="card-text">The user gets to explore the changes in the shape of a displacement or velocity graph by changing the values of initial velocity and acceleration.</p>
+                        <a href="kinematics-graph/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="kinematics-graph/kinematics-graph.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseD1" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseD1">
                             <div class="card mt-3">
                                 <div class="card-body">
                                     <h3 class="header1">Prompts</h3>
                                     <ol>
-                                        <li>Create a website with a HTML5 canvas to show the bohr model of atoms of elements from 1 to 20 in the periodic table. Put all the codes in one page.</li>
-                                        <li>There should be a drop-down menu to choose the element. The image shown will update upon change in the drop-down menu.</li>
-                                        <li>The nucleus should be a dark yellow circle showing the chemical symbol and name of the element, as well as number of protons and neutrons, e.g. 1p; 1n for hydrogen.</li>
-                                        <li>There should be up to 4 concentric circles of different radii to represent the shells of the atom.</li>
-                                        <li>The electrons should be shown as coloured dots along the circumference of the circles representing the shells.</li>
-                                        <li>The first two dots of each shell shall be blue while the others will be red.</li>
-                                        <li>Display the dots on the lines of the circles of the shell.</li>
-                                        <li>The number of electrons shown should be the same as the number of protons for each element.</li>
+                                        <li>Create a graph using chart.js with vertical axis being "displacement / m" and horizontal axis being "time / s".</li>
+                                        <li>There should be a slider for the initial velocity value ranging from 0 to 2 m/s, a slider for the acceleration value ranging from -2 m/s^2 to 2 m/s^2.</li>
+                                        <li>The displacement will start from zero and will follow a function dependent on the initial velocity and acceleration values from the slider. </li>
+                                        <li>Draw the line of the displacement on the graph. Update the graph whenever the sliders are moved. Draw the function of the displacement graph with a smooth curve instead of connecting the dots.</li>
+                                        <li>Show the values of the velocity and acceleration, along with the units</li>
+                                        <li>Use A drop-down list to change the vertical axis to velocity or acceleration, updating the axis each time and the curve as well.</li>
                                     </ol>
                                 </div>
                             </div>
@@ -981,25 +681,70 @@
                     </div>
             </div>
         </div>
+    
         <div class="col-md-4">
             <div class="card mb-4">
-                <img class="card-img-top" src="latex-renderer/latex-renderer.png" alt="LaTeX Renderer">
+                <img class="card-img-top" src="stationary-waves/stationary-waves.gif" alt="Formation of Stationary Waves">
                     <div class="card-body">
-                        <h3 class="card-title">LaTeX Renderer</h3>
-                        <p class="card-text">Generate Math equations using LaTeX. The image rendered can be downloaded as a scalable vector graphics (SVG) file for inserting into presentation slides or for display of working in SLS.</p>
-                        <p class="card-text">Note: If uploading into SLS, the javascript files must be at the same level as the index.html file in the zip folder.</p>
-                        <a href="latex-renderer/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="latex-renderer/latex-renderer.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#promptsCollapse32" aria-expanded="false" aria-controls="promptsCollapse">Show Prompts</button>
-                        <div class="collapse" id="promptsCollapse32">
+                        <h3 class="card-title">Formation of Stationary Waves</h3>
+                        <p class="card-text">Meant for A-level Physics, students can observe how two waves moving in opposite directions can come together to produce a stationary wave.</p>
+                        <p class="card-text">A second page allows students to explore what happens when the conditions (wavelength, period, amplitude) of both waves are not identical.</p>
+                        <p class="card-text">Note: The plotly.js file must remain in the same folder as the html files if uploading as a zip file into SLS.</p>
+                        <a href="stationary-waves/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="stationary-waves/stationary-waves.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseD2" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseD2">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <p>For the index page:</p>
+                                    <ol>
+                                        <li>Create a graph using plotly.js with a vertical axis for displacement of wave particles and a horizontal axis for distance moved by a wave. .</li>
+                                        <li>Draw the curve of an infinitely long transverse wave moving along the horizontal axis.</li>
+                                        <li>Create another infinitely long transverse wave of the same wavelength moving in the opposite direction along the same horizontal axis. Represent them in different colours. </li>
+                                        <li>Use a slider to change the period of oscillation of both waves and another slider to change the wavelength of the waves.</li>
+                                        <li>Each wave should have the same wavelength.</li>
+                                        <li><i>Revised prompt: Keep the vertical axis fixed in height, equal to the maximum possible amplitude of the third wave.</i></li>
+                                         <li><i>Revised prompt: Keeep the legend of the chart to the bottom so that the horizontal axis length is fixed at 640 pixels</i></li>
+                                    </ol>
+                                    <p>For the second page:</p>
+                                    <ol><li>Have separate sliders for the amplitudes, periods and wavelengths of wave 1 and wave 2.</li>
+                                        <li>Display the values of the sliders next to them.</li></ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="electric-potential/electric-potential.png" alt="Electric Potential of Two Charges">
+                    <div class="card-body">
+                        <h3 class="card-title">Electric Potential of Two Charges</h3>
+                        <p class="card-text">Meant for A-level Physics, the variation of electric potential due to two charge particles can be observed.</p>
+                        <p class="card-text">Sliders allow user to change the magnitude and signs of the charges and the distance apart.</p>
+                        <p class="card-text">Note: The plotly.js file must remain in the same folder as the html files if uploading as a zip file into SLS.</p>
+                        <a href="electric-potential/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="electric-potential/electric-potential.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseD3" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseD3">
                             <div class="card mt-3">
                                 <div class="card-body">
                                     <h3 class="header1">Prompts</h3>
                                     <ol>
-                                        <li>Create a website with a large input box to input latex and render it as a SVG file</li>
-                                        <li>Add a button to download the rendered SVG image with transparent background.</li>
-                                        <li>Add a button to convert the SVG image into png with a transparent background for download.</li>
-                                        <li>Suggest a file name for the downloaded image based on the first 20 characters of the input.</li>
+                                    <li>Create a web app to represent the electric potential of two charged particles.</li>
+                                    <li>The two particles should be represented as dots along a straight line, with the midpoint being x=0.
+                                    </li>
+                                    <li>The electric potential for each particle should be drawn using plotly.js. The vertical axis of the graph should be that of electric potential. The horizontal axis is the distance from the centre of the first particle.</li>
+                                    <li>The sum of the two electric potentials should be represented on the same axes as well.</li>
+                                    <li>Show all the codes in one html file.</li>
+                                    <li>Make the curve smooth.</li>
+                                    <li>Use sliders to change the charge of each particle separately (both negative and positive values)</li>
+                                    <li>Use a sliider to change the distance between the two particles.</li>
+                                    <li>Update the curves with the sliders.</li>
+                                    <li>Keep the range of values in the axes fixed.</li>
+                                    <li>Use a checkbox to toggle the visibility of the total potential graph.</li>
                                     
                                     </ol>
                                 </div>
@@ -1007,11 +752,381 @@
                         </div>
                     </div>
             </div>
+        </div> 
+    
+        <div class="row">
+        
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <img class="card-img-top" src="earth-moon-system/earth-moon-system.png" alt="Earth-Moon System">
+                        <div class="card-body">
+                            <h3 class="card-title">Earth-Moon System</h3>
+                            <p class="card-text">This animation is intended to show the rate of rotation of the Moon being equal to the rate of its revolution around the Earth.</p>
+                            <p class="card-text">The result is that half of the Moon is always not visible from Earth.</p>
+                            <a href="earth-moon-system/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                            <a href="earth-moon-system/earth-moon-system.zip" class="btn btn-secondary">Download for SLS</a>
+                            <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseD4" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                            <div class="collapse" id="promptsCollapseD4">
+                                <div class="card mt-3">
+                                    <div class="card-body">
+                                        <h3 class="header1">Prompts</h3>
+                                        <ol>
+                                            <li>Create a 2D animation of the revolution of the Moon around the Earth.</li>
+                                            <li>The Earth is drawn as a green circle at the center of the canvas.</li>
+                                            <li>Show the rotation of the moon about its own axis with the same time as it takes to move one round around the earth.</li>
+                                            <li> Use two coloured hemispheres to represent the Moon, with the darker hemisphere facing away from the Earth.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <img class="card-img-top" src="projectile-simulator/projectile-simulator.png" alt="Projectile Simulator">
+                        <div class="card-body">
+                            <h3 class="card-title">Projectile Simulator</h3>
+                            <p class="card-text">This simulation is used for JC physics students to visualise the independence of horizontal and vertical components of velocity in a projectile launched vertically from a cart moving at constant velocity.</p>
+                            <a href="projectile-simulator/" class="btn btn-primary" target="_blank">Test it out</a>
+                            <a href="projectile-simulator/projectile-simulator.zip" class="btn btn-secondary">Download for SLS</a>
+                            <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseD5" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                            <div class="collapse" id="promptsCollapseD5">
+                                <div class="card mt-3">
+                                    <div class="card-body">
+                                        <h3 class="header1">Prompts</h3>
+                                        <ol>
+                                            <li>Create a simulation to demonstrate the independence of the horizontal and vertical velocities of a projectile and visually represent the cart and projectile movements.</li>
+                                            <li>When the launch button is pressed, a projectile will be shot upward from a cart that is moving from left to right on wheels.</li>
+                                            <li>The horizontal velocity of the projectile will remain constant while the vertical velocity will change with time according to gravitational acceleration. </li>
+                                            <li>In the end, the projectile will land on the same spot relative to the moving cart.</li>
+                                            <li>Use a slider to change the horizontal velocity of the cart. Use a button to start the cart and another button to launch the projectile.</li>
+                                            <li>Use a slider to change the initial vertical launch velocity of the projectile. Before the launch button is pressed, the vertical velocity of the projectile is zero.</li>
+                                            <li>Add two wheels below the cart's rectangle.</li>
+                                            <li>Add a button to reset everything.</li>
+                                            <li>Use time = zero at the time when the launch button is pressed.</li>
+                                            <li>Trace the path of the ball after the launch in the canvas with a dotted curve line.</li>
+                                            <li>Create a variable to store the initial horizontal position of the projectile as the launch button is pressed. Use it to determine the starting point of the trace.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <img class="card-img-top" src="wave-motion/wave-motion.gif" alt="Wave Motion Animation">
+                        <div class="card-body">
+                            <h3 class="card-title">Wave Motion Interactive Animation</h3>
+                            <p class="card-text">This animation can be used to demonstrate the effect of changes in period on wavelength of a wave. It also highlights a particular particle to show the perpendicular motion to the direction of wave propagation.</p>
+                            <a href="wave-motion/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                            <a href="wave-motion/wave-motion.zip" class="btn btn-secondary">Download for SLS</a>
+                            <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseD6" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                            <div class="collapse" id="promptsCollapseD6">
+                                <div class="card mt-3">
+                                    <div class="card-body">
+                                        <h3 class="header1">Prompts</h3>
+                                        <p>Create a simulation of particles moving vertically with simple harmonic motion. The simulation should display 25 particles arranged horizontally, each oscillating vertically at a different phase. The horizontal motion of the particles should simulate simple harmonic motion, with their positions following a sine wave pattern. The amplitude of oscillation should be set to 100 pixels, and the period of oscillation should be controlled by a slider input with a range from 0.1 to 5 seconds. The particles should be confined within a container with a fixed width of 640 pixels and a height of 480 pixels. The slider input should be positioned at the bottom of the container. The simulation should update the positions of the particles at regular intervals to create the illusion of continuous motion. One of the particles near the middle should be red in colour.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>                                      
         </div>
+        
+        <div class="row">
+            
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <img class="card-img-top" src="bohr-model/bohr-model.png" alt="Bohr's Model of the Atom">
+                        <div class="card-body">
+                            <h3 class="card-title">Bohr's Model of the Atom</h3>
+                            <p class="card-text">This interactive app will show the number of electrons in the shells of an atom based on the Bohr's model.</p>
+                            <a href="bohr-model/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                            <a href="bohr-model/bohr-model.zip" class="btn btn-secondary">Download for SLS</a>
+                            <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseD7" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                            <div class="collapse" id="promptsCollapseD7">
+                                <div class="card mt-3">
+                                    <div class="card-body">
+                                        <h3 class="header1">Prompts</h3>
+                                        <ol>
+                                            <li>Create a website with a HTML5 canvas to show the bohr model of atoms of elements from 1 to 20 in the periodic table. Put all the codes in one page.</li>
+                                            <li>There should be a drop-down menu to choose the element. The image shown will update upon change in the drop-down menu.</li>
+                                            <li>The nucleus should be a dark yellow circle showing the chemical symbol and name of the element, as well as number of protons and neutrons, e.g. 1p; 1n for hydrogen.</li>
+                                            <li>There should be up to 4 concentric circles of different radii to represent the shells of the atom.</li>
+                                            <li>The electrons should be shown as coloured dots along the circumference of the circles representing the shells.</li>
+                                            <li>The first two dots of each shell shall be blue while the others will be red.</li>
+                                            <li>Display the dots on the lines of the circles of the shell.</li>
+                                            <li>The number of electrons shown should be the same as the number of protons for each element.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <img class="card-img-top" src="dice/dice.png" alt="Dice Simulator">
+                        <div class="card-body">
+                            <h3 class="card-title">Dice Simulator</h3>
+                            <p class="card-text">This can be used to teach the math concept of probability. User can choose between the use of one or two dice. The results will be charted.</p>
+                            <p class="card-text">Note: External scripts cannot be referenced when uploaded into SLS's so the javascript from https://cdn.jsdelivr.net/npm/chart.js had to be saved as a separate file in the folder and the path was changed to directly refer to it.</p>
+                            <a href="dice/index.html" class="btn btn-primary">Test it out</a>
+                            <a href="dice/dice.zip" class="btn btn-secondary">Download for SLS</a>
+                            <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseD8" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                            <div class="collapse" id="promptsCollapseD8">
+                                <div class="card mt-3">
+                                    <div class="card-body">
+                                        <h3 class="header1">Prompts</h3>
+                                        <p>Provide the code for the following in a single html file:</p>
+                                        <ol>
+                                            <li>Create a 6-sided dice simulator where the user can click on the image of a dice, the dice image will change randomly and the final result will be shown on the image.</li>
+                                            <li>The dice image will be represented by the file "dice1.png" for the number 1, "dice2.png" for number 2, "dice3.png" for number 3 and so on. The image size is 80 pixels by 80 pixels.</li>
+                                            <li>The default setting shows one dice. The initial image shown is "dice1.png". </li>
+                                            <li>Create a button to cast the dice.</li>
+                                            <li>Create a bar chart with 6 vertical columns at the bottom that shows the frequency of the numbers obtained by the dice. Adjust the bar chart to show all 6 possible outcomes.</li>
+                                            <li>Each time the dice is cast and the result is shown, it is added to a list shown below the chart.</li>
+                                            <li>Create a button for an option to toggle between the use of one dice or two die. When this button is clicked, the list of results and the bar chart is cleared. The initial images shown are both "dice1.png". If two die are used, both die will be shown side by side.</li>
+                                            <li>Both die will be cast when clicking on either dice. The bar chart now shows the frequency of the total of the numbers obtained by the die. Adjust the bar chart such that it now has 12 vertical columns show all 12 possible outcomes.</li>
+                                            <li>The total number for each toss will be shown in the list.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <img class="card-img-top" src="interactive-graph/interactive-graph.png" alt="Interactive Graph">
+                        <div class="card-body">
+                            <h3 class="card-title">Interactive Graph</h3>
+                            <p class="card-text">The user can use sliders to manipulate variables that affect a graph.</p>
+                            <p class="card-text">A screenshot of the graph will be taken with a button and saved into the computer. This can then be uploaded later in a free-response question in SLS for checking.</p>
+                             <p class="card-text">Note: External scripts cannot be referenced when uploaded into SLS's so the javascript from https://cdn.jsdelivr.net/npm/chart.js had to be saved as a separate file in the folder and the path was changed to directly refer to it.</p>
+                            <a href="interactive-graph/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                            <a href="interactive-graph/interactive-graph.zip" class="btn btn-secondary">Download for SLS</a>
+                            <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseD9" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                            <div class="collapse" id="promptsCollapseD9">
+                                <div class="card mt-3">
+                                    <div class="card-body">
+                                        <h3 class="header1">Prompts</h3>
+                                        <p>Provide the code for the following in a single html file:</p>
+                                        <ol>
+                                            <li>Create a html webpage that has a graph with a vertical axis labelled "velocity" and horizontal axis labelled "time". The range of values for the vertical axis is from zero to 10 m/s while the range of values for the horizontal axis is 0 to 8 seconds.</li>
+                                            <li>A red line representing a change in velocity from zero to 10 m/s in 8 seconds is shown.</li>
+                                            <li>A blue horizontal line is at a height that is variable, adjustable using a slider to change the variable.</li>
+                                            <li>There should be a button for a screenshot of the graph to be taken and downloaded.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </div>
+        
+        
+        <div class="row">
+            
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <img class="card-img-top" src="graph-plotter/graph-plotter.png" alt="Graph Plotter">
+                        <div class="card-body">
+                            <h3 class="card-title">Graph Plotter</h3>
+                            <p class="card-text">User can upload a csv file consisting of data from an experiment, with the column header being the labels of the axes. The first column of the data will be the horizontal axis while the second column will be the vertical axis. A best-fit straight line will be plotted, along with the equation of the line being shown.</p>
+                            <p class="card-text">This is especially useful for when students are doing lab work and the teacher does not want the students to bother too much with configure the graph. If done on SLS, the screenshot can be uploaded as the submission for a free-response question.</p>
+                            <p class="card-text">A sample data set can be downloaded <a href="./graph-plotter/data.csv">here</a> for testing.
+                            <p class="card-text">
+                            Note: External scripts cannot be referenced when uploaded into SLS's so the javascript from https://cdn.jsdelivr.net/npm/chart.js and https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js had to be saved as separate files in the folder and the path was changed to directly refer to them.</p>
+                            <a href="graph-plotter/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                            <a href="graph-plotter/graph-plotter.zip" class="btn btn-secondary">Download for SLS</a>
+                            <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseD10" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                            <div class="collapse" id="promptsCollapseD10">
+                                <div class="card mt-3">
+                                    <div class="card-body">
+                                        <h3 class="header1">Prompts</h3>
+                                        <ol>
+                                            <li>Create a website using html and javascript for users to plot a graph using data from a csv file.</li>
+                                            <li>The user can upload a csv file with the first column being the horizontal axis and the second column being the vertical axis.</li>
+                                            <li>The column headers, which is the first set of values in the csv file, will form the labels for the axes of the graph.</li>
+                                            <li>Plot the points with the data in the csv file and use linear regression to obtain the best-fit straight line of the data.</li>
+                                            <li>The best fit line should be a line joining two red dots.</li>
+                                            <li>Indicate the gradient and intercept of the best-fit line.</li>
+                                            <li>Add a button at the bottom for users to take a screenshot of the graph.</li>
+                                            <li>Put all the codes in one html file.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </div>    
     </div>
+</div>      
     
 
     
+    
+<div class="container" id="Sensors">
+
+<header class="container-header">    
+<h2>Sensors</h2><a href="#top" id="backlink">Back to Top</a>
+</header>    
+    
+    <div class="row">
+    
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="sound-level-meter/sound-level-meter.png" alt="Sound Level Meter">
+                    <div class="card-body">
+                        <h3 class="card-title">Sound Level Meter</h3>
+                        <p class="card-text">Use this sound level meter to measure the noise level in your class. The slider allows you to change the sensitivity of the meter. The sensitivity value ranges from -20 dB to 20 dB.</p>
+                        <a href="sound-level-meter/" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="sound-level-meter/sound-level-meter.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseE1" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseE1">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a html and javascript page that senses the sound from the computer's microphone and indicates the loudness on a needle to simulate a sound level meter.</li>
+                                        <li>Use the slider to change the sensitivity of the sound level meter.</li>
+                                        <li>Centralise everything horizontally.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="sound-frequency-analyser/sound-frequency-analyser.png" alt="Sound Frequency Analyser">
+                    <div class="card-body">
+                        <h3 class="card-title">Sound Frequency Analyser</h3>
+                        <p class="card-text">This sound frequency analyser is able to pick up the dominant frequency from the microphone. Students can use it to investigate the effect on the frequency of sound by factors such as length or tension of a guitar string.</p>
+                        <p>For higher level Physics students, they can observe the frequencies of higher harmonics.</p>
+                        <a href="sound-frequency-analyser/" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="sound-frequency-analyser/sound-frequency-analyser.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseE2" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseE2">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Process the data from the microphone to determine the dominant frequency or frequency spectrum of the sound signal.</li>
+                                        <li>Display the value for the dominant frequency.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+          
+          
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="sound-generator/sound-generator.png" alt="Sound Generator">
+                    <div class="card-body">
+                        <h3 class="card-title">Sound Generator</h3>
+                        <p class="card-text">The sound generator can be used to demonstrate the effect of frequency on the pitch of a sound. It can also be used to determine the audible frequency range of an individual.</p>
+                        <a href="sound-generator/" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="sound-generator/sound-generator.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseE3" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseE3">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a website that generates sound at the highest possible volume with a frequency control slider from 10 Hz to 40000 Hz.</li>
+                                        <li>Use a play and stop button.</li>
+                                        <li>Add an input box too for the frequency to work together with the slider.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    
+    
+    </div>
+    
+    
+    
+   
+    <div class="row">
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="metronome/metronome.png" alt="Metronome">
+                    <div class="card-body">
+                        <h3 class="card-title">Metronome</h3>
+                        <p class="card-text">This digital metronome can be used to keep timing using audio cues.</p>
+                        <p class="card-text">The frequency of oscillation is adjustable.</p>
+                        <a href="metronome/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="metronome/metronome.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseE4" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseE4">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Make a metronome website with javascript with adjustable frequency.</li>
+                                        <li>Produce a midi sound of 440 Hz every half an oscillation.</li>
+                                        <li>Represent it like an inverted pendulum with one end of the pendulum fixed at the bottom of the canvas.</li>
+                                        <li>Have a start and stop button for the ticking.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="camera-brightness-recorder/camera-brightness-recorder.png" alt="Camera Brightness Recorder">
+                    <div class="card-body">
+                        <h3 class="card-title">Camera Brightness Recorder</h3>
+                        <p class="card-text">This can be used as a datalogger of the brightness detected by a camera.</p>
+                        <p class="card-text">Note that the camera needs to be enabled for your browser. This app will probably not work with iOS devices due to their privacy policies.</p>
+                        <p class="card-text">The brightness value calculated is not based on a specific unit such as lux or candela per square meter, which are commonly used units for measuring brightness in physical light measurements. It is a result of averaging the intensity values of the red, green, and blue color channels of each pixel in the captured frame.</p>
+                        <p class="card-text">It's important to note that the value is relative and may vary depending on factors such as ambient light conditions, camera settings, and image processing algorithms. Therefore, it should be interpreted as a relative measure of brightness rather than an absolute physical measurement.</p>
+                        <a href="camera-brightness-recorder/" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="camera-brightness-recorder/camera-brightness-recorder.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseE5" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseE5">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a webpage with html and javascript that obtains information from the computer's sensors such as brightness.</li>
+                                        <li>Display the brightness information.</li>
+                                        <li>Use a start and stop button to being and end the sampling. </li>
+                                        <li>Use a slider to control the sampling rate.</li>
+                                        <li>Record the brightness data in a list at the bottom with the timestamp.</li>
+                                        <li>Create a button to download the data in csv format.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+         
+        
+    </div> 
+</div>      
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
