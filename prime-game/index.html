@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prime Number Guessing Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        p {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        input[type="number"] {
+            width: calc(100% - 110px);
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            width: 100px;
+            margin-top: 10px;
+            padding: 8px 0;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #result {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #guessLog {
+            margin-top: 20px;
+        }
+
+        .guess {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Prime Number Guessing Game</h1>
+        <p>Guess a prime number between 1 and 1000:</p>
+        <input type="number" id="userGuess" min="1" max="1000">
+        <button onclick="checkGuess()">Submit Guess</button>
+        <button onclick="restartGame()">Restart Game</button>
+        <div id="result"></div>
+        <div id="guessLog"></div>
+    </div>
+
+    <script>
+        let targetPrime = generateRandomPrime();
+
+        function generateRandomPrime() {
+            const primes = [];
+            for (let i = 2; i <= 1000; i++) {
+                let isPrime = true;
+                for (let j = 2; j <= Math.sqrt(i); j++) {
+                    if (i % j === 0) {
+                        isPrime = false;
+                        break;
+                    }
+                }
+                if (isPrime) {
+                    primes.push(i);
+                }
+            }
+            return primes[Math.floor(Math.random() * primes.length)];
+        }
+
+        function checkGuess() {
+            const userGuess = parseInt(document.getElementById('userGuess').value);
+            const resultDiv = document.getElementById('result');
+            const guessLogDiv = document.getElementById('guessLog');
+
+            if (isNaN(userGuess) || userGuess < 1 || userGuess > 1000) {
+                resultDiv.textContent = 'Please enter a valid number between 1 and 1000.';
+                return;
+            }
+
+            if (!isPrime(userGuess)) {
+                resultDiv.textContent = userGuess + ' is not a prime number.';
+                return;
+            }
+
+            let logMessage = userGuess + ': ';
+            if (userGuess === targetPrime) {
+                resultDiv.textContent = 'Congratulations! You guessed the prime number ' + userGuess + '.';
+                logMessage += 'Correct';
+            } else if (userGuess < targetPrime) {
+                resultDiv.textContent = 'Too small. Try again.';
+                logMessage += 'Too small';
+            } else {
+                resultDiv.textContent = 'Too big. Try again.';
+                logMessage += 'Too big';
+            }
+
+            const guessDiv = document.createElement('div');
+            guessDiv.classList.add('guess');
+            guessDiv.textContent = logMessage;
+            guessLogDiv.appendChild(guessDiv);
+        }
+
+        function restartGame() {
+            targetPrime = generateRandomPrime();
+            document.getElementById('userGuess').value = '';
+            document.getElementById('result').textContent = '';
+            document.getElementById('guessLog').innerHTML = '';
+        }
+
+        function isPrime(num) {
+            if (num <= 1) return false;
+            for (let i = 2; i <= Math.sqrt(num); i++) {
+                if (num % i === 0) return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>

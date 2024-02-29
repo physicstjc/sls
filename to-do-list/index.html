@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>To-Do List</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    #todo-container {
+      width: 300px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    #task-input {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+
+    #task-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .task-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #ddd;
+      padding: 8px 0;
+    }
+
+    .delete-btn {
+      cursor: pointer;
+      color: #e74c3c;
+    }
+    #warning {
+      font-family: monospace;
+      font-size: 8pt;
+      }
+  </style>
+</head>
+<body>
+
+<div id="todo-container">
+  <h2>To-Do List</h2>
+<p id="warning">(This list is only saved to this device and browser.)</p>    
+  <input type="text" id="task-input" placeholder="Add a new task">
+  <ul id="task-list"></ul>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const dbPromise = initDatabase();
+
+    const taskInput = document.getElementById('task-input');
+    const taskList = document.getElementById('task-list');
+
+    taskInput.addEventListener('keyup', (event) => {
+      if (event.key === 'Enter') {
+        addTask(event.target.value);
+        event.target.value = '';
+      }
+    });
+
+    function initDatabase() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open('TodoDB', 1);
+
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          const objectStore = db.createObjectStore('tasks', { keyPath: 'id', autoIncrement: true });
+          objectStore.createIndex('description', 'description', { unique: false });
+        };
+
+        request.onsuccess = (event) => {
+          resolve(event.target.result);
+        };
+
+        request.onerror = (event) => {
+          reject(`Error opening database: ${event.target.error}`);
+        };
+      });
+    }
+
+    function addTask(description) {
+      dbPromise.then(db => {
+        const transaction = db.transaction('tasks', 'readwrite');
+        const objectStore = transaction.objectStore('tasks');
+
+        const task = {
+          description,
+          timestamp: new Date().getTime()
+        };
+
+        const request = objectStore.add(task);
+
+        request.onsuccess = () => {
+          displayTasks();
+        };
+
+        request.onerror = (event) => {
+          console.error(`Error adding task: ${event.target.error}`);
+        };
+      });
+    }
+
+    function displayTasks() {
+      taskList.innerHTML = '';
+
+      dbPromise.then(db => {
+        const transaction = db.transaction('tasks', 'readonly');
+        const objectStore = transaction.objectStore('tasks');
+        const index = objectStore.index('description');
+
+        index.openCursor().onsuccess = (event) => {
+          const cursor = event.target.result;
+
+          if (cursor) {
+            const listItem = document.createElement('li');
+            listItem.className = 'task-item';
+            listItem.innerHTML = `
+              <span>${cursor.value.description}</span>
+              <span class="delete-btn" data-id="${cursor.value.id}">&#10006;</span>
+            `;
+            taskList.appendChild(listItem);
+
+            const deleteBtn = listItem.querySelector('.delete-btn');
+            deleteBtn.addEventListener('click', () => {
+              deleteTask(cursor.value.id);
+            });
+
+            cursor.continue();
+          }
+        };
+      });
+    }
+
+    function deleteTask(id) {
+      dbPromise.then(db => {
+        const transaction = db.transaction('tasks', 'readwrite');
+        const objectStore = transaction.objectStore('tasks');
+        const request = objectStore.delete(id);
+
+        request.onsuccess = () => {
+          displayTasks();
+        };
+
+        request.onerror = (event) => {
+          console.error(`Error deleting task: ${event.target.error}`);
+        };
+      });
+    }
+
+    displayTasks();
+  });
+</script>
+
+</body>
+</html>
