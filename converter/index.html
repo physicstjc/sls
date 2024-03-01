@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code to HTML Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        #codeInput {
+            width: 80%;
+            height: 300px; /* Initial height */
+            resize: both; /* Allow resizing */
+            overflow: auto; /* Enable scrolling when content exceeds dimensions */
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Code to HTML Converter</h1>
+    <textarea id="codeInput" placeholder="Enter your code here"></textarea><br>
+    <button onclick="downloadHTML()">Download as HTML</button>
+    <button onclick="runInNewTab()">Run in New Tab</button>
+
+    <script>
+        function downloadHTML() {
+            const code = document.getElementById('codeInput').value;
+            const element = document.createElement('a');
+            const file = new Blob([code], {
+                type: 'text/plain'
+            });
+            element.href = URL.createObjectURL(file);
+            element.download = 'index.html';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        function runInNewTab() {
+            const code = document.getElementById('codeInput').value;
+            const htmlContent = `<html><head><title>Run HTML</title></head><body>${code}</body></html>`;
+            const newTab = window.open();
+            newTab.document.open();
+            newTab.document.write(htmlContent);
+            newTab.document.close();
+        }
+    </script>
+</body>
+
+</html>
