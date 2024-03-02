@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record and Playback Video with Audio</title>
+    <style>
+        #video-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #video-preview,
+        #recorded-video {
+            width: 100%;
+            max-width: 600px;
+        }
+        h2, p {
+            font-family: sans-serif;
+            text-align: center;
+        }
+        #controls {
+            text-align: center;
+            margin-top: 10px;
+        }
+        #start-recording, #stop-recording {
+            display: inline-block;
+            padding: 10px 20px;
+            font-family: sans-serif;
+            font-size: 16px;
+            background-color: #5A5A5A;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+        #download {
+            display: inline-block;
+            padding: 10px 20px;
+            font-family: sans-serif;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Video Recorder</h2>
+    <div id="video-container">
+        <video id="video-preview" autoplay muted playsinline></video>
+        <video id="recorded-video" style="display: none;" controls></video>
+        <div id="controls">
+            <button id="start-recording">Start Recording</button>
+            <button id="stop-recording" disabled>Stop Recording</button>
+            <a id="download" href="#" download="recorded-video.mp4" style="display: none;">Download Video</a>
+        </div>
+    </div>
+
+    <script>
+        const videoContainer = document.getElementById('video-container');
+        const videoPreview = document.getElementById('video-preview');
+        const recordedVideo = document.getElementById('recorded-video');
+        const startRecordingButton = document.getElementById('start-recording');
+        const stopRecordingButton = document.getElementById('stop-recording');
+        const downloadButton = document.getElementById('download');
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        startRecordingButton.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                videoPreview.srcObject = stream;
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = (e) => {
+                    recordedChunks.push(e.data);
+                };
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+                    recordedVideo.src = URL.createObjectURL(blob);
+                    recordedVideo.style.display = 'block';
+                    videoPreview.style.display = 'none';
+                    downloadButton.href = recordedVideo.src;
+                    downloadButton.style.display = 'inline-block';
+                };
+                mediaRecorder.start();
+                startRecordingButton.disabled = true;
+                stopRecordingButton.disabled = false;
+                downloadButton.style.display = 'none';
+            } catch (error) {
+                console.error('Error accessing media devices: ', error);
+            }
+        });
+
+        stopRecordingButton.addEventListener('click', () => {
+            if (mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                startRecordingButton.disabled = false;
+                stopRecordingButton.disabled = true;
+            }
+        });
+    </script>
+</body>
+</html>
