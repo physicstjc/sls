@@ -490,7 +490,7 @@
                 <img class="card-img-top" src="video-recorder/video-recorder.png" alt="Video Recorder">
                     <div class="card-body">
                         <h3 class="card-title">Video Recorder</h3>
-                        <p class="card-text">With a video recorder embedded into SLS, users will not have to use an external app to make video recordings for submission. However, the user will still have to download the video first (in mp4 format) before submitting as a file attachment into a free-response question. (SLS currently has a audio-response question type but not yet a video-response question type.)
+                        <p class="card-text">With a video recorder embedded into SLS, users will not have to use an external app to make video recordings for submission. However, the user will still have to download the video first (in mp4 format) before submitting as a file attachment into a free-response question. (SLS currently has a audio-response question type but not yet a video-response question type.)</p>
                         <p class="card-text">In some devices, the recorder only works when opened in full screen mode. </p>
                         <p class="card-text">Note that different web browsers may impose their own limitations on video recording. For example, some browsers may limit the duration of a video recording to prevent excessive resource usage or to ensure a good user experience.</p>
                         <p class="card-text">Some browsers may prompt the user for permission to access the device's camera and microphone, and users may have the option to deny or limit access. Additionally, browser security settings or extensions may impose additional restrictions on video recording.</p>
@@ -513,10 +513,41 @@
                         </div>
                     </div>
             </div>
+        </div> 
+            
+            
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="pdf-viewer/pdf-viewer.png" alt="PDF Viewer">
+                    <div class="card-body">
+                        <h3 class="card-title">PDF Viewer</h3>
+                        <p class="card-text">This allows a pdf file to be embedded seamlessly into SLS. Currently, SLS only allows for pdf files to be uploaded as a downloadable attachment but does not load it.</p>
+                        <p class="card-text">For saving into SLS, please change the file name in the index.html file to that of the pdf file.</p>
+                        <p class="card-text">Ensure that the pdf file is in the same level as the index.html file within the zip folder.</p>
+                        <p class="card-text"><font color="red">NEW!</font> If you are not confident in doing the above, you may use the automatic zipping function in <a href="pdf-viewer/upload.html">here</a>. (This is also built with ChatGPT)</p>
+                        <a href="pdf-viewer/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="pdf-viewer/pdf-viewer.zip" class="btn btn-secondary">Download for SLS</a>
+                        <a href="pdf-viewer/upload.html" class="btn btn-secondary">Upload PDF and Zip for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA15" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA15">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Prompt for the index file: Create a website that embeds a PDF file.</li>
+                                        <li>Prompts for the zip folder creator: Create a website that allows users to upload a pdf file, then create a index.html file that points to that pdf file using the code above to embed to pdf. The output will be a zip file with both the index.html file and the uploaded pdf file. Use only javascript, css and html.
+                                        </li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+                
         </div>
     </div>
     
-    </div>
+</div>
 
     
     
