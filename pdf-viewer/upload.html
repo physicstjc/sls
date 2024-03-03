@@ -13,30 +13,62 @@
             flex-direction: column;
             align-items: center;
         }
+        .container {
+              max-width: 500px;
+              margin-top: 20px;
+              padding: 20px;
+              background-color: #fff;
+              border-radius: 8px;
+              box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            }
         h2 {
             margin-bottom: 20px;
         }
         input[type="file"] {
+            display: none;
             margin-bottom: 10px;
         }
         button {
             padding: 10px 20px;
-            background-color: #007bff;
+            background-color: #28a745;
             color: #fff;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
         }
         button:hover {
-            background-color: #0056b3;
+            background-color: #218838;
         }
+        label {
+          display: block;
+          background-color: #007bff;
+          color: #fff;
+          padding: 10px 20px;
+          text-align: center;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+           margin-bottom: 10px;
+        }
+
+        label:hover {
+          background-color: #0056b3;
+        }
+
     </style>
 </head>
 <body>
+    <div class="container">
     <h2>Upload a PDF file</h2>
-    <input type="file" id="pdfFile" accept=".pdf">
-    <button onclick="handleUpload()">Upload PDF</button>
-
+    <p>Select a single pdf file that you would like to display in SLS without requiring students to download.</p>
+    <p>When the new zip file is uploaded into SLS, it will display the pdf file as shown below.</p>
+    <p align="center"><img src="pdf-viewer.png">
+    <p>Note the <a href="https://www.learning.moe.edu.sg/teacher-user-guide/author/file-size-limits/">maximum file size limits</a>.</p>    
+    <label for="fileInput">Choose File</label>
+    <input type="file" id="pdfFile" accept=".pdf" required>
+    <button onclick="handleUpload()">Generate Zip File</button>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
     <script>
         function handleUpload() {
