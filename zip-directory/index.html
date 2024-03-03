@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zip Folder Processor</title>
+    
+<style>
+    body {
+      font-family: Arial, sans-serif;    
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin-top: 20px;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    label {
+      display: block;
+      background-color: #007bff;
+      color: #fff;
+      padding: 10px 20px;
+      text-align: center;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    label:hover {
+      background-color: #0056b3;
+    }
+
+    button {
+      display: block;
+      margin-top: 20px;
+      padding: 10px 20px;    
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+    
+    #folderTitle {
+    width: 100%;
+      padding: 6px 10px;
+      margin: 8px 0;
+      box-sizing: border-box;
+      font-size: 16px;    
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Upload a zipped folder</h1>
+    <label for="fileInput">Choose File</label>
+    <input type="file" id="fileInput" accept=".zip" required>
+    <p>Title for zipped folder and index.html file:</p>
+    <input type="text" id="folderTitle" placeholder="Enter a title" required>  
+    <button onclick="processZip()">Process</button>
+  </div>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+  <script>
+    async function processZip() {
+      const fileInput = document.getElementById('fileInput');
+      const titleInput = document.getElementById('folderTitle');
+      const fileList = fileInput.files;
+
+      if (fileList.length === 0) {
+        alert('Please select a file.');
+        return;
+      }
+
+      const zipFile = fileList[0];
+      const zip = new JSZip();
+
+      try {
+        const zipContent = await readZipFile(zipFile);
+        const indexContent = generateIndex(zipContent.files, titleInput.value);
+
+        // Generate processed zip folder
+        const processedZip = new JSZip();
+        processedZip.file('index.html', indexContent);
+
+        for (const [relativePath, file] of Object.entries(zipContent.files)) {
+          if (!file.dir) {
+            const blob = await file.async('blob');
+            processedZip.file(relativePath, blob);
+          }
+        }
+
+        // Download processed zip folder
+        const processedZipBlob = await processedZip.generateAsync({ type: 'blob' });
+        const processedZipFileName = `${titleInput.value}.zip`;
+        downloadBlob(processedZipBlob, processedZipFileName);
+      } catch (error) {
+        console.error('Error processing zip:', error);
+        alert('Error processing zip file.');
+      }
+    }
+
+    function readZipFile(zipFile) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const arrayBuffer = reader.result;
+          JSZip.loadAsync(arrayBuffer).then(zip => resolve(zip)).catch(error => reject(error));
+        };
+        reader.onerror = error => reject(error);
+        reader.readAsArrayBuffer(zipFile);
+      });
+    }
+
+    function generateIndex(files, title) {
+      let indexContent = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${title}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 20px;
+            }
+            ul {
+              list-style-type: none;
+              padding: 0;
+            }
+            li {
+              margin-bottom: 5px;
+            }
+            a {
+              text-decoration: none;
+              color: #007bff;
+            }
+            a:hover {
+              text-decoration: underline;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          <ul>`;
+      for (const file of Object.keys(files)) {
+        indexContent += `<li><a href="${file}" target="_blank">${file}</a></li>`;
+      }
+      indexContent += `
+          </ul>
+        </body>
+        </html>`;
+      return indexContent;
+    }
+
+    function downloadBlob(blob, fileName) {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
