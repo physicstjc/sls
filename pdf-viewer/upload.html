@@ -13,6 +13,16 @@
             flex-direction: column;
             align-items: center;
         }
+        
+        .container {
+              max-width: 500px;
+              margin-top: 20px;
+              padding: 20px;
+              background-color: #fff;
+              border-radius: 8px;
+              box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            }
+
         h2 {
             margin-bottom: 20px;
         }
@@ -33,9 +43,18 @@
     </style>
 </head>
 <body>
+    <div class="container">
+    <h2>Upload a PDF file</h2>
+    <p>Select a single pdf file that you would like to display in SLS without requiring students to download.</p>
+    <p>When the new zip file is uploaded into SLS, it will display the pdf file as shown below.</p>
+    <p align="center"><img src="pdf-viewer.png">
+    <p>Note the <a href="https://www.learning.moe.edu.sg/teacher-user-guide/author/file-size-limits/">maximum file size limits</a>.</p>    
+
     <h2>Upload a PDF file</h2>
     <input type="file" id="pdfFile" accept=".pdf">
     <button onclick="handleUpload()">Upload PDF</button>
+
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
     <script>
