@@ -29,29 +29,42 @@
         input[type="file"] {
             margin-bottom: 10px;
         }
+        label {
+      display: block;
+      background-color: #007bff;
+      color: #fff;
+      padding: 10px 20px;
+      text-align: center;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    label:hover {
+      background-color: #0056b3;
+    }
         button {
             padding: 10px 20px;
-            background-color: #007bff;
+            background-color: #28a745;
             color: #fff;
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
         button:hover {
-            background-color: #0056b3;
+            background-color: #218838;
         }
     </style>
 </head>
 <body>
     <div class="container">
-    <h2>Upload a PDF file</h2>
+    <h2>Packaging a PDF file for SLS</h2>
     <p>Select a single pdf file that you would like to display in SLS without requiring students to download.</p>
     <p>When the new zip file is uploaded into SLS, it will display the pdf file as shown below.</p>
+    <p>Note the <a href="https://www.learning.moe.edu.sg/teacher-user-guide/author/file-size-limits/">maximum file size limits</a>.</p>   
     <p align="center"><img src="pdf-viewer.png">
-    <p>Note the <a href="https://www.learning.moe.edu.sg/teacher-user-guide/author/file-size-limits/">maximum file size limits</a>.</p>    
+    <input type="file" id="pdfFile" accept=".pdf" required> 
 
-    <h2>Upload a PDF file</h2>
-    <input type="file" id="pdfFile" accept=".pdf">
     <button onclick="handleUpload()">Process PDF</button>
 
     </div>
@@ -68,6 +81,7 @@
             }
 
             const zip = new JSZip();
+		 const fileNameWithoutExtension = file.name.split('.').slice(0, -1).join('.'); // Extract filename without extension
             zip.file(file.name, file); // Include the uploaded PDF file in the ZIP
 
             zip.file('index.html', `<!DOCTYPE html>
@@ -76,6 +90,12 @@
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Download PDF</title>
+            <style>
+                #pdf-viewer {
+                    width: 100%;
+                    height: 100vh;
+                }
+            </style>
             </head>
             <body>
                 <div id="pdf-viewer">
@@ -83,12 +103,11 @@
                 </div>
             </body>
             </html>`);
-
             zip.generateAsync({ type: 'blob' }).then(blob => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'pdf_viewer.zip';
+                a.download = `${fileNameWithoutExtension}.zip`; // Set the zip file name
                 a.click();
                 URL.revokeObjectURL(url);
             });
