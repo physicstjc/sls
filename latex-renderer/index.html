@@ -16,8 +16,7 @@
             border: 1px solid #ccc;
             resize: both;
         }
-        body
-        {
+        body {
             font-family: sans-serif;
             text-align: center;
         }
@@ -42,15 +41,18 @@
     <h3>LaTeX Renderer</h3>
     <p>Input (<a href="https://gitmind.com/faq/formula-list.html" target="_blank">help</a>)</p>
     <textarea id="latexInput" placeholder="Enter LaTeX code here"></textarea>
-    <p>Output</p><div id="output"></div>
+    <p>Output</p>
+    <div id="output"></div>
     <button class="downloadButton" id="downloadSVGButton">Download SVG</button>
     <button class="downloadButton" id="downloadPNGButton">Download PNG</button>
+    <button class="downloadButton" id="copyToClipboardButton">Copy to Clipboard</button>
 
     <script>
         const input = document.getElementById('latexInput');
         const output = document.getElementById('output');
         const downloadSVGButton = document.getElementById('downloadSVGButton');
         const downloadPNGButton = document.getElementById('downloadPNGButton');
+        const copyToClipboardButton = document.getElementById('copyToClipboardButton');
 
         input.addEventListener('input', () => {
             renderLatex(input.value);
@@ -62,6 +64,10 @@
 
         downloadPNGButton.addEventListener('click', () => {
             downloadImage('png');
+        });
+
+        copyToClipboardButton.addEventListener('click', () => {
+            copyImageToClipboard();
         });
 
         function renderLatex(latexCode) {
@@ -84,6 +90,7 @@
             const svgData = new XMLSerializer().serializeToString(svg);
 
             if (format === 'svg') {
+                // Download SVG code as a file
                 const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
@@ -94,9 +101,9 @@
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
             } else if (format === 'png') {
+                // Download PNG image
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-
                 const image = new Image();
                 const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
 
@@ -120,6 +127,32 @@
                 };
                 reader.readAsDataURL(blob);
             }
+        }
+
+        function copyImageToClipboard() {
+            const svg = output.querySelector('svg');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const image = new Image();
+            const svgData = new XMLSerializer().serializeToString(svg);
+            
+            image.onload = function () {
+                canvas.width = image.width;
+                canvas.height = image.height;
+                ctx.drawImage(image, 0, 0);
+
+                canvas.toBlob((blob) => {
+                    navigator.clipboard.write([
+                        new ClipboardItem({ 'image/png': blob })
+                    ]).then(() => {
+                        alert('Image copied to clipboard!');
+                    }).catch((error) => {
+                        console.error('Unable to copy to clipboard', error);
+                    });
+                });
+            };
+
+            image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgData);
         }
     </script>
 </body>
