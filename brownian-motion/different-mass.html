@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+        body {
+            font-family: sans-serif;
+            text-align: center;
+        }
+    </style>
+    <title>Brownian Motion Simulation</title>
+</head>
+<body>
+    <h3>Red particle with 100x mass of grey particle</h3>
+        <canvas id="brownianCanvas" width="600" height="400"></canvas>
+    <br>
+    <label for="showParticles">Show Grey Particles:</label>
+    <input type="checkbox" id="showParticles" checked>
+    <label for="speedSlider">Particle Speed:</label>
+    <input type="range" id="speedSlider" min="1" max="5" value="2">
+<a href="index.html">Change Mass</a>
+
+
+
+    <script>
+        const canvas = document.getElementById('brownianCanvas');
+        const ctx = canvas.getContext('2d');
+        const speedSlider = document.getElementById('speedSlider');
+        const speedValue = document.getElementById('speedValue');
+        const showParticlesCheckbox = document.getElementById('showParticles');
+
+        const redParticle = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 15,
+            mass: 100,
+            color: 'red',
+            velocity: { x: 0, y: 0 },
+        };
+
+        const greyParticles = [];
+        const numGreyParticles = 500;
+
+        for (let i = 0; i < numGreyParticles; i++) {
+            greyParticles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: 5,
+                mass: 1,
+                color: 'white',
+                velocity: { x: (Math.random() - 0.5) * 2 * speedSlider.value, y: (Math.random() - 0.5) * 2 * speedSlider.value },
+            });
+        }
+
+        function update() {
+            // Update grey particles only if the checkbox is not checked
+            if (!showParticlesCheckbox.unchecked) {
+                for (const particle of greyParticles) {
+                    updateParticle(particle);
+                }
+            }
+
+            // Update red particle
+            updateParticle(redParticle);
+
+            // Check for collisions
+            checkCollisions();
+
+            // Draw particles
+            drawParticles();
+
+            // Request animation frame
+            requestAnimationFrame(update);
+        }
+
+        function updateParticle(particle) {
+            // Update position based on velocity
+            particle.x += particle.velocity.x;
+            particle.y += particle.velocity.y;
+
+            // Bounce off walls
+            if (particle.x - particle.radius < 0 || particle.x + particle.radius > canvas.width) {
+                particle.velocity.x *= -1;
+            }
+
+            if (particle.y - particle.radius < 0 || particle.y + particle.radius > canvas.height) {
+                particle.velocity.y *= -1;
+            }
+        }
+
+        function checkCollisions() {
+            for (const greyParticle of greyParticles) {
+                // Check collision with red particle
+                if (checkParticleCollision(redParticle, greyParticle)) {
+                    handleParticleCollision(redParticle, greyParticle);
+                }
+            }
+        }
+
+        function checkParticleCollision(particleA, particleB) {
+            const dx = particleB.x - particleA.x;
+            const dy = particleB.y - particleA.y;
+            const distance = Math.sqrt(dx**2 + dy**2);
+
+            return distance < particleA.radius + particleB.radius;
+        }
+
+        function handleParticleCollision(particleA, particleB) {
+            const dx = particleB.x - particleA.x;
+            const dy = particleB.y - particleA.y;
+            const collisionAngle = Math.atan2(dy, dx);
+
+            const relativeVelocity = {
+                x: particleB.velocity.x - particleA.velocity.x,
+                y: particleB.velocity.y - particleA.velocity.y,
+            };
+
+            const distance = Math.sqrt(dx**2 + dy**2);
+            const normalX = dx / distance;
+            const normalY = dy / distance;
+
+            const relativeSpeed = relativeVelocity.x * normalX + relativeVelocity.y * normalY;
+
+            const impulse = (2 * relativeSpeed) / (particleA.mass + particleB.mass);
+
+            const impulseAx = impulse * particleB.mass * normalX;
+            const impulseAy = impulse * particleB.mass * normalY;
+            const impulseBx = -impulse * particleA.mass * normalX;
+            const impulseBy = -impulse * particleA.mass * normalY;
+
+            // Update velocities
+            particleA.velocity.x += impulseAx;
+            particleA.velocity.y += impulseAy;
+            particleB.velocity.x += impulseBx;
+            particleB.velocity.y += impulseBy;
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw grey particles if the checkbox is not checked
+            for (const particle of greyParticles) {
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+                ctx.fillStyle = showParticlesCheckbox.checked ? 'grey' : particle.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            // Draw red particle
+            ctx.beginPath();
+            ctx.arc(redParticle.x, redParticle.y, redParticle.radius, 0, Math.PI * 2);
+            ctx.fillStyle = redParticle.color;
+            ctx.fill();
+            ctx.closePath();
+
+            // Draw line trace for the red particle
+            ctx.beginPath();
+            ctx.moveTo(redParticle.x, redParticle.y);
+            ctx.lineTo(redParticle.x - redParticle.velocity.x * 5, redParticle.y - redParticle.velocity.y * 5);
+            ctx.strokeStyle = redParticle.color;
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        // Event listener for speed slider
+        speedSlider.addEventListener('input', () => {
+            speedValue.textContent = speedSlider.value;
+            // Update the initial velocities of the grey particles
+            for (const particle of greyParticles) {
+                particle.velocity.x = (Math.random() - 0.5) * 2 * speedSlider.value;
+                particle.velocity.y = (Math.random() - 0.5) * 2 * speedSlider.value;
+            }
+        });
+
+        // Start the simulation
+        update();
+    </script>
+</body>
+</html>

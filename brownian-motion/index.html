@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Air Molecules Simulation</title>
+  <style>
+    canvas {
+      border: 1px solid #000;
+    }
+    body {
+      font-family: sans-serif;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+    <h3>Particles of the same mass</h3>
+    <canvas id="particleCanvas" width="600" height="400"></canvas>
+    <br><label for="showParticlesCheckbox">Show Grey Particles:</label>
+  <input type="checkbox" id="showParticlesCheckbox" checked>
+
+  <label for="speedSlider">Particle Speed:</label>
+  <input type="range" id="speedSlider" min="1" max="5" step="1" value="2">
+    <a href="different-mass.html">Change Mass</a>
+
+
+
+  <script>
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+    const particleCount = 500;
+    const particles = [];
+    const largerParticles = [];
+    let particleSpeed = 5;
+    let showParticles = true;
+
+    function initParticles() {
+      for (let i = 0; i < particleCount; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * particleSpeed,
+          vy: (Math.random() - 0.5) * particleSpeed,
+        });
+      }
+
+      for (let i = 0; i < 1; i++) {
+        largerParticles.push({
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+          vx: particleSpeed,
+          vy: particleSpeed,
+        });
+      }
+    }
+
+    function updateParticles() {
+      particles.forEach((particle, index) => {
+        if (showParticles) {
+          particle.x += particle.vx;
+          particle.y += particle.vy;
+
+          // Bounce off walls
+          if (particle.x < 0 || particle.x > canvas.width) {
+            particle.vx *= -1;
+          }
+
+          if (particle.y < 0 || particle.y > canvas.height) {
+            particle.vy *= -1;
+          }
+
+          // Check for collisions with other particles
+          for (let i = 0; i < particles.length; i++) {
+            if (i !== index) {
+              const otherParticle = particles[i];
+              const dx = particle.x - otherParticle.x;
+              const dy = particle.y - otherParticle.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+
+              if (distance < 6) {
+                // Simple elastic collision
+                const tempVx = particle.vx;
+                const tempVy = particle.vy;
+                particle.vx = otherParticle.vx;
+                particle.vy = otherParticle.vy;
+                otherParticle.vx = tempVx;
+                otherParticle.vy = tempVy;
+              }
+            }
+          }
+        }
+      });
+
+      largerParticles.forEach(particle => {
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+
+        // Bounce off walls
+        if (particle.x < 0 || particle.x > canvas.width) {
+          particle.vx *= -1;
+        }
+
+        if (particle.y < 0 || particle.y > canvas.height) {
+          particle.vy *= -1;
+        }
+
+        // Check for collisions with smaller particles
+        particles.forEach(smallerParticle => {
+          const dx = particle.x - smallerParticle.x;
+          const dy = particle.y - smallerParticle.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < 10) {
+            // Simple elastic collision
+            const tempVx = particle.vx;
+            const tempVy = particle.vy;
+            particle.vx = smallerParticle.vx;
+            particle.vy = smallerParticle.vy;
+            smallerParticle.vx = tempVx;
+            smallerParticle.vy = tempVy;
+          }
+        });
+      });
+    }
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (showParticles) {
+        particles.forEach(particle => {
+          ctx.fillStyle = 'grey';
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, 5, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+
+      largerParticles.forEach(particle => {
+        ctx.fillStyle = 'red';
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, 8, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    function animate() {
+      updateParticles();
+      drawParticles();
+      requestAnimationFrame(animate);
+    }
+
+    initParticles();
+    animate();
+
+    // Event listener for speed slider
+    const speedSlider = document.getElementById('speedSlider');
+    speedSlider.addEventListener('input', () => {
+      particleSpeed = parseInt(speedSlider.value);
+      particles.forEach(particle => {
+        particle.vx = (Math.random() - 0.5) * particleSpeed * 2;
+        particle.vy = (Math.random() - 0.5) * particleSpeed * 2;
+      });
+
+      largerParticles.forEach(particle => {
+        particle.vx = particleSpeed * 2;
+        particle.vy = particleSpeed * 2;
+      });
+    });
+
+    // Event listener for show particles checkbox
+    const showParticlesCheckbox = document.getElementById('showParticlesCheckbox');
+    showParticlesCheckbox.addEventListener('change', () => {
+      showParticles = showParticlesCheckbox.checked;
+    });
+  </script>
+</body>
+</html>
