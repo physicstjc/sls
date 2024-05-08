@@ -58,6 +58,12 @@
             ctx.lineTo(280 + tubeWidth, bottomLevel);
             ctx.stroke();
 
+            // Close the top of the left tube
+            ctx.beginPath();
+            ctx.moveTo(200, bottomLevel - 250);
+            ctx.lineTo(200 + tubeWidth, bottomLevel - 250);
+            ctx.stroke();
+
             // Draw bottom liquid connecting tube
             ctx.fillStyle = 'blue';
             ctx.fillRect(200 + tubeWidth, bottomLevel - tubeWidth, 80 - tubeWidth, tubeWidth);
