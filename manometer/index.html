@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>U-tube Manometer Simulation</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+        #controls {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>U-tube Manometer Simulation</h1>
+    <canvas id="manometerCanvas" width="500" height="500"></canvas>
+    <div id="controls">
+        <label for="pressureSlider">Air Pressure in Flask (atm):</label>
+        <input type="range" id="pressureSlider" min="50" max="150" value="100" step="1">
+        <span id="pressureValue">1.00</span> atm
+    </div>
+    <script>
+        const canvas = document.getElementById('manometerCanvas');
+        const ctx = canvas.getContext('2d');
+        const slider = document.getElementById('pressureSlider');
+        const pressureValueSpan = document.getElementById('pressureValue');
+
+        let basePressure = 100; // 1 atm
+        let liquidHeightLeft = 150;
+        let liquidHeightRight = 150;
+        const baseLiquidHeight = 150;
+        const tubeWidth = 10;
+        const uTubeGap = 80;
+        const bottomLevel = 400;
+
+        function drawManometer() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.lineWidth = 2;
+
+            // Draw flask and connecting tube
+            ctx.beginPath();
+            ctx.arc(150, 200, 30, 0, 2 * Math.PI);
+            ctx.moveTo(180, 200);
+            ctx.lineTo(200, 200);
+            ctx.lineTo(200, bottomLevel);
+            ctx.stroke();
+
+            // Draw U-tube
+            ctx.beginPath();
+            ctx.moveTo(200, bottomLevel - 250);
+            ctx.lineTo(200, bottomLevel);
+            ctx.moveTo(200 + tubeWidth, bottomLevel - 250);
+            ctx.lineTo(200 + tubeWidth, bottomLevel);
+            ctx.moveTo(280, bottomLevel - 250);
+            ctx.lineTo(280, bottomLevel);
+            ctx.moveTo(280 + tubeWidth, bottomLevel - 250);
+            ctx.lineTo(280 + tubeWidth, bottomLevel);
+            ctx.stroke();
+
+            // Draw bottom liquid connecting tube
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(200 + tubeWidth, bottomLevel - tubeWidth, 80 - tubeWidth, tubeWidth);
+
+            // Draw liquid columns in U-tube
+            ctx.fillRect(200, bottomLevel - liquidHeightLeft, tubeWidth, liquidHeightLeft);
+            ctx.fillRect(280, bottomLevel - liquidHeightRight, tubeWidth, liquidHeightRight);
+        }
+
+        function updateManometer(pressure) {
+            const deltaHeight = (pressure - basePressure) / 2;
+            liquidHeightLeft = baseLiquidHeight - deltaHeight;
+            liquidHeightRight = baseLiquidHeight + deltaHeight;
+            drawManometer();
+
+            // Convert slider value to atm
+            const atmPressure = (pressure / 100).toFixed(2);
+            pressureValueSpan.textContent = atmPressure;
+        }
+
+        slider.addEventListener('input', (event) => {
+            const pressure = event.target.value;
+            updateManometer(pressure);
+        });
+
+        // Initial draw
+        updateManometer(basePressure);
+    </script>
+</body>
+</html>
