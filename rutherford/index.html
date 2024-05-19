@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rutherford Gold-Foil Experiment Simulation</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+        }
+        canvas {
+            display: block;
+            background-color: #f0f0f0;
+        }
+        #startButton {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="simulationCanvas"></canvas>
+    <button id="startButton">Start Simulation</button>
+    <script>
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        const startButton = document.getElementById('startButton');
+
+        const alphaParticles = [];
+        const goldNuclei = [];
+        const particleCount = 100;
+        const goldNucleiCount = 5;
+        let goldFoilX, goldFoilWidth, goldFoilHeight, nucleusRadius;
+        const spacingY = 100;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            goldFoilX = canvas.width / 2;
+            goldFoilWidth = Math.min(20, canvas.width * 0.025);
+            goldFoilHeight = canvas.height;
+            nucleusRadius = Math.min(5, canvas.width * 0.00625);
+
+            alphaParticles.length = 0;
+            goldNuclei.length = 0;
+        }
+
+        class AlphaParticle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = 2;
+                this.vy = 0;
+                this.scattered = false;
+            }
+
+            update() {
+                if (!this.scattered && this.x > goldFoilX && this.x < goldFoilX + goldFoilWidth) {
+                    goldNuclei.forEach(nucleus => {
+                        const distanceToNucleus = Math.hypot(this.x - nucleus.x, this.y - nucleus.y);
+                        if (distanceToNucleus < nucleusRadius) {
+                            // Bounce back
+                            this.vx = -Math.random() * 2;
+                            this.vy = (Math.random() - 0.5) * 4;
+                            this.scattered = true;
+                        }
+                    });
+
+                    if (!this.scattered && Math.random() < 0.05) { // 5% chance to scatter
+                        this.vx = Math.random() * 2;
+                        this.vy = (Math.random() - 0.5) * 4;
+                        this.scattered = true;
+                    }
+                }
+                this.x += this.vx;
+                this.y += this.vy;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                ctx.fillStyle = 'red';
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        function createParticles() {
+            for (let i = 0; i < particleCount; i++) {
+                const y = Math.random() * canvas.height;
+                alphaParticles.push(new AlphaParticle(0, y));
+            }
+        }
+
+        function createGoldNuclei() {
+            const startY = (canvas.height - (goldNucleiCount - 1) * spacingY) / 2;
+            for (let i = 0; i < goldNucleiCount; i++) {
+                const x = goldFoilX + goldFoilWidth / 2;
+                const y = startY + i * spacingY;
+                goldNuclei.push({ x, y });
+            }
+        }
+
+        function drawGoldFoil() {
+            ctx.fillStyle = 'gold';
+            ctx.fillRect(goldFoilX, 0, goldFoilWidth, goldFoilHeight);
+            // Draw the nuclei
+            goldNuclei.forEach(nucleus => {
+                ctx.beginPath();
+                ctx.arc(nucleus.x, nucleus.y, nucleusRadius, 0, Math.PI * 2);
+                ctx.fillStyle = 'black';
+                ctx.fill();
+                ctx.closePath();
+            });
+        }
+
+        function updateSimulation() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawGoldFoil();
+            alphaParticles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+            requestAnimationFrame(updateSimulation);
+        }
+
+        startButton.addEventListener('click', () => {
+            createParticles();
+            createGoldNuclei();
+            updateSimulation();
+        });
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas(); // Initialize the canvas size
+    </script>
+</body>
+</html>
