@@ -130,10 +130,14 @@
             remainingGreyParticles.push({ x: time, y: currentGreyCount });
             updateChart();
             drawParticles();
+/            / Update the text display for time and remaining particles
+            document.getElementById('timeDisplay').textContent = `Time: ${time} seconds`;
+            document.getElementById('remainingParticlesDisplay').textContent = `Remaining Grey Particles: ${currentGreyCount}`;
 
             if (currentGreyCount > 0) {
                 intervalId = setTimeout(simulateDecay, 1000);
             }
+
         }
 
         function createChart() {
