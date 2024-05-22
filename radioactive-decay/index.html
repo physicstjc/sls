@@ -183,10 +183,18 @@
             document.body.removeChild(link);
         }
 
+        let isAnimating = false;
+
         startButton.onclick = function() {
-            clearInterval(intervalId);
-            initializeParticles();
-            intervalId = setTimeout(simulateDecay, 1000);
+            if (isAnimating) {
+                clearInterval(intervalId);
+                startButton.textContent = "Start Animation";
+            } else {
+                initializeParticles();
+                intervalId = setTimeout(simulateDecay, 1000);
+                startButton.textContent = "Stop Animation";
+            }
+            isAnimating = !isAnimating;
         }
 
         document.getElementById('downloadButton').addEventListener('click', downloadCSV);
