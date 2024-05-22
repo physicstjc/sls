@@ -28,6 +28,7 @@
         <span id="halfLifeValue">10</span> seconds
         <br>
         <button id="startButton">Start Animation</button>
+        <button id="downloadButton">Download Data as CSV</button>
     </div>
     <canvas id="decayCanvas" width="500" height="500"></canvas>
     <div id="chart" style="width: 500px; height: 300px;"></div>
@@ -162,7 +163,25 @@
             });
         }
 
+        function generateCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Time (seconds),Remaining Grey Particles\n";
+            remainingGreyParticles.forEach(point => {
+                csvContent += `${point.x},${point.y}\n`;
+            });
+            return csvContent;
+        }
 
+        function downloadCSV() {
+            const csvContent = generateCSV();
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "radioactive_decay_data.csv");
+            document.body.appendChild(link); // Required for Firefox
+            link.click();
+            document.body.removeChild(link);
+        }
 
         startButton.onclick = function() {
             clearInterval(intervalId);
@@ -170,16 +189,17 @@
             intervalId = setTimeout(simulateDecay, 1000);
         }
 
+        document.getElementById('downloadButton').addEventListener('click', downloadCSV);
+
         window.onload = () => {
             initializeParticles();
             createChart();
         }
     </script>
     
-            <br>
+        <br>
         <span id="timeDisplay">Time: 0 seconds</span>
         <br>
         <span id="remainingParticlesDisplay">Remaining Grey Particles: 3600</span>
-
 </body>
 </html>
