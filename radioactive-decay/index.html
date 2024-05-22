@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radioactive Decay Simulation</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+        canvas, #chart {
+            border: 1px solid black;
+            margin: 10px;
+        }
+        #controls {
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Radioactive Decay Simulation</h1>
+    <div id="controls">
+        <label for="halfLife">Half-life (seconds): </label>
+        <input type="range" id="halfLife" min="1" max="200" value="10">
+        <span id="halfLifeValue">10</span> seconds
+        <br>
+        <button id="startButton">Start Animation</button>
+    </div>
+    <canvas id="decayCanvas" width="500" height="500"></canvas>
+    <div id="chart" style="width: 500px; height: 300px;"></div>
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+        const decayCanvas = document.getElementById('decayCanvas');
+        const chartDiv = document.getElementById('chart');
+        const halfLifeSlider = document.getElementById('halfLife');
+        const halfLifeValue = document.getElementById('halfLifeValue');
+        const startButton = document.getElementById('startButton');
+
+        const ctx = decayCanvas.getContext('2d');
+        const gridSize = 60;
+        const particleSize = decayCanvas.width / gridSize / 2;
+        let particles = [];
+        let remainingGreyParticles = [];
+        let intervalId;
+        let time = 0;
+
+        halfLifeSlider.oninput = function() {
+            halfLifeValue.textContent = this.value;
+        }
+
+        function initializeParticles() {
+            particles = Array.from({ length: gridSize }, () =>
+                Array.from({ length: gridSize }, () => true)
+            );
+            remainingGreyParticles = [];
+            time = 0;
+            drawParticles();
+            updateChart();
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, decayCanvas.width, decayCanvas.height);
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    ctx.fillStyle = particles[i][j] ? 'grey' : 'red';
+                    ctx.beginPath();
+                    ctx.arc(
+                        i * 2 * particleSize + particleSize,
+                        j * 2 * particleSize + particleSize,
+                        particleSize - 1,
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fill();
+                }
+            }
+        }
+
+        function initializeParticles() {
+            particles = Array.from({ length: gridSize }, () =>
+                Array.from({ length: gridSize }, () => true)
+            );
+            remainingGreyParticles = [];
+            time = 0;
+            document.getElementById('timeDisplay').textContent = "Time: 0 seconds";
+            document.getElementById('remainingParticlesDisplay').textContent = "Remaining Grey Particles: 3600";
+            drawParticles();
+            updateChart();
+        }
+
+        function simulateDecay() {
+            const halfLife = parseFloat(halfLifeSlider.value);
+            const decayProbability = 1 - Math.pow(0.5, 1 / halfLife);
+
+            let currentGreyCount = 0;
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    if (particles[i][j] && Math.random() < decayProbability) {
+                        particles[i][j] = false;
+                    }
+                    if (particles[i][j]) {
+                        currentGreyCount++;
+                    }
+                }
+            }
+
+            time++;
+            remainingGreyParticles.push({ x: time, y: currentGreyCount });
+            updateChart();
+            drawParticles();
+
+            // Update the text display for time and remaining particles
+            document.getElementById('timeDisplay').textContent = `Time: ${time} seconds`;
+            document.getElementById('remainingParticlesDisplay').textContent = `Remaining Grey Particles: ${currentGreyCount}`;
+
+            if (currentGreyCount > 0) {
+                intervalId = setTimeout(simulateDecay, 1000);
+            }
+        }
+
+        function createChart() {
+            Plotly.newPlot(chartDiv, [{
+                x: [0],
+                y: [3600],
+                mode: 'lines',
+                name: 'Remaining Grey Particles'
+            }], {
+                title: 'Remaining Grey Particles Over Time',
+                xaxis: {
+                    title: 'Time (seconds)',
+                    range: [0, 10]  // Initial range for the time axis
+                },
+                yaxis: {
+                    title: 'Grey Particles',
+                    range: [0, 3600]  // Fixed range for the vertical axis
+                }
+            });
+        }
+
+        function updateChart() {
+            const x = [0, ...remainingGreyParticles.map(point => point.x)];
+            const y = [3600, ...remainingGreyParticles.map(point => point.y)];
+            Plotly.react(chartDiv, [{
+                x: x,
+                y: y,
+                mode: 'lines',
+                name: 'Remaining Grey Particles'
+            }], {
+                title: 'Remaining Grey Particles Over Time',
+                xaxis: {
+                    title: 'Time (seconds)',
+                    range: [0, Math.max(10, time)]  // Dynamic range for the time axis
+                },
+                yaxis: {
+                    title: 'Grey Particles',
+                    range: [0, 3600]  // Fixed range for the vertical axis
+                }
+            });
+        }
+
+
+
+        startButton.onclick = function() {
+            clearInterval(intervalId);
+            initializeParticles();
+            intervalId = setTimeout(simulateDecay, 1000);
+        }
+
+        window.onload = () => {
+            initializeParticles();
+            createChart();
+        }
+    </script>
+    
+            <br>
+        <span id="timeDisplay">Time: 0 seconds</span>
+        <br>
+        <span id="remainingParticlesDisplay">Remaining Grey Particles: 3600</span>
+
+</body>
+</html>
