@@ -10,13 +10,36 @@
             flex-direction: column;
             align-items: center;
             font-family: Arial, sans-serif;
-        }
-        canvas, #chart {
-            border: 1px solid black;
-            margin: 10px;
+            margin: 0;
+            padding: 0;
         }
         #controls {
             margin: 20px;
+            text-align: center;
+        }
+        #canvasContainer, #chartContainer {
+            width: 90%;
+            max-width: 480px;
+            margin: 10px;
+            display: flex;
+            justify-content: center;
+        }
+        canvas {
+            width: 100%;
+            height: auto;
+        }
+        #chartContainer {
+            width: 100%;
+            min-height: 250px;
+        }
+        #chart {
+            width: 100%;
+            height: 100%;
+        }
+        @media (max-width: 600px) {
+            #chartContainer {
+                height: 250px;
+            }
         }
     </style>
 </head>
@@ -30,8 +53,12 @@
         <button id="startButton">Start Animation</button>
         <button id="downloadButton">Download Data as CSV</button>
     </div>
-    <canvas id="decayCanvas" width="500" height="500"></canvas>
-    <div id="chart" style="width: 500px; height: 300px;"></div>
+    <div id="canvasContainer">
+        <canvas id="decayCanvas"></canvas>
+    </div>
+    <div id="chartContainer">
+        <div id="chart"></div>
+    </div>
 
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script>
@@ -43,7 +70,6 @@
 
         const ctx = decayCanvas.getContext('2d');
         const gridSize = 60;
-        const particleSize = decayCanvas.width / gridSize / 2;
         let particles = [];
         let remainingGreyParticles = [];
         let intervalId;
@@ -64,7 +90,10 @@
         }
 
         function drawParticles() {
-            ctx.clearRect(0, 0, decayCanvas.width, decayCanvas.height);
+            const width = decayCanvas.width;
+            const height = decayCanvas.height;
+            const particleSize = width / gridSize / 2;
+            ctx.clearRect(0, 0, width, height);
             for (let i = 0; i < gridSize; i++) {
                 for (let j = 0; j < gridSize; j++) {
                     ctx.fillStyle = particles[i][j] ? 'grey' : 'red';
@@ -79,18 +108,6 @@
                     ctx.fill();
                 }
             }
-        }
-
-        function initializeParticles() {
-            particles = Array.from({ length: gridSize }, () =>
-                Array.from({ length: gridSize }, () => true)
-            );
-            remainingGreyParticles = [];
-            time = 0;
-            document.getElementById('timeDisplay').textContent = "Time: 0 seconds";
-            document.getElementById('remainingParticlesDisplay').textContent = "Remaining Grey Particles: 3600";
-            drawParticles();
-            updateChart();
         }
 
         function simulateDecay() {
@@ -113,10 +130,13 @@
             remainingGreyParticles.push({ x: time, y: currentGreyCount });
             updateChart();
             drawParticles();
-
             // Update the text display for time and remaining particles
             document.getElementById('timeDisplay').textContent = `Time: ${time} seconds`;
             document.getElementById('remainingParticlesDisplay').textContent = `Remaining Grey Particles: ${currentGreyCount}`;
+
+            if (currentGreyCount > 0) {
+                intervalId = setTimeout(simulateDecay, 1000);
+            }
 
             if (currentGreyCount > 0) {
                 intervalId = setTimeout(simulateDecay, 1000);
@@ -194,12 +214,22 @@
         window.onload = () => {
             initializeParticles();
             createChart();
+            adjustCanvasSize();
+        }
+
+        window.onresize = adjustCanvasSize;
+
+        function adjustCanvasSize() {
+            const containerWidth = document.getElementById('canvasContainer').offsetWidth;
+            decayCanvas.width = containerWidth;
+            decayCanvas.height = containerWidth;
+            drawParticles();
         }
     </script>
     
-        <br>
-        <span id="timeDisplay">Time: 0 seconds</span>
-        <br>
-        <span id="remainingParticlesDisplay">Remaining Grey Particles: 3600</span>
+    <br>
+    <span id="timeDisplay">Time: 0 seconds</span>
+    <br>
+    <span id="remainingParticlesDisplay">Remaining Grey Particles: 3600</span>
 </body>
 </html>
