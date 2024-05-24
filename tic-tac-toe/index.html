@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe with Timer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #game {
+            text-align: center;
+        }
+        #board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            margin: 20px auto;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            cursor: pointer;
+        }
+        .cell.disabled {
+            pointer-events: none;
+            background-color: #e0e0e0;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 1.5em;
+        }
+        #timer {
+            margin-top: 10px;
+            font-size: 1.2em;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <h1>Tic-Tac-Toe</h1>
+        <div id="board">
+            <div class="cell" id="cell-0"></div>
+            <div class="cell" id="cell-1"></div>
+            <div class="cell" id="cell-2"></div>
+            <div class="cell" id="cell-3"></div>
+            <div class="cell" id="cell-4"></div>
+            <div class="cell" id="cell-5"></div>
+            <div class="cell" id="cell-6"></div>
+            <div class="cell" id="cell-7"></div>
+            <div class="cell" id="cell-8"></div>
+        </div>
+        <div id="status"></div>
+        <div id="timer">Time left: 5s</div>
+        <button id="restart">Restart Game</button>
+    </div>
+    <script>
+        const cells = document.querySelectorAll('.cell');
+        const statusText = document.getElementById('status');
+        const timerText = document.getElementById('timer');
+        const restartButton = document.getElementById('restart');
+        let currentPlayer = 'X';
+        let gameActive = true;
+        let timer;
+        let timeLeft = 5;
+
+        const winningConditions = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+
+        function startTimer() {
+            timeLeft = 5;
+            timerText.textContent = `Time left: ${timeLeft}s`;
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                timerText.textContent = `Time left: ${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    switchPlayer();
+                }
+            }, 1000);
+        }
+
+        function handleCellClick(event) {
+            const cell = event.target;
+            const cellIndex = Array.from(cells).indexOf(cell);
+
+            if (cell.textContent !== '' || !gameActive) {
+                return;
+            }
+
+            cell.textContent = currentPlayer;
+            checkResult();
+            if (gameActive) {
+                switchPlayer();
+            }
+        }
+
+        function switchPlayer() {
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            statusText.textContent = `Player ${currentPlayer}'s turn`;
+            startTimer();
+        }
+
+        function checkResult() {
+            let roundWon = false;
+            for (let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                if (cells[a].textContent && cells[a].textContent === cells[b].textContent && cells[a].textContent === cells[c].textContent) {
+                    roundWon = true;
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                statusText.textContent = `Player ${currentPlayer} wins!`;
+                gameActive = false;
+                clearInterval(timer);
+                return;
+            }
+
+            const roundDraw = Array.from(cells).every(cell => cell.textContent !== '');
+            if (roundDraw) {
+                statusText.textContent = 'Draw!';
+                gameActive = false;
+                clearInterval(timer);
+                return;
+            }
+        }
+
+        function restartGame() {
+            currentPlayer = 'X';
+            gameActive = true;
+            statusText.textContent = `Player ${currentPlayer}'s turn`;
+            cells.forEach(cell => cell.textContent = '');
+            startTimer();
+        }
+
+        cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+        restartButton.addEventListener('click', restartGame);
+
+        statusText.textContent = `Player ${currentPlayer}'s turn`;
+        startTimer();
+    </script>
+</body>
+</html>
