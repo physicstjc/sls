@@ -18,9 +18,9 @@
     <h1>Velocity Vector Addition Simulation</h1>
     <canvas id="simulationCanvas" width="640" height="480"></canvas>
     <div id="controls">
-        <label for="riverSpeed">River Velocity:</label>
+        <label for="riverSpeed">River Speed:</label>
         <input type="range" id="riverSpeed" min="-10" max="10" value="0" step="0.1">
-        <span id="riverSpeedValue">0</span> m/s
+        <span id="riverSpeedValue">0</span>
         <button id="animateButton">Animate Boat</button>
     </div>
 
@@ -36,6 +36,7 @@
         let riverSpeed = parseFloat(riverSpeedSlider.value);
         let animationFrameId;
         let waveOffset = 0;
+        let dx = 0;
 
         function drawArrow(fromX, fromY, toX, toY, color) {
             const headLength = 10; // length of head in pixels
@@ -117,7 +118,7 @@
             let y = 400;
             const angle = Math.atan2(-40, riverSpeed * 10);
             const speed = Math.sqrt(Math.pow(boatSpeed, 2) + Math.pow(riverSpeed, 2));
-            const dx = speed * Math.cos(angle) / 10;
+            dx = speed * Math.cos(angle) / 10;
             const dy = speed * Math.sin(angle) / 10;
 
             function drawBoat() {
@@ -141,7 +142,7 @@
                     return;
                 }
 
-                waveOffset = (waveOffset + riverSpeed * 0.5) % 40;
+                waveOffset = (waveOffset + dx) % 40;
                 animationFrameId = requestAnimationFrame(drawBoat);
             }
 
