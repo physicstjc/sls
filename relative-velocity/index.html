@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velocity Vector Addition Simulation</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            background-color: #f0f0f0;
+        }
+        #controls {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Velocity Vector Addition Simulation</h1>
+    <canvas id="simulationCanvas" width="640" height="480"></canvas>
+    <div id="controls">
+        <label for="riverSpeed">River Velocity:</label>
+        <input type="range" id="riverSpeed" min="-10" max="10" value="0" step="0.1">
+        <span id="riverSpeedValue">0</span> m/s
+        <button id="animateButton">Animate Boat</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const riverSpeedSlider = document.getElementById('riverSpeed');
+        const riverSpeedValue = document.getElementById('riverSpeedValue');
+        const animateButton = document.getElementById('animateButton');
+
+        const boatSpeed = 5;
+        let riverSpeed = parseFloat(riverSpeedSlider.value);
+        let animationFrameId;
+        let waveOffset = 0;
+
+        function drawArrow(fromX, fromY, toX, toY, color) {
+            const headLength = 10; // length of head in pixels
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const angle = Math.atan2(dy, dx);
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.closePath();
+            
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - headLength * Math.cos(angle - Math.PI / 6), toY - headLength * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - headLength * Math.cos(angle + Math.PI / 6), toY - headLength * Math.sin(angle + Math.PI / 6));
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        function drawWaves() {
+            ctx.strokeStyle = 'lightblue';
+            ctx.lineWidth = 2;
+            const waveHeight = 10;
+            const waveLength = 40;
+
+            for (let y = 100; y <= 380; y += 20) {
+                ctx.beginPath();
+                for (let x = 0; x <= canvas.width; x += waveLength) {
+                    ctx.moveTo(x + waveOffset, y);
+                    ctx.quadraticCurveTo(x + waveLength / 2 + waveOffset, y + waveHeight, x + waveLength + waveOffset, y);
+                    ctx.quadraticCurveTo(x + waveLength * 1.5 + waveOffset, y - waveHeight, x + waveLength * 2 + waveOffset, y);
+                }
+                ctx.stroke();
+            }
+        }
+
+        function drawVectors() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw the shores of the river
+            ctx.beginPath();
+            ctx.moveTo(0, 80);
+            ctx.lineTo(canvas.width, 80);
+            ctx.moveTo(0, 400);
+            ctx.lineTo(canvas.width, 400);
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.closePath();
+
+            drawWaves();
+
+            // Draw boat velocity vector (vertically upward)
+            drawArrow(320, 240, 320, 240 - 40, 'blue');
+            ctx.fillStyle = 'blue';
+            ctx.fillText('Boat Velocity (5 m/s)', 330, 200);
+
+            // Draw river velocity vector if river speed is not zero
+            if (riverSpeed !== 0) {
+                drawArrow(320, 240, 320 + riverSpeed * 10, 240, 'red');
+                ctx.fillStyle = 'red';
+                ctx.fillText(`River Velocity (${riverSpeed.toFixed(1)} m/s)`, 320 + riverSpeed * 10 + 10, 250);
+            }
+
+            // Draw resultant velocity vector
+            drawArrow(320, 240, 320 + riverSpeed * 10, 240 - 40, 'green');
+            ctx.fillStyle = 'green';
+            ctx.fillText('Resultant Velocity', 320 + riverSpeed * 10 + 10, 240 - 40 - 10);
+        }
+
+        function animateBoat() {
+            let x = 320;
+            let y = 400;
+            const angle = Math.atan2(-40, riverSpeed * 10);
+            const speed = Math.sqrt(Math.pow(boatSpeed, 2) + Math.pow(riverSpeed, 2));
+            const dx = speed * Math.cos(angle) / 10;
+            const dy = speed * Math.sin(angle) / 10;
+
+            function drawBoat() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawVectors();
+
+                // Draw the boat as a pencil-like shape inverted vertically
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + 10, y + 30);
+                ctx.lineTo(x - 10, y + 30);
+                ctx.closePath();
+                ctx.fillStyle = 'black';
+                ctx.fill();
+
+                x += dx;
+                y += dy;
+
+                if (y <= 80) {
+                    cancelAnimationFrame(animationFrameId);
+                    return;
+                }
+
+                waveOffset = (waveOffset + riverSpeed * 0.5) % 40;
+                animationFrameId = requestAnimationFrame(drawBoat);
+            }
+
+            drawBoat();
+        }
+
+        riverSpeedSlider.addEventListener('input', () => {
+            riverSpeed = parseFloat(riverSpeedSlider.value);
+            riverSpeedValue.textContent = riverSpeed.toFixed(1);
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            drawVectors();
+            animateBoat();
+        });
+
+        animateButton.addEventListener('click', () => {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            animateBoat();
+        });
+
+        drawVectors();
+    </script>
+</body>
+</html>
