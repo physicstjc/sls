@@ -1,293 +1,100 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Equations of Motion</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f4f4f9;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      color: #333;
-    }
-    .container {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      width: 80%;
-      max-width: 600px;
-      text-align: center;
-    }
-    h1 {
-      font-size: 24px;
-      margin-bottom: 20px;
-    }
-    .score {
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-    .problem {
-      font-size: 18px;
-      margin: 20px 0;
-      background-color: #e0f7fa;
-      padding: 15px;
-      border-radius: 10px;
-    }
-    input[type="text"] {
-      padding: 10px;
-      font-size: 16px;
-      margin-right: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      width: 150px;
-    }
-    .feedback {
-      margin-top: 15px;
-      font-size: 16px;
-    }
-    .feedback.correct {
-      color: green;
-    }
-    .feedback.incorrect {
-      color: red;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      margin: 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      background-color: #007bff;
-      color: #fff;
-      transition: background-color 0.3s;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    button.disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-    button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Equations of Motion Problems</h1>
-    <div class="score" id="score">Score: 0/0</div>
-    <div class="problem" id="problem"></div>
-    <input type="text" id="answer" placeholder="Enter your answer">
-    <span id="unit"></span>
-    <button id="submit" onclick="checkAnswer()">Submit</button><br>
-    <button id="previous" onclick="previousProblem()">Previous</button>
-    <button id="next" onclick="nextProblem()">Next</button>
-    <div class="feedback" id="feedback"></div>
-  </div>
-
-  <script>
-    let currentProblemIndex = 0;
-    let score = 0;
-    let attempts = 0;
-    const attemptedProblems = [];
-
-    const problems = [
-      {
-        question: "A car starts from rest and accelerates uniformly at 2 m/s² for 10 seconds. What is the final velocity of the car?",
-        correctAnswer: 20,
-        unit: "m/s",
-        equation: "v = u + at",
-        explanation: "Using v = u + at, where u = 0 (starts from rest), a = 2 m/s², and t = 10 s, we get v = 0 + 2*10 = 20 m/s."
-      },
-      {
-        question: "A car traveling at 15 m/s accelerates uniformly at 3 m/s² for 5 seconds. What is the final velocity of the car?",
-        correctAnswer: 30,
-        unit: "m/s",
-        equation: "v = u + at",
-        explanation: "Using v = u + at, where u = 15 m/s, a = 3 m/s², and t = 5 s, we get v = 15 + 3*5 = 30 m/s."
-      },
-      {
-        question: "A car decelerates uniformly from 20 m/s to a stop in 4 seconds. What is its acceleration?",
-        correctAnswer: -5,
-        unit: "m/s²",
-        equation: "v = u + at",
-        explanation: "Using v = u + at, where v = 0 (stops), u = 20 m/s, and t = 4 s, we get 0 = 20 + a*4 => a = -5 m/s²."
-      },
-      {
-        question: "A ball is thrown upwards with an initial velocity of 10 m/s. What is the maximum height it reaches? (Take g = 10 m/s²)",
-        correctAnswer: 5,
-        unit: "m",
-        equation: "v² = u² + 2as",
-        explanation: "Using v² = u² + 2as, where v = 0 (at max height), u = 10 m/s, a = -10 m/s², we get 0 = 10² + 2*(-10)*s => s = 5 m."
-      },
-      {
-        question: "A vehicle accelerates from 5 m/s to 25 m/s over a distance of 150 meters. What is its acceleration?",
-        correctAnswer: 2,
-        unit: "m/s²",
-        equation: "v² = u² + 2as",
-        explanation: "Using v² = u² + 2as, where v = 25 m/s, u = 5 m/s, and s = 150 m, we get 25² = 5² + 2*a*150 => a = 2 m/s²."
-      },
-      {
-        question: "A bike moving at 10 m/s stops in 20 meters with a uniform deceleration. What is the deceleration?",
-        correctAnswer: -2.5,
-        unit: "m/s²",
-        equation: "v² = u² + 2as",
-        explanation: "Using v² = u² + 2as, where v = 0 (stops), u = 10 m/s, and s = 20 m, we get 0 = 10² + 2*a*20 => a = -2.5 m/s²."
-      },
-      {
-        question: "A runner accelerates from rest to 8 m/s in 4 seconds. What is the distance covered?",
-        correctAnswer: 16,
-        unit: "m",
-        equation: "s = ut + 0.5at²",
-        explanation: "Using s = ut + 0.5at², where u = 0 (starts from rest), a = 2 m/s² (from v = u + at), and t = 4 s, we get s = 0 + 0.5*2*4² = 16 m."
-      },
-      {
-        question: "A train moving with a constant acceleration covers 400 meters in 20 seconds. If its initial velocity is 10 m/s, what is its acceleration?",
-        correctAnswer: 1,
-        unit: "m/s²",
-        equation: "s = ut + 0.5at²",
-        explanation: "Using s = ut + 0.5at², where s = 400 m, u = 10 m/s, and t = 20 s, we get 400 = 10*20 + 0.5*a*20² => a = 1 m/s²."
-      },
-      {
-        question: "A car travels at a constant speed of 20 m/s for 5 seconds and then decelerates uniformly to rest in 10 seconds. What distance does it cover during deceleration?",
-        correctAnswer: 100,
-        unit: "m",
-        equation: "s = ut + 0.5at²",
-        explanation: "Using s = ut + 0.5at² for deceleration, where u = 20 m/s, a = -2 m/s² (from v = u + at), and t = 10 s, we get s = 20*10 + 0.5*(-2)*10² = 100 m."
-      },
-      {
-        question: "A cyclist moving at 5 m/s uniformly accelerates at 1 m/s² for 10 seconds. What is the distance covered in this time?",
-        correctAnswer: 100,
-        unit: "m",
-        equation: "s = ut + 0.5at²",
-        explanation: "Using s = ut + 0.5at², where u = 5 m/s, a = 1 m/s², and t = 10 s, we get s = 5*10 + 0.5*1*10² = 100 m."
-      },
-      {
-        question: "A car starts from rest and accelerates to a speed of 20 m/s in 10 seconds. What distance does the car cover in this time?",
-        correctAnswer: 100,
-        unit: "me",
-        equation: "s = (u + v)t / 2",
-        explanation: "Using s = (u + v)t / 2, where u = 0 (starts from rest), v = 20 m/s, and t = 10 s, we get s = (0 + 20) * 10 / 2 = 100 meters."
-      },
-      {
-        question: "A cyclist accelerates uniformly from 5 m/s to 15 m/s in 6 seconds. What is the distance traveled by the cyclist in this time?",
-        correctAnswer: 60,
-        unit: "m",
-        equation: "s = (u + v)t / 2",
-        explanation: "Using s = (u + v)t / 2, where u = 5 m/s, v = 15 m/s, and t = 6 s, we get s = (5 + 15) * 6 / 2 = 60 meters."
-      },
-      {
-        question: "A car decelerates from 25 m/s to 5 m/s in 8 seconds. What distance does the car cover during this deceleration?",
-        correctAnswer: 120,
-        unit: "m",
-        equation: "s = (u + v)t / 2",
-        explanation: "Using s = (u + v)t / 2, where u = 25 m/s, v = 5 m/s, and t = 8 s, we get s = (25 + 5) * 8 / 2 = 120 meters."
-      },
-      {
-        question: "A train accelerates from 10 m/s to 30 m/s in 5 seconds. What distance does the train travel in this time?",
-        correctAnswer: 100,
-        unit: "m",
-        equation: "s = (u + v)t / 2",
-        explanation: "Using s = (u + v)t / 2, where u = 10 m/s, v = 30 m/s, and t = 5 s, we get s = (10 + 30) * 5 / 2 = 100 meters."
-      }    
-    ];
-
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-    }
-
-    shuffle(problems);
-
-    function displayProblem() {
-      if (currentProblemIndex >= problems.length) {
-        document.getElementById('problem').innerText = 'Congratulations! You have completed all problems.';
-        document.getElementById('answer').style.display = 'none';
-        document.getElementById('unit').style.display = 'none';
-        document.getElementById('submit').style.display = 'none';
-        document.getElementById('previous').style.display = 'none';
-        document.getElementById('next').style.display = 'none';
-        return;
-      }
-
-      document.getElementById('problem').innerText = problems[currentProblemIndex].question;
-      document.getElementById('unit').innerText = problems[currentProblemIndex].unit;
-      document.getElementById('feedback').innerText = '';
-      const answerInput = document.getElementById('answer');
-      const submitButton = document.getElementById('submit');
-
-      if (attemptedProblems[currentProblemIndex]) {
-        answerInput.value = attemptedProblems[currentProblemIndex].userAnswer;
-        answerInput.disabled = true;
-        submitButton.disabled = true;
-        submitButton.classList.add('disabled');
-        document.getElementById('feedback').innerText = attemptedProblems[currentProblemIndex].feedback;
-      } else {
-        answerInput.value = '';
-        answerInput.disabled = false;
-        submitButton.disabled = false;
-        submitButton.classList.remove('disabled');
-        document.getElementById('feedback').innerText = '';
-      }
-    }
-
-    function updateScore() {
-      document.getElementById('score').innerText = `Score: ${score}/${attempts}`;
-    }
-
-    function checkAnswer() {
-      const userAnswer = parseFloat(document.getElementById('answer').value);
-      const correctAnswer = problems[currentProblemIndex].correctAnswer;
-
-      attempts++;
-      let feedback = '';
-      if (userAnswer === correctAnswer) {
-        score++;
-        feedback = 'Correct!';
-        document.getElementById('feedback').classList.add('correct');
-        document.getElementById('feedback').classList.remove('incorrect');
-      } else {
-        feedback = 'Incorrect. ' + problems[currentProblemIndex].explanation;
-        document.getElementById('feedback').classList.add('incorrect');
-        document.getElementById('feedback').classList.remove('correct');
-      }
-
-      updateScore();
-      attemptedProblems[currentProblemIndex] = { userAnswer, feedback };
-
-      document.getElementById('answer').disabled = true;
-      document.getElementById('submit').disabled = true;
-      document.getElementById('submit').classList.add('disabled');
-      document.getElementById('feedback').innerText = feedback;
-    }
-
-    function nextProblem() {
-      if (currentProblemIndex < problems.length - 1) {
-        currentProblemIndex++;
-        displayProblem();
-      }
-    }
-
-    function previousProblem() {
-      if (currentProblemIndex > 0) {
-        currentProblemIndex--;
-        displayProblem();
-      }
-    }
-
-    displayProblem();
-  </script>
-</body>
-</html>
+const problems = [
+  {
+    question: "A car starts from rest and accelerates uniformly at 2.0 m/s² for 10 seconds. What is the final velocity of the car?",
+    correctAnswer: 20,
+    unit: "m/s",
+    equation: "v = u + at",
+    explanation: "Using v = u + at, where u = 0 (starts from rest), a = 2.0 m/s², and t = 10 s, we get v = 0 + 2.0*10 = 20 m/s."
+  },
+  {
+    question: "A car traveling at 15 m/s accelerates uniformly at 3.0 m/s² for 5.0 seconds. What is the final velocity of the car?",
+    correctAnswer: 30,
+    unit: "m/s",
+    equation: "v = u + at",
+    explanation: "Using v = u + at, where u = 15 m/s, a = 3.0 m/s², and t = 5.0 s, we get v = 15 + 3.0*5.0 = 30 m/s."
+  },
+  {
+    question: "A car decelerates uniformly from 20 m/s to a stop in 4.0 seconds. What is its acceleration?",
+    correctAnswer: -5.0,
+    unit: "m/s²",
+    equation: "v = u + at",
+    explanation: "Using v = u + at, where v = 0 (stops), u = 20 m/s, and t = 4.0 s, we get 0 = 20 + a*4.0 => a = -5.0 m/s²."
+  },
+  {
+    question: "A ball is thrown upwards with an initial velocity of 10 m/s. What is the maximum height it reaches? (Take g = 10 m/s²)",
+    correctAnswer: 5.0,
+    unit: "m",
+    equation: "v² = u² + 2as",
+    explanation: "Using v² = u² + 2as, where v = 0 (at max height), u = 10 m/s, a = -10 m/s², we get 0 = 10² + 2*(-10)*s => s = 5.0 m."
+  },
+  {
+    question: "A vehicle accelerates from 5.0 m/s to 25 m/s over a distance of 150 meters. What is its acceleration?",
+    correctAnswer: 2.0,
+    unit: "m/s²",
+    equation: "v² = u² + 2as",
+    explanation: "Using v² = u² + 2as, where v = 25 m/s, u = 5.0 m/s, and s = 150 m, we get 25² = 5.0² + 2*a*150 => a = 2.0 m/s²."
+  },
+  {
+    question: "A bike moving at 10 m/s stops in 20 meters with a uniform deceleration. What is the deceleration?",
+    correctAnswer: -2.5,
+    unit: "m/s²",
+    equation: "v² = u² + 2as",
+    explanation: "Using v² = u² + 2as, where v = 0 (stops), u = 10 m/s, and s = 20 m, we get 0 = 10² + 2*a*20 => a = -2.5 m/s²."
+  },
+  {
+    question: "A runner accelerates from rest to 8.0 m/s in 4.0 seconds. What is the distance covered?",
+    correctAnswer: 16,
+    unit: "m",
+    equation: "s = ut + 0.5at²",
+    explanation: "Using s = ut + 0.5at², where u = 0 (starts from rest), a = 2.0 m/s² (from v = u + at), and t = 4.0 s, we get s = 0 + 0.5*2.0*4.0² = 16 m."
+  },
+  {
+    question: "A train moving with a constant acceleration covers 400 meters in 20 seconds. If its initial velocity is 10 m/s, what is its acceleration?",
+    correctAnswer: 1.0,
+    unit: "m/s²",
+    equation: "s = ut + 0.5at²",
+    explanation: "Using s = ut + 0.5at², where s = 400 m, u = 10 m/s, and t = 20 s, we get 400 = 10*20 + 0.5*a*20² => a = 1.0 m/s²."
+  },
+  {
+    question: "A car travels at a constant speed of 20 m/s for 5.0 seconds and then decelerates uniformly to rest in 10 seconds. What distance does it cover during deceleration?",
+    correctAnswer: 100,
+    unit: "m",
+    equation: "s = ut + 0.5at²",
+    explanation: "Using s = ut + 0.5at² for deceleration, where u = 20 m/s, a = -2.0 m/s² (from v = u + at), and t = 10 s, we get s = 20*10 + 0.5*(-2.0)*10² = 100 m."
+  },
+  {
+    question: "A cyclist moving at 5.0 m/s uniformly accelerates at 1.0 m/s² for 10 seconds. What is the distance covered in this time?",
+    correctAnswer: 100,
+    unit: "m",
+    equation: "s = ut + 0.5at²",
+    explanation: "Using s = ut + 0.5at², where u = 5.0 m/s, a = 1.0 m/s², and t = 10 s, we get s = 5.0*10 + 0.5*1.0*10² = 100 m."
+  },
+  {
+    question: "A car starts from rest and accelerates to a speed of 20 m/s in 10 seconds. What distance does the car cover in this time?",
+    correctAnswer: 100,
+    unit: "m",
+    equation: "s = (u + v)t / 2",
+    explanation: "Using s = (u + v)t / 2, where u = 0 (starts from rest), v = 20 m/s, and t = 10 s, we get s = (0 + 20) * 10 / 2 = 100 meters."
+  },
+  {
+    question: "A cyclist accelerates uniformly from 5.0 m/s to 15 m/s in 6.0 seconds. What is the distance traveled by the cyclist in this time?",
+    correctAnswer: 60,
+    unit: "m",
+    equation: "s = (u + v)t / 2",
+    explanation: "Using s = (u + v)t / 2, where u = 5.0 m/s, v = 15 m/s, and t = 6.0 s, we get s = (5.0 + 15) * 6.0 / 2 = 60 meters."
+  },
+  {
+    question: "A car decelerates from 25 m/s to 5.0 m/s in 8.0 seconds. What distance does the car cover during this deceleration?",
+    correctAnswer: 120,
+    unit: "m",
+    equation: "s = (u + v)t / 2",
+    explanation: "Using s = (u + v)t / 2, where u = 25 m/s, v = 5.0 m/s, and t = 8.0 s, we get s = (25 + 5.0) * 8.0 / 2 = 120 meters."
+  },
+  {
+    question: "A train accelerates from 10 m/s to 30 m/s in 5.0 seconds. What distance does the train travel in this time?",
+    correctAnswer: 100,
+    unit: "m",
+    equation: "s = (u + v)t / 2",
+    explanation: "Using s = (u + v)t / 2, where u = 10 m/s, v = 30 m/s, and t = 5.0 s, we get s = (10 + 30) * 5.0 / 2 = 100 meters."
+  }
+];
