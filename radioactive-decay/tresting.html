@@ -4,121 +4,97 @@
     <title>Radioactive Decay Simulation</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
         canvas {
             border: 1px solid black;
             margin: 10px;
         }
-        #controls {
+        .controls {
             margin: 10px;
         }
     </style>
 </head>
 <body>
-    <div id="controls">
-        <label for="halfLifeSlider">Half-life (seconds): </label>
-        <input type="range" id="halfLifeSlider" min="1" max="200" value="100">
+    <div class="controls">
+        <label for="halfLife">Half-life (seconds): </label>
+        <input type="range" id="halfLife" min="1" max="200" value="100">
         <span id="halfLifeValue">100</span> seconds
-        <button id="downloadData">Download CSV</button>
+        <button onclick="downloadCSV()">Download Data as CSV</button>
     </div>
-    <canvas id="particleCanvas" width="600" height="600"></canvas>
-    <div id="chartCanvas" style="width:600px;height:600px;"></div>
+    <canvas id="decayCanvas" width="600" height="600"></canvas>
+    <div id="decayChart" style="width:600px;height:400px;"></div>
 
     <script>
-        const canvas = document.getElementById('particleCanvas');
+        const canvas = document.getElementById('decayCanvas');
         const ctx = canvas.getContext('2d');
-        const halfLifeSlider = document.getElementById('halfLifeSlider');
-        const halfLifeValue = document.getElementById('halfLifeValue');
-        const downloadButton = document.getElementById('downloadData');
-
         const gridSize = 60;
-        const particleCount = gridSize * gridSize;
-        let particles = Array(particleCount).fill(true);  // true means undecayed
+        let particles = Array(gridSize * gridSize).fill(0);
         let time = 0;
-        let decayData = [{time: 0, undecayed: particleCount}];
-        let halfLife = parseInt(halfLifeSlider.value);
-        let decayConstant = Math.log(2) / halfLife;
+        let halfLife = 100;
+        let decayData = [];
+        
+        const decayChart = document.getElementById('decayChart');
+        let chartData = [{x: [0], y: [gridSize * gridSize], mode: 'lines', name: 'Undecayed Nuclei'}];
+        Plotly.newPlot(decayChart, chartData, {xaxis: {title: 'Time (s)'}, yaxis: {title: 'Remaining Nuclei', range: [0, gridSize * gridSize]}});
 
-        // Initialize plotly chart
-        let chartData = [{
-            x: [0],
-            y: [particleCount],
-            mode: 'lines',
-            name: 'Undecayed Particles'
-        }];
-
-        Plotly.newPlot('chartCanvas', chartData, {
-            title: 'Radioactive Decay',
-            xaxis: { title: 'Time (s)' },
-            yaxis: { title: 'Undecayed Nuclei', range: [0, particleCount] }
+        document.getElementById('halfLife').addEventListener('input', (e) => {
+            halfLife = parseInt(e.target.value);
+            document.getElementById('halfLifeValue').innerText = halfLife;
         });
 
-        // Update half-life value display
-        halfLifeSlider.addEventListener('input', () => {
-            halfLife = parseInt(halfLifeSlider.value);
-            halfLifeValue.textContent = halfLife;
-            decayConstant = Math.log(2) / halfLife;
-        });
-
-        // Function to update particles
-        function updateParticles() {
-            time++;
-            let decayedCount = 0;
-
-            for (let i = 0; i < particleCount; i++) {
-                if (particles[i] && Math.random() < decayConstant) {
-                    particles[i] = false;
-                    decayedCount++;
+        function decayParticles() {
+            for (let i = 0; i < particles.length; i++) {
+                if (particles[i] === 0 && Math.random() < Math.log(2) / halfLife) {
+                    particles[i] = 1;
                 }
             }
-
-            let undecayedCount = particleCount - decayedCount;
-            decayData.push({time: time, undecayed: undecayedCount});
-            chartData[0].x.push(time);
-            chartData[0].y.push(undecayedCount);
-
-            Plotly.update('chartCanvas', chartData, {
-                yaxis: {range: [0, particleCount]}
-            });
-
-            drawParticles();
         }
 
-        // Function to draw particles
-        function drawParticles() {
+        function updateCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            for (let y = 0; y < gridSize; y++) {
-                for (let x = 0; x < gridSize; x++) {
-                    const index = y * gridSize + x;
-                    ctx.fillStyle = particles[index] ? 'grey' : 'red';
-                    ctx.fillRect(x * 10, y * 10, 10, 10);
-                }
+            for (let i = 0; i < particles.length; i++) {
+                ctx.fillStyle = particles[i] === 0 ? 'grey' : 'red';
+                const x = (i % gridSize) * 10;
+                const y = Math.floor(i / gridSize) * 10;
+                ctx.beginPath();
+                ctx.arc(x + 5, y + 5, 5, 0, Math.PI * 2);
+                ctx.fill();
             }
         }
 
-        // Function to download data as CSV
+        function updateChart() {
+            const undecayed = particles.filter(p => p === 0).length;
+            decayData.push({time, undecayed});
+            Plotly.extendTraces(decayChart, {x: [[time]], y: [[undecayed]]}, [0]);
+        }
+
         function downloadCSV() {
             let csvContent = "data:text/csv;charset=utf-8,Time (s),Undecayed Nuclei\n";
             decayData.forEach(row => {
                 csvContent += `${row.time},${row.undecayed}\n`;
             });
-
             const encodedUri = encodeURI(csvContent);
-            const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', 'decay_data.csv');
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "decay_data.csv");
             document.body.appendChild(link);
-
             link.click();
+            document.body.removeChild(link);
         }
 
-        downloadButton.addEventListener('click', downloadCSV);
+        function step() {
+            decayParticles();
+            updateCanvas();
+            updateChart();
+            time++;
+            requestAnimationFrame(step);
+        }
 
-        // Initial draw
-        drawParticles();
-
-        // Start the simulation
-        setInterval(updateParticles, 1000);
+        requestAnimationFrame(step);
     </script>
 </body>
 </html>
