@@ -21,8 +21,8 @@
         canvas {
             border: 1px solid black;
             margin: 5px;
-            width: 600px;
-            height: 150px;
+            width: 580px;
+            height: 120px;
         }
         #chart {
             border: 1px solid black;
@@ -49,7 +49,7 @@
         #info {
             display: flex;
             justify-content: space-between;
-            width: 600px;
+            width: 580px;
             margin-top: 10px;
         }
         #info span {
@@ -58,6 +58,7 @@
     </style>
 </head>
 <body>
+    <h1>Radioactive Decay Simulation</h1>
     <div id="controls">
         <label for="halfLife">Half-life (seconds): </label><span id="halfLifeValue">10</span>s         
         <input type="range" id="halfLife" min="1" max="200" value="10">
@@ -65,16 +66,15 @@
         <button id="startButton">Start Animation</button>
         <button id="downloadButton">Download Data as CSV</button>
     </div>
-    <canvas id="decayCanvas" width="600" height="150"></canvas>
+    <canvas id="decayCanvas" width="580" height="150"></canvas>
     <div id="chart"></div>
 
     <div id="info">
         <span id="timeDisplay">Time: 0 seconds</span> 
         <span id="remainingParticlesDisplay">Remaining Grey Particles: 900</span>
     </div>
-    <h1>Radioactive Decay Simulation</h1>
 
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="plotly-latest.min.js"></script>
     <script>
         const decayCanvas = document.getElementById('decayCanvas');
         const chartDiv = document.getElementById('chart');
@@ -163,18 +163,17 @@
                 mode: 'lines',
                 name: 'Remaining Grey Particles'
             }], {
-                title: 'Remaining Grey Particles Over Time',
                 xaxis: {
                     title: 'Time (seconds)',
                     range: [0, 10]
                 },
                 yaxis: {
                     title: 'Grey Particles',
-                    range: [0, 900]
+                    range: [0, 920]
                 },
-                margin: { l: 50, r: 10, t: 50, b: 40 },
-                width: 600,
-                height: 250
+                margin: { l: 50, r: 10, t: 30, b: 40 },
+                width: 580,
+                height: 200
             });
         }
 
@@ -187,18 +186,17 @@
                 mode: 'lines',
                 name: 'Remaining Grey Particles'
             }], {
-                title: 'Remaining Grey Particles Over Time',
                 xaxis: {
                     title: 'Time (seconds)',
                     range: [0, Math.max(10, time)]
                 },
                 yaxis: {
                     title: 'Grey Particles',
-                    range: [0, 900]
+                    range: [0, 920]
                 },
-                margin: { l: 50, r: 10, t: 50, b: 40 },
-                width: 600,
-                height: 250
+                margin: { l: 50, r: 10, t: 30, b: 40 },
+                width: 580,
+                height: 200
             });
         }
 
