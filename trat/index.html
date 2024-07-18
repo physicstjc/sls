@@ -39,7 +39,7 @@
     }
     #selected-options {
         list-style-type: none;
-    }bu
+    }
 </style>
 </head>
 <body>
@@ -56,8 +56,8 @@
         <button id="next-button" onclick="nextQuestion()">Next</button>
     </div>
     <div id="selected-options-container">
-      <p>Selected Options:</p>
-      <ul id="selected-options"></ul>
+        <p>Selected Options:</p>
+        <ul id="selected-options"></ul>
     </div>
 
     <script>
@@ -67,103 +67,104 @@
 
         // Load questions from CSV file
         fetch('questions.csv')
-          .then(response => response.text())
-          .then(data => {
-            let rows = data.split('\n');
-            rows.forEach(row => {
-              let [questionNumber, answer] = row.split(',');
-              questions.push({ questionNumber: questionNumber.trim(), answer: answer.trim() });
+            .then(response => response.text())
+            .then(data => {
+                let rows = data.split('\n');
+                rows.forEach(row => {
+                    let [questionNumber, answer] = row.split(',');
+                    questions.push({ questionNumber: questionNumber.trim(), answer: answer.trim() });
+                });
+                displayQuestion(); // Display the first question when the page loads
             });
-            displayQuestion();
-          });
 
         function displayQuestion() {
-          let currentQuestion = questions[currentQuestionIndex];
-          document.getElementById('question').innerText = `Question ${currentQuestion.questionNumber}`;
-          document.getElementById('options-container').innerHTML = `
-            <button class="option" onclick="chooseOption('A')" data-value="A">A</button>
-            <button class="option" onclick="chooseOption('B')" data-value="B">B</button>
-            <button class="option" onclick="chooseOption('C')" data-value="C">C</button>
-            <button class="option" onclick="chooseOption('D')" data-value="D">D</button>
-          `;
+            let currentQuestion = questions[currentQuestionIndex];
+            document.getElementById('question').innerText = `Question ${currentQuestion.questionNumber}`;
+            document.getElementById('options-container').innerHTML = `
+                <button class="option" onclick="chooseOption('A')" data-value="A">A</button>
+                <button class="option" onclick="chooseOption('B')" data-value="B">B</button>
+                <button class="option" onclick="chooseOption('C')" data-value="C">C</button>
+                <button class="option" onclick="chooseOption('D')" data-value="D">D</button>
+            `;
         }
 
         function chooseOption(option) {
-          let currentQuestion = questions[currentQuestionIndex];
-          let selectedOption = document.querySelector(`.option[data-value="${option}"]`);
+            let currentQuestion = questions[currentQuestionIndex];
+            let selectedOption = document.querySelector(`.option[data-value="${option}"]`);
 
-          // Check if the current question has already been answered correctly
-          if (currentQuestion.answeredCorrectly) {
-            return; // Exit the function if the question has already been answered correctly
-          }
-
-          // Update the list of selected options
-          let selectedOptionsList = document.getElementById('selected-options');
-          let listItem = document.createElement('li');
-          listItem.textContent = `Question ${currentQuestion.questionNumber}: Option ${option}`;
-
-          if (option === currentQuestion.answer) {
-            selectedOption.classList.add('correct');
-            if (currentQuestion.attempts === undefined) {
-              score += 4;
-              listItem.textContent += ` (Correct, Earned 4 points)`;
-            } else if (currentQuestion.attempts === 1) {
-              score += 2;
-              listItem.textContent += ` (Correct, Earned 2 points)`;
-            } else if (currentQuestion.attempts === 2) {
-              score += 1;
-              listItem.textContent += ` (Correct, Earned 1 point)`;
+            // Check if the current question has already been answered correctly
+            if (currentQuestion.answeredCorrectly) {
+                return; // Exit the function if the question has already been answered correctly
             }
-            document.getElementById('score').innerText = `Score: ${score}`;
-            currentQuestion.answeredCorrectly = true; // Mark the question as answered correctly
-          } else {
-            selectedOption.classList.add('incorrect');
-            if (currentQuestion.attempts === undefined) {
-              currentQuestion.attempts = 1;
-            } else if (currentQuestion.attempts === 1) {
-              currentQuestion.attempts = 2;
+
+            // Update the list of selected options
+            let selectedOptionsList = document.getElementById('selected-options');
+            let listItem = document.createElement('li');
+            listItem.textContent = `Question ${currentQuestion.questionNumber}: Option ${option}`;
+
+            if (option === currentQuestion.answer) {
+                selectedOption.classList.add('correct');
+                if (currentQuestion.attempts === undefined) {
+                    score += 4;
+                    listItem.textContent += ` (Correct, Earned 4 points)`;
+                } else if (currentQuestion.attempts === 1) {
+                    score += 2;
+                    listItem.textContent += ` (Correct, Earned 2 points)`;
+                } else if (currentQuestion.attempts === 2) {
+                    score += 1;
+                    listItem.textContent += ` (Correct, Earned 1 point)`;
+                }
+                document.getElementById('score').innerText = `Score: ${score}`;
+                currentQuestion.answeredCorrectly = true; // Mark the question as answered correctly
             } else {
-              currentQuestion.attempts = 3;
+                selectedOption.classList.add('incorrect');
+                if (currentQuestion.attempts === undefined) {
+                    currentQuestion.attempts = 1;
+                } else if (currentQuestion.attempts === 1) {
+                    currentQuestion.attempts = 2;
+                } else {
+                    currentQuestion.attempts = 3;
+                }
+                if (currentQuestion.attempts === 3) {
+                    disableOptions();
+                }
             }
-            if (currentQuestion.attempts === 3) {
-              disableOptions();
-            }
-          }
 
-          selectedOptionsList.appendChild(listItem);
+            selectedOptionsList.appendChild(listItem);
         }
+
         function disableOptions() {
-          document.querySelectorAll('.option').forEach(option => {
-            option.disabled = true;
-            if (!option.classList.contains('correct')) {
-              option.classList.add('incorrect');
-            }
-          });
+            document.querySelectorAll('.option').forEach(option => {
+                option.disabled = true;
+                if (!option.classList.contains('correct')) {
+                    option.classList.add('incorrect');
+                }
+            });
         }
 
         function nextQuestion() {
-          currentQuestionIndex++;
-          if (currentQuestionIndex >= questions.length) {
-            currentQuestionIndex = questions.length - 1;
-          }
-          resetOptions();
-          displayQuestion();
+            currentQuestionIndex++;
+            if (currentQuestionIndex >= questions.length) {
+                currentQuestionIndex = questions.length - 1;
+            }
+            resetOptions();
+            displayQuestion();
         }
 
         function previousQuestion() {
-          currentQuestionIndex--;
-          if (currentQuestionIndex < 0) {
-            currentQuestionIndex = 0;
-          }
-          resetOptions();
-          displayQuestion();
+            currentQuestionIndex--;
+            if (currentQuestionIndex < 0) {
+                currentQuestionIndex = 0;
+            }
+            resetOptions();
+            displayQuestion();
         }
 
         function resetOptions() {
-          document.querySelectorAll('.option').forEach(option => {
-            option.classList.remove('correct', 'incorrect');
-            option.disabled = false;
-          });
+            document.querySelectorAll('.option').forEach(option => {
+                option.classList.remove('correct', 'incorrect');
+                option.disabled = false;
+            });
         }
     </script>
 </body>
