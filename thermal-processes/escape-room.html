@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Thermometer of Fate</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f3f3f3;
+        }
+        #thermometer {
+            margin: 20px auto;
+            width: 50px;
+            height: 300px;
+            background: linear-gradient(to top, #ff0000, #ffcccc);
+            border: 2px solid #000;
+            border-radius: 10px;
+            position: relative;
+        }
+        #mercury {
+            width: 100%;
+            background-color: #ff0000;
+            position: absolute;
+            bottom: 0;
+            border-radius: 10px;
+        }
+        .input-container {
+            margin: 20px;
+        }
+        .result {
+            margin: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .latex {
+            text-align: left;
+            display: inline-block;
+            margin: 20px;
+        }
+    </style>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <h1>Thermometer of Fate</h1>
+    <p>You are trapped in a laboratory. To escape, you must heat a thermometer to exactly 60°C without exceeding it.</p><p>In the room, you find a sink, an electric kettle and a freezer.</p><p>Use the inputs below to mix boiling water (at 100°C) and ice (at -5°C) to achieve this precise temperature.</p>
+    
+    <div class="latex">
+        <p>Specific Heat Capacities:</p>
+        <p>\( c_{\text{water}} = 4.18 \, \text{J/g} \cdot \text{°C} \)</p>
+        <p>\( c_{\text{ice}} = 2.1 \, \text{J/g} \cdot \text{°C} \)</p>
+        <p>Specific Latent Heats:</p>
+        <p>\( L_f = 334 \, \text{J/g} \) (Fusion of Ice)</p>
+        <p>\( L_v = 2260 \, \text{J/g} \) (Vaporization of Water)</p>
+    </div>
+
+    <div class="input-container">
+        <label for="water">Boiling Water (ml): </label>
+        <input type="number" id="water" min="0" step="0.1" value="0">
+    </div>
+    <div class="input-container">
+        <label for="ice">Ice (g): </label>
+        <input type="number" id="ice" min="0" step="0.1" value="0">
+    </div>
+    <button onclick="calculateTemperature()">Submit</button>
+       <div class="result" id="result"></div>
+
+    <script>
+        function calculateTemperature() {
+            const water = parseFloat(document.getElementById('water').value) || 0;
+            const ice = parseFloat(document.getElementById('ice').value) || 0;
+            const waterMass = water; // Assuming 1 ml of water = 1 g
+            const iceMass = ice;
+
+            const cWater = 4.18; // Specific heat capacity of water (J/g°C)
+            const cIce = 2.1; // Specific heat capacity of ice (J/g°C)
+            const lf = 334; // Latent heat of fusion of ice (J/g)
+            const lv = 2260; // Latent heat of vaporization of water (J/g)
+            const finalTemp = 60; // Desired final temperature (°C)
+            const initialTempWater = 100; // Initial temperature of water (°C)
+            const initialTempIce = -5; // Initial temperature of ice (°C)
+
+            // Calculate the energy needed to warm the ice to 0°C
+            const energyToWarmIce = iceMass * cIce * (0 - initialTempIce);
+
+            // Calculate the energy needed to melt the ice
+            const energyToMeltIce = iceMass * lf;
+
+            // Calculate the energy needed to warm the melted ice to the final temperature
+            const energyToWarmMeltedIce = iceMass * cWater * (finalTemp - 0);
+
+            // Total energy needed to heat the ice to the final temperature
+            const totalEnergyForIce = energyToWarmIce + energyToMeltIce + energyToWarmMeltedIce;
+
+            // Calculate the energy released by the hot water cooling down to the final temperature
+            const energyReleasedByWater = waterMass * cWater * (initialTempWater - finalTemp);
+
+            // Check if the energy released by the water matches the energy needed for the ice within a margin of error
+            const marginOfError = 100; // Allowable error in joules
+            const energyDifference = Math.abs(energyReleasedByWater - totalEnergyForIce);
+
+            let resultText;
+            if (energyDifference <= marginOfError && water > 0 && ice > 0) {
+                resultText = "Congratulations! You've reached exactly 60°C and unlocked the door!";
+            } else if (energyReleasedByWater > totalEnergyForIce + marginOfError) {
+                resultText = "Oh no! The temperature has exceeded 60°C. Explosion triggered!";
+            } else {
+                resultText = "The temperature is below 60°C. Keep trying!";
+            }
+
+            // Update the result text
+            document.getElementById('result').innerText = resultText;
+
+        }
+    </script>
+</body>
+</html>
