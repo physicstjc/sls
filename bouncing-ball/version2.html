@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Ball Simulation</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            max-width: 580px;
+            max-height: 460px;
+            margin: 0 auto;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            overflow: hidden;
+        }
+        h1 {
+            text-align: center;
+            color: #444;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100px;
+            height: 250px;
+        }
+        #controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        #plotlyDiv {
+            flex-grow: 1;
+            height: 250px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bouncing Ball Simulation</h1>
+    <div id="controls">
+        <label for="heightInput">Initial Height (m):</label>
+        <input type="number" id="heightInput" value="10" step="0.1">
+        <label for="energyLossSlider">Energy Loss per Bounce (%):</label>
+        <input type="range" id="energyLossSlider" min="0" max="100" value="20">
+        <span id="energyLossValue">20</span>%
+        <label for="axisDropdown">Vertical Axis:</label>
+        <select id="axisDropdown">
+            <option value="velocity">Velocity</option>
+            <option value="displacement">Displacement</option>
+        </select>
+        <div>
+            <button id="startButton">Start</button>
+            <button id="stopButton">Stop</button>
+        </div>
+    </div>
+    <div class="container">
+        <canvas id="ballCanvas"></canvas>
+        <div id="plotlyDiv"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('ballCanvas');
+        const ctx = canvas.getContext('2d');
+        const ballImg = new Image();
+        ballImg.src = 'ball.png';
+        let animationFrameId;
+        const g = 9.81;
+        let height, velocity, time, energyLoss, isRunning;
+
+        const plotlyDiv = document.getElementById('plotlyDiv');
+        let plotData = {
+            time: [],
+            velocity: [],
+            displacement: []
+        };
+
+        function resetSimulation() {
+            height = parseFloat(document.getElementById('heightInput').value);
+            velocity = 0;
+            time = 0;
+            energyLoss = document.getElementById('energyLossSlider').value / 100;
+            plotData = {
+                time: [],
+                velocity: [],
+                displacement: []
+            };
+        }
+
+        function updateSimulation(dt) {
+            velocity += g * dt;
+            height -= velocity * dt;
+
+            if (height <= 0) {
+                height = 0;
+                velocity = -velocity * (1 - energyLoss);
+            }
+
+            time += dt;
+            plotData.time.push(time);
+            plotData.velocity.push(velocity);
+            plotData.displacement.push(height);
+        }
+
+        function drawBall() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const y = canvas.height - height * 25; // Scaling for canvas
+            ctx.drawImage(ballImg, canvas.width / 2 - 10, y - 10, 20, 20); // Drawing the ball image
+        }
+
+        function plotGraph() {
+            const axisType = document.getElementById('axisDropdown').value;
+            const trace = {
+                x: plotData.time,
+                y: plotData[axisType],
+                mode: 'lines',
+                name: axisType.charAt(0).toUpperCase() + axisType.slice(1)
+            };
+
+            Plotly.newPlot(plotlyDiv, [trace], {
+                title: `${axisType.charAt(0).toUpperCase() + axisType.slice(1)} vs Time`,
+                xaxis: { title: 'Time (s)' },
+                yaxis: { title: `${axisType.charAt(0).toUpperCase() + axisType.slice(1)} (m/s)` }
+            });
+        }
+
+        function animate() {
+            const dt = 0.02;
+            updateSimulation(dt);
+            drawBall();
+            plotGraph();
+
+            if (isRunning) {
+                animationFrameId = requestAnimationFrame(animate);
+            }
+        }
+
+        document.getElementById('startButton').addEventListener('click', () => {
+            resetSimulation();
+            isRunning = true;
+            animate();
+        });
+
+        document.getElementById('stopButton').addEventListener('click', () => {
+            isRunning = false;
+            cancelAnimationFrame(animationFrameId);
+        });
+
+        document.getElementById('energyLossSlider').addEventListener('input', (event) => {
+            document.getElementById('energyLossValue').textContent = event.target.value;
+        });
+
+        document.getElementById('axisDropdown').addEventListener('change', plotGraph);
+
+        ballImg.onload = function() {
+            resetSimulation();
+            drawBall();
+            plotGraph();
+        };
+    </script>
+</body>
+</html>
