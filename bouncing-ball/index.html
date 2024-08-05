@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bouncing Ball Simulation</title>
-    <script src="plotly-latest.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -126,9 +126,10 @@
     let initialHeight = parseFloat(initialHeightInput.value);
     let energyLoss = parseFloat(energyLossSlider.value) / 100;
     let time = 0;
-    let timeStep = 0.1;
+    let timeStep = 0.02;
     let velocityData = [];
     let displacementData = [];
+    let realHeightToCanvasRatio = canvas.height / initialHeight;
 
     function plotGraph() {
         let data;
@@ -164,7 +165,8 @@
 
     function resetSimulation() {
         initialHeight = parseFloat(initialHeightInput.value);
-        ball.y = canvas.height - initialHeight;
+        realHeightToCanvasRatio = canvas.height / initialHeight;
+        ball.y = canvas.height - (initialHeight * realHeightToCanvasRatio);
         ball.dy = 0;
         time = 0;
         velocityData = [];
@@ -177,7 +179,7 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         ball.dy += gravity * timeStep;
-        ball.y += ball.dy * timeStep;
+        ball.y += ball.dy * timeStep * realHeightToCanvasRatio;
 
         if (ball.y > canvas.height - ball.height) {
             ball.y = canvas.height - ball.height;
