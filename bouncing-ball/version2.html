@@ -35,10 +35,11 @@
         }
         #controls {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
             gap: 10px;
             margin-bottom: 10px;
-            align-items: center;
+            flex-wrap: wrap;
         }
         #plotlyDiv {
             flex-grow: 1;
@@ -74,10 +75,8 @@
             <option value="velocity">Velocity</option>
             <option value="displacement">Displacement</option>
         </select>
-        <div>
-            <button id="startButton">Start</button>
-            <button id="stopButton">Stop</button>
-        </div>
+        <button id="startButton">Start</button>
+        <button id="stopButton">Stop</button>
     </div>
     <div class="container">
         <canvas id="ballCanvas"></canvas>
@@ -130,7 +129,7 @@
         function drawBall() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const y = canvas.height - height * 25; // Scaling for canvas
-            ctx.drawImage(ballImg, canvas.width / 2 - 10, y - 10, 20, 8); // Drawing the ball image
+            ctx.drawImage(ballImg, canvas.width / 2 - 10, y - 10, 20, 20); // Drawing the ball image
         }
 
         function plotGraph() {
