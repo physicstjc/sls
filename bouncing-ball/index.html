@@ -82,7 +82,7 @@
 <div id="appContainer">
     <div id="controls">
         <div class="control">
-            <label for="initialHeight">Initial Height (cm):</label>
+            <label for="initialHeight">Initial Height (m):</label>
             <input type="number" id="initialHeight" value="200">
         </div>
         <div class="control">
@@ -135,10 +135,10 @@
         let yAxisLabel;
         if (axisDropdown.value === 'velocity') {
             data = { x: velocityData.map(d => d.time), y: velocityData.map(d => d.value) };
-            yAxisLabel = 'Velocity (cm/s)';
+            yAxisLabel = 'Velocity (m/s)';
         } else {
             data = { x: displacementData.map(d => d.time), y: displacementData.map(d => d.value) };
-            yAxisLabel = 'Displacement (cm)';
+            yAxisLabel = 'Displacement (m)';
         }
 
         let trace = {
