@@ -99,770 +99,14 @@
 <div class="container">
     <h1 class="mt-4 mb-4">AI-Generated Apps for Student Learning Space</h1>
     
-    <p>This is a series of apps that were produced using codes given by <a href="https://chat.openai.com/" target="_blank">ChatGPT 3.5 (the free version)</a>. You can do so with other GAI like <a href="https://copilot.microsoft.com/" target="_blank">Microsoft Copilot</a> too. The apps are usable directly from here or can be downloaded and included into an SLS package.</p><p>The prompts given to ChatGPT are provided for your reference. However, you may still have to refine the prompts as the output may not always be consistent. While it is possible to generate a working app without any changes to the code, you can customise the app much faster if you know a bit of html or javascript. You may even ask ChatGPT to teach you how to do so!</p>
+    <p>This is a series of apps that were produced using codes given by <a href="https://chat.openai.com/" target="_blank">ChatGPT 3.5 (the free version)</a>. You can do so with other GAI like <a href="https://copilot.microsoft.com/" target="_blank">Microsoft Copilot</a> too. The apps are usable directly from here or can be downloaded and included into an SLS package.</p><p>The prompts given to ChatGPT are provided for your reference. However, you may still have to refine the prompts as the output may not always be consistent. While it is possible to generate a working app without any changes to the code, you can customise the app much faster if you know a bit of html or javascript. You may even ask ChatGPT to teach you how to do so! </p>
     
-    <p>Check out the step-by-step guide to produce and deploy your app.</p>
+    <p>Check out the step-by-step guide to produce and deploy your app. This <a href="http://127.0.0.1:60725/converter/index.html">html file generator</a> helps you to save the code into a html file and test it out.</p>
     <p>How to: <a href="how-to.html">Generate your own apps</a> | <a href="https://www.learning.moe.edu.sg/teacher-user-guide/author/insert-media-objects/" target="_blank">Upload to SLS as Media Objects</a></p>
 
     </div>
-    
-<div class="container" id="General">
-<header class="container-header">    
-<h2>General Tools</h2><a href="#top" id="backlink">Back to Top</a>
-</header> 
-    
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="converter/converter.png" alt="HTML File Generator">
-                    <div class="card-body">
-                        <h3 class="card-title">HTML File Generator</h3>
-                        <p class="card-text">This serves as a web-based code editor. Users can cut and paste html, js and css code into the input box and convert them into a downloadable index.html file straightaway.</p>
-                        <a href="converter/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="converter/converter.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA1" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseA1">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol><li>Create a website with a large input box with adjustable dimensions. The aim of this site is to convert codes written into the box into html.</li>
-                                    <li>Whatever the user keys in, when a button is clicked, save the content as plain text and download it as an "index.html" file.</li>
-                                    <li>Create another button for the codes to run in another browser tab as a html file without downloading.</li></ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
+
        
-        
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="pomodoro-timer/pomodoro-timer.png" alt="Delight">
-                    <div class="card-body">
-                        <h3 class="card-title">Pomodoro Timer</h3>
-                        <p class="card-text">Students can use this timer as a focusing strategy. For the first 25 minutes, the timer will be shown in a green box. During the 5-minute break, it will turn light blue.</p>
-                        <p class="card-text">A random piece of accompanying music will be played if needed.</p>
-                        <p class="card-text">The user can also key in a task to focus on during the 25 minutes.</p>
-                        <a href="pomodoro-timer/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="pomodoro-timer/pomodoro-timer.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA2" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseA2">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a pomodoro timer webpage. A timer for 25 minutes will begin with a start button. There is a pause button that will pause or resume the timer.  After 25 minutes,  there will be a 5 minute break.</li>
-                                        <li>The "Pause" button should toggle to "Resume" when pressed and vice versa.</li>
-                                        <li>The "Start" button will restart the timer every time it is pressed.</li>
-                                        <li>The style of the first 25 minutes should be very different from that of the last 5 minutes.</li>
-                                        <li>Also, there should be another button to turn on the music. There are 5 mp3 files to randomly choose from and play one after another. The file names are "music1.mp3", "music2.mp3", and so on.</li>
-                                        <li>The play music button should toggle to become a mute button and vice versa.</li>
-                                        <li>There should be an input box for a line of text. The placeholder in the input box should read: "Focus: ".</li>
-                                        <li>When it's break time, please indicate using an image "break-image.png".</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-    
-        
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="countdown-timer/countdown-timer.png" alt="Countdown Timer Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Countdown Timer</h3>
-                        <p class="card-text">For use in class. Set a duration and start the timer. When the time is up, an alarm will sound.</p>
-                        <p class="card-text">For use in SLS, provided the student does not go from one page to another, a timer can be set up to help student manage the time on an activity.</p>
-                        <p class="card-text">Replace the alarm with something more soothing if you like.</p>
-                        <a href="countdown-timer/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="countdown-timer/countdown-timer.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA3" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseA3">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Provide the code for the following in a single html file:</p>
-                                    <ol>
-                                        <li>Create a webpage: This is a basic instruction to start building a webpage.</li>
-                                        <li>Add a countdown timer: We want to include a timer that counts down from a specified time.</li>
-                                        <li>Allow setting hours, minutes, and seconds: Users should be able to input the duration of the countdown by setting the hours, minutes, and seconds individually.</li>
-                                        <li>Include buttons for adjustment: Add buttons labeled with "+H", "-H", "+M", "-M", "+S", and "-S" for users to increase or decrease the hours, minutes, and seconds as they desire.</li>
-                                        <li>Styling the webpage: Use CSS to style the webpage for a visually appealing appearance. This includes setting fonts, colors, and layout.</li>
-                                        <li>Add functionality for starting, pausing, and resetting the timer: Implement JavaScript functions for starting, pausing, and resetting the countdown timer. These functions should be triggered by clicking corresponding buttons.</li>
-                                        <li>Incorporate sound: When the timer reaches zero, play a sound from an audio file (alarm.mp3).</li>
-                                        <li>Include a mute button: After the sound starts playing, display a button labeled "Mute" that allows users to mute or unmute the sound.</li>
-                                                                            </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="random-name-generator/random-name-generator.png" alt="Random Name Generator Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Random Name Generator</h3>
-                        <p class="card-text">For use in class. Either enter the names with semi-colons as separators or upload a classlist (consisting only of names, not index number, etc) in csv form.</p>
-                        <p class="card-text">If you want to remove the displayed name from the list, you can click the "Remove Name" button below the displayed name. The list of names drawn will appear in a list below.</p>
-                        <a href="random-name-generator/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="random-name-generator/random-name-generator.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA4" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseA4">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Provide the code for the following in a single html file:</p>
-                                    <ol>
-                                        <li>This web page lets you generate random names from a list of names you provide.</li>
-                                        <li>There's a section labeled "Enter names separated by semicolons."</li>
-                                        <li>You can type or paste a list of names into a box provided. Each name should be separated by a semicolon.</li>
-                                        <li>Alternatively, you can upload a file containing a list of names in CSV format using the "Or upload a CSV file" option.</li>
-                                        <li>Once you've entered the names or uploaded the file, click the "Submit" button.</li>
-                                        <li>After submitting, the page will display another section.</li>
-                                        <li>In this new section, there's a button labeled "Generate Random Name."</li>
-                                        <li>When you click this button, a random name from the list you provided will appear on the page.</li>
-                                        <li>Below the "Generate Random Name" button, there's a paragraph displaying the randomly generated name.</li>
-                                        <li>If the user wants to remove the displayed name from the list, you can click the "Remove Name" button below the displayed name.</li>
-                                        <li>Any names that you've generated will be listed below the "Generated Names" section.</li>
-                                        <li>Each generated name will appear on a separate line.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="acoustic-stopwatch/acoustic-stopwatch.png" alt="Acoustic Stopwatch">
-                    <div class="card-body">
-                        <h3 class="card-title">Acoustic Stopwatch</h3>
-                        <p class="card-text">Instead of using buttons to start and stop a timer, hands can be freed by using loud sounds to trigger the starting and stopping.</p>
-                        <p class="card-text">Acoustic stopwatches can be used in various scientific experiments where precise timing is required, such as in physics experiments involving the measurement of sound propagation or timing of a student completing a lap using a clap as start and stop triggers.</p>
-                        <p class="card-text">A slider can be used to adjust the threshold of the sound used to trigger the stopwatch. A default value to use is 150 (This is a relative unit and not a physical unit). The timing is displayed up to 1 millisecond.</p>
-                        <a href="acoustic-stopwatch/" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="acoustic-stopwatch/acoustic-stopwatch.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA5" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseA5">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a webpage with javascript and html that serves as an acoustic stopwatch.</li>
-                                        <li>A start button will be used to begin listening for the first loud sound in order to start the timing.</li>
-                                        <li>The timer will start only when a sound louder than a predetermined threshold is detected by the microphone of the device after pressing the start button.</li>
-                                        <li>It will stop when a second sound that is louder than the same threshold is detected. </li>
-                                        <li>Use a slider to vary the threshold of sound.</li>
-                                        <li>Use another slider to adjust the minimum delay before the timer will stop with the second sound.</li>
-                                        <li>Display the time in seconds and milliseconds.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="interactive-video/interactive-video.png" alt="Interactive Video Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Interactive Video</h3>
-                        <p class="card-text">Engage students with questions at chosen timing during the playing of a video. The teacher can edit the timing and questions using the html code. </p><p>Change the video name in the line that says 'source src="pizza.mp4" type="video/mp4'</p>
-                        <a href="interactive-video/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="interactive-video/interactive-video.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA6" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseA6">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Make a webpage using html, javascript and css and put a video player on it. Also, create a space where questions can appear later.</li>
-                                        <li>Make the webpage look nice by adding styles to arrange the video and question areas.</li>
-                                        <li>Add some special instructions for the webpage to make it interactive:
-                                            <ul><li>Keep track of the video and where it's paused or playing.</li>
-                                                <li>Plan out when the questions should pop up during the video.</li>
-                                                <li>Keep track of which question is currently being asked.</li>
-                                                <li>Set up rules for when to show the questions and what happens when you answer them.</li>
-                                                <li>Make sure the video pauses when a question appears, so you can't watch until you answer.</li>
-                                                <li>Update the webpage to include the question boxes with options to choose from and a button to submit your answer. </li>
-                                            </ul></li>
-
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-        
-        
-    </div> 
-    
-    <div class="row">
-        <div class="col-md-4">
-                <div class="card mb-4">
-                    <img class="card-img-top" src="interactive-story/interactive-story.png" alt="Interactive Story">
-                        <div class="card-body">
-                            <h3 class="card-title">Interactive Story</h3>
-                            <p class="card-text">A story line is decided by the user based on the branches designed by the teacher. ChatGPT can help to create the story too. AI image generators like Dall-E can be used to create images for the story.</p>
-                            <p class="card-text">However, quite a bit of work is needed to insert the pictures in the right sections and to indicate the path to be taken by each button.</p>
-                            <a href="interactive-story/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                            <a href="interactive-story/interactive-story.zip" class="btn btn-secondary">Download for SLS</a>
-                            <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA7" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                            <div class="collapse" id="promptsCollapseA7">
-                                <div class="card mt-3">
-                                    <div class="card-body">
-                                        <h3 class="header1">Prompts</h3>
-                                        <ol>
-                                            <li>Create a single html page where an interactive story with multiple story arcs can be presented. Users can choose to go to one page or another.</li>
-                                            <li>Add a button for the function to read out the text in the story.</li>
-                                            <li>Create a sample story.</li>
-                                        </ol>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="definitions/definitions.png" alt="Definitions Flashcards Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Digital Flashcards</h3>
-                        <p class="card-text">For use online. Teacher can include a csv file of key terms and their corresponding definitions into the same folder as the index file. Students can filter by topic and use this to test their recall of definitions of selected key terms.</p>
-                        <a href="definitions/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="definitions/definitions.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA8" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseA8">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Create a revision webpage using html, javascript and css that references a csv file in the same folder with three columns: "topic", "term" and "definition". There should be a filter for the "topic" field. Each term in the "term" field will be displayed in turn using a left and right button. Another button labelled "Definition" will be used to show or hide the corresponding "definition" field at the bottom. Put all the script and style codes in the html file.</p>
-    
-                                </div>
-                            </div>
-                        </div>
-                </div>
-            </div>
-        </div>
-            
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="student-flashcards/student-flashcards.png" alt="Student Flashcards">
-                    <div class="card-body">
-                        <h3 class="card-title">Student Flashcards</h3>
-                        <p class="card-text">This is the second flashcard app in this collection. The main difference is that students get to upload their own terms and definitions in the form of a csv file.</p>
-                        <p class="card-text">Keyboard entries are taken as alternative input method.</p>
-                        <a href="student-flashcards/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="student-flashcards/student-flashcards.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA9" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseA9">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a revision webpage using html, javascript and css that references a csv file in the same folder with two columns: "term" and "definition".</li>
-                                        <li>The csv file is to be uploaded by the user.</li>
-                                        <li>Each term in the "term" field will be displayed in turn using a left and right button. Another button labelled "Definition" will be used to show or hide the corresponding "definition" field at the bottom. Put all the script and style codes in the html file.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-    </div>
-    
-    
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="quotations/random-quotes.png" alt="Random Quote Generator Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Random Quote Generator</h3>
-                        <p class="card-text">Can be used to automatically show a different inspirational quote each time a student visits a site. These quotes will be random and therefore, different for each student. The list of quotes is coded into the html. You can change it from there.</p>
-                        <a href="quotations/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="quotations/random-quotes.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA10" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseA10">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Create a html webpage with a randomly generated quote with the attributed source each time it loads. The quotes should be aimed at inspiring students to put in their best effort in their exam preparations. The quote will be chosen from a list of twenty quotes.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="latex-renderer/latex-renderer.png" alt="LaTeX Renderer">
-                    <div class="card-body">
-                        <h3 class="card-title">LaTeX Renderer</h3>
-                        <p class="card-text">Generate Math equations using LaTeX. The image rendered can be downloaded as a scalable vector graphics (SVG) file for inserting into presentation slides or for display of working in SLS.</p>
-                        <p class="card-text">Note: If uploading into SLS, the javascript files must be at the same level as the index.html file in the zip folder.</p>
-                        <a href="latex-renderer/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="latex-renderer/latex-renderer.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA11" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseA11">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a website with a large input box to input latex and render it as a SVG file</li>
-                                        <li>Add a button to download the rendered SVG image with transparent background.</li>
-                                        <li>Add a button to convert the SVG image into png with a transparent background for download.</li>
-                                        <li>Suggest a file name for the downloaded image based on the first 20 characters of the input.</li>
-                                    
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="to-do-list/to-do-list.png" alt="To-Do List">
-                    <div class="card-body">
-                        <h3 class="card-title">To-Do List</h3>
-                        <p class="card-text">Maintains a to-do list. However, as this application uses a database that is stored only on the browser from which it is loaded, you will not be able to see the to-do list in another browser.</p>
-                        <a href="to-do-list/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="to-do-list/to-do-list.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA12" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseA12">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a website with a to-do list using indexedDB and javascript. </li>
-                                        <li>Put all the codes in one page. Put all the codes in one page. </li>
-                                        <li>Use css to give it a pleasant look.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-    </div>
-    
-     <div class="row">
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="calculator/calculator.png" alt="Basic Calculator">
-                    <div class="card-body">
-                        <h3 class="card-title">Basic Calculator</h3>
-                        <p class="card-text">The basic calculator functions can be found in this app. The priority of multiplication and division over addition and subtraction applies.</p>
-                        <p class="card-text">Keyboard entries are taken as alternative input method.</p>
-                        <a href="calculator/" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="calculator/calculator.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA13" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseA13">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a webpage with a basic calculator, with the digits and operators in square buttons arranged in a usual calculator arrangement.</li>
-                                        <li>Allow keyboard entries as alternative input method.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-         
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="video-recorder/video-recorder.png" alt="Video Recorder">
-                    <div class="card-body">
-                        <h3 class="card-title">Video Recorder</h3>
-                        <p class="card-text">With a video recorder embedded into SLS, users will not have to use an external app to make video recordings for submission. However, the user will still have to download the video first (in mp4 format) before submitting as a file attachment into a free-response question. (SLS currently has a audio-response question type but not yet a video-response question type.)</p>
-                        <p class="card-text">In some devices, the recorder only works when opened in full screen mode. </p>
-                        <p class="card-text">Note that different web browsers may impose their own limitations on video recording. For example, some browsers may limit the duration of a video recording to prevent excessive resource usage or to ensure a good user experience.</p>
-                        <p class="card-text">Some browsers may prompt the user for permission to access the device's camera and microphone, and users may have the option to deny or limit access. Additionally, browser security settings or extensions may impose additional restrictions on video recording.</p>
-                        <a href="video-recorder/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="video-recorder/video-recorder.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA14" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseA14">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a website that could record video and audio from the device camera and microphone.</li>
-                                        <li>Show a preview of the video in the browser. Do not show the video in fullscreen mode even in mobile devices so that the controls can remain visible.
-                                        </li>
-                                        <li>Use a download button for the user to download the recorded video in mp4 format.</li>
-                                        <li>After the recording, replace the video preview with the video that has been recorded. Include playback functions.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div> 
-            
-            
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="pdf-viewer/pdf-viewer.png" alt="PDF Viewer">
-                    <div class="card-body">
-                        <h3 class="card-title">PDF Viewer</h3>
-                        <p class="card-text">This allows a pdf file to be embedded seamlessly into SLS. Currently, SLS only allows for pdf files to be uploaded as a downloadable attachment but does not load it.</p>
-                        <p class="card-text">For saving into SLS, please change the file name in the index.html file to that of the pdf file.</p>
-                        <p class="card-text">Ensure that the pdf file is in the same level as the index.html file within the zip folder.</p>
-                        <p class="card-text"><font color="red">NEW!</font> If you are not confident in doing the above, you may use the automatic zipping function in <a href="pdf-viewer/upload.html">here</a>. (This is also built with ChatGPT)</p>
-                        <a href="pdf-viewer/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="pdf-viewer/pdf-viewer.zip" class="btn btn-secondary">Download for SLS</a>
-                        <a href="pdf-viewer/upload.html" class="btn btn-secondary">Upload PDF and Zip for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA15" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseA15">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Prompt for the index file: Create a website that embeds a PDF file.</li>
-                                        <li>Prompts for the zip folder creator: Create a website that allows users to upload a pdf file, then create a index.html file that points to that pdf file using the code above to embed to pdf. The output will be a zip file with both the index.html file and the uploaded pdf file. Use only javascript, css and html.
-                                        </li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-                
-        </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="zip-directory/zip-directory.png" alt="Zip Directory Generator">
-                    <div class="card-body">
-                        <h3 class="card-title">Zipped Directory Generator</h3>
-                        <p class="card-text">This page helps teachers to auto-generate an index file that lists down all the files in the root directory of a zipped folder. It then creates a new zipped folder with all the files and the index file.</p>
-                        <p class="card-text">When uploaded into SLS, the package shows as a directory of all the files in the folder and students can download the files one by one or altogether as a zipped folder.</p>
-                
-                        <a href="zip-directory/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA16" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseA16">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a website using javascript that allows users to upload a zipped folder into the browser and then creates an index.html file that lists all the files within in in the form of links.</li>
-                                        <li>Use a button for the user to download a new zipped file with the original files and the index.html file.
-                                        </li>
-                                        <li>Create an input box to enter a title for the zip folder and the index.html file.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-                
-        </div>
-        
-                <div class="col-md-4">
-            <div class="card mb-4" id="audio-transcription">
-                <img class="card-img-top" src="audio-transcription/audio-transcription.png" alt="Audio Transcription">
-                    <div class="card-body">
-                        <h3 class="card-title">Audio Transcription</h3>
-                        <p class="card-text">This app transcribes speech to text, including the option of including timestamps. It can be used for students' self-assessment of their oral presentation or for quick generation of text.</p>
-                        <a href="audio-transcription/index.html" class="btn btn-primary" target="_blank">English</a>
-                        <a href="audio-transcription/audio-transcription.zip" class="btn btn-secondary">Download for SLS </a><br>
-                        <a href="audio-transcription/chinese/index.html" class="btn btn-primary" target="_blank">Chinese</a>
-                        <a href="audio-transcription/chinese/audio-transcription-chinese.zip" class="btn btn-secondary">Download for SLS</a><br>
-                        <a href="audio-transcription/malay/index.html" class="btn btn-primary" target="_blank">Malay</a>
-                        <a href="audio-transcription/malay/audio-transcription-malay.zip" class="btn btn-secondary">Download for SLS</a><br>
-                        <a href="audio-transcription/tamil/index.html" class="btn btn-primary" target="_blank">Tamil</a>
-                        <a href="audio-transcription/tamil/audio-transcription-tamil.zip" class="btn btn-secondary">Download for SLS</a><br>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA17" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseA17">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a webpage to transcribe an audio recording using javascript and html.</li>
-                                        <li>Use a stop button to pause the recording.</li>
-                                        <li>When the start button is clicked again, the recording resumes. Keep the entire text that is being transcribed.</li>
-                                        <li>Use a button to allow the user to copy the whole text.</li>
-                                        <li>Start each segment in a new line please.</li>
-                                        <li>Stylise the buttons and text.</li>
-                                        <li>Use a checkbox to show and hide the timestamp of the recorded segments.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-                
-        </div>
-        
-    </div>
-    
-</div>
-
-    
-    
-    
-    
-    
-<div class="container" id="Games">
-
-<header class="container-header">    
-<h2>Games</h2><a href="#top" id="backlink">Back to Top</a>
-</header>    
-    
-    <div class="row">
-    
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="delight/delight.png" alt="Delight">
-                    <div class="card-body">
-                        <h3 class="card-title">Delight - A Turn-Based Board Game on Electricity</h3>
-                        <p class="card-text">Players will take turns to connect their own bulbs to the terminals while trying to sabotage their opponent's bulbs.</p>
-                        <p class="card-text">At lower levels, students can compete to see who has the most lit bulbs. However, they will need to be able to identify which light bulbs are lit.</p>
-                        <p class="card-text">Do watch out for short-circuits.</p>
-                        <p class="card-text">At higher levels, students can compete to see whose light bulbs has the most total electrical power, with some calculations involved.</p>
-                        <a href="delight/" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="delight/delight.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB1" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseB1">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a game board using 16 squares in a 4-by-4 grid with html and javascript. In each square, there is a space of 100 pixels by 100 pixels where an image can be placed. The squares will be the placeholders for the images.</li>
-                                        <li>On the top left corner, the image file "positive.png" is shown. On the bottom right corner, the image file "negative.png" is shown.</li>
-                                        <li>Below the 4 by 4 grid, there is a line if images two users can take turns to choose from: "cross-wires.png", "r-wires-0.png", "t-wires-0.png", "straight-wire-0.png", "yellow-light-0.png" and "red-light-0.png".</li>
-                                        <li>Change the css such that when an image is chosen, it will grey out slightly</li>
-                                        <li>Upon clicking an image that had been placed in the grids, the image will rotate by 90 degrees clockwise.</li>
-                                        <li>Include an undo button to reverse the last step.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-    
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="guess-word/guess-word.png" alt="Hangman Game">
-                    <div class="card-body">
-                        <h3 class="card-title">Hangman</h3>
-                        <p class="card-text">Can be used in-class, online or even as part of a virtual escape room. Open the HTML file in a web browser to play the game. The game will present physics keywords for the user to guess one word at a time. Teachers can edit the html to add new words into the list.</p>
-                        <a href="guess-word/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="guess-word/guess-word.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB2" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseB2">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol><li>Create a hangman game based on keywords in physics such as "impulse", "momentum" and "inelastic" for the user to guess one word at a time.</li>
-                                    <li>The number of blanks that are shown is the number of letters in the selected word. </li>
-                                    <li>Leave a space between each blank. </li>
-                                    <li>The guessing is done letter by letter.</li>
-                                    <li>For each correct guess, add one point to the score</li>
-                                    <li>For each incorrect guess, deduct one point. Keep score until all the words are completed. </li>
-                                    <li>Display the score. Put all the codes in one html file. Celebrate the completion of each word.</li></ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="chinese-word-game/chinese-word-game.png" alt="Chinese Word Game">
-                    <div class="card-body">
-                        <h3 class="card-title">Chinese Word Game</h3>
-                        <p class="card-text">The user will answer questions to a quiz in the form of a game.</p>
-                        <p class="card-text">Teacher can edit the quiz questions in the html file.</p>
-                        <a href="chinese-word-game/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="chinese-word-game/chinese-word-game.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB3" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseB3">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Provide the code for the following in a single html file:</p>
-                                    <ol>
-                                        <li>I'd like to create a webpage with a game to help people learn Chinese 成语 (Chengyu), which are interesting idiomatic expressions in Chinese. /li>
-                                        <li>Each 成语 will consist of 4 words, but one word will be replaced by a blank or line.</li>
-                                        <li>The missing word is the one that the player needs to guess.</li>
-                                        <li>The game screen will show 4 options for the missing word.</li>
-                                        <li>Options will be displayed as bubbles floating around the screen.</li>
-                                        <li>The bubbles should move slowly and randomly across the screen and bounce off the walls. They must remain within the box.</li>
-                                        <li>The player needs to click on the correct bubble corresponding to the missing word.</li>
-                                        <li>Once the correct bubble is clicked, the completed 成语 will be shown on the screen.</li>
-                                        <li>One point will be added to the player's score for each correct guess.</li>
-                                        <li>After the player answers one question, the next question will be displayed automatically.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-    
-    </div>
-    
-    
-     <div class="row">
-    
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="prime-game/prime-game.png" alt="Guess the Prime Number Game">
-                    <div class="card-body">
-                        <h3 class="card-title">"Guess the Prime Number" Game</h3>
-                        <p class="card-text">The player will guess a prime number between 1 to 1000 that was randomly selected by the computer.</p>
-                        <p class="card-text">The computer will prompt the player if the number is non-prime, or if it is too big or too small.</p>
-                        <a href="prime-game/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="prime-game/prime-game.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB4" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseB4">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a website with a game that allows users to guess a prime number between 1 to 1000.</li>
-                                        <li>When the user guesses correctly, there will be a congratulatory message.</li>
-                                        <li>When the user guesses wrongly, there will be a message telling the user if the number entered is not a prime number, or if the number entered is too small or too big.</li>
-                                        <li>A input box will be used to enter the number.</li>
-                                        <li>There will be a log of the guesses made as well as whether the guess is non-prime, or too big or too small.</li>
-                                        <li>Refinement 1: Put all these in a single file.</li>
-                                        <li>Refinement 2: The correct number must be randomly selected from a list of prime numbers from 1 to 1000. Inform the user whether the guess is too small or too big.</li>
-                                        <li>Refinement 3: Reject the entry if it is not a prime number. Inform the user if it is not a prime number.</li>
-                                        <li>Refinement 4: The randomly generated prime number should remain the same until the user guesses it correctly. </li>
-                                        <li>Create a button to restart the game and reset all the values.</li>
-                                        <li>Redesign the website to make it more aesthetically pleasing. For the list of guesses, make it such that each guess appears in a new row.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-         
-    </div>
-</div>
-    
-<div class="container" id="Assessment">
-
-<header class="container-header">    
-<h2>Assessment</h2><a href="#top" id="backlink">Back to Top</a>
-</header>    
-    
-    <div class="row">
-    
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="coin-addition/coin-addition.png" alt="Coin Addition Practice Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Coin Addition</h3>
-                        <p class="card-text">For self-practice or in class learning. Users will be shown a number of Singapore coins. They will need to key in the total value for checking.</p>
-                        <a href="coin-addition/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="coin-addition/coin-addition.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseC1" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseC1">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a quiz website on how to add values of coins.</li>
-                                        <li>Use a button to generate a new problem with a random number of coins of varying values such as 5 cents (represented by image file "TS5c.jpg"), 10 cents (represented by image file "TS10c.jpg"), 20 cents (represented by image file "TS20c.jpg"), 50 cents (represented by image file "TS50c.jpg") and 1 dollar (represented by image file "TS1d.jpg").</li>
-                                        <li>Display the number of coins as required by duplicating the images.</li>
-                                        <li>Use an input box with a submit button to check the value of coins added in terms of dollars.</li>
-                                        <li>Put a dollar sign in front of the input box.</li>
-                                        <li>Centralise all the messages and elements.</li>
-                                        <li>Use a button to generate a new question.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-    
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="irat/irat.png" alt="Interactive Video Screenshot">
-                    <div class="card-body">
-                        <h3 class="card-title">Individual Readiness Assurance Test (iRAT)</h3>
-                        <p class="card-text">A series of multiple-choice options that do not automark but upon completion, student will download a csv file of their responses to be used for the next step of <a href="https://www.youtube.com/watch?v=aZd4GBdiwY4" target="_blank">team-based learning</a>, which is the tRAT.</p>
-                        <a href="irat/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="irat/irat.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseC2" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseC2">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a webpage where students can enter their options for a series of 10 multiple-choice questions with 4 options. Display 10 rows of four options A, B, C and D. Each option exists as a button. Each question should be part of an ordered list.</li>
-                                        <li>There is no need to check the answer but when an option is chosen, the lightgrey buttons should turn lightblue in colour.</li>
-                                        <li>If a button is selected, when i click on it again, it should become unselected.</li>
-                                        <li>Include a button that triggers the export of a csv file with every question and its corresponding chosen option.</li>
-
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-    
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="trat/trat.png" alt="Team-based learning">
-                    <div class="card-body">
-                        <h3 class="card-title">tRAT Assessment Tool</h3>
-                        <p class="card-text">For use in class for <a href="https://www.youtube.com/watch?v=aZd4GBdiwY4" target="_blank">team-based learning</a>. Students will work in groups to come up with a consensus to answer questions. They will get multiple tries in each multiple-choice question, with decreasing rewards for retries.</p>
-                        <p>Teacher will have to edit the csv file with the answers. Do not change the relative position of the csv file.</p>
-                        <a href="trat/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="trat/trat.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseC3" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseC3">
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <h3 class="header1">Prompts</h3>
-                                    <p>Provide the code for the following in a single html file:</p>
-                                    <ol>
-                                        <li>Create a website for users to key in their answers to a tRAT quiz for checking.</li>
-                                        <li>The answers will be referenced from a csv file containing the question number in the first column and the answer to the multiple choice question (A, B, C or D) in the second column.</li>
-                                        <li>The quiz will display the question number and 4 options: A, B, C and D. The user will choose the answer from the 4 options.</li>
-                                        <li>If the first option is the correct answer, the letter will become light green and 4 marks will be added to the overall score. If it is the wrong answer, the letter will become dark grey and no marks will be added.</li>
-                                        <li>The user will get to try a second time for the same question. If the second option is the correct answer, the letter will become light green and 2 marks will be added to the overall score. If it is the wrong answer, the letter will become dark grey and no marks will be added.</li>
-                                        <li>The user will get to try a third time for the same question. If the third option is the correct answer, the letter will become light green and 1 mark will be added to the overall score. If it is the wrong answer, the letter will become dark grey and no marks will be added. There will not be a fourth time for the same question.</li>
-                                        <li>Getting it correct on the second try should only get 2 marks added. On the third try, only 1 mark will be added if correct.</li>
-                                        <li>The total score will be shown at the bottom of the page.</li>
-                                        <li>There will be two other buttons to move to the next question or back to the previous question. Don't jump to the next question automatically.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-    </div>
-</div>    
-        
-    
 <div class="container" id="Visualisation">
 
 <header class="container-header">    
@@ -1457,9 +701,769 @@
                     </div>
             </div>
         </div>
-         
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="acoustic-stopwatch/acoustic-stopwatch.png" alt="Acoustic Stopwatch">
+                    <div class="card-body">
+                        <h3 class="card-title">Acoustic Stopwatch</h3>
+                        <p class="card-text">Instead of using buttons to start and stop a timer, hands can be freed by using loud sounds to trigger the starting and stopping.</p>
+                        <p class="card-text">Acoustic stopwatches can be used in various scientific experiments where precise timing is required, such as in physics experiments involving the measurement of sound propagation or timing of a student completing a lap using a clap as start and stop triggers.</p>
+                        <p class="card-text">A slider can be used to adjust the threshold of the sound used to trigger the stopwatch. A default value to use is 150 (This is a relative unit and not a physical unit). The timing is displayed up to 1 millisecond.</p>
+                        <a href="acoustic-stopwatch/" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="acoustic-stopwatch/acoustic-stopwatch.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseE6" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseE6">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a webpage with javascript and html that serves as an acoustic stopwatch.</li>
+                                        <li>A start button will be used to begin listening for the first loud sound in order to start the timing.</li>
+                                        <li>The timer will start only when a sound louder than a predetermined threshold is detected by the microphone of the device after pressing the start button.</li>
+                                        <li>It will stop when a second sound that is louder than the same threshold is detected. </li>
+                                        <li>Use a slider to vary the threshold of sound.</li>
+                                        <li>Use another slider to adjust the minimum delay before the timer will stop with the second sound.</li>
+                                        <li>Display the time in seconds and milliseconds.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div> 
+        
+    </div>
+    
+    
+    
+<div class="container" id="General">
+<header class="container-header">    
+<h2>General Tools</h2><a href="#top" id="backlink">Back to Top</a>
+</header> 
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="converter/converter.png" alt="HTML File Generator">
+                    <div class="card-body">
+                        <h3 class="card-title">HTML File Generator</h3>
+                        <p class="card-text">This serves as a web-based code editor. Users can cut and paste html, js and css code into the input box and convert them into a downloadable index.html file straightaway.</p>
+                        <a href="converter/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="converter/converter.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA1" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA1">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol><li>Create a website with a large input box with adjustable dimensions. The aim of this site is to convert codes written into the box into html.</li>
+                                    <li>Whatever the user keys in, when a button is clicked, save the content as plain text and download it as an "index.html" file.</li>
+                                    <li>Create another button for the codes to run in another browser tab as a html file without downloading.</li></ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+       
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="pomodoro-timer/pomodoro-timer.png" alt="Delight">
+                    <div class="card-body">
+                        <h3 class="card-title">Pomodoro Timer</h3>
+                        <p class="card-text">Students can use this timer as a focusing strategy. For the first 25 minutes, the timer will be shown in a green box. During the 5-minute break, it will turn light blue.</p>
+                        <p class="card-text">A random piece of accompanying music will be played if needed.</p>
+                        <p class="card-text">The user can also key in a task to focus on during the 25 minutes.</p>
+                        <a href="pomodoro-timer/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="pomodoro-timer/pomodoro-timer.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA2" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA2">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a pomodoro timer webpage. A timer for 25 minutes will begin with a start button. There is a pause button that will pause or resume the timer.  After 25 minutes,  there will be a 5 minute break.</li>
+                                        <li>The "Pause" button should toggle to "Resume" when pressed and vice versa.</li>
+                                        <li>The "Start" button will restart the timer every time it is pressed.</li>
+                                        <li>The style of the first 25 minutes should be very different from that of the last 5 minutes.</li>
+                                        <li>Also, there should be another button to turn on the music. There are 5 mp3 files to randomly choose from and play one after another. The file names are "music1.mp3", "music2.mp3", and so on.</li>
+                                        <li>The play music button should toggle to become a mute button and vice versa.</li>
+                                        <li>There should be an input box for a line of text. The placeholder in the input box should read: "Focus: ".</li>
+                                        <li>When it's break time, please indicate using an image "break-image.png".</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="countdown-timer/countdown-timer.png" alt="Countdown Timer Screenshot">
+                    <div class="card-body">
+                        <h3 class="card-title">Countdown Timer</h3>
+                        <p class="card-text">For use in class. Set a duration and start the timer. When the time is up, an alarm will sound.</p>
+                        <p class="card-text">For use in SLS, provided the student does not go from one page to another, a timer can be set up to help student manage the time on an activity.</p>
+                        <p class="card-text">Replace the alarm with something more soothing if you like.</p>
+                        <a href="countdown-timer/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="countdown-timer/countdown-timer.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA3" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA3">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <p>Provide the code for the following in a single html file:</p>
+                                    <ol>
+                                        <li>Create a webpage: This is a basic instruction to start building a webpage.</li>
+                                        <li>Add a countdown timer: We want to include a timer that counts down from a specified time.</li>
+                                        <li>Allow setting hours, minutes, and seconds: Users should be able to input the duration of the countdown by setting the hours, minutes, and seconds individually.</li>
+                                        <li>Include buttons for adjustment: Add buttons labeled with "+H", "-H", "+M", "-M", "+S", and "-S" for users to increase or decrease the hours, minutes, and seconds as they desire.</li>
+                                        <li>Styling the webpage: Use CSS to style the webpage for a visually appealing appearance. This includes setting fonts, colors, and layout.</li>
+                                        <li>Add functionality for starting, pausing, and resetting the timer: Implement JavaScript functions for starting, pausing, and resetting the countdown timer. These functions should be triggered by clicking corresponding buttons.</li>
+                                        <li>Incorporate sound: When the timer reaches zero, play a sound from an audio file (alarm.mp3).</li>
+                                        <li>Include a mute button: After the sound starts playing, display a button labeled "Mute" that allows users to mute or unmute the sound.</li>
+                                                                            </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="random-name-generator/random-name-generator.png" alt="Random Name Generator Screenshot">
+                    <div class="card-body">
+                        <h3 class="card-title">Random Name Generator</h3>
+                        <p class="card-text">For use in class. Either enter the names with semi-colons as separators or upload a classlist (consisting only of names, not index number, etc) in csv form.</p>
+                        <p class="card-text">If you want to remove the displayed name from the list, you can click the "Remove Name" button below the displayed name. The list of names drawn will appear in a list below.</p>
+                        <a href="random-name-generator/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="random-name-generator/random-name-generator.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA4" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA4">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <p>Provide the code for the following in a single html file:</p>
+                                    <ol>
+                                        <li>This web page lets you generate random names from a list of names you provide.</li>
+                                        <li>There's a section labeled "Enter names separated by semicolons."</li>
+                                        <li>You can type or paste a list of names into a box provided. Each name should be separated by a semicolon.</li>
+                                        <li>Alternatively, you can upload a file containing a list of names in CSV format using the "Or upload a CSV file" option.</li>
+                                        <li>Once you've entered the names or uploaded the file, click the "Submit" button.</li>
+                                        <li>After submitting, the page will display another section.</li>
+                                        <li>In this new section, there's a button labeled "Generate Random Name."</li>
+                                        <li>When you click this button, a random name from the list you provided will appear on the page.</li>
+                                        <li>Below the "Generate Random Name" button, there's a paragraph displaying the randomly generated name.</li>
+                                        <li>If the user wants to remove the displayed name from the list, you can click the "Remove Name" button below the displayed name.</li>
+                                        <li>Any names that you've generated will be listed below the "Generated Names" section.</li>
+                                        <li>Each generated name will appear on a separate line.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4" id="audio-transcription">
+                <img class="card-img-top" src="audio-transcription/audio-transcription.png" alt="Audio Transcription">
+                    <div class="card-body">
+                        <h3 class="card-title">Audio Transcription</h3>
+                        <p class="card-text">This app transcribes speech to text, including the option of including timestamps. It can be used for students' self-assessment of their oral presentation or for quick generation of text.</p>
+                        <a href="audio-transcription/index.html" class="btn btn-primary" target="_blank">English</a>
+                        <a href="audio-transcription/audio-transcription.zip" class="btn btn-secondary">Download for SLS </a><br>
+                        <a href="audio-transcription/chinese/index.html" class="btn btn-primary" target="_blank">Chinese</a>
+                        <a href="audio-transcription/chinese/audio-transcription-chinese.zip" class="btn btn-secondary">Download for SLS</a><br>
+                        <a href="audio-transcription/malay/index.html" class="btn btn-primary" target="_blank">Malay</a>
+                        <a href="audio-transcription/malay/audio-transcription-malay.zip" class="btn btn-secondary">Download for SLS</a><br>
+                        <a href="audio-transcription/tamil/index.html" class="btn btn-primary" target="_blank">Tamil</a>
+                        <a href="audio-transcription/tamil/audio-transcription-tamil.zip" class="btn btn-secondary">Download for SLS</a><br>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA5" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA5">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a webpage to transcribe an audio recording using javascript and html.</li>
+                                        <li>Use a stop button to pause the recording.</li>
+                                        <li>When the start button is clicked again, the recording resumes. Keep the entire text that is being transcribed.</li>
+                                        <li>Use a button to allow the user to copy the whole text.</li>
+                                        <li>Start each segment in a new line please.</li>
+                                        <li>Stylise the buttons and text.</li>
+                                        <li>Use a checkbox to show and hide the timestamp of the recorded segments.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+                
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="interactive-video/interactive-video.png" alt="Interactive Video Screenshot">
+                    <div class="card-body">
+                        <h3 class="card-title">Interactive Video</h3>
+                        <p class="card-text">Engage students with questions at chosen timing during the playing of a video. The teacher can edit the timing and questions using the html code. </p><p>Change the video name in the line that says 'source src="pizza.mp4" type="video/mp4'</p>
+                        <a href="interactive-video/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="interactive-video/interactive-video.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA6" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA6">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Make a webpage using html, javascript and css and put a video player on it. Also, create a space where questions can appear later.</li>
+                                        <li>Make the webpage look nice by adding styles to arrange the video and question areas.</li>
+                                        <li>Add some special instructions for the webpage to make it interactive:
+                                            <ul><li>Keep track of the video and where it's paused or playing.</li>
+                                                <li>Plan out when the questions should pop up during the video.</li>
+                                                <li>Keep track of which question is currently being asked.</li>
+                                                <li>Set up rules for when to show the questions and what happens when you answer them.</li>
+                                                <li>Make sure the video pauses when a question appears, so you can't watch until you answer.</li>
+                                                <li>Update the webpage to include the question boxes with options to choose from and a button to submit your answer. </li>
+                                            </ul></li>
+
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        
         
     </div> 
+    
+    <div class="row">
+        <div class="col-md-4">
+                <div class="card mb-4">
+                    <img class="card-img-top" src="interactive-story/interactive-story.png" alt="Interactive Story">
+                        <div class="card-body">
+                            <h3 class="card-title">Interactive Story</h3>
+                            <p class="card-text">A story line is decided by the user based on the branches designed by the teacher. ChatGPT can help to create the story too. AI image generators like Dall-E can be used to create images for the story.</p>
+                            <p class="card-text">However, quite a bit of work is needed to insert the pictures in the right sections and to indicate the path to be taken by each button.</p>
+                            <a href="interactive-story/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                            <a href="interactive-story/interactive-story.zip" class="btn btn-secondary">Download for SLS</a>
+                            <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA7" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                            <div class="collapse" id="promptsCollapseA7">
+                                <div class="card mt-3">
+                                    <div class="card-body">
+                                        <h3 class="header1">Prompts</h3>
+                                        <ol>
+                                            <li>Create a single html page where an interactive story with multiple story arcs can be presented. Users can choose to go to one page or another.</li>
+                                            <li>Add a button for the function to read out the text in the story.</li>
+                                            <li>Create a sample story.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="definitions/definitions.png" alt="Definitions Flashcards Screenshot">
+                    <div class="card-body">
+                        <h3 class="card-title">Digital Flashcards</h3>
+                        <p class="card-text">For use online. Teacher can include a csv file of key terms and their corresponding definitions into the same folder as the index file. Students can filter by topic and use this to test their recall of definitions of selected key terms.</p>
+                        <a href="definitions/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="definitions/definitions.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA8" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA8">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <p>Create a revision webpage using html, javascript and css that references a csv file in the same folder with three columns: "topic", "term" and "definition". There should be a filter for the "topic" field. Each term in the "term" field will be displayed in turn using a left and right button. Another button labelled "Definition" will be used to show or hide the corresponding "definition" field at the bottom. Put all the script and style codes in the html file.</p>
+    
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </div>
+            
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="student-flashcards/student-flashcards.png" alt="Student Flashcards">
+                    <div class="card-body">
+                        <h3 class="card-title">Student Flashcards</h3>
+                        <p class="card-text">This is the second flashcard app in this collection. The main difference is that students get to upload their own terms and definitions in the form of a csv file.</p>
+                        <p class="card-text">Keyboard entries are taken as alternative input method.</p>
+                        <a href="student-flashcards/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="student-flashcards/student-flashcards.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA9" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA9">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a revision webpage using html, javascript and css that references a csv file in the same folder with two columns: "term" and "definition".</li>
+                                        <li>The csv file is to be uploaded by the user.</li>
+                                        <li>Each term in the "term" field will be displayed in turn using a left and right button. Another button labelled "Definition" will be used to show or hide the corresponding "definition" field at the bottom. Put all the script and style codes in the html file.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="quotations/random-quotes.png" alt="Random Quote Generator Screenshot">
+                    <div class="card-body">
+                        <h3 class="card-title">Random Quote Generator</h3>
+                        <p class="card-text">Can be used to automatically show a different inspirational quote each time a student visits a site. These quotes will be random and therefore, different for each student. The list of quotes is coded into the html. You can change it from there.</p>
+                        <a href="quotations/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="quotations/random-quotes.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA10" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA10">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <p>Create a html webpage with a randomly generated quote with the attributed source each time it loads. The quotes should be aimed at inspiring students to put in their best effort in their exam preparations. The quote will be chosen from a list of twenty quotes.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="latex-renderer/latex-renderer.png" alt="LaTeX Renderer">
+                    <div class="card-body">
+                        <h3 class="card-title">LaTeX Renderer</h3>
+                        <p class="card-text">Generate Math equations using LaTeX. The image rendered can be downloaded as a scalable vector graphics (SVG) file for inserting into presentation slides or for display of working in SLS.</p>
+                        <p class="card-text">Note: If uploading into SLS, the javascript files must be at the same level as the index.html file in the zip folder.</p>
+                        <a href="latex-renderer/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="latex-renderer/latex-renderer.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA11" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA11">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a website with a large input box to input latex and render it as a SVG file</li>
+                                        <li>Add a button to download the rendered SVG image with transparent background.</li>
+                                        <li>Add a button to convert the SVG image into png with a transparent background for download.</li>
+                                        <li>Suggest a file name for the downloaded image based on the first 20 characters of the input.</li>
+                                    
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="to-do-list/to-do-list.png" alt="To-Do List">
+                    <div class="card-body">
+                        <h3 class="card-title">To-Do List</h3>
+                        <p class="card-text">Maintains a to-do list. However, as this application uses a database that is stored only on the browser from which it is loaded, you will not be able to see the to-do list in another browser.</p>
+                        <a href="to-do-list/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="to-do-list/to-do-list.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA12" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA12">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a website with a to-do list using indexedDB and javascript. </li>
+                                        <li>Put all the codes in one page. Put all the codes in one page. </li>
+                                        <li>Use css to give it a pleasant look.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+    
+     <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="calculator/calculator.png" alt="Basic Calculator">
+                    <div class="card-body">
+                        <h3 class="card-title">Basic Calculator</h3>
+                        <p class="card-text">The basic calculator functions can be found in this app. The priority of multiplication and division over addition and subtraction applies.</p>
+                        <p class="card-text">Keyboard entries are taken as alternative input method.</p>
+                        <a href="calculator/" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="calculator/calculator.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA13" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA13">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a webpage with a basic calculator, with the digits and operators in square buttons arranged in a usual calculator arrangement.</li>
+                                        <li>Allow keyboard entries as alternative input method.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+         
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="video-recorder/video-recorder.png" alt="Video Recorder">
+                    <div class="card-body">
+                        <h3 class="card-title">Video Recorder</h3>
+                        <p class="card-text">With a video recorder embedded into SLS, users will not have to use an external app to make video recordings for submission. However, the user will still have to download the video first (in mp4 format) before submitting as a file attachment into a free-response question. (SLS currently has a audio-response question type but not yet a video-response question type.)</p>
+                        <p class="card-text">In some devices, the recorder only works when opened in full screen mode. </p>
+                        <p class="card-text">Note that different web browsers may impose their own limitations on video recording. For example, some browsers may limit the duration of a video recording to prevent excessive resource usage or to ensure a good user experience.</p>
+                        <p class="card-text">Some browsers may prompt the user for permission to access the device's camera and microphone, and users may have the option to deny or limit access. Additionally, browser security settings or extensions may impose additional restrictions on video recording.</p>
+                        <a href="video-recorder/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="video-recorder/video-recorder.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA14" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA14">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a website that could record video and audio from the device camera and microphone.</li>
+                                        <li>Show a preview of the video in the browser. Do not show the video in fullscreen mode even in mobile devices so that the controls can remain visible.
+                                        </li>
+                                        <li>Use a download button for the user to download the recorded video in mp4 format.</li>
+                                        <li>After the recording, replace the video preview with the video that has been recorded. Include playback functions.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div> 
+            
+            
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="pdf-viewer/pdf-viewer.png" alt="PDF Viewer">
+                    <div class="card-body">
+                        <h3 class="card-title">PDF Viewer</h3>
+                        <p class="card-text">This allows a pdf file to be embedded seamlessly into SLS. Currently, SLS only allows for pdf files to be uploaded as a downloadable attachment but does not load it.</p>
+                        <p class="card-text">For saving into SLS, please change the file name in the index.html file to that of the pdf file.</p>
+                        <p class="card-text">Ensure that the pdf file is in the same level as the index.html file within the zip folder.</p>
+                        <p class="card-text"><font color="red">NEW!</font> If you are not confident in doing the above, you may use the automatic zipping function in <a href="pdf-viewer/upload.html">here</a>. (This is also built with ChatGPT)</p>
+                        <a href="pdf-viewer/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="pdf-viewer/pdf-viewer.zip" class="btn btn-secondary">Download for SLS</a>
+                        <a href="pdf-viewer/upload.html" class="btn btn-secondary">Upload PDF and Zip for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA15" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA15">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Prompt for the index file: Create a website that embeds a PDF file.</li>
+                                        <li>Prompts for the zip folder creator: Create a website that allows users to upload a pdf file, then create a index.html file that points to that pdf file using the code above to embed to pdf. The output will be a zip file with both the index.html file and the uploaded pdf file. Use only javascript, css and html.
+                                        </li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+                
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="zip-directory/zip-directory.png" alt="Zip Directory Generator">
+                    <div class="card-body">
+                        <h3 class="card-title">Zipped Directory Generator</h3>
+                        <p class="card-text">This page helps teachers to auto-generate an index file that lists down all the files in the root directory of a zipped folder. It then creates a new zipped folder with all the files and the index file.</p>
+                        <p class="card-text">When uploaded into SLS, the package shows as a directory of all the files in the folder and students can download the files one by one or altogether as a zipped folder.</p>
+                
+                        <a href="zip-directory/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseA16" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseA16">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a website using javascript that allows users to upload a zipped folder into the browser and then creates an index.html file that lists all the files within in in the form of links.</li>
+                                        <li>Use a button for the user to download a new zipped file with the original files and the index.html file.
+                                        </li>
+                                        <li>Create an input box to enter a title for the zip folder and the index.html file.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+                
+        </div>
+        
+                
+        
+    </div>
+    
+</div>
+
+    
+    
+    
+    
+    
+<div class="container" id="Games">
+
+<header class="container-header">    
+<h2>Games</h2><a href="#top" id="backlink">Back to Top</a>
+</header>    
+    
+    <div class="row">
+    
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="delight/delight.png" alt="Delight">
+                    <div class="card-body">
+                        <h3 class="card-title">Delight - A Turn-Based Board Game on Electricity</h3>
+                        <p class="card-text">Players will take turns to connect their own bulbs to the terminals while trying to sabotage their opponent's bulbs.</p>
+                        <p class="card-text">At lower levels, students can compete to see who has the most lit bulbs. However, they will need to be able to identify which light bulbs are lit.</p>
+                        <p class="card-text">Do watch out for short-circuits.</p>
+                        <p class="card-text">At higher levels, students can compete to see whose light bulbs has the most total electrical power, with some calculations involved.</p>
+                        <a href="delight/" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="delight/delight.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB1" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseB1">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a game board using 16 squares in a 4-by-4 grid with html and javascript. In each square, there is a space of 100 pixels by 100 pixels where an image can be placed. The squares will be the placeholders for the images.</li>
+                                        <li>On the top left corner, the image file "positive.png" is shown. On the bottom right corner, the image file "negative.png" is shown.</li>
+                                        <li>Below the 4 by 4 grid, there is a line if images two users can take turns to choose from: "cross-wires.png", "r-wires-0.png", "t-wires-0.png", "straight-wire-0.png", "yellow-light-0.png" and "red-light-0.png".</li>
+                                        <li>Change the css such that when an image is chosen, it will grey out slightly</li>
+                                        <li>Upon clicking an image that had been placed in the grids, the image will rotate by 90 degrees clockwise.</li>
+                                        <li>Include an undo button to reverse the last step.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="guess-word/guess-word.png" alt="Hangman Game">
+                    <div class="card-body">
+                        <h3 class="card-title">Hangman</h3>
+                        <p class="card-text">Can be used in-class, online or even as part of a virtual escape room. Open the HTML file in a web browser to play the game. The game will present physics keywords for the user to guess one word at a time. Teachers can edit the html to add new words into the list.</p>
+                        <a href="guess-word/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="guess-word/guess-word.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB2" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseB2">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol><li>Create a hangman game based on keywords in physics such as "impulse", "momentum" and "inelastic" for the user to guess one word at a time.</li>
+                                    <li>The number of blanks that are shown is the number of letters in the selected word. </li>
+                                    <li>Leave a space between each blank. </li>
+                                    <li>The guessing is done letter by letter.</li>
+                                    <li>For each correct guess, add one point to the score</li>
+                                    <li>For each incorrect guess, deduct one point. Keep score until all the words are completed. </li>
+                                    <li>Display the score. Put all the codes in one html file. Celebrate the completion of each word.</li></ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="chinese-word-game/chinese-word-game.png" alt="Chinese Word Game">
+                    <div class="card-body">
+                        <h3 class="card-title">Chinese Word Game</h3>
+                        <p class="card-text">The user will answer questions to a quiz in the form of a game.</p>
+                        <p class="card-text">Teacher can edit the quiz questions in the html file.</p>
+                        <a href="chinese-word-game/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="chinese-word-game/chinese-word-game.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB3" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseB3">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <p>Provide the code for the following in a single html file:</p>
+                                    <ol>
+                                        <li>I'd like to create a webpage with a game to help people learn Chinese 成语 (Chengyu), which are interesting idiomatic expressions in Chinese. /li>
+                                        <li>Each 成语 will consist of 4 words, but one word will be replaced by a blank or line.</li>
+                                        <li>The missing word is the one that the player needs to guess.</li>
+                                        <li>The game screen will show 4 options for the missing word.</li>
+                                        <li>Options will be displayed as bubbles floating around the screen.</li>
+                                        <li>The bubbles should move slowly and randomly across the screen and bounce off the walls. They must remain within the box.</li>
+                                        <li>The player needs to click on the correct bubble corresponding to the missing word.</li>
+                                        <li>Once the correct bubble is clicked, the completed 成语 will be shown on the screen.</li>
+                                        <li>One point will be added to the player's score for each correct guess.</li>
+                                        <li>After the player answers one question, the next question will be displayed automatically.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    
+    </div>
+    
+    
+     <div class="row">
+    
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="prime-game/prime-game.png" alt="Guess the Prime Number Game">
+                    <div class="card-body">
+                        <h3 class="card-title">"Guess the Prime Number" Game</h3>
+                        <p class="card-text">The player will guess a prime number between 1 to 1000 that was randomly selected by the computer.</p>
+                        <p class="card-text">The computer will prompt the player if the number is non-prime, or if it is too big or too small.</p>
+                        <a href="prime-game/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="prime-game/prime-game.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB4" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseB4">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a website with a game that allows users to guess a prime number between 1 to 1000.</li>
+                                        <li>When the user guesses correctly, there will be a congratulatory message.</li>
+                                        <li>When the user guesses wrongly, there will be a message telling the user if the number entered is not a prime number, or if the number entered is too small or too big.</li>
+                                        <li>A input box will be used to enter the number.</li>
+                                        <li>There will be a log of the guesses made as well as whether the guess is non-prime, or too big or too small.</li>
+                                        <li>Refinement 1: Put all these in a single file.</li>
+                                        <li>Refinement 2: The correct number must be randomly selected from a list of prime numbers from 1 to 1000. Inform the user whether the guess is too small or too big.</li>
+                                        <li>Refinement 3: Reject the entry if it is not a prime number. Inform the user if it is not a prime number.</li>
+                                        <li>Refinement 4: The randomly generated prime number should remain the same until the user guesses it correctly. </li>
+                                        <li>Create a button to restart the game and reset all the values.</li>
+                                        <li>Redesign the website to make it more aesthetically pleasing. For the list of guesses, make it such that each guess appears in a new row.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+         
+    </div>
+</div>
+    
+<div class="container" id="Assessment">
+
+<header class="container-header">    
+<h2>Assessment</h2><a href="#top" id="backlink">Back to Top</a>
+</header>    
+    
+    <div class="row">
+    
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="coin-addition/coin-addition.png" alt="Coin Addition Practice Screenshot">
+                    <div class="card-body">
+                        <h3 class="card-title">Coin Addition</h3>
+                        <p class="card-text">For self-practice or in class learning. Users will be shown a number of Singapore coins. They will need to key in the total value for checking.</p>
+                        <a href="coin-addition/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="coin-addition/coin-addition.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseC1" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseC1">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a quiz website on how to add values of coins.</li>
+                                        <li>Use a button to generate a new problem with a random number of coins of varying values such as 5 cents (represented by image file "TS5c.jpg"), 10 cents (represented by image file "TS10c.jpg"), 20 cents (represented by image file "TS20c.jpg"), 50 cents (represented by image file "TS50c.jpg") and 1 dollar (represented by image file "TS1d.jpg").</li>
+                                        <li>Display the number of coins as required by duplicating the images.</li>
+                                        <li>Use an input box with a submit button to check the value of coins added in terms of dollars.</li>
+                                        <li>Put a dollar sign in front of the input box.</li>
+                                        <li>Centralise all the messages and elements.</li>
+                                        <li>Use a button to generate a new question.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="irat/irat.png" alt="Interactive Video Screenshot">
+                    <div class="card-body">
+                        <h3 class="card-title">Individual Readiness Assurance Test (iRAT)</h3>
+                        <p class="card-text">A series of multiple-choice options that do not automark but upon completion, student will download a csv file of their responses to be used for the next step of <a href="https://www.youtube.com/watch?v=aZd4GBdiwY4" target="_blank">team-based learning</a>, which is the tRAT.</p>
+                        <a href="irat/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="irat/irat.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseC2" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseC2">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create a webpage where students can enter their options for a series of 10 multiple-choice questions with 4 options. Display 10 rows of four options A, B, C and D. Each option exists as a button. Each question should be part of an ordered list.</li>
+                                        <li>There is no need to check the answer but when an option is chosen, the lightgrey buttons should turn lightblue in colour.</li>
+                                        <li>If a button is selected, when i click on it again, it should become unselected.</li>
+                                        <li>Include a button that triggers the export of a csv file with every question and its corresponding chosen option.</li>
+
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="trat/trat.png" alt="Team-based learning">
+                    <div class="card-body">
+                        <h3 class="card-title">tRAT Assessment Tool</h3>
+                        <p class="card-text">For use in class for <a href="https://www.youtube.com/watch?v=aZd4GBdiwY4" target="_blank">team-based learning</a>. Students will work in groups to come up with a consensus to answer questions. They will get multiple tries in each multiple-choice question, with decreasing rewards for retries.</p>
+                        <p>Teacher will have to edit the csv file with the answers. Do not change the relative position of the csv file.</p>
+                        <a href="trat/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="trat/trat.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseC3" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseC3">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <p>Provide the code for the following in a single html file:</p>
+                                    <ol>
+                                        <li>Create a website for users to key in their answers to a tRAT quiz for checking.</li>
+                                        <li>The answers will be referenced from a csv file containing the question number in the first column and the answer to the multiple choice question (A, B, C or D) in the second column.</li>
+                                        <li>The quiz will display the question number and 4 options: A, B, C and D. The user will choose the answer from the 4 options.</li>
+                                        <li>If the first option is the correct answer, the letter will become light green and 4 marks will be added to the overall score. If it is the wrong answer, the letter will become dark grey and no marks will be added.</li>
+                                        <li>The user will get to try a second time for the same question. If the second option is the correct answer, the letter will become light green and 2 marks will be added to the overall score. If it is the wrong answer, the letter will become dark grey and no marks will be added.</li>
+                                        <li>The user will get to try a third time for the same question. If the third option is the correct answer, the letter will become light green and 1 mark will be added to the overall score. If it is the wrong answer, the letter will become dark grey and no marks will be added. There will not be a fourth time for the same question.</li>
+                                        <li>Getting it correct on the second try should only get 2 marks added. On the third try, only 1 mark will be added if correct.</li>
+                                        <li>The total score will be shown at the bottom of the page.</li>
+                                        <li>There will be two other buttons to move to the next question or back to the previous question. Don't jump to the next question automatically.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>    
+        
+  
 </div>      
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
