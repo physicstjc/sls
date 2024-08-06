@@ -130,7 +130,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const y = canvas.height - height * 25; // Scaling for canvas
             const ballSize = 20;
-            ctx.drawImage(ballImg, canvas.width / 2 - ballSize / 2, y - ballSize / 2, ballSize, ballSize); // Drawing the ball image
+            ctx.drawImage(ballImg, canvas.width / 2 - ballSize / 2, y + ballSize / 2, ballSize, ballSize); // Drawing the ball image
         }
 
         function plotGraph() {
