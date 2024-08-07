@@ -199,8 +199,7 @@
                             `${Math.abs((waveData.wavelength + Math.random() * 2).toFixed(2))} m`,
                             `${Math.abs((waveData.wavelength - Math.random() * 2).toFixed(2))} m`,
                             `${Math.abs((waveData.wavelength + Math.random() * 3).toFixed(2))} m`
-                        ],
-                        additionalInfo: `The speed of the wave is ${waveData.speed.toFixed(2)} m/s.`
+                        ]
                     },
                     {
                         text: 'What is the frequency of the wave (in Hertz)?',
@@ -221,10 +220,6 @@
         function displayQuestion(question) {
             const questionDiv = document.getElementById('question');
             questionDiv.innerHTML = `<p>${question.text}</p>`;
-
-            if (question.additionalInfo) {
-                questionDiv.innerHTML += `<p><strong>Additional Info:</strong> ${question.additionalInfo}</p>`;
-            }
 
             const optionsDiv = document.getElementById('options');
             optionsDiv.innerHTML = '';
