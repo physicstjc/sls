@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+            max-width: 580px;
+            max-height: 460px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        #graph {
+            width: 100%;
+            height: 50%;
+            max-width: 580px;
+            max-height: 230px;
+            margin: 0 auto;
+        }
+        .question {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        #options {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 5px;
+            max-width: 580px;
+        }
+        #options button {
+            background-color: #4682b4;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        #options button:hover {
+            background-color: #5a9bd4;
+        }
+        .score {
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .finished {
+            font-size: 16px;
+            color: green;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="graph"></div>
+    <div class="question" id="question"></div>
+    <div id="options"></div>
+    <div class="score" id="score"></div>
+
+    <script>
+        let score = 0;
+        let attempts = 0;
+        let questionNumber = 0;
+
+        function generateWaveData() {
+            const amplitude = Math.random() * 5 + 1;
+            const wavelength = Math.random() * 10 + 5;
+            const period = Math.random() * 5 + 2;
+            const speed = wavelength / period;
+            const frequency = 1 / period;
+
+            let x = [];
+            let y = [];
+            const isDistanceGraph = Math.random() < 0.5;
+
+            for (let i = 0; i <= 100; i++) {
+                const t = i * 0.1;
+                if (isDistanceGraph) {
+                    x.push(t);
+                    y.push(amplitude * Math.sin((2 * Math.PI / wavelength) * t));
+                } else {
+                    x.push(t);
+                    y.push(amplitude * Math.sin((2 * Math.PI / period) * t));
+                }
+            }
+
+            return { x, y, amplitude, wavelength, period, speed, frequency, isDistanceGraph };
+        }
+
+        function plotGraph(waveData) {
+            const { x, y, isDistanceGraph } = waveData;
+            const title = isDistanceGraph ? 'Displacement-Distance Graph' : 'Displacement-Time Graph';
+
+            Plotly.newPlot('graph', [{
+                x: x,
+                y: y,
+                type: 'scatter'
+            }], {
+                title: title,
+                xaxis: {
+                    title: isDistanceGraph ? 'Distance (m)' : 'Time (s)'
+                },
+                yaxis: {
+                    title: 'Displacement (m)'
+                },
+                margin: {
+                    t: 40,
+                    b: 40,
+                    l: 40,
+                    r: 20
+                }
+            });
+        }
+
+        function generateQuestion(waveData) {
+            const questions = [];
+
+            if (waveData.isDistanceGraph) {
+                questions.push(
+                    {
+                        text: 'What is the amplitude of the wave (in meters)?',
+                        correct: `${waveData.amplitude.toFixed(2)} m`,
+                        options: [
+                            `${Math.abs(waveData.amplitude.toFixed(2))} m`,
+                            `${Math.abs((waveData.amplitude + Math.random() * 2).toFixed(2))} m`,
+                            `${Math.abs((waveData.amplitude - Math.random() * 2).toFixed(2))} m`,
+                            `${Math.abs((waveData.amplitude + Math.random() * 3).toFixed(2))} m`
+                        ]
+                    },
+                    {
+                        text: 'What is the wavelength of the wave (in meters)?',
+                        correct: `${waveData.wavelength.toFixed(2)} m`,
+                        options: [
+                            `${Math.abs(waveData.wavelength.toFixed(2))} m`,
+                            `${Math.abs((waveData.wavelength + Math.random() * 2).toFixed(2))} m`,
+                            `${Math.abs((waveData.wavelength - Math.random() * 2).toFixed(2))} m`,
+                            `${Math.abs((waveData.wavelength + Math.random() * 3).toFixed(2))} m`
+                        ]
+                    },
+                    {
+                        text: `Given the speed of the wave is ${waveData.speed.toFixed(2)} m/s, what is the period of the wave (in seconds)?`,
+                        correct: `${waveData.period.toFixed(2)} s`,
+                        options: [
+                            `${Math.abs(waveData.period.toFixed(2))} s`,
+                            `${Math.abs((waveData.period + Math.random() * 2).toFixed(2))} s`,
+                            `${Math.abs((waveData.period - Math.random() * 2).toFixed(2))} s`,
+                            `${Math.abs((waveData.period + Math.random() * 3).toFixed(2))} s`
+                        ]
+                    },
+                    {
+                        text: `Given the speed of the wave is ${waveData.speed.toFixed(2)} m/s, what is the frequency of the wave (in Hertz)?`,
+                        correct: `${waveData.frequency.toFixed(2)} Hz`,
+                        options: [
+                            `${Math.abs(waveData.frequency.toFixed(2))} Hz`,
+                            `${Math.abs((waveData.frequency + Math.random() * 2).toFixed(2))} Hz`,
+                            `${Math.abs((waveData.frequency - Math.random() * 2).toFixed(2))} Hz`,
+                            `${Math.abs((waveData.frequency + Math.random() * 3).toFixed(2))} Hz`
+                        ]
+                    }
+                );
+            } else {
+                questions.push(
+                    {
+                        text: 'What is the amplitude of the wave (in meters)?',
+                        correct: `${waveData.amplitude.toFixed(2)} m`,
+                        options: [
+                            `${Math.abs(waveData.amplitude.toFixed(2))} m`,
+                            `${Math.abs((waveData.amplitude + Math.random() * 2).toFixed(2))} m`,
+                            `${Math.abs((waveData.amplitude - Math.random() * 2).toFixed(2))} m`,
+                            `${Math.abs((waveData.amplitude + Math.random() * 3).toFixed(2))} m`
+                        ]
+                    },
+                    {
+                        text: 'What is the period of the wave (in seconds)?',
+                        correct: `${waveData.period.toFixed(2)} s`,
+                        options: [
+                            `${Math.abs(waveData.period.toFixed(2))} s`,
+                            `${Math.abs((waveData.period + Math.random() * 2).toFixed(2))} s`,
+                            `${Math.abs((waveData.period - Math.random() * 2).toFixed(2))} s`,
+                            `${Math.abs((waveData.period + Math.random() * 3).toFixed(2))} s`
+                        ]
+                    },
+                    {
+                        text: `Given the speed of the wave is ${waveData.speed.toFixed(2)} m/s, what is the wavelength of the wave (in meters)?`,
+                        correct: `${waveData.wavelength.toFixed(2)} m`,
+                        options: [
+                            `${Math.abs(waveData.wavelength.toFixed(2))} m`,
+                            `${Math.abs((waveData.wavelength + Math.random() * 2).toFixed(2))} m`,
+                            `${Math.abs((waveData.wavelength - Math.random() * 2).toFixed(2))} m`,
+                            `${Math.abs((waveData.wavelength + Math.random() * 3).toFixed(2))} m`
+                        ],
+                        additionalInfo: `The speed of the wave is ${waveData.speed.toFixed(2)} m/s.`
+                    },
+                    {
+                        text: 'What is the frequency of the wave (in Hertz)?',
+                        correct: `${waveData.frequency.toFixed(2)} Hz`,
+                        options: [
+                            `${Math.abs(waveData.frequency.toFixed(2))} Hz`,
+                            `${Math.abs((waveData.frequency + Math.random() * 2).toFixed(2))} Hz`,
+                            `${Math.abs((waveData.frequency - Math.random() * 2).toFixed(2))} Hz`,
+                            `${Math.abs((waveData.frequency + Math.random() * 3).toFixed(2))} Hz`
+                        ]
+                    }
+                );
+            }
+
+            return questions[Math.floor(Math.random() * questions.length)];
+        }
+
+        function displayQuestion(question) {
+            const questionDiv = document.getElementById('question');
+            questionDiv.innerHTML = `<p>${question.text}</p>`;
+
+            if (question.additionalInfo) {
+                questionDiv.innerHTML += `<p><strong>Additional Info:</strong> ${question.additionalInfo}</p>`;
+            }
+
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            question.options = question.options.sort(() => Math.random() - 0.5);
+
+            question.options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => checkAnswer(question, option);
+                optionsDiv.appendChild(button);
+            });
+        }
+
+        function checkAnswer(question, selectedOption) {
+            attempts++;
+            if (selectedOption === question.correct) {
+                score++;
+                alert('Correct!');
+            } else {
+                alert(`Incorrect! The correct answer was ${question.correct}.`);
+            }
+
+            document.getElementById('score').textContent = `Score: ${score}/${attempts}`;
+            questionNumber++;
+            if (questionNumber < 10) {
+                nextQuestion();
+            } else {
+                document.getElementById('question').innerHTML = '<p class="finished">Quiz finished! Well done!</p>';
+                document.getElementById('options').innerHTML = '';
+            }
+        }
+
+        function nextQuestion() {
+            const waveData = generateWaveData();
+            plotGraph(waveData);
+            const question = generateQuestion(waveData);
+            displayQuestion(question);
+        }
+
+        nextQuestion();
+    </script>
+</body>
+</html>
