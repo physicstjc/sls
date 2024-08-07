@@ -214,12 +214,16 @@
                 );
             }
 
-            return questions[Math.floor(Math.random() * questions.length)];
+            return questions[Math.floor(Math.random() to questions.length)];
         }
 
         function displayQuestion(question) {
             const questionDiv = document.getElementById('question');
             questionDiv.innerHTML = `<p>${question.text}</p>`;
+
+            if (question.additionalInfo) {
+                questionDiv.innerHTML += `<p><strong>Additional Info:</strong> ${question.additionalInfo}</p>`;
+            }
 
             const optionsDiv = document.getElementById('options');
             optionsDiv.innerHTML = '';
@@ -235,7 +239,9 @@
 
         function checkAnswer(question, selectedOption) {
             attempts++;
-            if (selectedOption === question.correct) {
+            const selectedValue = parseFloat(selectedOption.split(' ')[0]);
+            const correctValue = parseFloat(question.correct.split(' ')[0]);
+            if (Math.abs(selectedValue - correctValue) < 0.01) {
                 score++;
                 alert('Correct!');
             } else {
