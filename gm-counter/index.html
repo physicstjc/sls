@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geiger-Muller Counter Simulation</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            width: 560px;
+            margin: 0 auto;
+            background-color: #f4f4f9;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        #controls {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        .lcd {
+            display: inline-block;
+            background: #333;
+            color: #0f0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 20px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px #0f0;
+            margin: 5px;
+        }
+        .lcd.timer {
+            color: #ff0;
+            box-shadow: 0 0 5px #ff0;
+        }
+        label {
+            margin-right: 10px;
+        }
+        select, button {
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+        }
+        button {
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <label for="source">Source:</label>
+        <select id="source">
+            <option value="background">Background</option>
+            <option value="banana">Banana</option>
+            <option value="cesium-137">Cesium-137</option>
+        </select>
+        <button id="start">Start</button>
+        <button id="stop">Stop</button>
+        <br>
+        <label for="view">View:</label>
+        <select id="view">
+            <option value="cumulative">Cumulative Count</option>
+            <option value="sample">Sample Count</option>
+            <option value="cpm">Counts Per Minute (CPM)</option>
+        </select>
+        <div>
+            <span>Total Count: <span id="totalCount" class="lcd">0</span></span>
+            <span>Time: <span id="timer" class="lcd timer">0</span>s</span>
+        </div>
+    </div>
+    <div id="plot" style="width: 100%; height: 300px;"></div>
+    <script>
+        const totalCountDisplay = document.getElementById('totalCount');
+        const timerDisplay = document.getElementById('timer');
+        const startButton = document.getElementById('start');
+        const stopButton = document.getElementById('stop');
+        const sourceSelect = document.getElementById('source');
+        const viewSelect = document.getElementById('view');
+
+        let totalCount = 0;
+        let timer = 0;
+        let interval;
+        let counting = false;
+        let sampleCounts = [];
+        let cumulativeCounts = [];
+        let cpmCounts = [];
+
+        const cumulativeData = {
+            x: [],
+            y: [],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Cumulative Count'
+        };
+
+        const sampleData = {
+            x: [],
+            y: [],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Sample Count',
+            visible: false
+        };
+
+        const cpmData = {
+            x: [],
+            y: [],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Counts Per Minute (CPM)',
+            visible: false
+        };
+
+        const layout = {
+            title: 'Geiger-Muller Counter Simulation',
+            xaxis: { title: 'Time (s)' },
+            yaxis: { title: 'Counts' }
+        };
+
+        Plotly.newPlot('plot', [cumulativeData, sampleData, cpmData], layout);
+
+        function startCounting() {
+            if (counting) return;
+            counting = true;
+            interval = setInterval(() => {
+                timer++;
+                const sampleCount = getRandomCount(sourceSelect.value);
+                totalCount += sampleCount;
+                totalCountDisplay.textContent = totalCount;
+                timerDisplay.textContent = timer;
+
+                cumulativeCounts.push(totalCount);
+                cumulativeData.x.push(timer);
+                cumulativeData.y.push(totalCount);
+
+                sampleCounts.push(sampleCount);
+                sampleData.x.push(timer);
+                sampleData.y.push(sampleCount);
+
+                const cpm = calculateCPM();
+                cpmCounts.push(cpm);
+                cpmData.x.push(timer);
+                cpmData.y.push(cpm);
+
+                updatePlot();
+            }, 1000);
+        }
+
+        function stopCounting() {
+            counting = false;
+            clearInterval(interval);
+        }
+
+        function getRandomCount(source) {
+            switch (source) {
+                case 'background': return Math.floor(Math.random() * 3);
+                case 'banana': return Math.floor(Math.random() * 5) + 2;
+                case 'cesium-137': return Math.floor(Math.random() * 10) + 5;
+                default: return 0;
+            }
+        }
+
+        function calculateCPM() {
+            const elapsedMinutes = timer / 60;
+            return elapsedMinutes > 0 ? totalCount / elapsedMinutes : totalCount;
+        }
+
+        function updateView() {
+            const view = viewSelect.value;
+            cumulativeData.visible = view === 'cumulative';
+            sampleData.visible = view === 'sample';
+            cpmData.visible = view === 'cpm';
+            layout.yaxis.title = view === 'cpm' ? 'CPM' : 'Counts';
+            updatePlot();
+        }
+
+        function updatePlot() {
+            Plotly.update('plot', [cumulativeData, sampleData, cpmData], layout);
+        }
+
+        function resetData() {
+            totalCount = 0;
+            timer = 0;
+            totalCountDisplay.textContent = totalCount;
+            timerDisplay.textContent = timer;
+            sampleCounts = [];
+            cumulativeCounts = [];
+            cpmCounts = [];
+
+            cumulativeData.x = [];
+            cumulativeData.y = [];
+            sampleData.x = [];
+            sampleData.y = [];
+            cpmData.x = [];
+            cpmData.y = [];
+            updatePlot();
+        }
+
+        startButton.addEventListener('click', startCounting);
+        stopButton.addEventListener('click', stopCounting);
+        viewSelect.addEventListener('change', updateView);
+        sourceSelect.addEventListener('change', resetData);
+
+        updateView();
+    </script>
+</body>
+</html>
