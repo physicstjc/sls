@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wave Properties Quiz</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
         body {
@@ -19,6 +20,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            position: relative;
         }
         #graph {
             width: 100%;
@@ -55,10 +57,33 @@
             font-size: 14px;
             margin-top: 10px;
         }
-        .finished {
-            font-size: 16px;
-            color: green;
+        .message-popup {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 2px solid #4682b4;
+            padding: 20px;
+            z-index: 1000;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            border-radius: 10px;
+        }
+        .message-popup button {
             margin-top: 10px;
+            background-color: #4682b4;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .message-popup button:hover {
+            background-color: #5a9bd4;
         }
     </style>
 </head>
@@ -67,6 +92,10 @@
     <div class="question" id="question"></div>
     <div id="options"></div>
     <div class="score" id="score"></div>
+    <div class="message-popup" id="message-popup">
+        <div id="message"></div>
+        <button onclick="closePopup()">Close</button>
+    </div>
 
     <script>
         let score = 0;
@@ -235,20 +264,31 @@
 
         function checkAnswer(question, selectedOption) {
             attempts++;
-            if (selectedOption === question.correct) {
+            const selectedValue = parseFloat(selectedOption.split(' ')[0]);
+            const correctValue = parseFloat(question.correct.split(' ')[0]);
+            const messagePopup = document.getElementById('message-popup');
+            const messageText = document.getElementById('message');
+            if (Math.abs(selectedValue - correctValue) < 0.01) {
                 score++;
-                alert('Correct!');
+                messageText.textContent = 'Correct!';
             } else {
-                alert(`Incorrect! The correct answer was ${question.correct}.`);
+                messageText.textContent = `Incorrect! The correct answer was ${question.correct}.`;
             }
+            messagePopup.style.display = 'block';
 
             document.getElementById('score').textContent = `Score: ${score}/${attempts}`;
+        }
+
+        function closePopup() {
+            document.getElementById('message-popup').style.display = 'none';
             questionNumber++;
             if (questionNumber < 10) {
                 nextQuestion();
             } else {
-                document.getElementById('question').innerHTML = '<p class="finished">Quiz finished! Well done!</p>';
+                document.getElementById('question').innerHTML = '';
                 document.getElementById('options').innerHTML = '';
+                document.getElementById('message-popup').innerHTML = '<p class="finished">Quiz finished! Well done!</p>';
+                document.getElementById('message-popup').style.display = 'block';
             }
         }
 
@@ -257,6 +297,7 @@
             plotGraph(waveData);
             const question = generateQuestion(waveData);
             displayQuestion(question);
+            document.getElementById('message').textContent = '';
         }
 
         nextQuestion();
