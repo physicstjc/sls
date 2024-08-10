@@ -1,0 +1,75 @@
+<style>
+        .answer {
+            display: none;
+            margin: 5px 0;
+            padding: 5px;
+            background-color: #e7e7ff;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+</style>
+
+
+<h3>Exploring Background Radiation</h3>
+    <p>Q1: Set the source to "Background" and start the count. Observe the count for a few minutes. What do you notice about the counts recorded?</p>
+    <div id="answer1" class="answer">
+        A1: The counts recorded are relatively low and vary randomly. This reflects the background radiation which is always present.
+    </div>
+    <button onclick="showAnswer('answer1')">Show Answer</button><br><br>
+
+    <p>Q2: Why is it important to measure background radiation before testing other sources?</p>
+    <div id="answer2" class="answer">
+        A2: Measuring background radiation is important to establish a baseline level of radiation. This helps in accurately identifying and quantifying the additional radiation from other sources.
+    </div>
+    <button onclick="showAnswer('answer2')">Show Answer</button><br><br>
+
+    <h3>Investigating a Banana as a Radiation Source</h3>
+    <p>Q3: Change the source to "Banana" and reset the data. Start the count and observe the readings. How do the counts from the banana compare to the background radiation?</p>
+    <div id="answer3" class="answer">
+        A3: The counts from the banana are higher than the background radiation. This is because bananas contain a small amount of radioactive potassium-40.
+    </div>
+    <button onclick="showAnswer('answer3')">Show Answer</button><br><br>
+
+    <p>Q4: How do the counts per minute (CPM) for the banana vary over time? Is there a pattern or do the counts appear random?</p>
+    <div id="answer4" class="answer">
+        A4: The counts per minute for the banana vary over time and appear random, reflecting the stochastic nature of radioactive decay.
+    </div>
+    <button onclick="showAnswer('answer4')">Show Answer</button><br><br>
+
+    <h3>Exploring a Cesium-137 Source</h3>
+    <p>Q5: Set the source to "Cesium-137" and reset the data. Start the count and observe the readings. How do the counts from Cesium-137 compare to both the background radiation and the banana?</p>
+    <div id="answer5" class="answer">
+        A5: The counts from Cesium-137 are significantly higher than both the background radiation and the banana. This is because Cesium-137 is a much stronger radioactive source.
+    </div>
+    <button onclick="showAnswer('answer5')">Show Answer</button><br><br>
+
+    <p>Q6: What do the counts per minute (CPM) tell you about the intensity of the Cesium-137 source compared to the other sources?</p>
+    <div id="answer6" class="answer">
+        A6: The CPM for Cesium-137 is much higher, indicating a higher intensity of radiation compared to the background and banana sources.
+    </div>
+    <button onclick="showAnswer('answer6')">Show Answer</button><br><br>
+    
+    <h3>Understanding the Random Nature of Radiation</h3>
+    <p>Q7: By looking at the sample counts, can you predict the next count value? Why or why not?</p>
+    <div id="answer7" class="answer">
+        A7: No, you cannot predict the next count value because radioactive decay is a random process. Each decay event is independent of the previous ones.
+    </div>
+    <button onclick="showAnswer('answer7')">Show Answer</button><br><br>
+
+    <p>Q8: How can you use the background radiation measurement to correct the readings from the banana and Cesium-137 sources?</p>
+    <div id="answer8" class="answer">
+        A8: You can subtract the average background CPM from the CPM of the banana and Cesium-137 sources to get the corrected readings, isolating the radiation from the specific sources.
+    </div>
+    <button onclick="showAnswer('answer8')">Show Answer</button><br><br>
+
+    <script>
+        function showAnswer(answerId) {
+            const answer = document.getElementById(answerId);
+            if (answer.style.display === "none" || answer.style.display === "") {
+                answer.style.display = "block";
+            } else {
+                answer.style.display = "none";
+            }
+        }
+
+    </script>

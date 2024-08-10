@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wave Properties Quiz</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="plotly-latest.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -277,19 +277,44 @@
             messagePopup.style.display = 'block';
 
             document.getElementById('score').textContent = `Score: ${score}/${attempts}`;
+            questionNumber++;
+            if (questionNumber >= 10) {
+                displayFinalMessage();
+            }
         }
 
         function closePopup() {
             document.getElementById('message-popup').style.display = 'none';
-            questionNumber++;
             if (questionNumber < 10) {
                 nextQuestion();
-            } else {
-                document.getElementById('question').innerHTML = '';
-                document.getElementById('options').innerHTML = '';
-                document.getElementById('message-popup').innerHTML = '<p class="finished">Quiz finished! Well done!</p>';
-                document.getElementById('message-popup').style.display = 'block';
             }
+        }
+
+        function resetQuiz() {
+            score = 0;
+            attempts = 0;
+            questionNumber = 0;
+            document.getElementById('score').textContent = `Score: ${score}/${attempts}`;
+            document.getElementById('message-popup').style.display = 'none';
+            nextQuestion();
+        }
+
+        function getFinalMessage(score) {
+            if (score < 5) {
+                return `You scored ${score}/10. Don't worry, keep practicing and you'll get better! Try again!`;
+            } else if (score >= 5 && score <= 7) {
+                return `You scored ${score}/10. You're almost there! Keep it up and you'll improve even more!`;
+            } else if (score >= 8 && score <= 9) {
+                return `You scored ${score}/10. Very good! You're doing great!`;
+            } else if (score === 10) {
+                return `You scored ${score}/10. Perfect! Excellent job!`;
+            }
+        }
+
+        function displayFinalMessage() {
+            const finalMessage = getFinalMessage(score);
+            document.getElementById('message-popup').innerHTML = `<p class="finished">${finalMessage}</p><button onclick="resetQuiz()">Start Over</button>`;
+            document.getElementById('message-popup').style.display = 'block';
         }
 
         function nextQuestion() {
