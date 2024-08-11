@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acoustic Stopwatch</title>
+</head>
+<body>
+    <h1>Acoustic Stopwatch</h1>
+    <p id="status">Preparing to start...</p>
+    <p id="time">Time: 0 ms</p>
+
+    <script>
+        let startTime = 0;
+        let stopTime = 0;
+        let running = false;
+        let lightThreshold = 0.5; // Change this value to adjust sensitivity to light changes
+        let soundThreshold = 0.2; // Change this value to adjust sensitivity to sound
+        let initialLightIntensity = null;
+        let detecting = false;
+
+        // Start video stream
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.play();
+            
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const analyser = audioContext.createAnalyser();
+            const microphone = audioContext.createMediaStreamSource(stream);
+            microphone.connect(analyser);
+
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteTimeDomainData(dataArray);
+
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            document.body.appendChild(canvas);
+
+            canvas.width = 640;
+            canvas.height = 480;
+
+            function processFrame() {
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                let lightIntensity = 0;
+
+                // Calculate average light intensity
+                for (let i = 0; i < imageData.data.length; i += 4) {
+                    lightIntensity += imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2];
+                }
+                lightIntensity /= (imageData.data.length / 4 * 255 * 3);
+
+                // Set the initial light intensity after the delay period
+                if (initialLightIntensity === null && detecting) {
+                    initialLightIntensity = lightIntensity;
+                }
+
+                // Detect a sudden drop in light intensity
+                if (detecting && !running && initialLightIntensity !== null) {
+                    if (lightIntensity < initialLightIntensity * lightThreshold) {
+                        startTime = performance.now();
+                        running = true;
+                        document.getElementById('status').textContent = 'Timing...';
+                    }
+                }
+
+                // Check for loud sound to stop the timer
+                analyser.getByteTimeDomainData(dataArray);
+                const maxVolume = Math.max(...dataArray) / 128 - 1;
+
+                if (maxVolume > soundThreshold && running) {
+                    stopTime = performance.now();
+                    running = false;
+                    document.getElementById('status').textContent = 'Stopped!';
+                    document.getElementById('time').textContent = `Time: ${(stopTime - startTime).toFixed(2)} ms`;
+                }
+
+                // Continue processing frames if the stopwatch is still running
+                if (running || detecting) {
+                    requestAnimationFrame(processFrame);
+                }
+            }
+
+            // Start detecting after a 5-second delay
+            setTimeout(() => {
+                detecting = true;
+                document.getElementById('status').textContent = 'Waiting for a sudden drop in light...';
+                requestAnimationFrame(processFrame);
+            }, 5000); // 5 seconds delay
+
+        }).catch(error => {
+            console.error('Error accessing media devices.', error);
+        });
+    </script>
+</body>
+</html>
