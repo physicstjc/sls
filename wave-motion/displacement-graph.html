@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Displacement-Distance Graph</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            max-width: 580px;
+            max-height: 380px;
+            overflow: hidden;
+        }
+        #graph {
+            width: 560px;
+            height: 360px; /* Reduced the height of the graph */
+            margin: 0;  /* Removed margin to reduce whitespace */
+        }
+        .slider-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            align-items: center;
+            height: 30%;
+            padding: 5px; /* Reduced padding to decrease space */
+            margin-top: 5px; /* Reduced space between graph and sliders */
+        }
+        .slider-group {
+            width: 45%;
+            text-align: center;
+        }
+        .slider {
+            width: 100%;
+        }
+        .slider-label {
+            margin-bottom: 3px; /* Reduced space below the label */
+        }
+        .slider-value {
+            margin-top: 3px; /* Reduced space above the value */
+        }
+    </style>
+</head>
+<body>
+    <div id="graph"></div>
+    <div class="slider-container">
+        <div class="slider-group">
+            <div class="slider-label">Amplitude (units)</div>
+            <input type="range" id="amplitude-slider" class="slider" min="0" max="10" step="0.1" value="5">
+            <div class="slider-value" id="amplitude-value">5</div>
+        </div>
+        <div class="slider-group">
+            <div class="slider-label">Wavelength (units)</div>
+            <input type="range" id="wavelength-slider" class="slider" min="2" max="20" step="0.1" value="10">
+            <div class="slider-value" id="wavelength-value">10</div>
+        </div>
+    </div>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+        const amplitudeSlider = document.getElementById('amplitude-slider');
+        const amplitudeValue = document.getElementById('amplitude-value');
+        const wavelengthSlider = document.getElementById('wavelength-slider');
+        const wavelengthValue = document.getElementById('wavelength-value');
+        const graphDiv = document.getElementById('graph');
+
+        function plotGraph(amplitude, wavelength) {
+            const x = Array.from({length: 100}, (_, i) => i * 0.1);
+            const y = x.map(xi => amplitude * Math.sin(2 * Math.PI * xi / wavelength));
+
+            const trace = {
+                x: x,
+                y: y,
+                type: 'scatter',
+                mode: 'lines',
+                line: {color: 'blue'}
+            };
+
+            const layout = {
+                title: 'Displacement-Distance Graph',
+                xaxis: {
+                    title: 'Distance (units)',
+                    range: [0, 10]  // Set the x-axis range to constant
+                },
+                yaxis: {
+                    title: 'Displacement (units)',
+                    range: [-10.5, 10.5]  // Set the y-axis range to constant
+                }
+            };
+
+            Plotly.newPlot(graphDiv, [trace], layout);
+        }
+
+        amplitudeSlider.addEventListener('input', () => {
+            const amplitude = parseFloat(amplitudeSlider.value);
+            amplitudeValue.textContent = amplitude;
+            plotGraph(amplitude, parseFloat(wavelengthSlider.value));
+        });
+
+        wavelengthSlider.addEventListener('input', () => {
+            const wavelength = parseFloat(wavelengthSlider.value);
+            wavelengthValue.textContent = wavelength;
+            plotGraph(parseFloat(amplitudeSlider.value), wavelength);
+        });
+
+        // Initial plot
+        plotGraph(parseFloat(amplitudeSlider.value), parseFloat(wavelengthSlider.value));
+    </script>
+</body>
+</html>
