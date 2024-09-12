@@ -1,0 +1,26 @@
+Category,Question,Answer,Points
+Advanced Math,What is the derivative of x^2?,2x,100
+Advanced Math,What is the limit of 1/x as x approaches infinity?,zero,200
+Advanced Math,What is the integral of 2x with respect to x?,x^2,300
+Advanced Math,What is the sum of angles in a triangle?,180,400
+Advanced Math,What is the term for a 10-sided polygon?,decagon,500
+Physics,What is the unit of force?,newton,100
+Physics,What is the value of acceleration due to gravity on Earth?,9.8,200
+Physics,What is the name of the force that opposes motion?,friction,300
+Physics,What is the SI unit of power?,watt,400
+Physics,What is the name of the law stating that force equals mass times acceleration?,Newton's,500
+Chemistry,What is the chemical symbol for water?,H2O,100
+Chemistry,What is the process of a liquid turning into gas?,evaporation,200
+Chemistry,What is the pH value of a neutral solution?,seven,300
+Chemistry,What is the name of the gas that supports combustion?,oxygen,400
+Chemistry,What is the chemical symbol for sodium?,Na,500
+Biology,What is the basic unit of life?,cell,100
+Biology,What is the process by which plants make food?,photosynthesis,200
+Biology,What is the name of the molecule that carries genetic information?,DNA,300
+Biology,What is the term for a group of organs working together?,system,400
+Biology,What is the part of the cell that controls its activities?,nucleus,500
+Social Studies,What is the name of Singapore's first Prime Minister?,Lee,100
+Social Studies,What is the term for the separation of powers between different branches of government?,democracy,200
+Social Studies,What is the document that outlines the rights of citizens?,constitution,300
+Social Studies,What is the name of the highest court in Singapore?,Supreme,400
+Social Studies,What is the term for a system where the government controls all aspects of the economy?,socialism,500

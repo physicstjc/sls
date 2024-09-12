@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeopardy Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        table {
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        td {
+            border: 1px solid #000;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #1E90FF;
+            color: white;
+            font-size: 20px;
+        }
+        td.clicked {
+            background-color: #87CEFA;
+            color: black;
+        }
+        .question-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border: 2px solid #000;
+            z-index: 10;
+        }
+        .question-popup.active {
+            display: block;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 5;
+        }
+        .overlay.active {
+            display: block;
+        }
+        .team-scores {
+            margin-top: 20px;
+        }
+        .team-scores table {
+            border: 1px solid #000;
+            padding: 10px;
+            text-align: center;
+            width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Jeopardy Game</h1>
+    <table id="jeopardy-board"></table>
+
+    <div class="overlay"></div>
+
+    <div class="question-popup" id="question-popup">
+        <h2 id="category"></h2>
+        <p id="question"></p>
+        <div id="answer-section">
+            <button id="show-answer">Show Answer</button>
+            <p id="answer" style="display: none;"></p>
+            <button id="correct">Correct</button>
+            <button id="incorrect">Incorrect</button>
+        </div>
+    </div>
+
+    <div class="team-scores">
+        <table>
+            <tr>
+                <th>Team 1</th>
+                <th>Team 2</th>
+            </tr>
+            <tr>
+                <td id="team1-score">0</td>
+                <td id="team2-score">0</td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        const categories = {};
+        let team1Score = 0;
+        let team2Score = 0;
+        let currentTeam = 1;
+
+        fetch('jeopardy_questions.csv')
+            .then(response => response.text())
+            .then(data => {
+                const rows = data.split('\\n').slice(1);
+                rows.forEach(row => {
+                    const [category, question, answer, points] = row.split(',');
+                    if (!categories[category]) {
+                        categories[category] = [];
+                    }
+                    categories[category].push({ question, answer, points });
+                });
+                populateBoard();
+            });
+
+        function populateBoard() {
+            const board = document.getElementById('jeopardy-board');
+            const categoryNames = Object.keys(categories);
+
+            // Create header row
+            const headerRow = document.createElement('tr');
+            categoryNames.forEach(category => {
+                const th = document.createElement('th');
+                th.textContent = category;
+                headerRow.appendChild(th);
+            });
+            board.appendChild(headerRow);
+
+            // Create question rows
+            for (let i = 0; i < 5; i++) {
+                const row = document.createElement('tr');
+                categoryNames.forEach(category => {
+                    const td = document.createElement('td');
+                    td.textContent = categories[category][i].points;
+                    td.dataset.category = category;
+                    td.dataset.index = i;
+                    td.addEventListener('click', handleClick);
+                    row.appendChild(td);
+                });
+                board.appendChild(row);
+            }
+        }
+
+        function handleClick(event) {
+            const td = event.currentTarget;
+            const category = td.dataset.category;
+            const index = td.dataset.index;
+            const question = categories[category][index];
+
+            // Mark the question as clicked
+            td.classList.add('clicked');
+            td.removeEventListener('click', handleClick);
+
+            showQuestionPopup(category, question);
+        }
+
+        function showQuestionPopup(category, question) {
+            const popup = document.getElementById('question-popup');
+            document.getElementById('category').textContent = category;
+            document.getElementById('question').textContent = question.question;
+            document.getElementById('answer').textContent = question.answer;
+            document.getElementById('answer').style.display = 'none';
+            document.querySelector('.overlay').classList.add('active');
+            popup.classList.add('active');
+
+            document.getElementById('show-answer').addEventListener('click', () => {
+                document.getElementById('answer').style.display = 'block';
+            });
+
+            document.getElementById('correct').addEventListener('click', () => {
+                updateScore(question.points, true);
+                closePopup();
+            });
+
+            document.getElementById('incorrect').addEventListener('click', () => {
+                updateScore(question.points, false);
+                closePopup();
+            });
+        }
+
+        function updateScore(points, correct) {
+            if (correct) {
+                if (currentTeam === 1) {
+                    team1Score += parseInt(points);
+                    document.getElementById('team1-score').textContent = team1Score;
+                } else {
+                    team2Score += parseInt(points);
+                    document.getElementById('team2-score').textContent = team2Score;
+                }
+            }
+            currentTeam = currentTeam === 1 ? 2 : 1;
+        }
+
+        function closePopup() {
+            document.querySelector('.overlay').classList.remove('active');
+            document.getElementById('question-popup').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
