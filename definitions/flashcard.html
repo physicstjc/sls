@@ -22,42 +22,44 @@
             width: 300px;
             height: 200px;
             perspective: 1000px;
-            position: relative;
         }
 
-        .flashcard div {
+        .flashcard-inner {
+            position: relative;
             width: 100%;
             height: 100%;
-            background-color: #fff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             font-size: 18px;
-            position: absolute;
-            backface-visibility: hidden;
-            transition: transform 0.6s;
         }
 
-        .front {
+        .flashcard-front {
             background-color: #1e90ff;
-            color: #fff;
-            transform: rotateY(0deg);
+            color: white;
         }
 
-        .back {
+        .flashcard-back {
             background-color: #fff;
             color: #333;
             transform: rotateY(180deg);
-        }
-
-        .flipped .front {
-            transform: rotateY(180deg);
-        }
-
-        .flipped .back {
-            transform: rotateY(0deg);
         }
 
         button {
@@ -72,11 +74,13 @@
     <h1>Physics Definitions Flashcards</h1>
     <div class="flashcard-container">
         <div class="flashcard" id="flashcard">
-            <div class="front">
-                <p>Term</p>
-            </div>
-            <div class="back">
-                <p>Definition</p>
+            <div class="flashcard-inner">
+                <div class="flashcard-front">
+                    <p>Term</p>
+                </div>
+                <div class="flashcard-back">
+                    <p>Definition</p>
+                </div>
             </div>
         </div>
     </div>
@@ -86,15 +90,22 @@
     <script>
         let currentCard = 0;
 
-        const termElement = document.querySelector('.front p');
-        const definitionElement = document.querySelector('.back p');
+        const termElement = document.querySelector('.flashcard-front p');
+        const definitionElement = document.querySelector('.flashcard-back p');
         const flashcard = document.getElementById('flashcard');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
 
-        function updateFlashcard(index, term, definition) {
-            termElement.textContent = term;
-            definitionElement.textContent = definition;
+        // Example flashcards, replace with your full list
+        const flashcards = [
+            { term: "Scalar", definition: "A scalar is a physical quantity which has magnitude only." },
+            { term: "Vector", definition: "A vector is a physical quantity which has both magnitude and direction." },
+            { term: "Distance", definition: "Distance is the total length travelled by a body regardless of the direction of motion." }
+        ];
+
+        function updateFlashcard(index) {
+            termElement.textContent = flashcards[index].term;
+            definitionElement.textContent = flashcards[index].definition;
         }
 
         flashcard.addEventListener('click', () => {
@@ -102,18 +113,21 @@
         });
 
         prevBtn.addEventListener('click', () => {
-            currentCard = currentCard === 0 ? 0 : currentCard - 1; // Change logic according to your data length
-            // Call updateFlashcard() with the current card data here
+            currentCard = currentCard === 0 ? flashcards.length - 1 : currentCard - 1;
+            updateFlashcard(currentCard);
+            flashcard.classList.remove('flipped');
         });
 
         nextBtn.addEventListener('click', () => {
-            currentCard = currentCard + 1; // Change logic according to your data length
-            // Call updateFlashcard() with the current card data here
+            currentCard = currentCard === flashcards.length - 1 ? 0 : currentCard + 1;
+            updateFlashcard(currentCard);
+            flashcard.classList.remove('flipped');
         });
 
-        // Initialize the first flashcard (pass your data here)
-        updateFlashcard(currentCard, "Scalar", "A scalar is a physical quantity which has magnitude only.");
+        // Initialize the first flashcard
+        updateFlashcard(currentCard);
     </script>
+
     <p>You can also try typing it out using the AI bot here: <a href="https://app.schoolai.com/student-space?code=H6PT">https://app.schoolai.com/student-space?code=H6PT</a></p>
 </body>
 </html>
