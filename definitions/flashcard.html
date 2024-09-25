@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Definitions Flashcards</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+
+        .flashcard-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 50px;
+        }
+
+        .flashcard {
+            width: 300px;
+            height: 200px;
+            perspective: 1000px;
+            position: relative;
+        }
+
+        .flashcard div {
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            position: absolute;
+            backface-visibility: hidden;
+            transition: transform 0.6s;
+        }
+
+        .front {
+            background-color: #1e90ff;
+            color: #fff;
+            transform: rotateY(0deg);
+        }
+
+        .back {
+            background-color: #fff;
+            color: #333;
+            transform: rotateY(180deg);
+        }
+
+        .flipped .front {
+            transform: rotateY(180deg);
+        }
+
+        .flipped .back {
+            transform: rotateY(0deg);
+        }
+
+        button {
+            margin: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Physics Definitions Flashcards</h1>
+    <div class="flashcard-container">
+        <div class="flashcard" id="flashcard">
+            <div class="front">
+                <p>Term</p>
+            </div>
+            <div class="back">
+                <p>Definition</p>
+            </div>
+        </div>
+    </div>
+    <button id="prevBtn">Previous</button>
+    <button id="nextBtn">Next</button>
+    
+    <script>
+        let currentCard = 0;
+
+        const termElement = document.querySelector('.front p');
+        const definitionElement = document.querySelector('.back p');
+        const flashcard = document.getElementById('flashcard');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function updateFlashcard(index, term, definition) {
+            termElement.textContent = term;
+            definitionElement.textContent = definition;
+        }
+
+        flashcard.addEventListener('click', () => {
+            flashcard.classList.toggle('flipped');
+        });
+
+        prevBtn.addEventListener('click', () => {
+            currentCard = currentCard === 0 ? 0 : currentCard - 1; // Change logic according to your data length
+            // Call updateFlashcard() with the current card data here
+        });
+
+        nextBtn.addEventListener('click', () => {
+            currentCard = currentCard + 1; // Change logic according to your data length
+            // Call updateFlashcard() with the current card data here
+        });
+
+        // Initialize the first flashcard (pass your data here)
+        updateFlashcard(currentCard, "Scalar", "A scalar is a physical quantity which has magnitude only.");
+    </script>
+</body>
+</html>
