@@ -97,11 +97,61 @@
         const nextBtn = document.getElementById('nextBtn');
 
         // Example flashcards, replace with your full list
-        const flashcards = [
-            { term: "Scalar", definition: "A scalar is a physical quantity which has magnitude only." },
-            { term: "Vector", definition: "A vector is a physical quantity which has both magnitude and direction." },
-            { term: "Distance", definition: "Distance is the total length travelled by a body regardless of the direction of motion." }
-        ];
+const flashcards = [
+    { term: "Scalar", definition: "A scalar is a physical quantity which has magnitude only." },
+    { term: "Vector", definition: "A vector is a physical quantity which has both magnitude and direction." },
+    { term: "Distance", definition: "Distance is the total length travelled by a body regardless of the direction of motion." },
+    { term: "Displacement", definition: "Displacement is the distance measured in a straight line in a specified direction." },
+    { term: "Speed", definition: "Speed is the distance traveled per unit time." },
+    { term: "Velocity", definition: "Velocity is the rate of change of displacement." },
+    { term: "Acceleration", definition: "Acceleration is the rate of change of velocity." },
+    { term: "Mass", definition: "Mass is a measure of the amount of matter in a body." },
+    { term: "Weight", definition: "Weight is the force of gravity acting on a body." },
+    { term: "Gravitational Field", definition: "A region in which a mass experiences a force due to gravitational attraction." },
+    { term: "Inertia", definition: "The resistance of a body to resist a change in the state of rest or motion of the body." },
+    { term: "Newton’s 1st Law", definition: "A body will remain in its state of rest or uniform motion unless acted upon by a resultant force." },
+    { term: "Newton’s 2nd Law", definition: "The resultant force acting on an object of constant mass is the product of its mass and acceleration." },
+    { term: "Newton’s 3rd Law", definition: "If body A exerts a force on body B, then body B exerts an equal and opposite force on body A." },
+    { term: "Centre of Gravity", definition: "The point through which the entire weight of a body appears to act for any orientation." },
+    { term: "Moment of a Force", definition: "The product of the force and the perpendicular distance between the axis of rotation and the force." },
+    { term: "Principle of Moments", definition: "For an object to be in rotational equilibrium, the sum of clockwise moments must equal the sum of anti-clockwise moments." },
+    { term: "Pressure", definition: "Pressure is defined as the amount of force acting perpendicularly on a unit area." },
+    { term: "Work Done", definition: "The product of a force on a body and its displacement in the direction of the force." },
+    { term: "Principle of Conservation of Energy", definition: "Energy cannot be created or destroyed, but can be converted from one form to another. The total energy of an isolated system remains constant." },
+    { term: "Power", definition: "Power is defined as the rate of energy transfer." },
+    { term: "1st Law of Reflection", definition: "The incident ray, the reflected ray, and the normal to the surface of the mirror all lie in the same plane." },
+    { term: "2nd Law of Reflection", definition: "The angle of incidence is equal to the angle of reflection." },
+    { term: "Refractive Index", definition: "The ratio of speed of light in a vacuum to the speed of light in the medium." },
+    { term: "1st Law of Refraction", definition: "The incident ray, the refracted ray, and the normal at the point of incident all lie in the same plane." },
+    { term: "2nd Law of Refraction", definition: "The ratio of the sine of the angle of incidence to the sine of the angle of refraction is a constant." },
+    { term: "Critical Angle", definition: "The angle of incidence in the optically denser medium for which the angle of refraction in the optically less dense medium is 90°." },
+    { term: "Focal Length", definition: "Focal length is the distance between the optical centre and the focal point." },
+    { term: "Total Internal Reflection", definition: "Complete reflection of a light ray inside an optically denser medium at its boundary with an optically less dense medium." },
+    { term: "Wave", definition: "A propagation of a disturbance which carries energy from one point in space to another without transferring matter." },
+    { term: "Wave Speed", definition: "The distance travelled by a wave per second." },
+    { term: "Amplitude", definition: "The magnitude of maximum displacement of the particle from its equilibrium position." },
+    { term: "Frequency", definition: "The number of complete waves produced per second." },
+    { term: "Period", definition: "The period of the wave is the time for a particle in the wave to complete one cycle of vibration." },
+    { term: "Wavelength", definition: "The wavelength of a wave. is the shortest distance between 2 points which are vibrating in phase." },
+    { term: "Wavefront", definition: "The wavefront is an imaginary line or surface that joins points of a wave that are in phase." },
+    { term: "Transverse Waves", definition: "Transverse waves are waves in which the displacement of the particles of the medium is perpendicular to the direction of the direction of energy transfer." },
+    { term: "Longitudinal Waves", definition: "Longitudinal waves are waves in which the displacement of the particles of the medium is parallel to the direction of energy transfer." },
+    { term: "Ultrasound", definition: "Ultrasound is sound with frequencies above the upper hearing limit of the human range of audibility " },
+    { term: "Electric Field", definition: "An electric field as a region in which an electric charge experiences a force." },
+    { term: "Electric Current", definition: "Electric current is the rate of flow of charge." },
+    { term: "", definition: "" },
+    { term: "", definition: "" },
+    { term: "", definition: "" },
+        { term: "", definition: "" },
+        { term: "", definition: "" },
+    { term: "Latent Heat", definition: "The heat absorbed or emitted to change a substance from one phase to another without a temperature change." },
+        { term: "", definition: "" },
+        { term: "", definition: "" },
+        { term: "", definition: "" },
+    { term: "Nuclear Fusion", definition: "The process by which two light atomic nuclei combine to form one heavier nucleus and release a huge amount of energy." },
+    { term: "Nuclear Fission", definition: "The process by which the nucleus of an atom splits into two or more parts and releases a huge amount of energy." }
+];
+
 
         function updateFlashcard(index) {
             termElement.textContent = flashcards[index].term;
