@@ -9,18 +9,91 @@
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 20px;
+            background-color: #f9f9f9;
+            color: #333;
         }
-        input, button {
+
+        h1 {
+            color: #0056b3;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="file"] {
+            display: block;
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f4f4f4;
+            cursor: pointer;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
             margin: 10px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            text-decoration: none;
+            background-color: #28a745;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        a:hover {
+            background-color: #218838;
+        }
+
+        footer {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #666;
         }
     </style>
 </head>
 <body>
-    <h1>PDF Splitter</h1>
-    <p>Upload a PDF file to split it into separate pages and download as a ZIP file.</p>
-    <input type="file" id="pdf-upload" accept="application/pdf">
-    <button id="process-pdf">Process PDF</button>
-    <a id="download-zip" href="#" style="display: none;">Download ZIP</a>
+    <div class="container">
+        <h1>PDF Splitter</h1>
+        <p>Upload a PDF file to split it into separate pages and download as a ZIP file.</p>
+        <input type="file" id="pdf-upload" accept="application/pdf">
+        <button id="process-pdf">Process PDF</button><br>
+        <a id="download-zip" href="#" style="display: none;">Download ZIP</a>
+    </div>
+    <footer>
+        &copy; 2024 PDF Tools | Made with ❤️
+    </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -60,7 +133,6 @@
             zipLink.href = URL.createObjectURL(zipBlob);
             zipLink.download = 'split-pages.zip';
             zipLink.style.display = 'inline-block';
-            zipLink.textContent = 'Download ZIP';
         });
 
         async function createSinglePagePDF(imageData, width, height) {
