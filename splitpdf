@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Splitter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        input, button {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>PDF Splitter</h1>
+    <p>Upload a PDF file to split it into separate pages and download as a ZIP file.</p>
+    <input type="file" id="pdf-upload" accept="application/pdf">
+    <button id="process-pdf">Process PDF</button>
+    <a id="download-zip" href="#" style="display: none;">Download ZIP</a>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script>
+        document.getElementById('process-pdf').addEventListener('click', async () => {
+            const fileInput = document.getElementById('pdf-upload');
+            if (!fileInput.files[0]) {
+                alert("Please upload a PDF file.");
+                return;
+            }
+
+            const pdfFile = fileInput.files[0];
+            const arrayBuffer = await pdfFile.arrayBuffer();
+            const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+            const zip = new JSZip();
+
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+                const page = await pdfDoc.getPage(i);
+                const viewport = page.getViewport({ scale: 1 });
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                await page.render({ canvasContext: context, viewport }).promise;
+
+                const imageData = canvas.toDataURL('image/png');
+                const singlePagePDF = await createSinglePagePDF(imageData, viewport.width, viewport.height);
+                zip.file(`page-${i}.pdf`, singlePagePDF);
+            }
+
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            const zipLink = document.getElementById('download-zip');
+            zipLink.href = URL.createObjectURL(zipBlob);
+            zipLink.download = 'split-pages.zip';
+            zipLink.style.display = 'inline-block';
+            zipLink.textContent = 'Download ZIP';
+        });
+
+        async function createSinglePagePDF(imageData, width, height) {
+            const pdfDoc = await PDFLib.PDFDocument.create();
+            const page = pdfDoc.addPage([width, height]);
+
+            const pngImage = await pdfDoc.embedPng(imageData);
+            page.drawImage(pngImage, {
+                x: 0,
+                y: 0,
+                width: width,
+                height: height,
+            });
+
+            const pdfBytes = await pdfDoc.save();
+            return new Blob([pdfBytes], { type: 'application/pdf' });
+        }
+    </script>
+</body>
+</html>
