@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft Teams Checklist</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            max-width: 600px;
+            margin: 20px auto;
+            text-align: center;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+        }
+        h1 {
+            color: #5a67d8;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+        }
+        li {
+            margin: 10px 0;
+            font-size: 1.1rem;
+        }
+        label {
+            cursor: pointer;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #5a67d8;
+            color: #fff;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #434190;
+        }
+        .stars {
+            margin-top: 20px;
+            font-size: 24px;
+            color: gold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
+        .star {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Star_%28gold%29.svg/1024px-Star_%28gold%29.svg.png') no-repeat center;
+            background-size: contain;
+        }
+    </style>
+</head>
+<body>
+    <div id="landing-page">
+        <h1>Welcome to the Microsoft Teams Checklist</h1>
+        <p>Please enter your name to get started:</p>
+        <input type="text" id="user-name" placeholder="Your Name" style="padding: 10px; font-size: 16px;">
+        <button id="start-button">Start</button>
+    </div>
+
+    <div id="checklist-page" style="display: none;">
+        <h1>Microsoft Teams Checklist</h1>
+        <p id="greeting"></p>
+        <ul>
+            <li><label><input type="checkbox" class="task"> Instant meeting</label></li>
+            <li><label><input type="checkbox" class="task"> Schedule meeting</label></li>
+            <li><label><input type="checkbox" class="task"> Manage meeting settings</label></li>
+            <li><label><input type="checkbox" class="task"> Share screen</label></li>
+            <li><label><input type="checkbox" class="task"> Share Whiteboard</label></li>
+            <li><label><input type="checkbox" class="task"> Manage Attendees</label></li>
+            <li><label><input type="checkbox" class="task"> Download recordings</label></li>
+        </ul>
+        <button id="submit">Submit</button>
+        <button id="save" style="display: none;">Save Achievement</button>
+        <div id="result" class="stars"></div>
+    </div>
+
+    <script>
+        const landingPage = document.getElementById('landing-page');
+        const checklistPage = document.getElementById('checklist-page');
+        const startButton = document.getElementById('start-button');
+        const userNameInput = document.getElementById('user-name');
+        const greeting = document.getElementById('greeting');
+
+        startButton.addEventListener('click', () => {
+            const userName = userNameInput.value.trim();
+            if (userName) {
+                greeting.textContent = `Hello, ${userName}! Let's get started:`;
+                landingPage.style.display = 'none';
+                checklistPage.style.display = 'block';
+            } else {
+                alert('Please enter your name to proceed.');
+            }
+        });
+
+        const submitButton = document.getElementById('submit');
+        const saveButton = document.getElementById('save');
+        const resultDiv = document.getElementById('result');
+        const tasks = document.querySelectorAll('.task');
+
+        submitButton.addEventListener('click', () => {
+            let checkedCount = 0;
+            tasks.forEach(task => {
+                if (task.checked) {
+                    checkedCount++;
+                }
+            });
+            const starsEarned = Math.min(3, Math.floor(checkedCount / 2)); // One star for every two tasks
+            resultDiv.innerHTML = '';
+            for (let i = 0; i < starsEarned; i++) {
+                const fullStar = document.createElement('div');
+                fullStar.className = 'star';
+                resultDiv.appendChild(fullStar);
+            }
+            if (starsEarned > 0) {
+                saveButton.style.display = 'inline-block';
+            }
+        });
+
+        saveButton.addEventListener('click', () => {
+            html2canvas(document.body).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'achievement.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        });
+    </script>
+
+    <!-- Include html2canvas library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</body>
+</html>
