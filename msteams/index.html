@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Microsoft Teams Checklist</title>
+    <title>TJC MSTeams Training Checklist</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -54,18 +54,11 @@
         .stars {
             margin-top: 20px;
             font-size: 24px;
-            color: gold;
+            color: orange;
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 5px;
-        }
-        .star {
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Star_%28gold%29.svg/1024px-Star_%28gold%29.svg.png') no-repeat center;
-            background-size: contain;
         }
     </style>
 </head>
@@ -124,24 +117,37 @@
                     checkedCount++;
                 }
             });
+            const userName = userNameInput.value.trim();
+            if (checkedCount === tasks.length) {
+                greeting.textContent = `Congratulations! ${userName}, you have fulfilled all the success criteria!`;
+            } else {
+                greeting.textContent = `Well done! ${userName}, do try out the other features in your own time!`;
+            }
+
             const starsEarned = Math.min(3, Math.floor(checkedCount / 2)); // One star for every two tasks
             resultDiv.innerHTML = '';
             for (let i = 0; i < starsEarned; i++) {
-                const fullStar = document.createElement('div');
-                fullStar.className = 'star';
-                resultDiv.appendChild(fullStar);
+                resultDiv.innerHTML += '★';
             }
-            if (starsEarned > 0) {
+            if (checkedCount % 2 !== 0 && starsEarned < 3) {
+                resultDiv.innerHTML += '☆';
+            }
+            if (starsEarned > 0 || checkedCount % 2 !== 0) {
                 saveButton.style.display = 'inline-block';
             }
         });
 
         saveButton.addEventListener('click', () => {
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => button.style.display = 'none');
+
             html2canvas(document.body).then(canvas => {
                 const link = document.createElement('a');
                 link.download = 'achievement.png';
                 link.href = canvas.toDataURL();
                 link.click();
+
+                buttons.forEach(button => button.style.display = '');
             });
         });
     </script>
