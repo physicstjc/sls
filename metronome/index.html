@@ -48,6 +48,8 @@
         const pendulumWidth = 5;
         const angle = Math.PI / 4; // Initial angle for the pendulum
 
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)(); // Persistent audio context
+
         startButton.addEventListener('click', startMetronome);
         stopButton.addEventListener('click', stopMetronome);
         frequencyRange.addEventListener('input', updateFrequency);
@@ -66,7 +68,7 @@
             intervalId = setInterval(tick, frequency);
             startButton.style.display = 'none';
             stopButton.style.display = 'inline';
-            tick(); // Start the metronome immediately
+            tick(); // Start immediately
         }
 
         function stopMetronome() {
@@ -80,7 +82,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             const x = centerX + pendulumLength * Math.sin(angle);
-            const y = centerY - 4*pendulumLength * Math.cos(angle);
+            const y = centerY - 4 * pendulumLength * Math.cos(angle);
 
             ctx.beginPath();
             ctx.moveTo(centerX, centerY);
@@ -92,38 +94,18 @@
 
         function tick() {
             beatCount++;
-            const angleIncrement = Math.PI / 4; // Adjust this value for the swing speed
-            const maxAngle = Math.PI / 4; // Maximum swing angle
-
-
-            if (beatCount % 2 === 0) {
-                const currentAngle = angle;
-                drawPendulum(currentAngle);// Play sound
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
-                oscillator.connect(audioCtx.destination);
-                oscillator.start();
-                setTimeout(() => {
-                    oscillator.stop();
-                }, 1000);
-            }
-            if (beatCount % 2 === 1) {
-                const currentAngle = -angle;
-                drawPendulum(currentAngle);// Play sound
-                // Play sound
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
-                oscillator.connect(audioCtx.destination);
-                oscillator.start();
-                setTimeout(() => {
-                    oscillator.stop();
-                }, 1000);
-            }
-
+            const currentAngle = (beatCount % 2 === 0) ? angle : -angle;
+            drawPendulum(currentAngle);
+            
+            // Play sound
+            const oscillator = audioCtx.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+            oscillator.connect(audioCtx.destination);
+            oscillator.start();
+            setTimeout(() => {
+                oscillator.stop();
+            }, 100);
         }
     </script>
 </body>
