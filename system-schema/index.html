@@ -17,7 +17,6 @@
     <div id="toolbar">
         <button id="addBody">Add Body</button>
         <button id="addForce">Add Force</button>
-        <button id="move">Move</button>
         <button id="delete">Delete</button>
         <button id="saveCanvas">Save Image</button>
     </div>
@@ -31,15 +30,51 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const bodies = [], forces = [];
-        let mode = '', selectedBodies = [], draggingBody = null, overlayCallback;
+        let selectedBodies = [], draggingBody = null, overlayCallback;
 
-        document.getElementById('addBody').onclick = () => mode = 'body';
-        document.getElementById('addForce').onclick = () => mode = 'force';
-        document.getElementById('move').onclick = () => {
-            mode = 'move';
-            selectedBodies = []; // Clear any previously selected bodies
+        document.getElementById('addBody').onclick = () => showOverlay(label => {
+            bodies.push({ x: canvas.width / 2, y: canvas.height / 2, r: 30, label, color: '#FFEE99' });
+            draw();
+        });
+
+        document.getElementById('addForce').onclick = () => showOverlay(label => {
+            if (selectedBodies.length === 2) {
+                forces.push({ from: selectedBodies[0], to: selectedBodies[1], label });
+                selectedBodies = [];
+                draw();
+            }
+        });
+
+        document.getElementById('delete').onclick = () => {
+            if (selectedBodies.length) {
+                selectedBodies.forEach(body => {
+                    const index = bodies.indexOf(body);
+                    if (index !== -1) {
+                        forces.splice(0, forces.length, ...forces.filter(f => f.from !== body && f.to !== body));
+                        bodies.splice(index, 1);
+                    }
+                });
+                selectedBodies = [];
+                draw();
+            }
         };
-        document.getElementById('delete').onclick = () => mode = 'delete';
+
+        document.getElementById('saveCanvas').onclick = () => {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            tempCtx.fillStyle = '#ADD8E6';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+            tempCtx.drawImage(canvas, 0, 0);
+
+            const link = document.createElement('a');
+            link.href = tempCanvas.toDataURL('image/png');
+            link.download = 'canvas.png';
+            link.click();
+        };
 
         const overlay = document.getElementById('overlay');
         const overlayInput = document.getElementById('overlayInput');
@@ -50,119 +85,130 @@
         };
         document.getElementById('cancelOverlay').onclick = () => overlay.style.display = 'none';
 
-        canvas.addEventListener('mousedown', (e) => {
-        if (mode === 'move') {
+        canvas.addEventListener('mousedown', startDrag);
+        canvas.addEventListener('mousemove', drag);
+        canvas.addEventListener('mouseup', endDrag);
+
+        canvas.addEventListener('touchstart', (e) => startDrag(e.touches[0]));
+        canvas.addEventListener('touchmove', (e) => drag(e.touches[0]));
+        canvas.addEventListener('touchend', endDrag);
+
+        
+        document.getElementById('addForce').onclick = () => {
+    selectedBodies = [];
+    canvas.addEventListener('click', selectBodyForForce);
+};
+
+function selectBodyForForce(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const body = bodies.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
+    if (body && !selectedBodies.includes(body)) {
+        selectedBodies.push(body);
+        body.originalColor = body.color;
+        body.color = '#FFA07A'; // Highlight selected body
+        draw();
+    }
+    
+    if (selectedBodies.length === 2) {
+        canvas.removeEventListener('click', selectBodyForForce);
+        showOverlay(label => {
+            forces.push({ from: selectedBodies[0], to: selectedBodies[1], label });
+            selectedBodies.forEach(b => b.color = b.originalColor || '#FFEE99'); // Restore color
+            selectedBodies = [];
+            draw();
+        });
+    }
+}
+
+        function startDrag(e) {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-
-            // Find the body being clicked
+            
             const body = bodies.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
             if (body) {
-                selectedBodies = [body]; // Select only one body
+                selectedBodies = [body];
                 body.originalColor = body.color;
-                body.color = '#FFA07A'; // Highlight selected body
+                body.color = '#FFA07A';
                 draggingBody = body;
                 draw();
             }
         }
-        });
 
-        canvas.addEventListener('mousemove', (e) => {
-            if (draggingBody && mode === 'move') {
+        function drag(e) {
+            if (draggingBody) {
                 const rect = canvas.getBoundingClientRect();
                 draggingBody.x = e.clientX - rect.left;
                 draggingBody.y = e.clientY - rect.top;
                 draw();
             }
-        });
+        }
 
-        canvas.addEventListener('mouseup', () => {
+        function endDrag() {
             if (draggingBody) {
-                draggingBody.color = draggingBody.originalColor || '#FFEE99'; // Restore original color
+                draggingBody.color = draggingBody.originalColor || '#FFEE99';
                 draggingBody = null;
                 draw();
             }
-        });
+        }
 
-        canvas.addEventListener('click', (e) => {
-            const rect = canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
-            if (mode === 'body') {
-                showOverlay(label => { bodies.push({ x, y, r: 30, label, color: '#FFEE99' }); draw(); });
-            } else if (mode === 'force') {
-                const body = bodies.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
-                if (body) selectedBodies.push(body);
-                if (selectedBodies.length === 2) {
-                    showOverlay(label => {
-                        forces.push({ from: selectedBodies[0], to: selectedBodies[1], label });
-                        selectedBodies = [];
-                        draw();
-                    });
-                }
-            } else if (mode === 'delete') {
-                const idx = bodies.findIndex(b => Math.hypot(b.x - x, b.y - y) <= b.r);
-                if (idx !== -1) {
-                    forces.splice(0, forces.length, ...forces.filter(f => f.from !== bodies[idx] && f.to !== bodies[idx]));
-                    bodies.splice(idx, 1);
-                    draw();
-                }
-            }
-        });
+        function showOverlay(callback) {
+            overlayCallback = callback;
+            overlayInput.value = '';
+            overlay.style.display = 'flex';
+            overlayInput.focus();
+        }
 
-        function showOverlay(callback) { overlayCallback = callback; overlayInput.value = ''; overlay.style.display = 'flex'; overlayInput.focus(); }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.lineWidth = 2;
-                        forces.forEach((f, i) => {
-                const sameForces = forces.filter(force => (force.from === f.from && force.to === f.to) || (force.from === f.to && force.to === f.from));
-                const offset = (sameForces.indexOf(f) - (sameForces.length - 1) / 2) * 30;
+
+            forces.forEach(f => {
                 ctx.beginPath();
                 ctx.moveTo(f.from.x, f.from.y);
-                const midX = (f.from.x + f.to.x) / 2 + offset;
-                const midY = (f.from.y + f.to.y) / 2 - offset;
-                ctx.quadraticCurveTo(midX, midY, f.to.x, f.to.y);
                 ctx.lineTo(f.to.x, f.to.y);
                 ctx.stroke();
-                const textWidth = ctx.measureText(f.label).width + 10;
-                const textHeight = 20;
-                const textX = midX - textWidth / 2;
-                const textY = midY - textHeight / 2;
+
+                // Draw arrowhead
+                const angle = Math.atan2(f.to.y - f.from.y, f.to.x - f.from.x);
+                const arrowSize = 10;
+                ctx.beginPath();
+                ctx.moveTo(f.to.x, f.to.y);
+                ctx.lineTo(f.to.x - arrowSize * Math.cos(angle - Math.PI / 6), f.to.y - arrowSize * Math.sin(angle - Math.PI / 6));
+                ctx.lineTo(f.to.x - arrowSize * Math.cos(angle + Math.PI / 6), f.to.y - arrowSize * Math.sin(angle + Math.PI / 6));
+                ctx.lineTo(f.to.x, f.to.y);
+                ctx.fill();
+
+                // Draw label
+                const midX = (f.from.x + f.to.x) / 2;
+                const midY = (f.from.y + f.to.y) / 2;
                 ctx.fillStyle = '#FFF';
-                ctx.fillRect(textX, textY, textWidth, textHeight);
-                ctx.strokeRect(textX, textY, textWidth, textHeight);
-                
+                ctx.fillRect(midX - 15, midY - 10, 30, 20);
+                ctx.strokeRect(midX - 15, midY - 10, 30, 20);
                 ctx.fillStyle = '#000';
-                ctx.fillText(f.label, textX + textWidth / 2, textY + textHeight / 2);
+                ctx.fillText(f.label, midX, midY);
             });
+
             bodies.forEach(b => {
-                ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-                ctx.fillStyle = b.color; ctx.fill(); ctx.stroke();
-                ctx.fillStyle = '#000'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = 'bold 14px Arial';
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+                ctx.fillStyle = b.color;
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#000';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold 14px Arial';
                 ctx.fillText(b.label, b.x, b.y);
             });
         }
+
         draw();
-
-    document.getElementById('saveCanvas').onclick = () => {
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
-        const tempCtx = tempCanvas.getContext('2d');
-
-        // Fill background with white
-        tempCtx.fillStyle = '#ADD8E6';
-        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-
-        // Draw the existing canvas content
-        tempCtx.drawImage(canvas, 0, 0);
-
-        const link = document.createElement('a');
-        link.href = tempCanvas.toDataURL('image/png');
-        link.download = 'canvas.png';
-        link.click();
-    };
-
     </script>
 </body>
 </html>
