@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive System Schema</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
         #toolbar {
@@ -47,6 +48,42 @@
             margin-left: 10px;
         }
         button { width: 90%; margin-bottom: 10px; padding: 8px; cursor: pointer; }
+        button.icon-button { 
+            width: auto; 
+            padding: 10px;
+            font-size: 20px;
+        }
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            #toolbar {
+                width: 100%;
+                height: auto;
+                padding: 5px 0;  /* Reduced padding */
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-around;
+            }
+            #toolbar p, #toolbar strong {
+                font-size: 14px;  /* Smaller text */
+                margin: 2px 5px;  /* Reduced margins */
+            }
+            button { 
+                width: auto;
+                margin: 3px;
+                padding: 12px 20px;  /* Larger touch target */
+                font-size: 16px;     /* Larger text */
+                border-radius: 5px;   /* Rounded corners */
+            }
+            canvas {
+                width: 100% !important;
+                height: auto !important;
+                max-width: 560px;
+                max-height: 480px;
+            }
+        }
+        p, strong {
+            margin-left: 10px;
+        }
         canvas { width: 560px; height: 480px; border: 2px solid #000; cursor: crosshair; display: block; margin: auto; background-color: #ADD8E6;}
         .overlay { 
             position: fixed; /* Change from absolute to fixed */
@@ -81,9 +118,9 @@
         <p>System Schema</p>
         <button id="addBody">Add Body</button>
         <button id="addForce">Add Force</button>
-        <button id="move">Move</button>
-        <button id="delete">Delete</button>
-        <button id="saveCanvas">Save Image</button>
+        <button class="icon-button" id="move"><i class="fas fa-arrows-alt"></i></button>
+        <button class="icon-button" id="delete"><i class="fas fa-trash"></i></button>
+        <button class="icon-button" id="saveCanvas"><i class="fas fa-download"></i></button>
         <p>version 3.15.6</p>
     </div>
     <canvas id="canvas" width="560" height="480"></canvas>
