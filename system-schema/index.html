@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive System Schema</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; display: block; }
         .canvas-container {
@@ -29,11 +28,6 @@
             padding: 8px 15px; 
             cursor: pointer;
             border-radius: 5px;
-        }
-        button.icon-button { 
-            width: 40px;
-            padding: 8px;
-            font-size: 16px;
         }
         canvas { 
             width: 100%;
@@ -79,9 +73,9 @@
         <div class="button-bar">
             <button id="addBody">Add Body</button>
             <button id="addForce">Add Force</button>
-            <button class="icon-button" id="move"><i class="fas fa-arrows-alt"></i></button>
-            <button class="icon-button" id="delete"><i class="fas fa-trash"></i></button>
-            <button class="icon-button" id="saveCanvas"><i class="fas fa-download"></i></button>
+            <button id="move">Move</button>
+            <button id="delete">Delete</button>
+            <button id="saveCanvas">Download</button>
         </div>
     </div>
     <div class="overlay" id="overlay">
