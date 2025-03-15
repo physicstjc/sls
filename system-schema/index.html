@@ -15,6 +15,27 @@
             justify-content: center;
             box-shadow: inset -1px 0 5px rgba(0,0,0,0.2);
         }
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            #toolbar {
+                width: 100%;
+                height: auto;
+                padding: 10px 0;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-around;
+            }
+            button { 
+                width: auto;
+                margin: 5px;
+            }
+            canvas {
+                width: 100% !important;
+                height: auto !important;
+                max-width: 560px;
+                max-height: 480px;
+            }
+        }
         p, strong {
             margin-left: 10px;
         }
@@ -112,24 +133,30 @@
         }  );
         
         canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Prevents scrolling
+            e.preventDefault();
             const touch = e.touches[0];
-            const rect = canvas.getBoundingClientRect(), x = touch.clientX - rect.left, y = touch.clientY - rect.top;
-            draggingBody = bodies.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
+            const rect = canvas.getBoundingClientRect();
+            const x = (touch.clientX - rect.left) * (canvas.width / rect.width);
+            const y = (touch.clientY - rect.top) * (canvas.height / rect.height);
+            
+            if (mode === 'move') {
+                draggingBody = bodies.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
+            }
         });
 
         canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // Prevents unintended screen movement
+            e.preventDefault();
             if (draggingBody) {
                 const touch = e.touches[0];
                 const rect = canvas.getBoundingClientRect();
-                draggingBody.x = touch.clientX - rect.left;
-                draggingBody.y = touch.clientY - rect.top;
+                draggingBody.x = (touch.clientX - rect.left) * (canvas.width / rect.width);
+                draggingBody.y = (touch.clientY - rect.top) * (canvas.height / rect.height);
                 draw();
             }
         });
 
-        canvas.addEventListener('touchend', () => {
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
             draggingBody = null;
         });
 
