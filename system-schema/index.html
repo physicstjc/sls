@@ -20,14 +20,21 @@
             #toolbar {
                 width: 100%;
                 height: auto;
-                padding: 10px 0;
+                padding: 5px 0;  /* Reduced padding */
                 flex-direction: row;
                 flex-wrap: wrap;
                 justify-content: space-around;
             }
+            #toolbar p, #toolbar strong {
+                font-size: 14px;  /* Smaller text */
+                margin: 2px 5px;  /* Reduced margins */
+            }
             button { 
                 width: auto;
-                margin: 5px;
+                margin: 3px;
+                padding: 12px 20px;  /* Larger touch target */
+                font-size: 16px;     /* Larger text */
+                border-radius: 5px;   /* Rounded corners */
             }
             canvas {
                 width: 100% !important;
@@ -77,7 +84,7 @@
         <button id="move">Move</button>
         <button id="delete">Delete</button>
         <button id="saveCanvas">Save Image</button>
-        <p>version 3.15.5</p>
+        <p>version 3.15.6</p>
     </div>
     <canvas id="canvas" width="560" height="480"></canvas>
     <div class="overlay" id="overlay">
