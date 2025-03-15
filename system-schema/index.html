@@ -77,7 +77,7 @@
         <button id="move">Move</button>
         <button id="delete">Delete</button>
         <button id="saveCanvas">Save Image</button>
-        <p>version 3.15.4</p>
+        <p>version 3.15.5</p>
     </div>
     <canvas id="canvas" width="560" height="480"></canvas>
     <div class="overlay" id="overlay">
@@ -182,18 +182,34 @@
             e.preventDefault();
             draggingBody = null;
 
-            // Only process if it's not a drag operation
-            if (!draggingBody && mode === 'body') {
-                const touch = e.changedTouches[0];
-                const rect = canvas.getBoundingClientRect();
-                const x = (touch.clientX - rect.left) * (canvas.width / rect.width);
-                const y = (touch.clientY - rect.top) * (canvas.height / rect.height);
-                
+            const touch = e.changedTouches[0];
+            const rect = canvas.getBoundingClientRect();
+            const x = (touch.clientX - rect.left) * (canvas.width / rect.width);
+            const y = (touch.clientY - rect.top) * (canvas.height / rect.height);
+
+            if (mode === 'body') {
                 showOverlay(label => {
                     if (!label.trim()) return;
                     bodies.push({ x, y, r: 30, label, color: '#FFEE99' });
                     draw();
                 });
+            } else if (mode === 'force') {
+                const body = bodies.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
+                if (body) selectedBodies.push(body);
+                if (selectedBodies.length === 2) {
+                    showOverlay(label => {
+                        forces.push({ from: selectedBodies[0], to: selectedBodies[1], label });
+                        selectedBodies = [];
+                        draw();
+                    });
+                }
+            } else if (mode === 'delete') {
+                const idx = bodies.findIndex(b => Math.hypot(b.x - x, b.y - y) <= b.r);
+                if (idx !== -1) {
+                    forces.splice(0, forces.length, ...forces.filter(f => f.from !== bodies[idx] && f.to !== bodies[idx]));
+                    bodies.splice(idx, 1);
+                    draw();
+                }
             }
         });
 
