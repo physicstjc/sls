@@ -3,135 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Circles & Arrows</title>
+    <title>Interactive System Schema</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
         #toolbar { width: 150px; background-color: #f3f3f3; padding: 10px; box-shadow: inset -1px 0 5px rgba(0,0,0,0.2); }
         button { width: 100%; margin-bottom: 10px; padding: 8px; cursor: pointer; }
-        canvas { width: 560px; height: 480px; border: 1px solid #000; cursor: crosshair; background-color: #ADD8E6;}
+        canvas { width: 560px; height: 480px; border: 2px solid #000; cursor: crosshair; display: block; margin: auto; background-color: #ADD8E6;}
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; flex-direction: column; }
         .overlay input { padding: 8px; font-size: 14px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
-<div id="toolbar">
-    <h2>Action-Reaction Forces</h2>
-    <button id="addCircle">Add Body</button>
-    <button id="addArrow">Add Force</button>
-    <button id="move">Move</button>
-    <button id="delete">Delete</button>
-    <button id="saveCanvas">Save Image</button>
-</div>
-<canvas id="canvas" width="560" height="480"></canvas>
-<div class="overlay" id="overlay">
-    <input type="text" id="overlayInput" placeholder="Enter label">
-    <button id="confirmOverlay">Confirm</button>
-    <button id="cancelOverlay">Cancel</button>
-</div>
-<script>
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const circles = [], arrows = [];
-let mode = '', selectedCircles = [], draggingCircle = null, overlayCallback;
+    <div id="toolbar">
+        <button id="addBody">Add Body</button>
+        <button id="addForce">Add Force</button>
+        <button id="move">Move</button>
+        <button id="delete">Delete</button>
+        <button id="saveCanvas">Save Image</button>
+    </div>
+    <canvas id="canvas" width="560" height="480"></canvas>
+    <div class="overlay" id="overlay">
+        <input type="text" id="overlayInput" placeholder="Enter label">
+        <button id="confirmOverlay">Confirm</button>
+        <button id="cancelOverlay">Cancel</button>
+    </div>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const bodies = [], forces = [];
+        let mode = '', selectedBodies = [], draggingBody = null, overlayCallback;
 
-document.getElementById('addCircle').onclick = () => mode = 'circle';
-document.getElementById('addArrow').onclick = () => mode = 'arrow';
-document.getElementById('move').onclick = () => mode = 'move';
-document.getElementById('delete').onclick = () => mode = 'delete';
+        document.getElementById('addBody').onclick = () => mode = 'body';
+        document.getElementById('addForce').onclick = () => mode = 'force';
+        document.getElementById('move').onclick = () => mode = 'move';
+        document.getElementById('delete').onclick = () => mode = 'delete';
 
-const overlay = document.getElementById('overlay');
-const overlayInput = document.getElementById('overlayInput');
+        const overlay = document.getElementById('overlay');
+        const overlayInput = document.getElementById('overlayInput');
 
-document.getElementById('confirmOverlay').onclick = () => {
-    overlay.style.display = 'none';
-    overlayCallback(overlayInput.value);
-};
-document.getElementById('cancelOverlay').onclick = () => overlay.style.display = 'none';
+        document.getElementById('confirmOverlay').onclick = () => {
+            overlay.style.display = 'none';
+            overlayCallback(overlayInput.value);
+        };
+        document.getElementById('cancelOverlay').onclick = () => overlay.style.display = 'none';
 
-let isDragging = false;
-canvas.onmousedown = e => {
-    if (mode !== 'move') return;
-    const rect = canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
-    draggingCircle = circles.find(c => Math.hypot(c.x - x, c.y - y) <= c.r);
-    if (draggingCircle) isDragging = true;
-};
+        canvas.addEventListener('mousedown', (e) => {
+            if (mode !== 'move') return;
+            const rect = canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
+            draggingBody = bodies.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
+        });
 
-canvas.onmousemove = e => {
-    if (isDragging && mode === 'move' && draggingCircle) {
-        const rect = canvas.getBoundingClientRect();
-        draggingCircle.x = e.clientX - rect.left;
-        draggingCircle.y = e.clientY - rect.top;
-        draw();
-    }
-};
-
-canvas.onmouseup = () => isDragging = false;
-
-canvas.onclick = e => {
-    const rect = canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
-    if (mode === 'circle') showOverlay(label => { circles.push({ x, y, r: 50, label, color: '#FFEE99' }); draw(); });
-    else if (mode === 'arrow') {
-        const circle = circles.find(c => Math.hypot(c.x - x, c.y - y) <= c.r);
-        if (circle) selectedCircles.push(circle);
-        if (selectedCircles.length === 2) {
-            showOverlay(label => {
-                arrows.push({ from: selectedCircles[0], to: selectedCircles[1], label });
-                selectedCircles = [];
+        canvas.addEventListener('mousemove', (e) => {
+            if (draggingBody && mode === 'move') {
+                const rect = canvas.getBoundingClientRect();
+                draggingBody.x = e.clientX - rect.left;
+                draggingBody.y = e.clientY - rect.top;
                 draw();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => draggingBody = null);
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
+            if (mode === 'body') {
+                showOverlay(label => { bodies.push({ x, y, r: 30, label, color: '#FFEE99' }); draw(); });
+            } else if (mode === 'force') {
+                const body = bodies.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
+                if (body) selectedBodies.push(body);
+                if (selectedBodies.length === 2) {
+                    showOverlay(label => {
+                        forces.push({ from: selectedBodies[0], to: selectedBodies[1], label });
+                        selectedBodies = [];
+                        draw();
+                    });
+                }
+            } else if (mode === 'delete') {
+                const idx = bodies.findIndex(b => Math.hypot(b.x - x, b.y - y) <= b.r);
+                if (idx !== -1) {
+                    forces.splice(0, forces.length, ...forces.filter(f => f.from !== bodies[idx] && f.to !== bodies[idx]));
+                    bodies.splice(idx, 1);
+                    draw();
+                }
+            }
+        });
+
+        function showOverlay(callback) { overlayCallback = callback; overlayInput.value = ''; overlay.style.display = 'flex'; overlayInput.focus(); }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.lineWidth = 2;
+                        forces.forEach((f, i) => {
+                const sameForces = forces.filter(force => (force.from === f.from && force.to === f.to) || (force.from === f.to && force.to === f.from));
+                const offset = (sameForces.indexOf(f) - (sameForces.length - 1) / 2) * 30;
+                ctx.beginPath();
+                ctx.moveTo(f.from.x, f.from.y);
+                const midX = (f.from.x + f.to.x) / 2 + offset;
+                const midY = (f.from.y + f.to.y) / 2 - offset;
+                ctx.quadraticCurveTo(midX, midY, f.to.x, f.to.y);
+                ctx.lineTo(f.to.x, f.to.y);
+                ctx.stroke();
+                const textWidth = ctx.measureText(f.label).width + 10;
+                const textHeight = 20;
+                const textX = midX - textWidth / 2;
+                const textY = midY - textHeight / 2;
+                ctx.fillStyle = '#FFF';
+                ctx.fillRect(textX, textY, textWidth, textHeight);
+                ctx.strokeRect(textX, textY, textWidth, textHeight);
+                
+                ctx.fillStyle = '#000';
+                ctx.fillText(f.label, textX + textWidth / 2, textY + textHeight / 2);
+            });
+            bodies.forEach(b => {
+                ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+                ctx.fillStyle = b.color; ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#000'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = 'bold 14px Arial';
+                ctx.fillText(b.label, b.x, b.y);
             });
         }
-    }
-    else if (mode === 'delete') {
-        const idx = circles.findIndex(c => Math.hypot(c.x - x, c.y - y) <= c.r);
-        if (idx !== -1) {
-            arrows.splice(0, arrows.length, ...arrows.filter(a => a.from !== circles[idx] && a.to !== circles[idx]));
-            circles.splice(idx, 1);
-            draw();
-        }
-    }
-};
+        draw();
 
-function showOverlay(callback) { overlayCallback = callback; overlayInput.value = ''; overlay.style.display = 'flex'; overlayInput.focus(); }
+    document.getElementById('saveCanvas').onclick = () => {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext('2d');
 
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    arrows.forEach((a, i) => {
-        const same = arrows.filter(arr => (arr.from === a.from && arr.to === a.to) || (arr.from === a.to && arr.to === a.from));
-        const offset = (same.indexOf(a) - (same.length-1)/2) * 40;
-        ctx.beginPath();
-        ctx.moveTo(a.from.x, a.from.y);
-        ctx.quadraticCurveTo((a.from.x + a.to.x)/2 + offset, (a.from.y + a.to.y)/2 - offset, a.to.x, a.to.y);
-        ctx.stroke();
-        ctx.fillText(a.label, (a.from.x + a.to.x)/2 + offset, (a.from.y + a.to.y)/2 - offset);
-    });
-    circles.forEach(c => {
-        ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
-        ctx.fillStyle = c.color; ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#000'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '14px Tahoma';
-        ctx.fillStyle = '#333';
-        ctx.fillText(c.label, c.x, c.y);
-    });
-}
-draw();
-document.getElementById('saveCanvas').onclick = () => {
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-    const tempCtx = tempCanvas.getContext('2d');
-    
-    // Fill background with white
-    tempCtx.fillStyle = '#ADD8E6';
-    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-    
-    // Draw the existing canvas content
-    tempCtx.drawImage(canvas, 0, 0);
-    
-    const link = document.createElement('a');
-    link.href = tempCanvas.toDataURL('image/png');
-    link.download = 'canvas.png';
-    link.click();
-};
+        // Fill background with white
+        tempCtx.fillStyle = '#ADD8E6';
+        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
-</script>
+        // Draw the existing canvas content
+        tempCtx.drawImage(canvas, 0, 0);
+
+        const link = document.createElement('a');
+        link.href = tempCanvas.toDataURL('image/png');
+        link.download = 'canvas.png';
+        link.click();
+    };
+
+    </script>
 </body>
 </html>
