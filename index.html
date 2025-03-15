@@ -646,6 +646,43 @@
                 </div>
             </div>
          
+        
+        <div class="col-md-4">
+                <div class="card mb-4">
+                    <img class="card-img-top" src="system-schema/system-schema-app.png" alt="System Schema">
+                        <div class="card-body">
+                            <h3 class="card-title">System Schema</h3>
+                            <p class="card-text">This web app allows users to visually construct system schemas for analyzing Newton’s Third Law of Motion (Action-Reaction Pairs). Users can:</p>
+                                <ol><li>Create labeled objects (circles) to represent interacting bodies.</li>
+                                    <li>Draw force interactions (double-headed arrows) between objects to show equal and opposite forces.</li>
+                                    <li>Add multiple arrows between two objects to illustrate different forces (e.g., normal force, gravitational force, applied force).</li></ol>
+                            <a href="system-schema/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                            <a href="system-schema/system-schema.zip" class="btn btn-secondary">Download for SLS</a>
+                            <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseD18" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                            <div class="collapse" id="promptsCollapseD18">
+                                <div class="card mt-3">
+                                    <div class="card-body">
+                                        <h3 class="header1">Prompts</h3>
+                                        <ol>
+                                            <li>Create an interactive canvas-based web app where users can add labeled circles and connect them with arrows.</li>
+                                            <li>Toolbar functionality:<ul>
+                                                <li>Add circles with text labels.</li>
+                                                <li>Draw double-headed arrows between circles.</li>
+                                                <li>Move circles dynamically.</li>
+                                                <li>Delete circles and their associated arrows.</li></ul></li>
+                                            <li>Each circle represents an object in a system schema. Users enter a label via a UI overlay (instead of a browser prompt). All circles have a fixed pastel yellow color.</li>
+                                            <li>Users can add multiple arrows between two circles. Additional arrows between the same circles appear curved to avoid overlap.</li>
+                                            <li>Clicking a circle in move mode allows dragging. Clicking a circle in delete mode removes both the circle and all connected arrows.</li>
+                                            <li>Users enter text labels via an overlay pop-up UI. The overlay includes a Confirm and Cancel button.</li>
+                                            <li>Limit the canvas to a size of max width 560px and max height: 460px</li>
+                                            <li>A "Save as JPG" button allows users to export their diagrams.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
     </div>
     
 </div>
