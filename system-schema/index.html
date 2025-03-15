@@ -85,8 +85,13 @@
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
             if (mode === 'body') {
-                showOverlay(label => { bodies.push({ x, y, r: 30, label, color: '#FFEE99' }); draw(); });
-            } else if (mode === 'force') {
+            showOverlay(label => { 
+                if (!label.trim()) return; // Prevents adding empty labels
+                bodies.push({ x, y, r: 30, label, color: '#FFEE99' });
+                draw();
+            });
+        }
+            else if (mode === 'force') {
                 const body = bodies.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
                 if (body) selectedBodies.push(body);
                 if (selectedBodies.length === 2) {
@@ -130,7 +135,15 @@
 
                              
 
-        function showOverlay(callback) { overlayCallback = callback; overlayInput.value = ''; overlay.style.display = 'flex'; overlayInput.focus(); }
+        function showOverlay(callback) {
+            overlayCallback = callback;
+            overlayInput.value = ''; 
+            overlay.style.display = 'flex';
+            overlayInput.focus();
+
+            // Ensure the keyboard appears on mobile
+            setTimeout(() => { overlayInput.focus(); }, 300);
+        }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
