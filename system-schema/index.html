@@ -52,6 +52,8 @@
             if (mode === 'move') {
                 draggingBody = bodies.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
             }
+            if (mode !== 'move') return;
+            e.preventDefault(); // Prevents unwanted behaviors
         });
 
         canvas.addEventListener('mousemove', (e) => {
@@ -61,6 +63,7 @@
                 draggingBody.y = e.clientY - rect.top;
                 draw();
             }
+            if (!draggingBody) return;
         });
 
         canvas.addEventListener('mouseup', () => { draggingBody = null; });
@@ -87,7 +90,31 @@
                     draw();
                 }
             }
+        }  );
+        
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevents scrolling
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect(), x = touch.clientX - rect.left, y = touch.clientY - rect.top;
+            draggingBody = bodies.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
         });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Prevents unintended screen movement
+            if (draggingBody) {
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                draggingBody.x = touch.clientX - rect.left;
+                draggingBody.y = touch.clientY - rect.top;
+                draw();
+            }
+        });
+
+        canvas.addEventListener('touchend', () => {
+            draggingBody = null;
+        });
+
+                             
 
         function showOverlay(callback) { overlayCallback = callback; overlayInput.value = ''; overlay.style.display = 'flex'; overlayInput.focus(); }
 
