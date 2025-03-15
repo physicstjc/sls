@@ -17,6 +17,7 @@
     <div id="toolbar">
         <button id="addBody">Add Body</button>
         <button id="addForce">Add Force</button>
+        <button id="move">Move</button>
         <button id="delete">Delete</button>
         <button id="saveCanvas">Save Image</button>
     </div>
@@ -30,10 +31,11 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const bodies = [], forces = [];
-        let mode = '', selectedBodies = [], draggingBody = null, overlayCallback, awaitingLabel = false;
+        let mode = '', selectedBodies = [], draggingBody = null, overlayCallback;
 
-        document.getElementById('addBody').onclick = () => { mode = 'body'; awaitingLabel = false; };
-        document.getElementById('addForce').onclick = () => { mode = 'force'; awaitingLabel = false; selectedBodies = []; };
+        document.getElementById('addBody').onclick = () => mode = 'body';
+        document.getElementById('addForce').onclick = () => mode = 'force';
+        document.getElementById('move').onclick = () => mode = 'move';
         document.getElementById('delete').onclick = () => mode = 'delete';
 
         const overlay = document.getElementById('overlay');
@@ -41,17 +43,15 @@
 
         document.getElementById('confirmOverlay').onclick = () => {
             overlay.style.display = 'none';
-            awaitingLabel = false;
             overlayCallback(overlayInput.value);
         };
-        document.getElementById('cancelOverlay').onclick = () => {
-            overlay.style.display = 'none';
-            awaitingLabel = false;
-        };
+        document.getElementById('cancelOverlay').onclick = () => overlay.style.display = 'none';
 
         canvas.addEventListener('mousedown', (e) => {
             const rect = canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
-            draggingBody = bodies.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
+            if (mode === 'move') {
+                draggingBody = bodies.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
+            }
         });
 
         canvas.addEventListener('mousemove', (e) => {
@@ -63,26 +63,18 @@
             }
         });
 
-        canvas.addEventListener('mouseup', () => draggingBody = null);
+        canvas.addEventListener('mouseup', () => { draggingBody = null; });
 
         canvas.addEventListener('click', (e) => {
-            if (awaitingLabel) return;
             const rect = canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
             if (mode === 'body') {
-                awaitingLabel = true;
                 showOverlay(label => { bodies.push({ x, y, r: 30, label, color: '#FFEE99' }); draw(); });
             } else if (mode === 'force') {
                 const body = bodies.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
-                if (body) {
-                    body.color = '#FFA500'; // Change color when selected
-                    selectedBodies.push(body);
-                    draw();
-                }
+                if (body) selectedBodies.push(body);
                 if (selectedBodies.length === 2) {
-                    awaitingLabel = true;
                     showOverlay(label => {
                         forces.push({ from: selectedBodies[0], to: selectedBodies[1], label });
-                        selectedBodies.forEach(b => b.color = '#FFEE99'); // Reset color
                         selectedBodies = [];
                         draw();
                     });
@@ -102,7 +94,7 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.lineWidth = 2;
-            forces.forEach((f, i) => {
+                        forces.forEach((f, i) => {
                 const sameForces = forces.filter(force => (force.from === f.from && force.to === f.to) || (force.from === f.to && force.to === f.from));
                 const offset = (sameForces.indexOf(f) - (sameForces.length - 1) / 2) * 30;
                 ctx.beginPath();
@@ -110,13 +102,18 @@
                 const midX = (f.from.x + f.to.x) / 2 + offset;
                 const midY = (f.from.y + f.to.y) / 2 - offset;
                 ctx.quadraticCurveTo(midX, midY, f.to.x, f.to.y);
+                ctx.lineTo(f.to.x, f.to.y);
                 ctx.stroke();
-                
+                const textWidth = ctx.measureText(f.label).width + 10;
+                const textHeight = 20;
+                const textX = midX - textWidth / 2;
+                const textY = midY - textHeight / 2;
                 ctx.fillStyle = '#FFF';
-                ctx.fillRect(midX - 20, midY - 10, 40, 20);
-                ctx.strokeRect(midX - 20, midY - 10, 40, 20);
+                ctx.fillRect(textX, textY, textWidth, textHeight);
+                ctx.strokeRect(textX, textY, textWidth, textHeight);
+                
                 ctx.fillStyle = '#000';
-                ctx.fillText(f.label, midX, midY);
+                ctx.fillText(f.label, textX + textWidth / 2, textY + textHeight / 2);
             });
             bodies.forEach(b => {
                 ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
@@ -126,6 +123,20 @@
             });
         }
         draw();
+
+        document.getElementById('saveCanvas').onclick = () => {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.fillStyle = '#ADD8E6';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(canvas, 0, 0);
+            const link = document.createElement('a');
+            link.href = tempCanvas.toDataURL('image/png');
+            link.download = 'canvas.png';
+            link.click();
+        };
     </script>
 </body>
 </html>
