@@ -35,7 +35,10 @@
 
         document.getElementById('addBody').onclick = () => mode = 'body';
         document.getElementById('addForce').onclick = () => mode = 'force';
-        document.getElementById('move').onclick = () => mode = 'move';
+        document.getElementById('move').onclick = () => {
+            mode = 'move';
+            selectedBodies = []; // Clear any previously selected bodies
+        };
         document.getElementById('delete').onclick = () => mode = 'delete';
 
         const overlay = document.getElementById('overlay');
@@ -48,9 +51,21 @@
         document.getElementById('cancelOverlay').onclick = () => overlay.style.display = 'none';
 
         canvas.addEventListener('mousedown', (e) => {
-            if (mode !== 'move') return;
-            const rect = canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
-            draggingBody = bodies.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
+        if (mode === 'move') {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Find the body being clicked
+            const body = bodies.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
+            if (body) {
+                selectedBodies = [body]; // Select only one body
+                body.originalColor = body.color;
+                body.color = '#FFA07A'; // Highlight selected body
+                draggingBody = body;
+                draw();
+            }
+        }
         });
 
         canvas.addEventListener('mousemove', (e) => {
@@ -62,7 +77,13 @@
             }
         });
 
-        canvas.addEventListener('mouseup', () => draggingBody = null);
+        canvas.addEventListener('mouseup', () => {
+            if (draggingBody) {
+                draggingBody.color = draggingBody.originalColor || '#FFEE99'; // Restore original color
+                draggingBody = null;
+                draw();
+            }
+        });
 
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
