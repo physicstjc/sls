@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hangman Game</title>
+    <script src="xapiwrapper.min.js"></script>
+    <style>
+        .letter-box {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border-bottom: 2px solid black;
+            margin: 0 5px;
+            text-align: center;
+            font-size: 24px;
+        }
+        #game-container {
+            text-align: center;
+            margin-top: 50px;
+        }
+        #keyboard {
+            margin-top: 20px;
+        }
+        .keyboard-btn {
+            margin: 5px;
+            padding: 10px 15px;
+            font-size: 18px;
+        }
+        /* Add these new styles */
+        #hangman-drawing {
+            margin: 20px auto;
+            width: 200px;
+            height: 200px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Hangman Game</h1>
+        <canvas id="hangman-drawing" width="200" height="200"></canvas>
+        <div id="word-display"></div>
+        <!-- Removed keyboard div -->
+        <p id="message"></p>
+    </div>
+
+    <script>
+        let score = 0;
+        let attempts = 0;
+        const word = "LONGITUDINAL";
+        let guessedLetters = new Set();
+        let remainingTries = 10;  // Changed from 6 to 10 to accommodate the new drawing stages
+
+        // XAPI Configuration
+        const XAPIUtils = {
+            parameters: null,
+            getParameters: function () {
+                if (!this.parameters) {
+                    var urlParams = new URLSearchParams(window.location.search);
+                    var endpoint = urlParams.get('endpoint');
+                    var auth = urlParams.get('auth');
+                    var agent = JSON.parse(urlParams.get('agent'));
+                    var stateId = urlParams.get('stateId');
+                    var activityId = urlParams.get('activityId');
+
+                    ADL.XAPIWrapper.changeConfig({
+                        "endpoint": endpoint + "/",
+                        "auth": `Basic ${auth}`
+                    });
+
+                    this.parameters = {
+                        agent,
+                        stateId,
+                        activityId
+                    };
+                }
+                return this.parameters;
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", function () {
+            XAPIUtils.getParameters();
+            initializeGame();
+        });
+
+        function sendScore(score) {
+            try {
+                const parameters = XAPIUtils.getParameters();
+                const activityid = parameters.activityId;
+                const stateId = parameters.stateId;
+                const agent = parameters.agent;
+                const registration = null;
+
+                const stateValue = { score: score };
+
+                ADL.XAPIWrapper.sendState(activityid, agent, stateId, registration, stateValue);
+                console.log("Score sent successfully:", score);
+            } catch (err) {
+                console.error("An error has occurred!", err);
+            }
+        }
+
+        // Add these drawing functions after the existing variables
+        const canvas = document.getElementById('hangman-drawing');
+        const ctx = canvas.getContext('2d');
+
+        function drawHangman(mistakes) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+
+            // Base
+            if (mistakes > 0) {
+                ctx.beginPath();
+                ctx.moveTo(40, 180);
+                ctx.lineTo(160, 180);
+                ctx.stroke();
+            }
+
+            // Vertical pole
+            if (mistakes > 1) {
+                ctx.beginPath();
+                ctx.moveTo(100, 180);
+                ctx.lineTo(100, 40);
+                ctx.stroke();
+            }
+
+            // Horizontal beam
+            if (mistakes > 2) {
+                ctx.beginPath();
+                ctx.moveTo(100, 40);
+                ctx.lineTo(140, 40);
+                ctx.stroke();
+            }
+
+            // Rope
+            if (mistakes > 3) {
+                ctx.beginPath();
+                ctx.moveTo(140, 40);
+                ctx.lineTo(140, 60);
+                ctx.stroke();
+            }
+
+            // Head
+            if (mistakes > 4) {
+                ctx.beginPath();
+                ctx.arc(140, 70, 10, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // Body
+            if (mistakes > 5) {
+                ctx.beginPath();
+                ctx.moveTo(140, 80);
+                ctx.lineTo(140, 120);
+                ctx.stroke();
+            }
+
+            // Left arm
+            if (mistakes > 6) {
+                ctx.beginPath();
+                ctx.moveTo(140, 90);
+                ctx.lineTo(120, 100);
+                ctx.stroke();
+            }
+
+            // Right arm
+            if (mistakes > 7) {
+                ctx.beginPath();
+                ctx.moveTo(140, 90);
+                ctx.lineTo(160, 100);
+                ctx.stroke();
+            }
+
+            // Left leg
+            if (mistakes > 8) {
+                ctx.beginPath();
+                ctx.moveTo(140, 120);
+                ctx.lineTo(120, 140);
+                ctx.stroke();
+            }
+
+            // Right leg
+            if (mistakes > 9) {
+                ctx.beginPath();
+                ctx.moveTo(140, 120);
+                ctx.lineTo(160, 140);
+                ctx.stroke();
+            }
+        }
+
+        // Modify the makeGuess function
+        function makeGuess(letter) {
+            if (guessedLetters.has(letter)) return;
+            
+            guessedLetters.add(letter);
+            attempts++;
+            
+            if (!word.includes(letter)) {
+                remainingTries--;
+                drawHangman(10 - remainingTries);  // Changed from 6 to 10
+            }
+
+            displayWord();
+            checkGameStatus();
+        }
+
+        // Add keyboard event listener after initializeGame function
+        document.addEventListener('keydown', (event) => {
+            const key = event.key.toUpperCase();
+            if (/^[A-Z]$/.test(key) && !event.repeat) {
+                makeGuess(key);
+            }
+        });
+
+        // Modify initializeGame function
+        function initializeGame() {
+            displayWord();
+            // Removed createKeyboard() call
+            drawHangman(0);
+        }
+
+        function displayWord() {
+            const wordDisplay = document.getElementById('word-display');
+            wordDisplay.innerHTML = '';
+            for (let letter of word) {
+                const box = document.createElement('div');
+                box.className = 'letter-box';
+                box.textContent = guessedLetters.has(letter) ? letter : '';
+                wordDisplay.appendChild(box);
+            }
+        }
+
+        // Remove these functions as they're no longer needed
+        function createKeyboard() {
+            // Remove entire function
+        }
+
+        function disableKeyboard() {
+            // Remove entire function
+        }
+
+        function checkGameStatus() {
+            const won = [...word].every(letter => guessedLetters.has(letter));
+            if (won) {
+                score = 1;
+                document.getElementById('message').textContent = 'Congratulations! You won!';
+                sendScore(score);
+                // Remove disableKeyboard() call
+            } else if (remainingTries <= 0) {
+                score = 0;
+                document.getElementById('message').textContent = 'Game Over! The word was ' + word;
+                sendScore(score);
+                // Remove disableKeyboard() call
+            }
+        }
+    </script>
+</body>
+</html>
