@@ -1493,7 +1493,86 @@
                     </div>
             </div>
         </div>
-         
+                 <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="hangman/hangman.png" alt="Hangman">
+                    <div class="card-body">
+                        <h3 class="card-title">Template for SLS Interactive with Scores</h3>
+                        <p class="card-text">The player will pay hangman to guess a word.</p>
+                        <p class="card-text">If the player is correct, the app will send a score of 1 to SLS's Interactive Response Assistant. This score will be reflected in the SLS heatmap.</p>
+                        <a href="hangman/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="hangman/hangman.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB5" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseB5">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>For sending a score to SLS: Add these codes to send a score of 1 when the user gets it correct: 
+</li>    <pre>
+<code>
+&lt;script&gt;
+
+let score = 0;
+let attempts = 0;
+let questionNumber = 0;
+
+// XAPI Configuration
+const XAPIUtils = {
+  parameters: null,
+  getParameters: function () {
+    if (!this.parameters) {
+      var urlParams = new URLSearchParams(window.location.search);
+      var endpoint = urlParams.get('endpoint');
+      var auth = urlParams.get('auth');
+      var agent = JSON.parse(urlParams.get('agent'));
+      var stateId = urlParams.get('stateId');
+      var activityId = urlParams.get('activityId');
+      ADL.XAPIWrapper.changeConfig({
+        "endpoint": endpoint + "/",
+        "auth": `Basic ${auth}`
+      });
+      this.parameters = {
+        agent,
+        stateId,
+        activityId
+      };
+    }
+    return this.parameters;
+  }
+};
+
+document.addEventListener("DOMContentLoaded", function () {
+  XAPIUtils.getParameters();
+});
+
+function sendScore(score) {
+  try {
+    const parameters = XAPIUtils.getParameters();
+    const activityid = parameters.activityId;
+    const stateId = parameters.stateId;
+    const agent = parameters.agent;
+    const registration = null;
+    const stateValue = { score: score };
+    ADL.XAPIWrapper.sendState(activityid, agent, stateId, registration, stateValue);
+    console.log("Score sent successfully:", score);
+  } catch (err) {
+    console.error("An error has occurred!", err);
+  }
+}
+
+&lt;/script&gt;
+</code>
+    </pre>
+
+                                        <li>Include the javascript file "xapiwrapper.min.js" into your zipped directory</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
     </div>
 </div>
     
