@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projectile Motion Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <div class="input-group">
+                <label for="velocity">Initial Velocity (m/s):</label>
+                <input type="range" id="velocity" min="0" max="50" value="20" step="1">
+                <span id="velocityValue">20</span>
+            </div>
+            <div class="input-group">
+                <label for="angle">Launch Angle (degrees):</label>
+                <input type="range" id="angle" min="0" max="90" value="45" step="1">
+                <span id="angleValue">45</span>
+            </div>
+            <div class="input-group">
+                <label>
+                    <input type="checkbox" id="airResistance"> Include Air Resistance
+                </label>
+            </div>
+            <div class="preview-info">
+                <p>Maximum Height: <span id="maxHeight">0</span> m</p>
+                <p>Range: <span id="range">0</span> m</p>
+            </div>
+            <div class="time-controls">
+                <button id="pausePlay">Play</button>
+                <button id="restart">Restart</button>
+                <input type="range" id="timeSlider" min="0" max="100" value="0" step="1">
+                <span id="timeValue">0.00s</span>
+            </div>
+            <!-- Remove the launch button -->
+        </div>
+        
+        <div class="simulation-container">
+            <canvas id="simulationCanvas"></canvas>
+        </div>
+        
+        <div class="graphs-container">
+            <canvas id="velocityGraph"></canvas>
+        </div>
+    </div>
+    <script src="simulation.js"></script>
+</body>
+</html>
