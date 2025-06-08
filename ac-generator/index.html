@@ -104,21 +104,21 @@
     ctx.lineWidth = 1;
     for (let y = -100; y <= 120; y += 20 * 1/B) {
       ctx.beginPath();
-      ctx.moveTo(-120, y);
-      ctx.lineTo(120, y);
+      ctx.moveTo(-canvas.width /4, y);
+      ctx.lineTo(canvas.width /4, y);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(120, y);
-      ctx.lineTo(115, y - 5);
+      ctx.moveTo(canvas.width /4, y);
+      ctx.lineTo(canvas.width /4 - canvas.width /100, y - 5);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(120, y);
-      ctx.lineTo(115, y + 5);
+      ctx.moveTo(canvas.width /4, y);
+      ctx.lineTo(canvas.width /4 - canvas.width /100, y + 5);
       ctx.stroke();
     }
 
     // Rotating coil (trapezoid projection)
-    const w = 100;
+    const w = canvas.width /4;
     const h = 100;
     const angle = theta;
     const x1 = -w / 3 * Math.sin(angle);
@@ -143,7 +143,7 @@
     // EMF direction indicator arrows (top and bottom sides)
     ctx.strokeStyle = "red";
     ctx.lineWidth = 2;
-    const arrowSize = 10;
+    const arrowSize = canvas.width /100;
     const arrowDir = Math.sign(emf);
 
       
@@ -197,9 +197,9 @@
       const y = oscCanvas.height / 2 - v * (oscCanvas.height / 2);
       oscCtx.beginPath();
       oscCtx.moveTo(0, y);
-      oscCtx.lineTo(5, y);
+      oscCtx.lineTo(10, y);
       oscCtx.stroke();
-      oscCtx.fillText((v * 100).toFixed(0) + " V", 7, y + 3);
+      oscCtx.fillText((v * 100).toFixed(0) + " V", 10, y + 3);
     });
     oscCtx.fillText("Time →", oscCanvas.width - 55, oscCanvas.height - 5);
 
@@ -257,8 +257,8 @@
 
 // Resize both canvases proportionally
 function resizeAllCanvases() {
-  resizeCanvas(canvas, 0.5, 0.25);       // generatorCanvas
-  resizeCanvas(oscCanvas, 0.5, 0.25);    // oscilloscope
+  resizeCanvas(canvas, 1, 0.25);       // generatorCanvas
+  resizeCanvas(oscCanvas, 1, 0.25);    // oscilloscope
 }
 window.addEventListener('resize', resizeAllCanvases);
 resizeAllCanvases();
