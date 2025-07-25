@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intermolecular Forces Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            min-height: 100vh;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 640px;
+            height: 100%;
+            max-height: 480px;
+            min-height: 480px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: clamp(1.2em, 4vw, 1.8em);
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            gap: 15px;
+            min-height: 0;
+        }
+        
+        .left-panel {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        
+        .graph-container {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            min-height: 0;
+        }
+        
+        .right-panel {
+            width: 180px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .atoms-container {
+            height: 120px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+        }
+        
+        .atom {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #4facfe, #00f2fe);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 15px rgba(79, 172, 254, 0.8);
+            transition: all 0.1s ease;
+            width: 30px;
+            height: 30px;
+        }
+        
+        .atom1 {
+            left: 20px;
+            top: 45px;
+        }
+        
+        .atom2 {
+            top: 45px;
+        }
+        
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            flex: 1;
+        }
+        
+        .control-group h4 {
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+        
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .slider {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4facfe;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(79, 172, 254, 0.8);
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4facfe;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 8px rgba(79, 172, 254, 0.8);
+        }
+        
+        .value-display {
+            min-width: 50px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 8px;
+            border-radius: 3px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.8em;
+        }
+        
+        .info-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.75em;
+            line-height: 1.3;
+        }
+        
+        .info-panel h4 {
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .force-indicator {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7em;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .attractive { color: #ff6b6b; }
+        .repulsive { color: #4ecdc4; }
+        .equilibrium { color: #45b7d1; }
+        
+        .legend {
+            font-size: 0.65em;
+            line-height: 1.2;
+        }
+        
+        .legend-item {
+            margin-bottom: 2px;
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 640px) {
+            body {
+                padding: 5px;
+            }
+            
+            .container {
+                max-width: 100vw;
+                max-height: 100vh;
+                min-height: 100vh;
+                border-radius: 0;
+            }
+            
+            .main-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .left-panel {
+                flex: none;
+                height: 50%;
+            }
+            
+            .right-panel {
+                width: 100%;
+                height: 50%;
+                flex-direction: row;
+                gap: 10px;
+            }
+            
+            .atoms-container {
+                flex: 1;
+                height: 80px;
+            }
+            
+            .controls {
+                flex: 1;
+            }
+            
+            .atom {
+                width: 20px;
+                height: 20px;
+            }
+            
+            .atom1 {
+                left: 15px;
+                top: 30px;
+            }
+            
+            .atom2 {
+                top: 30px;
+            }
+        }
+        
+        @media (max-height: 480px) {
+            h1 {
+                font-size: 1.2em;
+                margin-bottom: 8px;
+            }
+            
+            .atoms-container {
+                height: 80px;
+            }
+            
+            .info-panel {
+                font-size: 0.7em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Intermolecular Forces</h1>
+        
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="graph-container">
+                    <canvas id="graph"></canvas>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="atoms-container">
+                    <div class="atom atom1"></div>
+                    <div class="atom atom2" id="atom2"></div>
+                    <div class="force-indicator" id="forceIndicator">Equilibrium</div>
+                </div>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <h4>Distance</h4>
+                        <div class="slider-container">
+                            <div class="slider-row">
+                                <input type="range" id="distanceSlider" class="slider" min="0.8" max="3.0" step="0.05" value="1.12">
+                                <div class="value-display" id="distanceValue">1.12</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-panel">
+                        <h4>Current State</h4>
+                        <div class="status-row">
+                            <span>Energy:</span>
+                            <span id="currentEnergy">-1.00 ε</span>
+                        </div>
+                        <div class="status-row">
+                            <span>Force:</span>
+                            <span id="currentForce">0.00</span>
+                        </div>
+                        
+                        <div class="legend">
+                            <div class="legend-item">🔴 Repulsive</div>
+                            <div class="legend-item">🔵 Equilibrium</div>
+                            <div class="legend-item">🟢 Attractive</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('graph');
+        const ctx = canvas.getContext('2d');
+        const distanceSlider = document.getElementById('distanceSlider');
+        const distanceValue = document.getElementById('distanceValue');
+        const atom2 = document.getElementById('atom2');
+        const forceIndicator = document.getElementById('forceIndicator');
+        const currentEnergy = document.getElementById('currentEnergy');
+        const currentForce = document.getElementById('currentForce');
+        
+        // Responsive canvas sizing
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const rect = container.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+            
+            ctx.scale(dpr, dpr);
+            updateSimulation();
+        }
+        
+        // Lennard-Jones potential parameters
+        const epsilon = 1.0;
+        const sigma = 1.0;
+        
+        function lennardJones(r) {
+            const term = Math.pow(sigma / r, 6);
+            return 4 * epsilon * (term * term - term);
+        }
+        
+        function lennardJonesForce(r) {
+            const term = Math.pow(sigma / r, 6);
+            return 24 * epsilon / r * (2 * term * term - term);
+        }
+        
+        function drawGraph() {
+            const rect = canvas.getBoundingClientRect();
+            ctx.clearRect(0, 0, rect.width, rect.height);
+            
+            const padding = Math.min(rect.width, rect.height) * 0.12;
+            const graphWidth = rect.width - 2 * padding;
+            const graphHeight = rect.height - 2 * padding;
+            
+            // Draw axes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(padding, rect.height - padding);
+            ctx.lineTo(rect.width - padding, rect.height - padding);
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, rect.height - padding);
+            ctx.stroke();
+            
+            // Scale parameters
+            const minR = 0.8;
+            const maxR = 3.0;
+            const minU = -1.5;
+            const maxU = 2.0;
+            
+            // Draw potential curve
+            ctx.strokeStyle = '#2196F3';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            let first = true;
+            for (let r = minR; r <= maxR; r += 0.02) {
+                const u = lennardJones(r);
+                if (u > maxU) continue;
+                
+                const x = padding + (r - minR) / (maxR - minR) * graphWidth;
+                const y = rect.height - padding - (u - minU) / (maxU - minU) * graphHeight;
+                
+                if (first) {
+                    ctx.moveTo(x, y);
+                    first = false;
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // Draw zero energy line
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            const zeroY = rect.height - padding - (0 - minU) / (maxU - minU) * graphHeight;
+            ctx.beginPath();
+            ctx.moveTo(padding, zeroY);
+            ctx.lineTo(rect.width - padding, zeroY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw equilibrium line
+            const equilibriumR = Math.pow(2, 1/6);
+            const equilibriumX = padding + (equilibriumR - minR) / (maxR - minR) * graphWidth;
+            ctx.strokeStyle = '#45b7d1';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([2, 2]);
+            ctx.beginPath();
+            ctx.moveTo(equilibriumX, padding);
+            ctx.lineTo(equilibriumX, rect.height - padding);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw current position indicator
+            const currentR = parseFloat(distanceSlider.value);
+            const currentU = lennardJones(currentR);
+            const currentX = padding + (currentR - minR) / (maxR - minR) * graphWidth;
+            const currentY = rect.height - padding - (currentU - minU) / (maxU - minU) * graphHeight;
+            
+            ctx.fillStyle = '#FF5722';
+            ctx.beginPath();
+            ctx.arc(currentX, currentY, 4, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Draw minimal scale labels
+            ctx.fillStyle = '#333';
+            ctx.font = `${Math.min(rect.width, rect.height) * 0.025}px Arial`;
+            ctx.textAlign = 'center';
+            
+            // X-axis labels
+            const labelSpacing = Math.max(1, Math.floor(rect.width / 120));
+            for (let r = 1.0; r <= 3.0; r += 0.5 * labelSpacing) {
+                const x = padding + (r - minR) / (maxR - minR) * graphWidth;
+                ctx.fillText(r.toFixed(1), x, rect.height - padding + 15);
+            }
+            
+            // Y-axis labels
+            ctx.textAlign = 'right';
+            for (let u = -1.0; u <= 1.0; u += 1.0) {
+                const y = rect.height - padding - (u - minU) / (maxU - minU) * graphHeight;
+                ctx.fillText(u.toFixed(0), padding - 8, y + 3);
+            }
+        }
+        
+        function updateSimulation() {
+            const r = parseFloat(distanceSlider.value);
+            distanceValue.textContent = r.toFixed(2);
+            
+            // Update atom position
+            const containerWidth = atom2.parentElement.offsetWidth;
+            const atomSpacing = 30 + (r - 1.0) * (containerWidth - 80) / 2.2;
+            atom2.style.left = Math.min(atomSpacing, containerWidth - 35) + 'px';
+            
+            // Calculate current energy and force
+            const energy = lennardJones(r);
+            const force = lennardJonesForce(r);
+            
+            currentEnergy.textContent = energy.toFixed(2) + ' ε';
+            currentForce.textContent = force.toFixed(2);
+            
+            // Update force indicator
+            const equilibriumR = Math.pow(2, 1/6);
+            if (Math.abs(r - equilibriumR) < 0.05) {
+                forceIndicator.textContent = 'Equilibrium';
+                forceIndicator.className = 'force-indicator equilibrium';
+            } else if (r < equilibriumR) {
+                forceIndicator.textContent = 'Repulsive';
+                forceIndicator.className = 'force-indicator repulsive';
+            } else {
+                forceIndicator.textContent = 'Attractive';
+                forceIndicator.className = 'force-indicator attractive';
+            }
+            
+            // Update atom colors
+            const atom1 = document.querySelector('.atom1');
+            if (r < equilibriumR) {
+                atom1.style.background = 'radial-gradient(circle at 30% 30%, #ff6b6b, #ff4757)';
+                atom2.style.background = 'radial-gradient(circle at 30% 30%, #ff6b6b, #ff4757)';
+                atom1.style.boxShadow = '0 0 20px rgba(255, 107, 107, 0.9)';
+                atom2.style.boxShadow = '0 0 20px rgba(255, 107, 107, 0.9)';
+            } else if (r > equilibriumR + 0.3) {
+                atom1.style.background = 'radial-gradient(circle at 30% 30%, #26de81, #20bf6b)';
+                atom2.style.background = 'radial-gradient(circle at 30% 30%, #26de81, #20bf6b)';
+                atom1.style.boxShadow = '0 0 20px rgba(38, 222, 129, 0.9)';
+                atom2.style.boxShadow = '0 0 20px rgba(38, 222, 129, 0.9)';
+            } else {
+                atom1.style.background = 'radial-gradient(circle at 30% 30%, #4facfe, #00f2fe)';
+                atom2.style.background = 'radial-gradient(circle at 30% 30%, #4facfe, #00f2fe)';
+                atom1.style.boxShadow = '0 0 15px rgba(79, 172, 254, 0.8)';
+                atom2.style.boxShadow = '0 0 15px rgba(79, 172, 254, 0.8)';
+            }
+            
+            drawGraph();
+        }
+        
+        distanceSlider.addEventListener('input', updateSimulation);
+        window.addEventListener('resize', () => {
+            setTimeout(resizeCanvas, 100);
+        });
+        
+        // Initialize
+        setTimeout(() => {
+            resizeCanvas();
+            updateSimulation();
+        }, 100);
+    </script>
+</body>
+</html>
