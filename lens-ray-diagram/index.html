@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Optics Ray Diagram</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            overflow-x: auto;
+        }
+        
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        #canvas {
+            width: 100%;
+            height: 400px;
+            display: block;
+            cursor: crosshair;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.95);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .mode-toggle {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .mode-toggle:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .mode-toggle:active {
+            transform: translateY(0);
+        }
+        
+        .control-group {
+            margin-bottom: 10px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 3px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .control-group span {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .draggable-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                position: relative;
+                margin-bottom: 10px;
+                left: 0;
+                right: 0;
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+            
+            .draggable-hint {
+                position: relative;
+                margin-top: 10px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <button class="mode-toggle" id="modeToggle">📍 Finite Object</button>
+            
+            <div class="control-group">
+                <label>Focal Length: <span id="focalDisplay">2.0</span> cm</label>
+                <span>Drag the focal points to adjust</span>
+            </div>
+            <div class="control-group" id="finiteControls">
+                <label>Object Height: <span id="heightDisplay">1.8</span> cm</label>
+                <span>Drag the object arrow</span>
+            </div>
+            <div class="control-group" id="finiteControls2">
+                <label>Object Distance: <span id="distanceDisplay">4.0</span> cm</label>
+                <span>Drag the object left/right</span>
+            </div>
+            <div class="control-group" id="infiniteControls" style="display: none;">
+                <label>Ray Angle: <span id="angleDisplay">0</span>°</label>
+                <span>Drag the parallel rays to adjust angle</span>
+            </div>
+        </div>
+        
+        <canvas id="canvas"></canvas>
+        
+        <div class="draggable-hint">
+            💡 Drag focal points, object arrow, or object position to explore optics!
+        </div>
+    </div>
+
+    <script>
+        class OpticsSimulator {
+            constructor() {
+                this.canvas = document.getElementById('canvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                // Set up canvas size
+                this.updateCanvasSize();
+                window.addEventListener('resize', () => this.updateCanvasSize());
+                
+                // Physics parameters
+                this.focalLength = 20;
+                this.lensPosition = 0;
+                this.objectDistance = -40; // negative for left side
+                this.objectHeight = 18;
+                this.isInfiniteObject = false;
+                this.rayAngle = 0; // angle in degrees for infinite object rays
+                
+                // Visual parameters
+                this.scale = 4; // pixels per unit
+                this.centerX = this.canvas.width / 2;
+                this.centerY = this.canvas.height / 2;
+                
+                // Interaction state
+                this.isDragging = false;
+                this.dragTarget = null;
+                this.lastMousePos = { x: 0, y: 0 };
+                
+                this.setupEventListeners();
+                this.draw();
+            }
+            
+            updateCanvasSize() {
+                const rect = this.canvas.getBoundingClientRect();
+                this.canvas.width = rect.width;
+                this.canvas.height = rect.height;
+                
+                this.centerX = rect.width / 2;
+                this.centerY = rect.height / 2 + 40; // Shift center down by 40 pixels
+                
+                if (this.ctx) this.draw();
+            }
+            
+            setupEventListeners() {
+                // Mouse events
+                this.canvas.addEventListener('mousedown', (e) => this.handleStart(e));
+                this.canvas.addEventListener('mousemove', (e) => this.handleMove(e));
+                this.canvas.addEventListener('mouseup', () => this.handleEnd());
+                this.canvas.addEventListener('mouseleave', () => this.handleEnd());
+                
+                // Touch events
+                this.canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.handleStart(e.touches[0]);
+                }, { passive: false });
+                
+                this.canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    this.handleMove(e.touches[0]);
+                }, { passive: false });
+                
+                this.canvas.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.handleEnd();
+                }, { passive: false });
+                
+                // Mode toggle button
+                document.getElementById('modeToggle').addEventListener('click', () => {
+                    this.toggleMode();
+                });
+            }
+            
+            toggleMode() {
+                this.isInfiniteObject = !this.isInfiniteObject;
+                const toggleButton = document.getElementById('modeToggle');
+                
+                if (this.isInfiniteObject) {
+                    toggleButton.textContent = '∞ Infinite Object';
+                    toggleButton.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+                } else {
+                    toggleButton.textContent = '📍 Finite Object';
+                    toggleButton.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                }
+                
+                // Show/hide appropriate controls
+                const finiteControls = document.querySelectorAll('#finiteControls, #finiteControls2');
+                const infiniteControls = document.getElementById('infiniteControls');
+                
+                if (this.isInfiniteObject) {
+                    finiteControls.forEach(el => el.style.display = 'none');
+                    infiniteControls.style.display = 'block';
+                } else {
+                    finiteControls.forEach(el => el.style.display = 'block');
+                    infiniteControls.style.display = 'none';
+                }
+                
+                this.draw();
+            }
+            
+            getMousePos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                };
+            }
+            
+            worldToScreen(worldX, worldY) {
+                return {
+                    x: this.centerX + worldX * this.scale,
+                    y: this.centerY - worldY * this.scale
+                };
+            }
+            
+            screenToWorld(screenX, screenY) {
+                return {
+                    x: (screenX - this.centerX) / this.scale,
+                    y: (this.centerY - screenY) / this.scale
+                };
+            }
+            
+            handleStart(e) {
+                const pos = this.getMousePos(e);
+                const worldPos = this.screenToWorld(pos.x, pos.y);
+                
+                // Check what we're clicking on
+                const target = this.getClickTarget(worldPos);
+                
+                if (target) {
+                    this.isDragging = true;
+                    this.dragTarget = target;
+                    this.lastMousePos = pos;
+                    this.canvas.style.cursor = 'grabbing';
+                }
+            }
+            
+            handleMove(e) {
+                const pos = this.getMousePos(e);
+                
+                if (this.isDragging && this.dragTarget) {
+                    const worldPos = this.screenToWorld(pos.x, pos.y);
+                    const deltaX = (pos.x - this.lastMousePos.x) / this.scale;
+                    const deltaY = (this.lastMousePos.y - pos.y) / this.scale;
+                    
+                    this.updateDragTarget(worldPos, deltaX, deltaY);
+                    this.lastMousePos = pos;
+                    this.draw();
+                } else {
+                    // Update cursor based on hover
+                    const worldPos = this.screenToWorld(pos.x, pos.y);
+                    const target = this.getClickTarget(worldPos);
+                    this.canvas.style.cursor = target ? 'grab' : 'crosshair';
+                }
+            }
+            
+            handleEnd() {
+                this.isDragging = false;
+                this.dragTarget = null;
+                this.canvas.style.cursor = 'crosshair';
+            }
+            
+            getClickTarget(worldPos) {
+                const tolerance = 8 / this.scale;
+                
+                // Check focal points
+                if (Math.abs(worldPos.x - this.focalLength) < tolerance && Math.abs(worldPos.y) < tolerance) {
+                    return 'rightFocal';
+                }
+                if (Math.abs(worldPos.x + this.focalLength) < tolerance && Math.abs(worldPos.y) < tolerance) {
+                    return 'leftFocal';
+                }
+                
+                // Check 2F points (also draggable to adjust focal length)
+                if (Math.abs(worldPos.x - 2 * this.focalLength) < tolerance && Math.abs(worldPos.y) < tolerance) {
+                    return 'right2F';
+                }
+                if (Math.abs(worldPos.x + 2 * this.focalLength) < tolerance && Math.abs(worldPos.y) < tolerance) {
+                    return 'left2F';
+                }
+                
+                if (this.isInfiniteObject) {
+                    // Check for ray angle adjustment (anywhere on the left side of canvas)
+                    if (worldPos.x < -10) {
+                        return 'rayAngle';
+                    }
+                } else {
+                    // Check object arrow (tip)
+                    if (Math.abs(worldPos.x - this.objectDistance) < tolerance && 
+                        Math.abs(worldPos.y - this.objectHeight) < tolerance) {
+                        return 'objectArrow';
+                    }
+                    
+                    // Check object base (for horizontal dragging)
+                    if (Math.abs(worldPos.x - this.objectDistance) < tolerance && 
+                        Math.abs(worldPos.y) < tolerance * 2) {
+                        return 'objectBase';
+                    }
+                }
+                
+                return null;
+            }
+            
+            updateDragTarget(worldPos, deltaX, deltaY) {
+                switch (this.dragTarget) {
+                    case 'rightFocal':
+                        this.focalLength = Math.max(5, Math.min(50, worldPos.x));
+                        break;
+                        
+                    case 'leftFocal':
+                        this.focalLength = Math.max(5, Math.min(50, -worldPos.x));
+                        break;
+                        
+                    case 'right2F':
+                        this.focalLength = Math.max(2.5, Math.min(25, worldPos.x / 2));
+                        break;
+                        
+                    case 'left2F':
+                        this.focalLength = Math.max(2.5, Math.min(25, -worldPos.x / 2));
+                        break;
+                        
+                    case 'rayAngle':
+                        // Convert mouse position to angle
+                        const angleRad = Math.atan2(worldPos.y, Math.abs(worldPos.x));
+                        this.rayAngle = Math.max(-30, Math.min(30, angleRad * 180 / Math.PI));
+                        break;
+                        
+                    case 'objectArrow':
+                        this.objectHeight = Math.max(5, Math.min(40, worldPos.y));
+                        this.objectDistance = Math.max(-80, Math.min(-5, worldPos.x));
+                        break;
+                        
+                    case 'objectBase':
+                        this.objectDistance = Math.max(-80, Math.min(-5, worldPos.x));
+                        break;
+                }
+                
+                this.updateDisplays();
+            }
+            
+            updateDisplays() {
+                document.getElementById('focalDisplay').textContent = (this.focalLength / 10).toFixed(1);
+                if (!this.isInfiniteObject) {
+                    document.getElementById('heightDisplay').textContent = (this.objectHeight / 10).toFixed(1);
+                    document.getElementById('distanceDisplay').textContent = (Math.abs(this.objectDistance) / 10).toFixed(1);
+                } else {
+                    document.getElementById('angleDisplay').textContent = this.rayAngle.toFixed(1);
+                }
+            }
+            
+            drawArrowhead(fromX, fromY, toX, toY, size = 6) {
+                const angle = Math.atan2(toY - fromY, toX - fromX);
+                
+                this.ctx.save();
+                this.ctx.translate(toX, toY);
+                this.ctx.rotate(angle);
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, 0);
+                this.ctx.lineTo(-size, -size/2);
+                this.ctx.lineTo(-size, size/2);
+                this.ctx.closePath();
+                this.ctx.fill();
+                
+                this.ctx.restore();
+            }
+            
+            calculateImageProperties() {
+                // Thin lens equation: 1/f = 1/do + 1/di
+                const do_val = Math.abs(this.objectDistance);
+                const f = this.focalLength;
+                
+                let di;
+                if (do_val === f) {
+                    di = Infinity; // No image formed at focal point
+                } else {
+                    di = (f * do_val) / (do_val - f);
+                }
+                
+                const magnification = -di / do_val;
+                const imageHeight = magnification * this.objectHeight;
+                
+                return {
+                    imageDistance: di,
+                    imageHeight: imageHeight,
+                    magnification: magnification
+                };
+            }
+            
+            draw() {
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                this.drawGrid();
+                this.drawAxis();
+                this.drawLens();
+                this.drawFocalPoints();
+                
+                if (this.isInfiniteObject) {
+                    this.drawInfiniteObjectRays();
+                } else {
+                    this.drawObject();
+                    this.drawImage();
+                    this.drawRays();
+                }
+            }
+            
+            drawGrid() {
+                this.ctx.strokeStyle = '#f0f0f0';
+                this.ctx.lineWidth = 0.5;
+                
+                // Vertical lines
+                for (let x = -100; x <= 100; x += 10) {
+                    const screenPos = this.worldToScreen(x, 0);
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(screenPos.x, 0);
+                    this.ctx.lineTo(screenPos.x, this.canvas.height);
+                    this.ctx.stroke();
+                }
+                
+                // Horizontal lines
+                for (let y = -50; y <= 50; y += 10) {
+                    const screenPos = this.worldToScreen(0, y);
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, screenPos.y);
+                    this.ctx.lineTo(this.canvas.width, screenPos.y);
+                    this.ctx.stroke();
+                }
+            }
+            
+            drawAxis() {
+                this.ctx.strokeStyle = '#ddd';
+                this.ctx.lineWidth = 1;
+                
+                // Optical axis (horizontal)
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, this.centerY);
+                this.ctx.lineTo(this.canvas.width, this.centerY);
+                this.ctx.stroke();
+                
+                // Vertical axis through lens
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.centerX, 0);
+                this.ctx.lineTo(this.centerX, this.canvas.height);
+                this.ctx.stroke();
+                
+                // Tick marks
+                this.ctx.fillStyle = '#666';
+                this.ctx.font = '10px Arial';
+                this.ctx.textAlign = 'center';
+                
+                for (let x = -80; x <= 80; x += 20) {
+                    if (x === 0) continue;
+                    const screenPos = this.worldToScreen(x, 0);
+                    this.ctx.fillText(x.toString(), screenPos.x, this.centerY + 15);
+                }
+            }
+            
+            drawLens() {
+                const centerX = this.centerX;
+                const centerY = this.centerY;
+                const height = 60 * this.scale; // Lens height
+                const width = 4; // Very thin lens
+                
+                // Create oval shape with sharp corners
+                this.ctx.strokeStyle = '#333';
+                this.ctx.fillStyle = 'rgba(173, 216, 230, 0.3)';
+                this.ctx.lineWidth = 2;
+                
+                this.ctx.beginPath();
+                
+                // Start from top center
+                this.ctx.moveTo(centerX, centerY - height/2);
+                
+                // Top right curve
+                this.ctx.quadraticCurveTo(centerX + width, centerY - height/4, centerX + width, centerY);
+                
+                // Bottom right curve  
+                this.ctx.quadraticCurveTo(centerX + width, centerY + height/4, centerX, centerY + height/2);
+                
+                // Bottom left curve
+                this.ctx.quadraticCurveTo(centerX - width, centerY + height/4, centerX - width, centerY);
+                
+                // Top left curve
+                this.ctx.quadraticCurveTo(centerX - width, centerY - height/4, centerX, centerY - height/2);
+                
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+                
+                // Add center line to emphasize thinness
+                this.ctx.strokeStyle = '#555';
+                this.ctx.lineWidth = 1;
+                this.ctx.beginPath();
+                this.ctx.moveTo(centerX, centerY - height/2);
+                this.ctx.lineTo(centerX, centerY + height/2);
+                this.ctx.stroke();
+            }
+            
+            drawFocalPoints() {
+                // Right focal point (F)
+                const rightF = this.worldToScreen(this.focalLength, 0);
+                this.ctx.fillStyle = '#ff6b6b';
+                this.ctx.beginPath();
+                this.ctx.arc(rightF.x, rightF.y, 6, 0, 2 * Math.PI);
+                this.ctx.fill();
+                
+                this.ctx.fillStyle = '#ff6b6b';
+                this.ctx.font = '12px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('F', rightF.x, rightF.y - 10);
+                
+                // Left focal point (F)
+                const leftF = this.worldToScreen(-this.focalLength, 0);
+                this.ctx.fillStyle = '#ff6b6b';
+                this.ctx.beginPath();
+                this.ctx.arc(leftF.x, leftF.y, 6, 0, 2 * Math.PI);
+                this.ctx.fill();
+                
+                this.ctx.fillText('F', leftF.x, leftF.y - 10);
+                
+                // Right 2F point
+                const right2F = this.worldToScreen(2 * this.focalLength, 0);
+                this.ctx.fillStyle = '#ff9999';
+                this.ctx.beginPath();
+                this.ctx.arc(right2F.x, right2F.y, 5, 0, 2 * Math.PI);
+                this.ctx.fill();
+                
+                this.ctx.fillStyle = '#ff9999';
+                this.ctx.font = '11px Arial';
+                this.ctx.fillText('2F', right2F.x, right2F.y - 10);
+                
+                // Left 2F point
+                const left2F = this.worldToScreen(-2 * this.focalLength, 0);
+                this.ctx.fillStyle = '#ff9999';
+                this.ctx.beginPath();
+                this.ctx.arc(left2F.x, left2F.y, 5, 0, 2 * Math.PI);
+                this.ctx.fill();
+                
+                this.ctx.fillText('2F', left2F.x, left2F.y - 10);
+                
+                // Focal length labels
+                this.ctx.fillStyle = '#666';
+                this.ctx.font = '10px Arial';
+                this.ctx.fillText(`f = ${(this.focalLength / 10).toFixed(1)} cm`, rightF.x, rightF.y + 20);
+                this.ctx.fillText(`2f = ${(2 * this.focalLength / 10).toFixed(1)} cm`, right2F.x, right2F.y + 20);
+            }
+            
+            drawObject() {
+                const objectBase = this.worldToScreen(this.objectDistance, 0);
+                const objectTip = this.worldToScreen(this.objectDistance, this.objectHeight);
+                
+                // Object arrow
+                this.ctx.strokeStyle = '#4ecdc4';
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                this.ctx.moveTo(objectBase.x, objectBase.y);
+                this.ctx.lineTo(objectTip.x, objectTip.y);
+                this.ctx.stroke();
+                
+                // Arrow tip
+                this.ctx.fillStyle = '#4ecdc4';
+                this.ctx.beginPath();
+                this.ctx.moveTo(objectTip.x, objectTip.y);
+                this.ctx.lineTo(objectTip.x - 5, objectTip.y + 8);
+                this.ctx.lineTo(objectTip.x + 5, objectTip.y + 8);
+                this.ctx.closePath();
+                this.ctx.fill();
+                
+                // Object label
+                this.ctx.fillStyle = '#4ecdc4';
+                this.ctx.font = '12px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('Object', objectBase.x, objectBase.y + 20);
+                this.ctx.fillText(`${(this.objectHeight / 10).toFixed(1)} cm`, objectTip.x + 20, objectTip.y);
+            }
+            
+            drawImage() {
+                if (this.isInfiniteObject) return;
+                
+                const imageProps = this.calculateImageProperties();
+                
+                if (isFinite(imageProps.imageDistance)) {
+                    const imageBase = this.worldToScreen(imageProps.imageDistance, 0);
+                    const imageTip = this.worldToScreen(imageProps.imageDistance, imageProps.imageHeight);
+                    
+                    // Image arrow
+                    this.ctx.strokeStyle = '#95e1d3';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.setLineDash([5, 5]);
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(imageBase.x, imageBase.y);
+                    this.ctx.lineTo(imageTip.x, imageTip.y);
+                    this.ctx.stroke();
+                    this.ctx.setLineDash([]);
+                    
+                    // Arrow tip
+                    this.ctx.fillStyle = '#95e1d3';
+                    this.ctx.beginPath();
+                    if (imageProps.imageHeight > 0) {
+                        this.ctx.moveTo(imageTip.x, imageTip.y);
+                        this.ctx.lineTo(imageTip.x - 4, imageTip.y + 6);
+                        this.ctx.lineTo(imageTip.x + 4, imageTip.y + 6);
+                    } else {
+                        this.ctx.moveTo(imageTip.x, imageTip.y);
+                        this.ctx.lineTo(imageTip.x - 4, imageTip.y - 6);
+                        this.ctx.lineTo(imageTip.x + 4, imageTip.y - 6);
+                    }
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                    
+                    // Image label
+                    this.ctx.fillStyle = '#95e1d3';
+                    this.ctx.font = '10px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText(`${(Math.abs(imageProps.imageHeight) / 10).toFixed(1)} cm`, 
+                                    imageTip.x + (imageProps.imageHeight > 0 ? 25 : -25), imageTip.y);
+                }
+            }
+            
+            drawInfiniteObjectRays() {
+                const lensHeight = 30;
+                const angleRad = this.rayAngle * Math.PI / 180;
+                const raySpacing = 15; // Spacing between parallel rays
+                
+                // Calculate focal point on focal plane where rays converge
+                const focusY = this.focalLength * Math.tan(angleRad);
+                const focusPoint = this.worldToScreen(this.focalLength, focusY);
+                
+                this.ctx.strokeStyle = '#ff9ff3';
+                this.ctx.fillStyle = '#ff9ff3';
+                this.ctx.lineWidth = 2;
+                
+                // Draw multiple parallel rays at the specified angle
+                for (let i = -2; i <= 2; i++) {
+                    // Calculate starting positions for parallel rays at the given angle
+                    const startX = -100;
+                    const baseY = i * raySpacing;
+                    
+                    // Calculate where this ray intersects the lens (x = 0)
+                    const lensIntersectionY = baseY + (0 - startX) * Math.tan(angleRad);
+                    
+                    // Only draw rays that pass through lens aperture
+                    if (Math.abs(lensIntersectionY) <= lensHeight) {
+                        const startPoint = this.worldToScreen(startX, baseY);
+                        const lensPoint = this.worldToScreen(0, lensIntersectionY);
+                        
+                        // Incoming parallel ray at angle
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(startPoint.x, startPoint.y);
+                        this.ctx.lineTo(lensPoint.x, lensPoint.y);
+                        this.ctx.stroke();
+                        
+                        // Arrowhead on incoming ray
+                        const midX1 = (startPoint.x + lensPoint.x) / 2;
+                        const midY1 = (startPoint.y + lensPoint.y) / 2;
+                        this.drawArrowhead(startPoint.x, startPoint.y, midX1, midY1);
+                        
+                        // Outgoing ray to focus point
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(lensPoint.x, lensPoint.y);
+                        this.ctx.lineTo(focusPoint.x, focusPoint.y);
+                        this.ctx.stroke();
+                        
+                        // Arrowhead on outgoing ray
+                        const midX2 = (lensPoint.x + focusPoint.x) / 2;
+                        const midY2 = (lensPoint.y + focusPoint.y) / 2;
+                        this.drawArrowhead(lensPoint.x, lensPoint.y, midX2, midY2);
+                    }
+                }
+                
+                // Draw focus point
+                this.ctx.fillStyle = '#00ff00';
+                this.ctx.beginPath();
+                this.ctx.arc(focusPoint.x, focusPoint.y, 4, 0, 2 * Math.PI);
+                this.ctx.fill();
+                
+                // Label focus point
+                this.ctx.fillStyle = '#00ff00';
+                this.ctx.font = '10px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('Focus', focusPoint.x, focusPoint.y - 8);
+                this.ctx.fillText(`(${(this.focalLength / 10).toFixed(1)}, ${(focusY / 10).toFixed(1)})`, focusPoint.x, focusPoint.y + 18);
+                
+                // Draw angle indicator showing the incident angle
+                if (Math.abs(this.rayAngle) > 0.5) {
+                    this.ctx.strokeStyle = '#666';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.setLineDash([3, 3]);
+                    
+                    // Draw angle arc and reference lines
+                    const arcRadius = 30;
+                    const arcCenter = this.worldToScreen(-70, 0);
+                    
+                    // Reference line (horizontal)
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(arcCenter.x - arcRadius, arcCenter.y);
+                    this.ctx.lineTo(arcCenter.x + arcRadius, arcCenter.y);
+                    this.ctx.stroke();
+                    
+                    // Angled line showing ray direction
+                    const angleLineEndX = arcCenter.x + arcRadius * Math.cos(angleRad);
+                    const angleLineEndY = arcCenter.y - arcRadius * Math.sin(angleRad);
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(arcCenter.x, arcCenter.y);
+                    this.ctx.lineTo(angleLineEndX, angleLineEndY);
+                    this.ctx.stroke();
+                    
+                    // Angle arc
+                    this.ctx.beginPath();
+                    this.ctx.arc(arcCenter.x, arcCenter.y, arcRadius * 0.7, 0, -angleRad, angleRad < 0);
+                    this.ctx.stroke();
+                    
+                    // Angle label
+                    this.ctx.fillStyle = '#666';
+                    this.ctx.font = '10px Arial';
+                    this.ctx.fillText(`${Math.abs(this.rayAngle).toFixed(1)}°`, arcCenter.x + 15, arcCenter.y - 15);
+                    
+                    this.ctx.setLineDash([]);
+                }
+            }
+            
+            drawRays() {
+                const objectTip = this.worldToScreen(this.objectDistance, this.objectHeight);
+                const imageProps = this.calculateImageProperties();
+                const lensHeight = 30; // Half height of lens aperture in world units
+                const objectDistanceAbs = Math.abs(this.objectDistance);
+                const isInsideFocalLength = objectDistanceAbs < this.focalLength;
+                
+                this.ctx.strokeStyle = '#ff9ff3';
+                this.ctx.fillStyle = '#ff9ff3';
+                this.ctx.lineWidth = 2;
+                
+                // Ray 1: Parallel to axis, then through focal point (or diverging if virtual image)
+                if (Math.abs(this.objectHeight) <= lensHeight) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(objectTip.x, objectTip.y);
+                    this.ctx.lineTo(this.centerX, objectTip.y);
+                    this.ctx.stroke();
+                    
+                    // Arrowhead on incoming segment
+                    const midX1 = (objectTip.x + this.centerX) / 2;
+                    this.drawArrowhead(objectTip.x, objectTip.y, midX1, objectTip.y);
+                    
+                    // Second segment
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.centerX, objectTip.y);
+                    
+                    if (isInsideFocalLength) {
+                        // Object inside focal length - ray diverges as if coming from right focal point
+                        const rightFocal = this.worldToScreen(this.focalLength, 0);
+                        const raySlope = (objectTip.y - rightFocal.y) / (this.centerX - rightFocal.x);
+                        const farRightY = objectTip.y + raySlope * (this.worldToScreen(100, 0).x - this.centerX);
+                        const farRight = { x: this.worldToScreen(100, 0).x, y: farRightY };
+                        this.ctx.lineTo(farRight.x, farRight.y);
+                        this.ctx.stroke();
+                        
+                        // Arrowhead on outgoing segment
+                        const midX2 = (this.centerX + farRight.x) / 2;
+                        const midY2 = objectTip.y + raySlope * (midX2 - this.centerX);
+                        this.drawArrowhead(this.centerX, objectTip.y, midX2, midY2);
+                    } else if (objectDistanceAbs === this.focalLength) {
+                        // Object exactly at focal point - ray exits parallel to axis
+                        const farRight = this.worldToScreen(100, this.objectHeight);
+                        this.ctx.lineTo(farRight.x, farRight.y);
+                        this.ctx.stroke();
+                        
+                        // Arrowhead on outgoing segment
+                        const midX2 = (this.centerX + farRight.x) / 2;
+                        this.drawArrowhead(this.centerX, objectTip.y, midX2, this.objectHeight);
+                    } else if (isFinite(imageProps.imageDistance)) {
+                        // Object outside focal length - ray goes through right focal point to image
+                        const rightFocal = this.worldToScreen(this.focalLength, 0);
+                        const imageTip = this.worldToScreen(imageProps.imageDistance, imageProps.imageHeight);
+                        
+                        // Ray goes through the right focal point
+                        this.ctx.lineTo(rightFocal.x, rightFocal.y);
+                        this.ctx.lineTo(imageTip.x, imageTip.y);
+                        this.ctx.stroke();
+                        
+                        // Arrowhead on outgoing segment (midpoint between lens and focal point)
+                        const midX2 = (this.centerX + rightFocal.x) / 2;
+                        const midY2 = (objectTip.y + rightFocal.y) / 2;
+                        this.drawArrowhead(this.centerX, objectTip.y, midX2, midY2);
+                    } else {
+                        const farRight = this.worldToScreen(100, this.objectHeight);
+                        this.ctx.lineTo(farRight.x, farRight.y);
+                        this.ctx.stroke();
+                        
+                        // Arrowhead on outgoing segment
+                        const midX2 = (this.centerX + farRight.x) / 2;
+                        this.drawArrowhead(this.centerX, objectTip.y, midX2, objectTip.y);
+                    }
+                }
+                
+                // Ray 2: Through center of lens (undeviated)
+                if (Math.abs(this.objectHeight) <= lensHeight) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(objectTip.x, objectTip.y);
+                    
+                    if (isInsideFocalLength) {
+                        const slope = this.objectHeight / this.objectDistance;
+                        const farRightY = slope * 100;
+                        const farRight = this.worldToScreen(100, farRightY);
+                        this.ctx.lineTo(farRight.x, farRight.y);
+                        this.ctx.stroke();
+                        
+                        // Arrowheads
+                        const midX1 = (objectTip.x + this.centerX) / 2;
+                        const midY1 = (objectTip.y + this.centerY) / 2;
+                        this.drawArrowhead(objectTip.x, objectTip.y, midX1, midY1);
+                        
+                        const midX2 = (this.centerX + farRight.x) / 2;
+                        const midY2 = (this.centerY + farRight.y) / 2;
+                        this.drawArrowhead(this.centerX, this.centerY, midX2, midY2);
+                    } else if (isFinite(imageProps.imageDistance)) {
+                        const imageTip = this.worldToScreen(imageProps.imageDistance, imageProps.imageHeight);
+                        this.ctx.lineTo(imageTip.x, imageTip.y);
+                        this.ctx.stroke();
+                        
+                        // Arrowheads
+                        const midX1 = (objectTip.x + this.centerX) / 2;
+                        const midY1 = (objectTip.y + this.centerY) / 2;
+                        this.drawArrowhead(objectTip.x, objectTip.y, midX1, midY1);
+                        
+                        const midX2 = (this.centerX + imageTip.x) / 2;
+                        const midY2 = (this.centerY + imageTip.y) / 2;
+                        this.drawArrowhead(this.centerX, this.centerY, midX2, midY2);
+                    } else {
+                        const slope = this.objectHeight / this.objectDistance;
+                        const farRightY = slope * 100;
+                        const farRight = this.worldToScreen(100, farRightY);
+                        this.ctx.lineTo(farRight.x, farRight.y);
+                        this.ctx.stroke();
+                        
+                        // Arrowheads
+                        const midX1 = (objectTip.x + this.centerX) / 2;
+                        const midY1 = (objectTip.y + this.centerY) / 2;
+                        this.drawArrowhead(objectTip.x, objectTip.y, midX1, midY1);
+                        
+                        const midX2 = (this.centerX + farRight.x) / 2;
+                        const midY2 = (this.centerY + farRight.y) / 2;
+                        this.drawArrowhead(this.centerX, this.centerY, midX2, midY2);
+                    }
+                }
+                
+                // Ray 3: Through focal point, then parallel
+                const objectTipWorld = { x: this.objectDistance, y: this.objectHeight };
+                const leftFocalWorld = { x: -this.focalLength, y: 0 };
+                
+                const raySlope = (objectTipWorld.y - leftFocalWorld.y) / (objectTipWorld.x - leftFocalWorld.x);
+                const lensIntersectionY = leftFocalWorld.y + raySlope * (0 - leftFocalWorld.x);
+                
+                if (Math.abs(lensIntersectionY) <= lensHeight) {
+                    const lensIntersection = this.worldToScreen(0, lensIntersectionY);
+                    
+                    // First segment: object to lens
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(objectTip.x, objectTip.y);
+                    this.ctx.lineTo(lensIntersection.x, lensIntersection.y);
+                    this.ctx.stroke();
+                    
+                    // Arrowhead on incoming segment
+                    const midX1 = (objectTip.x + lensIntersection.x) / 2;
+                    const midY1 = (objectTip.y + lensIntersection.y) / 2;
+                    this.drawArrowhead(objectTip.x, objectTip.y, midX1, midY1);
+                    
+                    // Second segment: lens to image/far right
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(lensIntersection.x, lensIntersection.y);
+                    
+                    if (isInsideFocalLength) {
+                        const farRight = this.worldToScreen(100, lensIntersectionY);
+                        this.ctx.lineTo(farRight.x, farRight.y);
+                        this.ctx.stroke();
+                        
+                        // Arrowhead on outgoing segment
+                        const midX2 = (lensIntersection.x + farRight.x) / 2;
+                        this.drawArrowhead(lensIntersection.x, lensIntersection.y, midX2, lensIntersectionY);
+                    } else if (isFinite(imageProps.imageDistance)) {
+                        const imageTip = this.worldToScreen(imageProps.imageDistance, imageProps.imageHeight);
+                        this.ctx.lineTo(imageTip.x, imageTip.y);
+                        this.ctx.stroke();
+                        
+                        // Arrowhead on outgoing segment
+                        const midX2 = (lensIntersection.x + imageTip.x) / 2;
+                        const midY2 = (lensIntersection.y + imageTip.y) / 2;
+                        this.drawArrowhead(lensIntersection.x, lensIntersection.y, midX2, midY2);
+                    } else {
+                        const farRight = this.worldToScreen(100, lensIntersectionY);
+                        this.ctx.lineTo(farRight.x, farRight.y);
+                        this.ctx.stroke();
+                        
+                        // Arrowhead on outgoing segment
+                        const midX2 = (lensIntersection.x + farRight.x) / 2;
+                        this.drawArrowhead(lensIntersection.x, lensIntersection.y, midX2, lensIntersectionY);
+                    }
+                }
+                
+                // Draw virtual image ray extensions (dashed lines, no arrows)
+                if (isInsideFocalLength && isFinite(imageProps.imageDistance) && imageProps.imageDistance < 0) {
+                    this.ctx.strokeStyle = '#ff9ff3';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.setLineDash([5, 5]);
+                    
+                    const virtualImageTip = this.worldToScreen(imageProps.imageDistance, imageProps.imageHeight);
+                    
+                    // Virtual extensions (no arrowheads)
+                    if (Math.abs(this.objectHeight) <= lensHeight) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(this.centerX, objectTip.y);
+                        this.ctx.lineTo(virtualImageTip.x, virtualImageTip.y);
+                        this.ctx.stroke();
+                    }
+                    
+                    if (Math.abs(this.objectHeight) <= lensHeight) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(this.centerX, this.centerY);
+                        this.ctx.lineTo(virtualImageTip.x, virtualImageTip.y);
+                        this.ctx.stroke();
+                    }
+                    
+                    this.ctx.setLineDash([]);
+                }
+            }
+        }
+        
+        // Initialize the simulator when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new OpticsSimulator();
+        });
+    </script>
+</body>
+</html>
