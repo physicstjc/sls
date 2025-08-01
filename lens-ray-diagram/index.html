@@ -46,7 +46,7 @@
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            font-size: 14px;
+            font-size: 16px;
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
@@ -58,11 +58,11 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 10px 18px;
             border-radius: 20px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 14px;
             transition: all 0.3s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
@@ -89,7 +89,7 @@
         
         .optics-simulator-container .control-group span {
             color: #666;
-            font-size: 12px;
+            font-size: 14px;
         }
         
         .optics-simulator-container .draggable-hint {
@@ -98,9 +98,9 @@
             right: 10px;
             background: rgba(0,0,0,0.7);
             color: white;
-            padding: 8px 12px;
+            padding: 10px 14px;
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 14px;
         }
         
         .optics-simulator-container .fullscreen-btn {
@@ -110,11 +110,11 @@
             background: rgba(0,0,0,0.6);
             color: white;
             border: none;
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -122,11 +122,38 @@
             z-index: 1000;
         }
         
+        .optics-simulator-container .zoom-controls {
+            position: absolute;
+            top: 5px;
+            right: 38px;
+            display: flex;
+            gap: 2px;
+            z-index: 1000;
+        }
+        
+        .optics-simulator-container .zoom-btn {
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .optics-simulator-container .zoom-btn:hover,
         .optics-simulator-container .fullscreen-btn:hover {
             background: rgba(0,0,0,0.8);
             transform: scale(1.1);
         }
         
+        .optics-simulator-container .zoom-btn:active,
         .optics-simulator-container .fullscreen-btn:active {
             transform: scale(0.95);
         }
@@ -176,6 +203,10 @@
 </head>
 <body>
     <div class="optics-simulator-container">
+        <div class="zoom-controls">
+            <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out">−</button>
+            <button class="zoom-btn" id="zoomInBtn" title="Zoom In">+</button>
+        </div>
         <button class="fullscreen-btn" id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
         <div class="container">
             <div class="controls">
@@ -282,6 +313,15 @@
                 document.getElementById('fullscreenBtn').addEventListener('click', () => {
                     this.toggleFullscreen();
                 });
+                
+                // Zoom buttons
+                document.getElementById('zoomInBtn').addEventListener('click', () => {
+                    this.zoomIn();
+                });
+                
+                document.getElementById('zoomOutBtn').addEventListener('click', () => {
+                    this.zoomOut();
+                });
             }
             
             toggleMode() {
@@ -309,6 +349,20 @@
                 }
                 
                 this.draw();
+            }
+            
+            zoomIn() {
+                if (this.scale < this.maxScale) {
+                    this.scale += 0.5;
+                    this.draw();
+                }
+            }
+            
+            zoomOut() {
+                if (this.scale > this.minScale) {
+                    this.scale -= 0.5;
+                    this.draw();
+                }
             }
             
             toggleFullscreen() {
@@ -641,7 +695,7 @@
                 this.ctx.fill();
                 
                 this.ctx.fillStyle = '#ff6b6b';
-                this.ctx.font = '12px Arial';
+                this.ctx.font = '14px Arial';
                 this.ctx.textAlign = 'center';
                 this.ctx.fillText('F', rightF.x, rightF.y - 10);
                 
@@ -662,7 +716,7 @@
                 this.ctx.fill();
                 
                 this.ctx.fillStyle = '#ff9999';
-                this.ctx.font = '11px Arial';
+                this.ctx.font = '13px Arial';
                 this.ctx.fillText('2F', right2F.x, right2F.y - 10);
                 
                 // Left 2F point
@@ -676,7 +730,7 @@
                 
                 // Focal length labels - positioned to avoid overlap
                 this.ctx.fillStyle = '#666';
-                this.ctx.font = '10px Arial';
+                this.ctx.font = '12px Arial';
                 
                 // Calculate distance between F and 2F points
                 const pointDistance = Math.abs(right2F.x - rightF.x);
@@ -716,12 +770,12 @@
                 
                 // Object label
                 this.ctx.fillStyle = '#d63031';
-                this.ctx.font = '12px Arial';
+                this.ctx.font = '14px Arial';
                 this.ctx.textAlign = 'left';
                 this.ctx.fillText('Object', objectBase.x - 30, objectBase.y + 20);
                 
                 // Object height label - position to avoid overlapping with object label
-                this.ctx.font = '10px Arial';
+                this.ctx.font = '12px Arial';
                 this.ctx.textAlign = 'center';
                 const heightLabelX = objectTip.x + (this.objectHeight > 0 ? 25 : -25);
                 const heightLabelY = objectTip.y + (this.objectHeight > 0 ? -5 : 15);
@@ -764,7 +818,7 @@
                     
                     // Image label
                     this.ctx.fillStyle = '#0984e3';
-                    this.ctx.font = '10px Arial';
+                    this.ctx.font = '12px Arial';
                     this.ctx.textAlign = 'center';
                     
                     // Position image height label to avoid overlap
