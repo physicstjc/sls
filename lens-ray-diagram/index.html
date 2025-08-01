@@ -587,11 +587,23 @@
                 
                 this.ctx.fillText('2F', left2F.x, left2F.y - 10);
                 
-                // Focal length labels
+                // Focal length labels - positioned to avoid overlap
                 this.ctx.fillStyle = '#666';
                 this.ctx.font = '10px Arial';
-                this.ctx.fillText(`f = ${(this.focalLength / 10).toFixed(1)} cm`, rightF.x, rightF.y + 20);
-                this.ctx.fillText(`2f = ${(2 * this.focalLength / 10).toFixed(1)} cm`, right2F.x, right2F.y + 20);
+                
+                // Calculate distance between F and 2F points
+                const pointDistance = Math.abs(right2F.x - rightF.x);
+                
+                // If points are too close, stagger the labels vertically more
+                if (pointDistance < 60) {
+                    // Close together - use different vertical positions
+                    this.ctx.fillText(`f = ${(this.focalLength / 10).toFixed(1)} cm`, rightF.x, rightF.y + 25);
+                    this.ctx.fillText(`2f = ${(2 * this.focalLength / 10).toFixed(1)} cm`, right2F.x, right2F.y + 45);
+                } else {
+                    // Far apart - can use similar positions
+                    this.ctx.fillText(`f = ${(this.focalLength / 10).toFixed(1)} cm`, rightF.x, rightF.y + 25);
+                    this.ctx.fillText(`2f = ${(2 * this.focalLength / 10).toFixed(1)} cm`, right2F.x, right2F.y + 25);
+                }
             }
             
             drawObject() {
@@ -599,7 +611,7 @@
                 const objectTip = this.worldToScreen(this.objectDistance, this.objectHeight);
                 
                 // Object arrow
-                this.ctx.strokeStyle = '#4ecdc4';
+                this.ctx.strokeStyle = '#d63031';
                 this.ctx.lineWidth = 3;
                 this.ctx.beginPath();
                 this.ctx.moveTo(objectBase.x, objectBase.y);
@@ -607,7 +619,7 @@
                 this.ctx.stroke();
                 
                 // Arrow tip
-                this.ctx.fillStyle = '#4ecdc4';
+                this.ctx.fillStyle = '#d63031';
                 this.ctx.beginPath();
                 this.ctx.moveTo(objectTip.x, objectTip.y);
                 this.ctx.lineTo(objectTip.x - 5, objectTip.y + 8);
@@ -616,11 +628,17 @@
                 this.ctx.fill();
                 
                 // Object label
-                this.ctx.fillStyle = '#4ecdc4';
+                this.ctx.fillStyle = '#d63031';
                 this.ctx.font = '12px Arial';
+                this.ctx.textAlign = 'left';
+                this.ctx.fillText('Object', objectBase.x - 30, objectBase.y + 20);
+                
+                // Object height label - position to avoid overlapping with object label
+                this.ctx.font = '10px Arial';
                 this.ctx.textAlign = 'center';
-                this.ctx.fillText('Object', objectBase.x, objectBase.y + 20);
-                this.ctx.fillText(`${(this.objectHeight / 10).toFixed(1)} cm`, objectTip.x + 20, objectTip.y);
+                const heightLabelX = objectTip.x + (this.objectHeight > 0 ? 25 : -25);
+                const heightLabelY = objectTip.y + (this.objectHeight > 0 ? -5 : 15);
+                this.ctx.fillText(`${(this.objectHeight / 10).toFixed(1)} cm`, heightLabelX, heightLabelY);
             }
             
             drawImage() {
@@ -633,7 +651,7 @@
                     const imageTip = this.worldToScreen(imageProps.imageDistance, imageProps.imageHeight);
                     
                     // Image arrow
-                    this.ctx.strokeStyle = '#95e1d3';
+                    this.ctx.strokeStyle = '#0984e3';
                     this.ctx.lineWidth = 2;
                     this.ctx.setLineDash([5, 5]);
                     this.ctx.beginPath();
@@ -643,7 +661,7 @@
                     this.ctx.setLineDash([]);
                     
                     // Arrow tip
-                    this.ctx.fillStyle = '#95e1d3';
+                    this.ctx.fillStyle = '#0984e3';
                     this.ctx.beginPath();
                     if (imageProps.imageHeight > 0) {
                         this.ctx.moveTo(imageTip.x, imageTip.y);
@@ -658,11 +676,15 @@
                     this.ctx.fill();
                     
                     // Image label
-                    this.ctx.fillStyle = '#95e1d3';
+                    this.ctx.fillStyle = '#0984e3';
                     this.ctx.font = '10px Arial';
                     this.ctx.textAlign = 'center';
+                    
+                    // Position image height label to avoid overlap
+                    const imageLabelX = imageTip.x + (imageProps.imageHeight > 0 ? 30 : -30);
+                    const imageLabelY = imageTip.y + (imageProps.imageHeight > 0 ? -5 : 15);
                     this.ctx.fillText(`${(Math.abs(imageProps.imageHeight) / 10).toFixed(1)} cm`, 
-                                    imageTip.x + (imageProps.imageHeight > 0 ? 25 : -25), imageTip.y);
+                                    imageLabelX, imageLabelY);
                 }
             }
             
@@ -717,18 +739,48 @@
                     }
                 }
                 
-                // Draw focus point
-                this.ctx.fillStyle = '#00ff00';
+                // Draw focus point as an image arrow
+                this.ctx.fillStyle = '#0984e3';
+                this.ctx.strokeStyle = '#0984e3';
+                this.ctx.lineWidth = 2;
+                this.ctx.setLineDash([5, 5]);
+                
+                // Image arrow from optical axis to focus point
+                const imageBase = this.worldToScreen(this.focalLength, 0);
                 this.ctx.beginPath();
-                this.ctx.arc(focusPoint.x, focusPoint.y, 4, 0, 2 * Math.PI);
+                this.ctx.moveTo(imageBase.x, imageBase.y);
+                this.ctx.lineTo(focusPoint.x, focusPoint.y);
+                this.ctx.stroke();
+                this.ctx.setLineDash([]);
+                
+                // Arrow tip at focus point
+                this.ctx.fillStyle = '#0984e3';
+                this.ctx.beginPath();
+                if (focusY > 0) {
+                    this.ctx.moveTo(focusPoint.x, focusPoint.y);
+                    this.ctx.lineTo(focusPoint.x - 4, focusPoint.y + 6);
+                    this.ctx.lineTo(focusPoint.x + 4, focusPoint.y + 6);
+                } else if (focusY < 0) {
+                    this.ctx.moveTo(focusPoint.x, focusPoint.y);
+                    this.ctx.lineTo(focusPoint.x - 4, focusPoint.y - 6);
+                    this.ctx.lineTo(focusPoint.x + 4, focusPoint.y - 6);
+                } else {
+                    // For zero angle, draw a small dot
+                    this.ctx.arc(focusPoint.x, focusPoint.y, 3, 0, 2 * Math.PI);
+                }
+                this.ctx.closePath();
                 this.ctx.fill();
                 
-                // Label focus point
-                this.ctx.fillStyle = '#00ff00';
-                this.ctx.font = '10px Arial';
+                // Image label
+                this.ctx.fillStyle = '#0984e3';
+                this.ctx.font = '12px Arial';
                 this.ctx.textAlign = 'center';
-                this.ctx.fillText('Focus', focusPoint.x, focusPoint.y - 8);
-                this.ctx.fillText(`(${(this.focalLength / 10).toFixed(1)}, ${(focusY / 10).toFixed(1)})`, focusPoint.x, focusPoint.y + 18);
+                this.ctx.fillText('Image', focusPoint.x, imageBase.y + 20);
+                if (Math.abs(focusY) > 0.1) {
+                    this.ctx.font = '10px Arial';
+                    this.ctx.fillText(`${(Math.abs(focusY) / 10).toFixed(1)} cm`, 
+                                    focusPoint.x + (focusY > 0 ? 25 : -25), focusPoint.y);
+                }
                 
                 // Draw angle indicator showing the incident angle
                 if (Math.abs(this.rayAngle) > 0.5) {
