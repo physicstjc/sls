@@ -5,15 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Optics Ray Diagram</title>
     <style>
-        body {
+        .optics-simulator-container {
             margin: 0;
             padding: 20px;
             font-family: Arial, sans-serif;
             background: #f0f0f0;
             overflow-x: auto;
+            box-sizing: border-box;
         }
         
-        .container {
+        .optics-simulator-container * {
+            box-sizing: border-box;
+        }
+        
+        .optics-simulator-container .container {
             position: relative;
             width: 100%;
             max-width: 1000px;
@@ -23,7 +28,7 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         
-        #canvas {
+        .optics-simulator-container #canvas {
             width: 100%;
             height: 400px;
             display: block;
@@ -32,7 +37,7 @@
             background: white;
         }
         
-        .controls {
+        .optics-simulator-container .controls {
             position: absolute;
             top: 10px;
             left: 10px;
@@ -49,7 +54,7 @@
             justify-content: space-between;
         }
         
-        .mode-toggle {
+        .optics-simulator-container .mode-toggle {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
@@ -62,32 +67,32 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
-        .mode-toggle:hover {
+        .optics-simulator-container .mode-toggle:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         
-        .mode-toggle:active {
+        .optics-simulator-container .mode-toggle:active {
             transform: translateY(0);
         }
         
-        .control-group {
+        .optics-simulator-container .control-group {
             margin-bottom: 10px;
         }
         
-        .control-group label {
+        .optics-simulator-container .control-group label {
             display: block;
             margin-bottom: 3px;
             font-weight: bold;
             color: #333;
         }
         
-        .control-group span {
+        .optics-simulator-container .control-group span {
             color: #666;
             font-size: 12px;
         }
         
-        .draggable-hint {
+        .optics-simulator-container .draggable-hint {
             position: absolute;
             bottom: 10px;
             right: 10px;
@@ -98,8 +103,60 @@
             font-size: 12px;
         }
         
+        .optics-simulator-container .fullscreen-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+        
+        .optics-simulator-container .fullscreen-btn:hover {
+            background: rgba(0,0,0,0.8);
+            transform: scale(1.1);
+        }
+        
+        .optics-simulator-container .fullscreen-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .optics-simulator-container.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #f0f0f0;
+            z-index: 9999;
+            padding: 10px;
+        }
+        
+        .optics-simulator-container.fullscreen .container {
+            max-width: none;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .optics-simulator-container.fullscreen #canvas {
+            flex: 1;
+            height: auto;
+        }
+        
         @media (max-width: 768px) {
-            .controls {
+            .optics-simulator-container .controls {
                 position: relative;
                 margin-bottom: 10px;
                 left: 0;
@@ -109,7 +166,7 @@
                 align-items: stretch;
             }
             
-            .draggable-hint {
+            .optics-simulator-container .draggable-hint {
                 position: relative;
                 margin-top: 10px;
                 text-align: center;
@@ -118,32 +175,35 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="controls">
-            <button class="mode-toggle" id="modeToggle">📍 Finite Object</button>
+    <div class="optics-simulator-container">
+        <button class="fullscreen-btn" id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
+        <div class="container">
+            <div class="controls">
+                <button class="mode-toggle" id="modeToggle">📍 Finite Object</button>
+                
+                <div class="control-group">
+                    <label>Focal Length: <span id="focalDisplay">2.0</span> cm</label>
+                    <span>Drag the focal points to adjust</span>
+                </div>
+                <div class="control-group" id="finiteControls">
+                    <label>Object Height: <span id="heightDisplay">1.8</span> cm</label>
+                    <span>Drag the object arrow</span>
+                </div>
+                <div class="control-group" id="finiteControls2">
+                    <label>Object Distance: <span id="distanceDisplay">4.0</span> cm</label>
+                    <span>Drag the object left/right</span>
+                </div>
+                <div class="control-group" id="infiniteControls" style="display: none;">
+                    <label>Ray Angle: <span id="angleDisplay">0</span>°</label>
+                    <span>Drag the parallel rays to adjust angle</span>
+                </div>
+            </div>
             
-            <div class="control-group">
-                <label>Focal Length: <span id="focalDisplay">2.0</span> cm</label>
-                <span>Drag the focal points to adjust</span>
+            <canvas id="canvas"></canvas>
+            
+            <div class="draggable-hint">
+                💡 Drag focal points, object arrow, or object position to explore optics!
             </div>
-            <div class="control-group" id="finiteControls">
-                <label>Object Height: <span id="heightDisplay">1.8</span> cm</label>
-                <span>Drag the object arrow</span>
-            </div>
-            <div class="control-group" id="finiteControls2">
-                <label>Object Distance: <span id="distanceDisplay">4.0</span> cm</label>
-                <span>Drag the object left/right</span>
-            </div>
-            <div class="control-group" id="infiniteControls" style="display: none;">
-                <label>Ray Angle: <span id="angleDisplay">0</span>°</label>
-                <span>Drag the parallel rays to adjust angle</span>
-            </div>
-        </div>
-        
-        <canvas id="canvas"></canvas>
-        
-        <div class="draggable-hint">
-            💡 Drag focal points, object arrow, or object position to explore optics!
         </div>
     </div>
 
@@ -217,6 +277,11 @@
                 document.getElementById('modeToggle').addEventListener('click', () => {
                     this.toggleMode();
                 });
+                
+                // Fullscreen toggle button
+                document.getElementById('fullscreenBtn').addEventListener('click', () => {
+                    this.toggleFullscreen();
+                });
             }
             
             toggleMode() {
@@ -244,6 +309,28 @@
                 }
                 
                 this.draw();
+            }
+            
+            toggleFullscreen() {
+                const container = document.querySelector('.optics-simulator-container');
+                const btn = document.getElementById('fullscreenBtn');
+                
+                if (container.classList.contains('fullscreen')) {
+                    // Exit fullscreen
+                    container.classList.remove('fullscreen');
+                    btn.innerHTML = '⛶';
+                    btn.title = 'Toggle Fullscreen';
+                } else {
+                    // Enter fullscreen
+                    container.classList.add('fullscreen');
+                    btn.innerHTML = '⛷';
+                    btn.title = 'Exit Fullscreen';
+                }
+                
+                // Trigger canvas resize after fullscreen change
+                setTimeout(() => {
+                    this.updateCanvasSize();
+                }, 100);
             }
             
             getMousePos(e) {
