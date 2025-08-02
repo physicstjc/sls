@@ -303,6 +303,12 @@
                 
                 this.setupEventListeners();
                 this.updateDisplays();
+                
+                // Start in fullscreen mode by default
+                setTimeout(() => {
+                    this.enterFullscreen();
+                }, 100);
+                
                 this.draw();
                 
                 // Ensure zoom buttons are working
@@ -448,26 +454,42 @@
                 }, 1000);
             }
             
-            toggleFullscreen() {
+            enterFullscreen() {
                 const container = document.querySelector('.optics-simulator-container');
                 const btn = document.getElementById('fullscreenBtn');
                 
-                if (container.classList.contains('fullscreen')) {
-                    // Exit fullscreen
-                    container.classList.remove('fullscreen');
-                    btn.innerHTML = '⛶';
-                    btn.title = 'Toggle Fullscreen';
-                } else {
-                    // Enter fullscreen
-                    container.classList.add('fullscreen');
-                    btn.innerHTML = '⛷';
-                    btn.title = 'Exit Fullscreen';
-                }
+                container.classList.add('fullscreen');
+                btn.innerHTML = '⛷';
+                btn.title = 'Exit Fullscreen';
                 
                 // Trigger canvas resize after fullscreen change
                 setTimeout(() => {
                     this.updateCanvasSize();
                 }, 100);
+            }
+            
+            exitFullscreen() {
+                const container = document.querySelector('.optics-simulator-container');
+                const btn = document.getElementById('fullscreenBtn');
+                
+                container.classList.remove('fullscreen');
+                btn.innerHTML = '⛶';
+                btn.title = 'Toggle Fullscreen';
+                
+                // Trigger canvas resize after fullscreen change
+                setTimeout(() => {
+                    this.updateCanvasSize();
+                }, 100);
+            }
+            
+            toggleFullscreen() {
+                const container = document.querySelector('.optics-simulator-container');
+                
+                if (container.classList.contains('fullscreen')) {
+                    this.exitFullscreen();
+                } else {
+                    this.enterFullscreen();
+                }
             }
             
             getMousePos(e) {
@@ -928,7 +950,7 @@
                 // Draw multiple parallel rays at the specified angle
                 for (let i = -2; i <= 2; i++) {
                     // Calculate starting positions for parallel rays at the given angle
-                    const startX = -100;
+                    const startX = -150;
                     const baseY = i * raySpacing;
                     
                     // Calculate where this ray intersects the lens (x = 0)
@@ -1074,8 +1096,8 @@
                         // Object inside focal length - ray diverges as if coming from right focal point
                         const rightFocal = this.worldToScreen(this.focalLength, 0);
                         const raySlope = (objectTip.y - rightFocal.y) / (this.centerX - rightFocal.x);
-                        const farRightY = objectTip.y + raySlope * (this.worldToScreen(100, 0).x - this.centerX);
-                        const farRight = { x: this.worldToScreen(100, 0).x, y: farRightY };
+                        const farRightY = objectTip.y + raySlope * (this.worldToScreen(150, 0).x - this.centerX);
+                        const farRight = { x: this.worldToScreen(150, 0).x, y: farRightY };
                         this.ctx.lineTo(farRight.x, farRight.y);
                         this.ctx.stroke();
                         
@@ -1107,7 +1129,7 @@
                         const midY2 = (objectTip.y + rightFocal.y) / 2;
                         this.drawArrowhead(this.centerX, objectTip.y, midX2, midY2);
                     } else {
-                        const farRight = this.worldToScreen(100, this.objectHeight);
+                        const farRight = this.worldToScreen(150, this.objectHeight);
                         this.ctx.lineTo(farRight.x, farRight.y);
                         this.ctx.stroke();
                         
@@ -1124,8 +1146,8 @@
                     
                     if (isInsideFocalLength) {
                         const slope = this.objectHeight / this.objectDistance;
-                        const farRightY = slope * 100;
-                        const farRight = this.worldToScreen(100, farRightY);
+                        const farRightY = slope * 150;
+                        const farRight = this.worldToScreen(150, farRightY);
                         this.ctx.lineTo(farRight.x, farRight.y);
                         this.ctx.stroke();
                         
@@ -1152,8 +1174,8 @@
                         this.drawArrowhead(this.centerX, this.centerY, midX2, midY2);
                     } else {
                         const slope = this.objectHeight / this.objectDistance;
-                        const farRightY = slope * 100;
-                        const farRight = this.worldToScreen(100, farRightY);
+                        const farRightY = slope * 150;
+                        const farRight = this.worldToScreen(150, farRightY);
                         this.ctx.lineTo(farRight.x, farRight.y);
                         this.ctx.stroke();
                         
@@ -1211,7 +1233,7 @@
                         const midY2 = (lensIntersection.y + imageTip.y) / 2;
                         this.drawArrowhead(lensIntersection.x, lensIntersection.y, midX2, midY2);
                     } else {
-                        const farRight = this.worldToScreen(100, lensIntersectionY);
+                        const farRight = this.worldToScreen(150, lensIntersectionY);
                         this.ctx.lineTo(farRight.x, farRight.y);
                         this.ctx.stroke();
                         
