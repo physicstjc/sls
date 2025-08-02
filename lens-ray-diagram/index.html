@@ -286,7 +286,7 @@
                 // Physics parameters
                 this.focalLength = 20;
                 this.lensPosition = 0;
-                this.objectDistance = -40; // negative for left side
+                this.objectDistance = -60; // negative for left side - start further out
                 this.objectHeight = 18;
                 this.isInfiniteObject = false;
                 this.rayAngle = 0; // angle in degrees for infinite object rays
@@ -599,11 +599,11 @@
                         
                     case 'objectArrow':
                         this.objectHeight = Math.max(5, Math.min(40, worldPos.y));
-                        this.objectDistance = Math.max(-80, Math.min(-5, worldPos.x));
+                        this.objectDistance = Math.max(-150, Math.min(-5, worldPos.x));
                         break;
                         
                     case 'objectBase':
-                        this.objectDistance = Math.max(-80, Math.min(-5, worldPos.x));
+                        this.objectDistance = Math.max(-150, Math.min(-5, worldPos.x));
                         break;
                 }
                 
@@ -682,7 +682,7 @@
                 this.ctx.lineWidth = 0.5;
                 
                 // Vertical lines
-                for (let x = -100; x <= 100; x += 10) {
+                for (let x = -150; x <= 150; x += 10) {
                     const screenPos = this.worldToScreen(x, 0);
                     this.ctx.beginPath();
                     this.ctx.moveTo(screenPos.x, 0);
@@ -721,7 +721,7 @@
                 this.ctx.font = '10px Arial';
                 this.ctx.textAlign = 'center';
                 
-                for (let x = -80; x <= 80; x += 20) {
+                for (let x = -140; x <= 140; x += 20) {
                     if (x === 0) continue;
                     const screenPos = this.worldToScreen(x, 0);
                     this.ctx.fillText(x.toString(), screenPos.x, this.centerY + 15);
