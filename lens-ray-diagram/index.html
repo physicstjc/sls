@@ -286,7 +286,7 @@
                 // Physics parameters
                 this.focalLength = 20;
                 this.lensPosition = 0;
-                this.objectDistance = -60; // negative for left side - start further out
+                this.objectDistance = -40; // negative for left side - positioned at 2F
                 this.objectHeight = 18;
                 this.isInfiniteObject = false;
                 this.rayAngle = 0; // angle in degrees for infinite object rays
@@ -310,10 +310,6 @@
                 }, 100);
                 
                 this.draw();
-                
-                // Ensure zoom buttons are working
-                console.log('Zoom in button:', document.getElementById('zoomInBtn'));
-                console.log('Zoom out button:', document.getElementById('zoomOutBtn'));
             }
             
             updateCanvasSize() {
@@ -389,69 +385,6 @@
                 }
                 
                 this.draw();
-            }
-            
-            zoomIn() {
-                if (this.scale < this.maxScale) {
-                    this.scale += 1; // Increase step size for more noticeable effect
-                    console.log('Zooming in to scale:', this.scale);
-                    // Force a complete redraw
-                    this.updateCanvasSize();
-                    this.draw();
-                    this.updateZoomDisplay();
-                }
-            }
-            
-            zoomOut() {
-                if (this.scale > this.minScale) {
-                    this.scale -= 1; // Increase step size for more noticeable effect
-                    console.log('Zooming out to scale:', this.scale);
-                    // Force a complete redraw
-                    this.updateCanvasSize();
-                    this.draw();
-                    this.updateZoomDisplay();
-                }
-            }
-            
-            updateZoomDisplay() {
-                // Update zoom level display
-                const zoomLevel = Math.round((this.scale / 4) * 100); // 4 is default scale
-                console.log(`Zoom level: ${zoomLevel}%`);
-                
-                // Show zoom level temporarily
-                const container = document.querySelector('.optics-simulator-container');
-                let zoomIndicator = document.getElementById('zoomIndicator');
-                
-                if (!zoomIndicator) {
-                    zoomIndicator = document.createElement('div');
-                    zoomIndicator.id = 'zoomIndicator';
-                    zoomIndicator.style.cssText = `
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        background: rgba(0,0,0,0.8);
-                        color: white;
-                        padding: 10px 20px;
-                        border-radius: 20px;
-                        font-size: 18px;
-                        font-weight: bold;
-                        z-index: 2000;
-                        pointer-events: none;
-                        transition: opacity 0.3s ease;
-                    `;
-                    container.appendChild(zoomIndicator);
-                }
-                
-                zoomIndicator.textContent = `${zoomLevel}%`;
-                zoomIndicator.style.opacity = '1';
-                
-                // Hide after 1 second
-                setTimeout(() => {
-                    if (zoomIndicator) {
-                        zoomIndicator.style.opacity = '0';
-                    }
-                }, 1000);
             }
             
             enterFullscreen() {
