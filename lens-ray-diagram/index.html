@@ -490,7 +490,7 @@
             getClickTarget(worldPos) {
                 const tolerance = 8 / this.scale;
                 
-                // Check focal points
+                // Check focal points FIRST (works in all modes)
                 if (Math.abs(worldPos.x - this.focalLength) < tolerance && Math.abs(worldPos.y) < tolerance) {
                     return 'rightFocal';
                 }
@@ -507,9 +507,16 @@
                 }
                 
                 if (this.isInfiniteObject) {
-                    // Check for ray angle adjustment (anywhere on the left side of canvas)
+                    // Check for ray angle adjustment on left side, but avoid focal point areas
                     if (worldPos.x < -10) {
-                        return 'rayAngle';
+                        // Check if we're NOT near any focal points
+                        const distanceToLeftF = Math.sqrt(Math.pow(worldPos.x + this.focalLength, 2) + Math.pow(worldPos.y, 2));
+                        const distanceToLeft2F = Math.sqrt(Math.pow(worldPos.x + 2 * this.focalLength, 2) + Math.pow(worldPos.y, 2));
+                        
+                        // If we're not close to focal points, allow ray angle adjustment
+                        if (distanceToLeftF > tolerance * 2 && distanceToLeft2F > tolerance * 2) {
+                            return 'rayAngle';
+                        }
                     }
                 } else {
                     // Check object arrow (tip)
