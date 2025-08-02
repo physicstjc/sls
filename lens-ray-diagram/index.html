@@ -104,6 +104,9 @@
         }
         
         .optics-simulator-container .fullscreen-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
             background: rgba(0,0,0,0.6);
             color: white;
             border: none;
@@ -116,7 +119,16 @@
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
-            flex-shrink: 0;
+            z-index: 1000;
+        }
+        
+        .optics-simulator-container .fullscreen-btn:hover {
+            background: rgba(0,0,0,0.8);
+            transform: scale(1.1);
+        }
+        
+        .optics-simulator-container .fullscreen-btn:active {
+            transform: scale(0.95);
         }
         
         .optics-simulator-container .zoom-controls {
@@ -163,20 +175,50 @@
             height: 100vh;
             background: #f0f0f0;
             z-index: 9999;
-            padding: 10px;
+            padding: 0;
+            margin: 0;
         }
         
         .optics-simulator-container.fullscreen .container {
             max-width: none;
             width: 100%;
-            height: 100%;
+            height: 100vh;
             display: flex;
             flex-direction: column;
+            border-radius: 0;
+            margin: 0;
+        }
+        
+        .optics-simulator-container.fullscreen .controls {
+            position: relative;
+            top: 0;
+            left: 0;
+            right: 0;
+            flex-shrink: 0;
+            margin: 10px;
+            margin-bottom: 0;
         }
         
         .optics-simulator-container.fullscreen #canvas {
             flex: 1;
             height: auto;
+            margin: 10px;
+            margin-top: 0;
+            border-radius: 8px;
+        }
+        
+        .optics-simulator-container.fullscreen .draggable-hint {
+            position: relative;
+            margin: 10px;
+            margin-top: 0;
+            text-align: center;
+        }
+        
+        .optics-simulator-container.fullscreen .fullscreen-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 10000;
         }
         
         @media (max-width: 768px) {
@@ -200,6 +242,7 @@
 </head>
 <body>
     <div class="optics-simulator-container">
+        <button class="fullscreen-btn" id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
         <div class="container">
             <div class="controls">
                 <button class="mode-toggle" id="modeToggle">📍 Finite Object</button>
