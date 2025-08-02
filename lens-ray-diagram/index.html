@@ -961,9 +961,8 @@
                 this.ctx.fillStyle = '#0984e3';
                 this.ctx.font = '12px Arial';
                 this.ctx.textAlign = 'center';
-                this.ctx.fillText('Image', focusPoint.x, imageBase.y + 20);
                 if (Math.abs(focusY) > 0.1) {
-                    this.ctx.font = '10px Arial';
+                    this.ctx.font = '12px Arial';
                     this.ctx.fillText(`${(Math.abs(focusY) / 10).toFixed(1)} cm`, 
                                     focusPoint.x + (focusY > 0 ? 25 : -25), focusPoint.y);
                 }
