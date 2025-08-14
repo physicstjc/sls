@@ -3,216 +3,591 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geiger-Muller Counter Simulation</title>
-    <script src="plotly-latest.min.js"></script>
+    <title>Geiger-Müller Counter Simulation</title>
     <style>
         body {
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
             font-family: Arial, sans-serif;
-            text-align: center;
-            width: 560px;
-            margin: 0 auto;
-            background-color: #f4f4f9;
-            padding: 0 px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            border-radius: 8px;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
-        #controls {
-            margin: 10px 0;
-            padding: 10px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
-        }
-        .lcd {
-            display: inline-block;
-            background: #333;
-            color: #0f0;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 20px;
-            padding: 10px 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 5px #0f0;
-            margin: 5px;
-        }
-        .lcd.timer {
-            color: #ff0;
-            box-shadow: 0 0 5px #ff0;
-        }
-        label {
-            margin-right: 10px;
-        }
-        select, button {
-            padding: 5px 10px;
-            margin: 5px 0;
-            border-radius: 5px;
+
+        .geiger-app {
+            width: 640px;
+            height: 480px;
+            background: white;
             border: 1px solid #ccc;
-            background-color: #fff;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            box-sizing: border-box;
         }
-        button {
+
+        .controls-header {
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+            background: #fafafa;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        select {
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .btn {
+            padding: 6px 16px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            background: #f8f8f8;
             cursor: pointer;
-            transition: background-color 0.3s;
+            font-size: 14px;
+            transition: background-color 0.2s;
         }
-        button:hover {
-            background-color: #e0e0e0;
+
+        .btn:hover {
+            background: #e8e8e8;
+        }
+
+        .btn:disabled {
+            background: #f0f0f0;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .btn.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #45a049;
+        }
+
+        .data-display {
+            background: #2d2d2d;
+            color: #00ff00;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .time-display {
+            background: #4a4a4a;
+            color: #ffff00;
+        }
+
+        .chart-container {
+            flex: 1;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #666;
+        }
+
+        .chart-area {
+            flex: 1;
+            position: relative;
+            border: 1px solid #ddd;
+            background: white;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .y-axis-label {
+            position: absolute;
+            left: -40px;
+            top: 50%;
+            transform: rotate(-90deg);
+            transform-origin: center;
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ccc;
+            transition: all 0.2s;
+        }
+
+        .status-indicator.active {
+            background: #ff4444;
+            box-shadow: 0 0 8px #ff4444;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+        }
+
+        .volume-slider {
+            width: 60px;
+            height: 4px;
         }
     </style>
 </head>
 <body>
-    <div id="controls">
-        <label for="source">Source:</label>
-        <select id="source">
-            <option value="background">Background</option>
-            <option value="banana">Banana</option>
-            <option value="cesium-137">Cesium-137</option>
-        </select>
-        <button id="start">Start</button>
-        <button id="stop">Stop</button>
-        <br>
-        <label for="view">View:</label>
-        <select id="view">
-            <option value="cumulative">Cumulative Count</option>
-            <option value="sample">Sample Count</option>
-            <option value="cpm">Counts Per Minute (CPM)</option>
-        </select>
-        <div>
-            <span>Total Count: <span id="totalCount" class="lcd">0</span></span>
-            <span>Time: <span id="timer" class="lcd timer">0</span>s</span>
+    <div class="geiger-app">
+        <div class="controls-header">
+            <div class="control-row">
+                <div class="control-group">
+                    <label>Source:</label>
+                    <select id="sourceSelect">
+                        <option value="background">Background</option>
+                        <option value="weak">Weak Source (50 μCi)</option>
+                        <option value="medium">Medium Source (200 μCi)</option>
+                        <option value="strong">Strong Source (500 μCi)</option>
+                    </select>
+                </div>
+                
+                <button class="btn" id="startBtn">Start</button>
+                <button class="btn" id="stopBtn" disabled>Stop</button>
+                
+                <div class="control-group">
+                    <label>View:</label>
+                    <select id="viewSelect">
+                        <option value="cumulative">Cumulative Count</option>
+                        <option value="rate">Count Rate (CPM)</option>
+                        <option value="histogram">Count Histogram</option>
+                    </select>
+                </div>
+                
+                <div class="status-indicator" id="statusIndicator"></div>
+            </div>
+            
+            <div class="control-row">
+                <div class="control-group">
+                    <label>Total Count:</label>
+                    <div class="data-display" id="totalCount">0</div>
+                </div>
+                
+                <div class="control-group">
+                    <label>Time:</label>
+                    <div class="data-display time-display" id="timeDisplay">0</div>
+                    <span>s</span>
+                </div>
+                
+                <div class="control-group">
+                    <label>Current CPM:</label>
+                    <div class="data-display" id="cpmDisplay">0.0</div>
+                </div>
+                
+                <div class="volume-control">
+                    <span>Vol:</span>
+                    <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="50">
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">Geiger-Muller Counter Simulation</div>
+            <div class="chart-area">
+                <div class="y-axis-label" id="yAxisLabel">Counts</div>
+                <canvas class="chart-canvas" id="chartCanvas" width="570" height="280"></canvas>
+            </div>
+            <div class="chart-labels">
+                <span>0</span>
+                <span id="timeAxisMax">60</span>
+            </div>
+            <div style="text-align: center; margin-top: 5px; font-size: 12px; color: #666;">
+                Time (s)
+            </div>
         </div>
     </div>
-    <div id="plot" style="width: 100%; height: 300px;"></div>
+
     <script>
-        const totalCountDisplay = document.getElementById('totalCount');
-        const timerDisplay = document.getElementById('timer');
-        const startButton = document.getElementById('start');
-        const stopButton = document.getElementById('stop');
-        const sourceSelect = document.getElementById('source');
-        const viewSelect = document.getElementById('view');
+        class GeigerCounterApp {
+            constructor() {
+                this.isRunning = false;
+                this.startTime = 0;
+                this.totalCounts = 0;
+                this.currentCPM = 0;
+                this.volume = 0.5;
+                this.audioContext = null;
+                
+                // Data storage
+                this.countData = [];
+                this.rateData = [];
+                this.timePoints = [];
+                this.maxTime = 60; // seconds
+                
+                // Source settings
+                this.sourceTypes = {
+                    background: { rate: 20, label: 'Background (20 CPM)' },
+                    weak: { rate: 70, label: 'Weak Source (50 μCi)' },
+                    medium: { rate: 220, label: 'Medium Source (200 μCi)' },
+                    strong: { rate: 520, label: 'Strong Source (500 μCi)' }
+                };
+                this.currentSource = 'background';
+                this.currentRate = this.sourceTypes.background.rate;
+                
+                // Chart
+                this.canvas = document.getElementById('chartCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.currentView = 'cumulative';
+                
+                this.initializeAudio();
+                this.bindEvents();
+                this.initializeChart();
+                this.updateDisplay();
+            }
 
-        let totalCount = 0;
-        let timer = 0;
-        let interval;
-        let counting = false;
-        let sampleCounts = [];
-        let cumulativeCounts = [];
-        let cpmCounts = [];
+            initializeAudio() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.warn('Audio not supported');
+                }
+            }
 
-        const cumulativeData = {
-            x: [],
-            y: [],
-            type: 'scatter',
-            mode: 'lines+markers',
-            name: 'Cumulative Count'
-        };
+            bindEvents() {
+                document.getElementById('startBtn').addEventListener('click', () => this.start());
+                document.getElementById('stopBtn').addEventListener('click', () => this.stop());
+                document.getElementById('sourceSelect').addEventListener('change', (e) => this.setSource(e.target.value));
+                document.getElementById('viewSelect').addEventListener('change', (e) => this.setView(e.target.value));
+                document.getElementById('volumeSlider').addEventListener('input', (e) => this.setVolume(e.target.value));
+            }
 
-        const sampleData = {
-            x: [],
-            y: [],
-            type: 'scatter',
-            mode: 'lines+markers',
-            name: 'Sample Count',
-            visible: false
-        };
+            setSource(sourceType) {
+                this.currentSource = sourceType;
+                this.currentRate = this.sourceTypes[sourceType].rate;
+            }
 
-        const cpmData = {
-            x: [],
-            y: [],
-            type: 'scatter',
-            mode: 'lines+markers',
-            name: 'Counts Per Minute (CPM)',
-            visible: false
-        };
+            setView(viewType) {
+                this.currentView = viewType;
+                this.updateYAxisLabel();
+                this.drawChart();
+            }
 
-        const layout = {
-            title: 'Geiger-Muller Counter Simulation',
-            xaxis: { title: 'Time (s)' },
-            yaxis: { title: 'Counts' }
-        };
+            setVolume(value) {
+                this.volume = value / 100;
+            }
 
-        Plotly.newPlot('plot', [cumulativeData, sampleData, cpmData], layout);
+            updateYAxisLabel() {
+                const label = document.getElementById('yAxisLabel');
+                switch(this.currentView) {
+                    case 'cumulative':
+                        label.textContent = 'Counts';
+                        break;
+                    case 'rate':
+                        label.textContent = 'CPM';
+                        break;
+                    case 'histogram':
+                        label.textContent = 'Frequency';
+                        break;
+                }
+            }
 
-        function startCounting() {
-            if (counting) return;
-            counting = true;
-            interval = setInterval(() => {
-                timer++;
-                const sampleCount = getRandomCount(sourceSelect.value);
-                totalCount += sampleCount;
-                totalCountDisplay.textContent = totalCount;
-                timerDisplay.textContent = timer;
+            generateClickSound() {
+                if (!this.audioContext || this.volume === 0) return;
 
-                cumulativeCounts.push(totalCount);
-                cumulativeData.x.push(timer);
-                cumulativeData.y.push(totalCount);
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(100, this.audioContext.currentTime + 0.01);
+                
+                gainNode.gain.setValueAtTime(this.volume * 0.3, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.05);
+                
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + 0.05);
+            }
 
-                sampleCounts.push(sampleCount);
-                sampleData.x.push(timer);
-                sampleData.y.push(sampleCount);
+            detectRadiation() {
+                this.totalCounts++;
+                this.generateClickSound();
+                this.flashIndicator();
+                this.updateDisplay();
+                
+                // Add data point
+                const currentTime = (Date.now() - this.startTime) / 1000;
+                this.timePoints.push(currentTime);
+                this.countData.push(this.totalCounts);
+                
+                // Calculate current CPM (based on last 60 seconds)
+                const oneMinuteAgo = currentTime - 60;
+                const recentCounts = this.timePoints.filter(t => t > oneMinuteAgo).length;
+                this.currentCPM = recentCounts;
+                
+                this.rateData.push(this.currentCPM);
+                
+                // Limit data points to prevent memory issues
+                if (this.timePoints.length > 1000) {
+                    this.timePoints = this.timePoints.slice(-800);
+                    this.countData = this.countData.slice(-800);
+                    this.rateData = this.rateData.slice(-800);
+                }
+                
+                this.drawChart();
+            }
 
-                const cpm = calculateCPM();
-                cpmCounts.push(cpm);
-                cpmData.x.push(timer);
-                cpmData.y.push(cpm);
+            flashIndicator() {
+                const indicator = document.getElementById('statusIndicator');
+                indicator.classList.add('active');
+                setTimeout(() => indicator.classList.remove('active'), 100);
+            }
 
-                updatePlot();
-            }, 1000);
-        }
+            getNextDetectionInterval() {
+                // Poisson distribution for realistic timing
+                const lambda = this.currentRate / 60; // events per second
+                return -Math.log(1 - Math.random()) / lambda * 1000; // milliseconds
+            }
 
-        function stopCounting() {
-            counting = false;
-            clearInterval(interval);
-        }
+            scheduleNextDetection() {
+                if (!this.isRunning) return;
+                
+                const interval = this.getNextDetectionInterval();
+                setTimeout(() => {
+                    if (this.isRunning) {
+                        this.detectRadiation();
+                        this.scheduleNextDetection();
+                    }
+                }, interval);
+            }
 
-        function getRandomCount(source) {
-            switch (source) {
-                case 'background': return Math.floor(Math.random() * 3);
-                case 'banana': return Math.floor(Math.random() * 5) + 2;
-                case 'cesium-137': return Math.floor(Math.random() * 10) + 5;
-                default: return 0;
+            start() {
+                if (this.audioContext && this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                }
+                
+                // Clear all data when starting
+                this.totalCounts = 0;
+                this.currentCPM = 0;
+                this.countData = [];
+                this.rateData = [];
+                this.timePoints = [];
+                this.maxTime = 60;
+                
+                this.isRunning = true;
+                this.startTime = Date.now();
+                
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+                document.getElementById('startBtn').classList.remove('active');
+                document.getElementById('stopBtn').classList.add('active');
+                document.getElementById('timeAxisMax').textContent = this.maxTime;
+                
+                this.updateDisplay();
+                this.drawChart();
+                this.scheduleNextDetection();
+                this.updateTimer();
+            }
+
+            stop() {
+                this.isRunning = false;
+                
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+                document.getElementById('startBtn').classList.remove('active');
+                document.getElementById('stopBtn').classList.remove('active');
+            }
+
+            updateTimer() {
+                if (!this.isRunning) return;
+                
+                const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+                document.getElementById('timeDisplay').textContent = elapsed;
+                
+                // Update time axis if needed
+                if (elapsed > this.maxTime) {
+                    this.maxTime = Math.ceil(elapsed / 60) * 60;
+                    document.getElementById('timeAxisMax').textContent = this.maxTime;
+                }
+                
+                setTimeout(() => this.updateTimer(), 1000);
+            }
+
+            updateDisplay() {
+                document.getElementById('totalCount').textContent = this.totalCounts;
+                document.getElementById('cpmDisplay').textContent = Math.round(this.currentCPM);
+            }
+
+            initializeChart() {
+                this.drawChart();
+            }
+
+            drawChart() {
+                const ctx = this.ctx;
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                
+                // Clear canvas
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, width, height);
+                
+                // Draw grid
+                ctx.strokeStyle = '#e0e0e0';
+                ctx.lineWidth = 1;
+                
+                // Vertical grid lines
+                for (let i = 0; i <= 10; i++) {
+                    const x = (width / 10) * i;
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, height);
+                    ctx.stroke();
+                }
+                
+                // Horizontal grid lines
+                for (let i = 0; i <= 8; i++) {
+                    const y = (height / 8) * i;
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(width, y);
+                    ctx.stroke();
+                }
+                
+                // Draw data
+                if (this.timePoints.length > 1) {
+                    ctx.strokeStyle = '#2196F3';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    
+                    const currentTime = this.isRunning ? (Date.now() - this.startTime) / 1000 : this.maxTime;
+                    let dataPoints, maxValue;
+                    
+                    switch(this.currentView) {
+                        case 'cumulative':
+                            dataPoints = this.countData;
+                            maxValue = Math.max(...dataPoints, 10);
+                            break;
+                        case 'rate':
+                            dataPoints = this.rateData;
+                            maxValue = Math.max(...dataPoints, this.currentRate * 1.5);
+                            break;
+                        case 'histogram':
+                            // Simple histogram implementation
+                            this.drawHistogram();
+                            return;
+                    }
+                    
+                    for (let i = 0; i < this.timePoints.length; i++) {
+                        const x = (this.timePoints[i] / this.maxTime) * width;
+                        const y = height - (dataPoints[i] / maxValue) * height;
+                        
+                        if (i === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    }
+                    
+                    ctx.stroke();
+                    
+                    // Draw points
+                    ctx.fillStyle = '#2196F3';
+                    for (let i = 0; i < this.timePoints.length; i++) {
+                        const x = (this.timePoints[i] / this.maxTime) * width;
+                        const y = height - (dataPoints[i] / maxValue) * height;
+                        
+                        ctx.beginPath();
+                        ctx.arc(x, y, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            drawHistogram() {
+                const ctx = this.ctx;
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                
+                // Create histogram of count intervals
+                if (this.timePoints.length < 2) return;
+                
+                const intervals = [];
+                for (let i = 1; i < this.timePoints.length; i++) {
+                    intervals.push(this.timePoints[i] - this.timePoints[i-1]);
+                }
+                
+                // Bin the intervals
+                const binSize = 0.5; // seconds
+                const maxInterval = 10;
+                const bins = Array(Math.ceil(maxInterval / binSize)).fill(0);
+                
+                intervals.forEach(interval => {
+                    const binIndex = Math.floor(interval / binSize);
+                    if (binIndex < bins.length) {
+                        bins[binIndex]++;
+                    }
+                });
+                
+                const maxBinValue = Math.max(...bins, 1);
+                const barWidth = width / bins.length;
+                
+                ctx.fillStyle = '#2196F3';
+                bins.forEach((count, i) => {
+                    const barHeight = (count / maxBinValue) * height;
+                    const x = i * barWidth;
+                    const y = height - barHeight;
+                    
+                    ctx.fillRect(x, y, barWidth - 1, barHeight);
+                });
             }
         }
 
-        function calculateCPM() {
-            const elapsedMinutes = timer / 60;
-            return elapsedMinutes > 0 ? totalCount / elapsedMinutes : totalCount;
-        }
-
-        function updateView() {
-            const view = viewSelect.value;
-            cumulativeData.visible = view === 'cumulative';
-            sampleData.visible = view === 'sample';
-            cpmData.visible = view === 'cpm';
-            layout.yaxis.title = view === 'cpm' ? 'CPM' : 'Counts';
-            updatePlot();
-        }
-
-        function updatePlot() {
-            Plotly.update('plot', [cumulativeData, sampleData, cpmData], layout);
-        }
-
-        function resetData() {
-            totalCount = 0;
-            timer = 0;
-            totalCountDisplay.textContent = totalCount;
-            timerDisplay.textContent = timer;
-            sampleCounts = [];
-            cumulativeCounts = [];
-            cpmCounts = [];
-
-            cumulativeData.x = [];
-            cumulativeData.y = [];
-            sampleData.x = [];
-            sampleData.y = [];
-            cpmData.x = [];
-            cpmData.y = [];
-            updatePlot();
-        }
-
-        startButton.addEventListener('click', startCounting);
-        stopButton.addEventListener('click', stopCounting);
-        viewSelect.addEventListener('change', updateView);
-        sourceSelect.addEventListener('change', resetData);
-
-        updateView();
+        // Initialize the application
+        window.addEventListener('load', () => {
+            new GeigerCounterApp();
+        });
     </script>
 </body>
 </html>
