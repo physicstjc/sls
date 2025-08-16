@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en" data-kantu="1"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Code Editor</title>
@@ -22,6 +20,7 @@
         .container {
             display: flex;
             height: 100vh;
+            transition: all 0.3s ease;
         }
 
         .editor-panel {
@@ -30,12 +29,28 @@
             flex-direction: column;
             background: #2d2d2d;
             border-right: 2px solid #444;
+            transition: width 0.3s ease, min-width 0.3s ease;
+            min-width: 300px;
+        }
+
+        .editor-panel.minimized {
+            width: 40px;
+            min-width: 40px;
+        }
+
+        .editor-panel.minimized .editor-container {
+            display: none;
         }
 
         .preview-panel {
             width: 50%;
             background: #ffffff;
             position: relative;
+            transition: width 0.3s ease;
+        }
+
+        .preview-panel.expanded {
+            width: calc(100% - 40px);
         }
 
         .panel-header {
@@ -48,6 +63,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            position: relative;
         }
 
         .panel-header::before {
@@ -55,8 +71,46 @@
             font-size: 16px;
         }
 
+        .editor-panel.minimized .panel-header {
+            padding: 12px 8px;
+            justify-content: center;
+        }
+
+        .editor-panel.minimized .panel-header .panel-title {
+            display: none;
+        }
+
         .preview-panel .panel-header::before {
             content: "🌐";
+        }
+
+        .minimize-toggle {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #4CAF50;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .minimize-toggle:hover {
+            background: #45a049;
+        }
+
+        .editor-panel.minimized .minimize-toggle {
+            position: static;
+            transform: none;
+            margin: 0;
         }
 
         .editor-container {
@@ -155,8 +209,6 @@
             background: #F57C00;
         }
 
-
-
         /* Syntax highlighting-like colors */
         .code-editor::placeholder {
             color: #6c7086;
@@ -168,40 +220,49 @@
             }
             
             .editor-panel, .preview-panel {
-                width: 100%;
+                width: 100% !important;
                 height: 50vh;
+                min-width: unset !important;
+            }
+
+            .editor-panel.minimized {
+                height: 40px;
+            }
+
+            .preview-panel.expanded {
+                height: calc(100vh - 40px);
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="editor-panel">
-            <div class="panel-header">Code Editor</div>
+        <div class="editor-panel" id="editorPanel">
+            <div class="panel-header">
+                <span class="panel-title">Code Editor</span>
+                <button class="minimize-toggle" id="minimizeToggle" onclick="toggleEditorPanel()" title="Minimize/Maximize Editor">◀</button>
+            </div>
             <div class="editor-container">
-                <div class="line-numbers" id="lineNumbers">1</div>
-                <textarea 
-                    class="code-editor" 
-                    id="codeInput" 
-                    placeholder="Write your HTML, CSS, and JavaScript here...
+                <div class="line-numbers" id="lineNumbers">1
+</div>
+                <textarea class="code-editor" id="codeInput" placeholder="Write your HTML, CSS, and JavaScript here...
 
 Example:
-<h1>Hello World!</h1>
-<p>This is a paragraph.</p>
+&lt;h1&gt;Hello World!&lt;/h1&gt;
+&lt;p&gt;This is a paragraph.&lt;/p&gt;
 
-<style>
+&lt;style&gt;
   h1 { color: #4CAF50; }
   p { color: #666; }
-</style>
+&lt;/style&gt;
 
-<script>
+&lt;script&gt;
   console.log('Hello from JavaScript!');
-</script>"
-                ></textarea>
+&lt;/script&gt;"></textarea>
             </div>
         </div>
         
-        <div class="preview-panel">
+        <div class="preview-panel" id="previewPanel">
             <div class="panel-header">
                 Live Preview
                 <div class="toolbar">
@@ -218,7 +279,27 @@ Example:
         const codeInput = document.getElementById('codeInput');
         const previewFrame = document.getElementById('previewFrame');
         const lineNumbers = document.getElementById('lineNumbers');
+        const editorPanel = document.getElementById('editorPanel');
+        const previewPanel = document.getElementById('previewPanel');
+        const minimizeToggle = document.getElementById('minimizeToggle');
         let updateTimeout;
+        let isMinimized = false;
+
+        function toggleEditorPanel() {
+            isMinimized = !isMinimized;
+            
+            if (isMinimized) {
+                editorPanel.classList.add('minimized');
+                previewPanel.classList.add('expanded');
+                minimizeToggle.innerHTML = '▶';
+                minimizeToggle.title = 'Maximize Editor';
+            } else {
+                editorPanel.classList.remove('minimized');
+                previewPanel.classList.remove('expanded');
+                minimizeToggle.innerHTML = '◀';
+                minimizeToggle.title = 'Minimize Editor';
+            }
+        }
 
         function updateLineNumbers() {
             const lines = codeInput.value.split('\n');
@@ -295,9 +376,16 @@ Example:
             }
         });
 
+        // Keyboard shortcut to toggle panel (Ctrl/Cmd + B)
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+                e.preventDefault();
+                toggleEditorPanel();
+            }
+        });
+
         // Initial setup
         updateLineNumbers();
         updatePreview();
     </script>
-</body>
-</html>
+</body></html>
