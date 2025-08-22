@@ -165,7 +165,7 @@
 
         .main-content {
             display: grid;
-            grid-template-columns: 1fr 320px;
+            grid-template-columns: 1fr 300px;
             gap: 15px;
             flex: 1;
             min-height: 0;
@@ -236,15 +236,15 @@
             background: rgba(255,255,255,0.1);
             backdrop-filter: blur(10px);
             border-radius: 10px;
-            padding: 12px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
         }
 
         .graph-title {
             text-align: center;
-            margin-bottom: 8px;
-            font-size: 14px;
+            margin-bottom: 6px;
+            font-size: 13px;
             font-weight: bold;
         }
 
@@ -255,44 +255,57 @@
         }
 
         .stats {
-            margin-top: 8px;
+            margin-top: 6px;
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 6px;
-            font-size: 11px;
+            gap: 4px;
+            font-size: 10px;
         }
 
         .stat-item {
             background: rgba(255,255,255,0.1);
-            padding: 6px;
-            border-radius: 6px;
+            padding: 4px;
+            border-radius: 4px;
             text-align: center;
         }
 
         .stat-item div:first-child {
-            font-size: 10px;
+            font-size: 9px;
             opacity: 0.9;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
         }
 
         .stat-item div:last-child {
             font-weight: bold;
-            font-size: 12px;
+            font-size: 10px;
         }
 
         @media (max-width: 768px) {
+            body {
+                overflow-y: auto;
+                min-height: 100vh;
+            }
+            
+            .container {
+                height: auto;
+                min-height: 100vh;
+                overflow: visible;
+            }
+            
             .main-content {
                 grid-template-columns: 1fr;
-                grid-template-rows: 1fr auto;
+                grid-template-rows: auto auto;
+                gap: 10px;
+            }
+
+            .dice-area {
+                order: 1;
+                min-height: 200px;
             }
 
             .graph-area {
-                height: 200px;
                 order: 2;
-            }
-            
-            .dice-area {
-                order: 1;
+                min-height: 300px;
             }
 
             .controls {
@@ -315,6 +328,11 @@
 
             .die {
                 font-size: 10px;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr 1fr;
+                gap: 3px;
             }
         }
 
@@ -481,7 +499,7 @@
                     },
                     plot_bgcolor: 'white',
                     paper_bgcolor: 'white',
-                    margin: { l: 50, r: 20, t: 20, b: 40 },
+                    margin: { l: 45, r: 15, t: 15, b: 35 },
                     legend: {
                         x: 0.98,
                         y: 0.02,
@@ -776,7 +794,7 @@
                     },
                     plot_bgcolor: 'white',
                     paper_bgcolor: 'white',
-                    margin: { l: 50, r: 20, t: 20, b: 40 },
+                    margin: { l: 45, r: 15, t: 15, b: 35 },
                     legend: {
                         x: 0.98,
                         y: 0.02,
