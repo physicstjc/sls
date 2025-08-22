@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radioactive Decay Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            min-height: 100vh;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            margin: 0;
+            padding: 15px;
+            box-sizing: border-box;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 5px;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            margin-bottom: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .controls {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .control-group label {
+            font-size: 10px;
+        }
+
+        #diceCount {
+            font-size: 10px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .slider-container span {
+            font-size: 10px;
+        }
+
+        input[type="range"] {
+            width: 120px;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.3);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .roll-btn {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
+            border: none;
+            border-radius: 15px;
+            padding: 6px 12px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255,107,107,0.3);
+        }
+
+        .roll-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,107,107,0.4);
+        }
+
+        .roll-btn:active {
+            transform: translateY(0);
+        }
+
+        .roll-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #6C5CE7, #8B7ED8);
+            border: none;
+            border-radius: 15px;
+            padding: 6px 12px;
+            color: white;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(108,92,231,0.3);
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108,92,231,0.4);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 15px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .dice-area {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dice-grid {
+            display: grid;
+            gap: 8px;
+            justify-items: center;
+            align-items: center;
+            justify-content: center;
+            align-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .die {
+            width: 35px;
+            height: 35px;
+            background: white;
+            border: 2px solid #333;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            transition: all 0.5s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .die.rolling {
+            animation: roll 0.5s ease-in-out;
+            background: #FFD700;
+        }
+
+        .die.decayed {
+            background: #666;
+            color: #999;
+            border-color: #444;
+            transform: scale(0.8);
+            opacity: 0.5;
+        }
+
+        @keyframes roll {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(1.1); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            75% { transform: rotate(270deg) scale(1.1); }
+        }
+
+        .graph-area {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .graph-title {
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .graph-canvas {
+            background: white;
+            border-radius: 8px;
+            flex: 1;
+        }
+
+        .stats {
+            margin-top: 8px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            font-size: 11px;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 6px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-item div:first-child {
+            font-size: 10px;
+            opacity: 0.9;
+            margin-bottom: 2px;
+        }
+
+        .stat-item div:last-child {
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr auto;
+            }
+
+            .graph-area {
+                height: 200px;
+                order: 2;
+            }
+            
+            .dice-area {
+                order: 1;
+            }
+
+            .controls {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .slider-container {
+                flex-direction: column;
+                gap: 3px;
+            }
+
+            input[type="range"] {
+                width: 150px;
+            }
+
+            .dice-grid {
+                gap: 4px;
+            }
+
+            .die {
+                font-size: 10px;
+            }
+        }
+
+        /* Iframe-specific optimizations */
+        @media (max-height: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.1rem;
+                margin-bottom: 1px;
+            }
+            
+            .header p {
+                font-size: 9px;
+            }
+            
+            .controls {
+                padding: 6px;
+                margin-bottom: 6px;
+            }
+            
+            .stats {
+                margin-top: 4px;
+                gap: 4px;
+            }
+            
+            .stat-item {
+                padding: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎲 Radioactive Decay Simulation</h1>
+            <p>Each die has a 1/6 chance of "decaying" (rolling a 6) per cast</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="diceSlider">Number of Dice</label>
+                <div class="slider-container">
+                    <span id="minValue">1</span>
+                    <input type="range" id="diceSlider" min="1" max="20" value="5" step="1">
+                    <span id="maxValue">400</span>
+                </div>
+                <span id="diceCount">25 dice</span>
+            </div>
+            
+            <button class="roll-btn" id="rollBtn">🎲 Roll All Dice</button>
+            <button class="reset-btn" id="resetBtn">Reset</button>
+        </div>
+
+        <div class="main-content">
+            <div class="dice-area">
+                <div class="dice-grid" id="diceGrid"></div>
+            </div>
+
+            <div class="graph-area">
+                <div class="graph-title">Dice Remaining vs Cast Number</div>
+                <div id="plotlyGraph" style="width: 100%; height: 100%; background: white; border-radius: 8px;"></div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div>Cast #</div>
+                        <div id="castNumber">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>Active Dice</div>
+                        <div id="activeDice">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>Decayed</div>
+                        <div id="decayedDice">0</div>
+                    </div>
+                </div>
+                <div class="stats" style="margin-top: 4px; grid-template-columns: 1fr;">
+                    <div class="stat-item">
+                        <div>Measured Half-Life</div>
+                        <div id="measuredHalfLife">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+    <script>
+        class RadioactiveDecaySimulation {
+            constructor() {
+                this.dice = [];
+                this.castData = [];
+                this.castNumber = 0;
+                this.isRolling = false;
+                this.fitSlope = null;
+                this.fitIntercept = null;
+                
+                this.initElements();
+                this.initGraph();
+                this.updateDiceCount();
+                this.resetSimulation();
+            }
+
+            initElements() {
+                this.diceSlider = document.getElementById('diceSlider');
+                this.diceCountDisplay = document.getElementById('diceCount');
+                this.diceGrid = document.getElementById('diceGrid');
+                this.rollBtn = document.getElementById('rollBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.castNumberDisplay = document.getElementById('castNumber');
+                this.activeDiceDisplay = document.getElementById('activeDice');
+                this.decayedDiceDisplay = document.getElementById('decayedDice');
+                this.measuredHalfLifeDisplay = document.getElementById('measuredHalfLife');
+
+                this.diceSlider.addEventListener('input', () => this.updateDiceCount());
+                this.rollBtn.addEventListener('click', () => this.rollDice());
+                this.resetBtn.addEventListener('click', () => this.resetSimulation());
+            }
+
+            initGraph() {
+                this.plotDiv = document.getElementById('plotlyGraph');
+                this.initializePlot();
+                window.addEventListener('resize', () => {
+                    setTimeout(() => {
+                        Plotly.Plots.resize(this.plotDiv);
+                    }, 100);
+                });
+                
+                // Update dice layout on window resize
+                window.addEventListener('resize', () => {
+                    setTimeout(() => {
+                        if (this.dice.length > 0) {
+                            const gridSize = Math.sqrt(this.dice.length);
+                            this.createDice(this.dice.length, gridSize);
+                            this.resetSimulation();
+                        }
+                    }, 100);
+                });
+            }
+
+            initializePlot() {
+                const layout = {
+                    title: {
+                        text: '',
+                        font: { size: 14 }
+                    },
+                    xaxis: {
+                        title: 'Cast Number',
+                        showgrid: true,
+                        gridcolor: '#e0e0e0',
+                        zeroline: false,
+                        titlefont: { size: 11 },
+                        tickfont: { size: 10 }
+                    },
+                    yaxis: {
+                        title: 'Dice Remaining',
+                        showgrid: true,
+                        gridcolor: '#e0e0e0',
+                        zeroline: false,
+                        titlefont: { size: 11 },
+                        tickfont: { size: 10 }
+                    },
+                    plot_bgcolor: 'white',
+                    paper_bgcolor: 'white',
+                    margin: { l: 50, r: 20, t: 20, b: 40 },
+                    legend: {
+                        x: 0.98,
+                        y: 0.02,
+                        xanchor: 'right',
+                        yanchor: 'bottom',
+                        bgcolor: 'rgba(255,255,255,0.9)',
+                        bordercolor: '#ccc',
+                        borderwidth: 1,
+                        font: { size: 10 }
+                    },
+                    showlegend: true
+                };
+
+                const config = {
+                    responsive: true,
+                    displayModeBar: false
+                };
+
+                // Initialize with empty data
+                const data = [
+                    {
+                        x: [0],
+                        y: [this.dice.length],
+                        mode: 'lines+markers',
+                        name: 'Actual Data',
+                        line: { color: '#FF6B6B', width: 3 },
+                        marker: { color: '#FF6B6B', size: 6 }
+                    }
+                ];
+
+                Plotly.newPlot(this.plotDiv, data, layout, config);
+            }
+
+            updateDiceCount() {
+                const sliderValue = parseInt(this.diceSlider.value);
+                const diceCount = sliderValue * sliderValue;
+                this.diceCountDisplay.textContent = `${diceCount} dice (${sliderValue}×${sliderValue})`;
+                this.createDice(diceCount, sliderValue);
+                this.resetSimulation();
+            }
+
+            createDice(count, gridSize) {
+                this.dice = [];
+                this.diceGrid.innerHTML = '';
+                
+                // Calculate optimal dice size based on available space
+                const container = this.diceGrid.parentElement;
+                const containerWidth = container.clientWidth - 40; // Account for padding
+                const containerHeight = container.clientHeight - 40;
+                
+                const maxDiceSize = Math.min(
+                    Math.floor((containerWidth - (gridSize - 1) * 8) / gridSize),
+                    Math.floor((containerHeight - (gridSize - 1) * 8) / gridSize)
+                );
+                
+                const diceSize = Math.max(20, Math.min(40, maxDiceSize));
+                
+                // Set up square grid layout with equal spacing
+                this.diceGrid.style.gridTemplateColumns = `repeat(${gridSize}, ${diceSize}px)`;
+                this.diceGrid.style.gridTemplateRows = `repeat(${gridSize}, ${diceSize}px)`;
+                this.diceGrid.style.gap = '8px';
+
+                for (let i = 0; i < count; i++) {
+                    const dieElement = document.createElement('div');
+                    dieElement.className = 'die';
+                    dieElement.textContent = '?';
+                    dieElement.style.width = `${diceSize}px`;
+                    dieElement.style.height = `${diceSize}px`;
+                    dieElement.style.fontSize = `${Math.max(12, diceSize * 0.4)}px`;
+                    this.diceGrid.appendChild(dieElement);
+
+                    this.dice.push({
+                        element: dieElement,
+                        value: 0,
+                        active: true
+                    });
+                }
+            }
+
+            async rollDice() {
+                if (this.isRolling) return;
+                
+                const activeDice = this.dice.filter(die => die.active);
+                if (activeDice.length === 0) return;
+
+                this.isRolling = true;
+                this.rollBtn.disabled = true;
+
+                // Animation phase
+                activeDice.forEach(die => {
+                    die.element.classList.add('rolling');
+                });
+
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // Roll results
+                let decayedThisRound = 0;
+                activeDice.forEach(die => {
+                    const roll = Math.floor(Math.random() * 6) + 1;
+                    die.value = roll;
+                    die.element.textContent = roll;
+                    die.element.classList.remove('rolling');
+
+                    if (roll === 6) {
+                        die.active = false;
+                        die.element.classList.add('decayed');
+                        decayedThisRound++;
+                    }
+                });
+
+                this.castNumber++;
+                const remainingDice = this.dice.filter(die => die.active).length;
+                
+                this.castData.push({
+                    cast: this.castNumber,
+                    remaining: remainingDice
+                });
+
+                this.updateStats();
+                this.updatePlot();
+
+                this.isRolling = false;
+                this.rollBtn.disabled = false;
+            }
+
+            updateStats() {
+                const activeDice = this.dice.filter(die => die.active).length;
+                const decayedDice = this.dice.length - activeDice;
+                
+                this.castNumberDisplay.textContent = this.castNumber;
+                this.activeDiceDisplay.textContent = activeDice;
+                this.decayedDiceDisplay.textContent = decayedDice;
+                
+                // Calculate measured half-life from actual data
+                this.calculateMeasuredHalfLife();
+            }
+
+            calculateMeasuredHalfLife() {
+                if (this.castData.length < 3) {
+                    this.measuredHalfLifeDisplay.textContent = '-';
+                    return;
+                }
+
+                // Find when we crossed half the initial amount
+                const initialCount = this.dice.length;
+                const halfPoint = initialCount / 2;
+                
+                // Find the cast where we first went below half
+                let halfLifeCast = null;
+                for (let i = 1; i < this.castData.length; i++) {
+                    if (this.castData[i].remaining <= halfPoint) {
+                        // Linear interpolation between the two points
+                        const before = this.castData[i-1];
+                        const after = this.castData[i];
+                        
+                        if (before.remaining > halfPoint && after.remaining <= halfPoint) {
+                            const ratio = (halfPoint - after.remaining) / (before.remaining - after.remaining);
+                            halfLifeCast = after.cast - ratio;
+                            break;
+                        }
+                    }
+                }
+                
+                if (halfLifeCast !== null) {
+                    this.measuredHalfLifeDisplay.textContent = halfLifeCast.toFixed(2) + ' casts';
+                } else if (this.castData[this.castData.length - 1].remaining < halfPoint) {
+                    // If we've passed half-life, estimate based on exponential fit
+                    this.fitExponentialCurve();
+                } else {
+                    this.measuredHalfLifeDisplay.textContent = 'Not reached';
+                }
+            }
+
+            fitExponentialCurve() {
+                if (this.castData.length < 3) return;
+
+                // Use least squares regression on log(N) = log(N0) - λt
+                // Where λ = ln(2)/half_life
+                let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+                let validPoints = 0;
+
+                for (let i = 1; i < this.castData.length; i++) {
+                    if (this.castData[i].remaining > 0) {
+                        const x = this.castData[i].cast;
+                        const y = Math.log(this.castData[i].remaining);
+                        
+                        sumX += x;
+                        sumY += y;
+                        sumXY += x * y;
+                        sumX2 += x * x;
+                        validPoints++;
+                    }
+                }
+
+                if (validPoints < 2) return;
+
+                // Calculate slope (negative decay constant)
+                const slope = (validPoints * sumXY - sumX * sumY) / (validPoints * sumX2 - sumX * sumX);
+                const intercept = (sumY - slope * sumX) / validPoints;
+                
+                // Store fit parameters for drawing
+                this.fitSlope = slope;
+                this.fitIntercept = intercept;
+                
+                // Calculate half-life from decay constant
+                if (slope < 0) {
+                    const decayConstant = -slope;
+                    const measuredHalfLife = Math.log(2) / decayConstant;
+                    this.measuredHalfLifeDisplay.textContent = measuredHalfLife.toFixed(2) + ' casts';
+                }
+            }
+
+            updatePlot() {
+                if (!this.castData || this.castData.length === 0) return;
+
+                // Prepare actual data
+                const actualX = this.castData.map(d => d.cast);
+                const actualY = this.castData.map(d => d.remaining);
+
+                // Prepare theoretical data
+                const maxCast = Math.max(10, actualX[actualX.length - 1] * 1.2);
+                const theoreticalX = [];
+                const theoreticalY = [];
+                for (let cast = 0; cast <= maxCast; cast += 0.5) {
+                    theoreticalX.push(cast);
+                    theoreticalY.push(this.dice.length * Math.pow(5/6, cast));
+                }
+
+                const data = [
+                    {
+                        x: actualX,
+                        y: actualY,
+                        mode: 'lines+markers',
+                        name: 'Actual Data',
+                        line: { color: '#FF6B6B', width: 3 },
+                        marker: { color: '#FF6B6B', size: 6 }
+                    },
+                    {
+                        x: theoreticalX,
+                        y: theoreticalY,
+                        mode: 'lines',
+                        name: 'Theoretical',
+                        line: { color: '#6C5CE7', width: 2, dash: 'dash' }
+                    }
+                ];
+
+                // Add best fit curve if available
+                if (this.castData.length > 2 && this.fitSlope && this.fitIntercept) {
+                    const bestFitX = [];
+                    const bestFitY = [];
+                    for (let cast = 0; cast <= maxCast; cast += 0.5) {
+                        const fittedValue = Math.exp(this.fitIntercept + this.fitSlope * cast);
+                        if (fittedValue > 0 && fittedValue <= this.dice.length * 1.1) {
+                            bestFitX.push(cast);
+                            bestFitY.push(fittedValue);
+                        }
+                    }
+                    
+                    if (bestFitX.length > 0) {
+                        data.push({
+                            x: bestFitX,
+                            y: bestFitY,
+                            mode: 'lines',
+                            name: 'Best Fit',
+                            line: { color: '#00CED1', width: 3 }
+                        });
+                    }
+                }
+
+                const layout = {
+                    title: {
+                        text: '',
+                        font: { size: 14 }
+                    },
+                    xaxis: {
+                        title: 'Cast Number',
+                        showgrid: true,
+                        gridcolor: '#e0e0e0',
+                        zeroline: false,
+                        range: [0, maxCast],
+                        titlefont: { size: 11 },
+                        tickfont: { size: 10 }
+                    },
+                    yaxis: {
+                        title: 'Dice Remaining',
+                        showgrid: true,
+                        gridcolor: '#e0e0e0',
+                        zeroline: false,
+                        range: [0, this.dice.length * 1.05],
+                        titlefont: { size: 11 },
+                        tickfont: { size: 10 }
+                    },
+                    plot_bgcolor: 'white',
+                    paper_bgcolor: 'white',
+                    margin: { l: 50, r: 20, t: 20, b: 40 },
+                    legend: {
+                        x: 0.98,
+                        y: 0.02,
+                        xanchor: 'right',
+                        yanchor: 'bottom',
+                        bgcolor: 'rgba(255,255,255,0.9)',
+                        bordercolor: '#ccc',
+                        borderwidth: 1,
+                        font: { size: 10 }
+                    },
+                    showlegend: true
+                };
+
+                Plotly.react(this.plotDiv, data, layout);
+            }
+
+            resetSimulation() {
+                this.castData = [{cast: 0, remaining: this.dice.length}];
+                this.castNumber = 0;
+                this.isRolling = false;
+                this.rollBtn.disabled = false;
+                this.fitSlope = null;
+                this.fitIntercept = null;
+
+                this.dice.forEach(die => {
+                    die.active = true;
+                    die.value = 0;
+                    die.element.textContent = '?';
+                    die.element.classList.remove('decayed', 'rolling');
+                });
+
+                this.updateStats();
+                this.updatePlot();
+            }
+        }
+
+        // Initialize the simulation when the page loads
+        window.addEventListener('load', () => {
+            new RadioactiveDecaySimulation();
+        });
+    </script>
+</body>
+</html>
