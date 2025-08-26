@@ -7,7 +7,7 @@
   <title>Wave Simulation</title>
   <style>
     :root{
-      --container-max: 1000px;
+      --container-max: 100%;
       --radius: 14px;
       --pad: 14px;
       --card-bg: rgba(255,255,255,0.10);
@@ -319,7 +319,7 @@
       resizeAll(){
         // Choose logical widths based on container width
         const container = document.querySelector('.container');
-        const maxW = Math.min(container.clientWidth - 2*16, 900); // padding guard
+        const maxW = Math.min(container.clientWidth - 2*24, 1200); // padding guard
         // Aspect ratio: keep graphs readable on phones
         const h1 = Math.round(Math.max(140, maxW * 0.22)); // distance graph
         const h2 = Math.round(Math.max(140, maxW * 0.22)); // time graph
