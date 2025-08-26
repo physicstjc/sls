@@ -1,541 +1,481 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wave Simulation</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: white;
-        }
-        
-        .container {
-            max-width: 1000px;
-            max-height: 640px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 15px;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        
-        h1 {
-            text-align: center;
-            margin: 0 0 10px 0;
-            font-size: 1.8rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-        
-        .graphs-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            flex: 1;
-            min-height: 0;
-        }
-        
-        .graph-section {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 10px;
-            border-radius: 10px;
-            text-align: center;
-            flex: 1;
-            min-height: 0;
-        }
-        
-        .graph-title {
-            font-size: 1rem;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-        
-        canvas {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            margin: 0 auto;
-            display: block;
-            max-width: 100%;
-            height: auto;
-        }
-        
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .control-group {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            flex: 1;
-            min-width: 120px;
-        }
-        
-        .control-group h3 {
-            margin: 0 0 5px 0;
-            font-size: 0.8rem;
-            color: #ffeb3b;
-        }
-        
-        .slider-container {
-            margin-bottom: 5px;
-        }
-        
-        .slider-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 3px;
-            font-weight: 500;
-            font-size: 0.75rem;
-        }
-        
-        input[type="range"] {
-            width: 100%;
-            height: 4px;
-            border-radius: 2px;
-            background: rgba(255, 255, 255, 0.3);
-            outline: none;
-            -webkit-appearance: none;
-        }
-        
-        input[type="range"]::-webkit-slider-thumb {
-            appearance: none;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #ffeb3b;
-            cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-        }
-        
-        input[type="range"]::-moz-range-thumb {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #ffeb3b;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-        }
-        
-        .button-container {
-            text-align: center;
-            margin-bottom: 8px;
-        }
-        
-        button {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-            border: none;
-            padding: 6px 15px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 0 5px;
-        }
-        
-        button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
-        }
-        
-        button:active {
-            transform: translateY(0);
-        }
-        
-        .reset-btn {
-            background: linear-gradient(45deg, #9c27b0, #673ab7) !important;
-        }
-        
-        .info {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 5px;
-            border-radius: 5px;
-            font-size: 0.7rem;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wave Simulation</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0; padding: 10px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh; color: white;
+    }
+    .container {
+      max-width: 1000px; max-height: 640px; margin: 0 auto;
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+      border-radius: 15px; padding: 15px;
+      box-shadow: 0 8px 32px rgba(31,38,135,0.37);
+      border: 1px solid rgba(255,255,255,0.18);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    h1 {
+      text-align: center; margin: 0 0 10px 0; font-size: 1.8rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    .graphs-container { display: flex; flex-direction: column; gap: 15px; flex: 1; min-height: 0; }
+    .graph-section { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; text-align: center; flex: 1; min-height: 0; }
+    .graph-title { font-size: 1rem; margin-bottom: 8px; font-weight: 600; }
+    canvas {
+      background: rgba(255,255,255,0.95);
+      border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      margin: 0 auto; display: block; max-width: 100%;
+      /* fixed logical size via attributes; avoid additional CSS scaling */
+      height: auto;
+    }
+    .controls { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+    .control-group {
+      background: rgba(255,255,255,0.1); padding: 8px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2); flex: 1; min-width: 120px;
+    }
+    .control-group h3 { margin: 0 0 5px 0; font-size: 0.8rem; color: #ffeb3b; }
+    .slider-container { margin-bottom: 5px; }
+    .slider-label { display: flex; justify-content: space-between; margin-bottom: 3px; font-weight: 500; font-size: 0.75rem; }
+    input[type="range"] { width: 100%; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.3); outline: none; -webkit-appearance: none; }
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none; width: 12px; height: 12px; border-radius: 50%;
+      background: #ffeb3b; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: #ffeb3b; cursor: pointer; border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .button-container { text-align: center; margin-bottom: 8px; }
+    button {
+      background: linear-gradient(45deg, #ff6b6b, #ee5a24); color: white; border: none;
+      padding: 6px 15px; font-size: 0.8rem; font-weight: 600; border-radius: 15px;
+      cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      text-transform: uppercase; letter-spacing: 0.5px; margin: 0 5px;
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 3px 12px rgba(0,0,0,0.3); }
+    button:active { transform: translateY(0); }
+    .reset-btn { background: linear-gradient(45deg, #9c27b0, #673ab7) !important; }
+    .info {
+      background: rgba(255,255,255,0.1); padding: 5px; border-radius: 5px;
+      font-size: 0.7rem; text-align: center; border: 1px solid rgba(255,255,255,0.2);
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🌊 Wave Simulation</h1>
-        
-        <div class="graphs-container">
-            <div class="graph-section">
-                <div class="graph-title">Displacement vs Distance</div>
-                <canvas id="distanceCanvas" width="700" height="160"></canvas>
-            </div>
-            
-            <div class="graph-section">
-                <div class="graph-title">Displacement vs Time</div>
-                <canvas id="timeCanvas" width="700" height="160"></canvas>
-            </div>
-        </div>
-        
-        <div class="controls">
-            <div class="control-group">
-                <h3>📏 Amplitude</h3>
-                <div class="slider-container">
-                    <div class="slider-label">
-                        <span>Amp:</span>
-                        <span id="amplitudeValue">50</span>
-                    </div>
-                    <input type="range" id="amplitudeSlider" min="10" max="100" value="50">
-                </div>
-            </div>
-            
-            <div class="control-group">
-                <h3>🎵 Frequency</h3>
-                <div class="slider-container">
-                    <div class="slider-label">
-                        <span>Freq:</span>
-                        <span id="frequencyValue">1.0</span>
-                    </div>
-                    <input type="range" id="frequencySlider" min="0.1" max="3.0" step="0.1" value="1.0">
-                </div>
-            </div>
-            
-            <div class="control-group">
-                <h3>⚡ Wave Speed</h3>
-                <div class="slider-container">
-                    <div class="slider-label">
-                        <span>Speed:</span>
-                        <span id="speedValue">100</span>
-                    </div>
-                    <input type="range" id="speedSlider" min="20" max="200" value="100">
-                </div>
-            </div>
-        </div>
-        
-        <div class="button-container">
-            <button id="animateBtn">Start Animation</button>
-            <button id="resetBtn" class="reset-btn">Reset</button>
-        </div>
-        
-        <div class="info">
-            <strong>Instructions:</strong> Adjust the sliders to change wave properties, then click the button to start/stop the animation. 
-            The top graph shows how displacement varies with distance, while the bottom shows how displacement varies with time at a fixed point.
-        </div>
+  <div class="container">
+    <h1>Wave Simulation</h1>
+
+    <div class="graphs-container">
+      <div class="graph-section">
+        <div class="graph-title">Displacement vs Distance</div>
+        <canvas id="distanceCanvas" width="700" height="160"></canvas>
+      </div>
+      <div class="graph-section">
+        <div class="graph-title">Displacement vs Time</div>
+        <canvas id="timeCanvas" width="700" height="160"></canvas>
+      </div>
     </div>
 
-    <script>
-        class WaveSimulation {
-            constructor() {
-                this.distanceCanvas = document.getElementById('distanceCanvas');
-                this.timeCanvas = document.getElementById('timeCanvas');
-                this.distanceCtx = this.distanceCanvas.getContext('2d');
-                this.timeCtx = this.timeCanvas.getContext('2d');
-                
-                this.amplitude = 50;
-                this.frequency = 1.0;
-                this.speed = 100;
-                this.time = 0;
-                this.isAnimating = false;
-                this.animationId = null;
-                
-                this.timeData = [];
-                this.maxTimePoints = 300;
-                
-                this.setupEventListeners();
-                this.drawInitialWaves();
-            }
-            
-            setupEventListeners() {
-                const amplitudeSlider = document.getElementById('amplitudeSlider');
-                const frequencySlider = document.getElementById('frequencySlider');
-                const speedSlider = document.getElementById('speedSlider');
-                const animateBtn = document.getElementById('animateBtn');
-                const resetBtn = document.getElementById('resetBtn');
-                
-                amplitudeSlider.addEventListener('input', (e) => {
-                    this.amplitude = parseInt(e.target.value);
-                    document.getElementById('amplitudeValue').textContent = this.amplitude;
-                    if (!this.isAnimating) this.drawInitialWaves();
-                });
-                
-                frequencySlider.addEventListener('input', (e) => {
-                    this.frequency = parseFloat(e.target.value);
-                    document.getElementById('frequencyValue').textContent = this.frequency.toFixed(1);
-                    if (!this.isAnimating) this.drawInitialWaves();
-                });
-                
-                speedSlider.addEventListener('input', (e) => {
-                    this.speed = parseInt(e.target.value);
-                    document.getElementById('speedValue').textContent = this.speed;
-                    if (!this.isAnimating) this.drawInitialWaves();
-                });
-                
-                animateBtn.addEventListener('click', () => {
-                    this.toggleAnimation();
-                });
-                
-                resetBtn.addEventListener('click', () => {
-                    this.reset();
-                });
-            }
-            
-            drawGrid(ctx, canvas) {
-                ctx.strokeStyle = '#e0e0e0';
-                ctx.lineWidth = 1;
-                
-                // Vertical grid lines
-                for (let x = 0; x <= canvas.width; x += 50) {
-                    ctx.beginPath();
-                    ctx.moveTo(x, 0);
-                    ctx.lineTo(x, canvas.height);
-                    ctx.stroke();
-                }
-                
-                // Horizontal grid lines
-                for (let y = 0; y <= canvas.height; y += 30) {
-                    ctx.beginPath();
-                    ctx.moveTo(0, y);
-                    ctx.lineTo(canvas.width, y);
-                    ctx.stroke();
-                }
-                
-                // Center line
-                ctx.strokeStyle = '#666';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(0, canvas.height / 2);
-                ctx.lineTo(canvas.width, canvas.height / 2);
-                ctx.stroke();
-            }
-            
-            drawAxes(ctx, canvas, xLabel, yLabel) {
-                ctx.fillStyle = '#333';
-                ctx.font = '14px Arial';
-                ctx.textAlign = 'center';
-                
-                // X-axis label
-                ctx.fillText(xLabel, canvas.width / 2, canvas.height - 10);
-                
-                // Y-axis label
-                ctx.save();
-                ctx.translate(15, canvas.height / 2);
-                ctx.rotate(-Math.PI / 2);
-                ctx.fillText(yLabel, 0, 0);
-                ctx.restore();
-            }
-            
-            drawDistanceWave() {
-                const ctx = this.distanceCtx;
-                const canvas = this.distanceCanvas;
-                
-                // Clear canvas
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                // Draw grid and axes
-                this.drawGrid(ctx, canvas);
-                this.drawAxes(ctx, canvas, 'Distance', 'Displacement');
-                
-                // Draw wave
-                ctx.strokeStyle = '#2196F3';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                
-                const centerY = canvas.height / 2;
-                const waveLength = 200; // pixels per wavelength
-                
-                for (let x = 0; x < canvas.width; x++) {
-                    const k = (2 * Math.PI) / waveLength; // wave number
-                    const omega = 2 * Math.PI * this.frequency;
-                    const displacement = this.amplitude * Math.sin(k * x - omega * this.time * 0.01);
-                    const y = centerY - displacement;
-                    
-                    if (x === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
-                }
-                
-                ctx.stroke();
-                
-                // Mark reference point
-                const refX = 200;
-                const k = (2 * Math.PI) / waveLength;
-                const omega = 2 * Math.PI * this.frequency;
-                const refY = centerY - this.amplitude * Math.sin(k * refX - omega * this.time * 0.01);
-                
-                ctx.fillStyle = '#F44336';
-                ctx.beginPath();
-                ctx.arc(refX, refY, 6, 0, 2 * Math.PI);
-                ctx.fill();
-            }
-            
-            drawTimeWave() {
-                const ctx = this.timeCtx;
-                const canvas = this.timeCanvas;
-                
-                // Clear canvas
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                // Draw grid and axes
-                this.drawGrid(ctx, canvas);
-                this.drawAxes(ctx, canvas, 'Time', 'Displacement');
-                
-                // Add current displacement to time data
-                if (this.isAnimating) {
-                    const omega = 2 * Math.PI * this.frequency;
-                    const displacement = this.amplitude * Math.sin(-omega * this.time * 0.01);
-                    
-                    this.timeData.push(displacement);
-                    
-                    // Keep only recent data
-                    if (this.timeData.length > this.maxTimePoints) {
-                        this.timeData.shift();
-                    }
-                }
-                
-                // Draw time wave
-                if (this.timeData.length > 1) {
-                    ctx.strokeStyle = '#4CAF50';
-                    ctx.lineWidth = 3;
-                    ctx.beginPath();
-                    
-                    const centerY = canvas.height / 2;
-                    const timeScale = canvas.width / this.maxTimePoints;
-                    
-                    for (let i = 0; i < this.timeData.length; i++) {
-                        const x = i * timeScale;
-                        const y = centerY - this.timeData[i];
-                        
-                        if (i === 0) {
-                            ctx.moveTo(x, y);
-                        } else {
-                            ctx.lineTo(x, y);
-                        }
-                    }
-                    
-                    ctx.stroke();
-                    
-                    // Mark current point
-                    if (this.timeData.length > 0) {
-                        const currentX = (this.timeData.length - 1) * timeScale;
-                        const currentY = centerY - this.timeData[this.timeData.length - 1];
-                        
-                        ctx.fillStyle = '#F44336';
-                        ctx.beginPath();
-                        ctx.arc(currentX, currentY, 6, 0, 2 * Math.PI);
-                        ctx.fill();
-                    }
-                }
-            }
-            
-            drawInitialWaves() {
-                this.drawDistanceWave();
-                
-                // For time wave when not animating, show a static sine wave
-                if (!this.isAnimating) {
-                    const ctx = this.timeCtx;
-                    const canvas = this.timeCanvas;
-                    
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    this.drawGrid(ctx, canvas);
-                    this.drawAxes(ctx, canvas, 'Time', 'Displacement');
-                    
-                    ctx.strokeStyle = '#4CAF50';
-                    ctx.lineWidth = 3;
-                    ctx.beginPath();
-                    
-                    const centerY = canvas.height / 2;
-                    
-                    for (let x = 0; x < canvas.width; x++) {
-                        const omega = 2 * Math.PI * this.frequency;
-                        const t = x * 0.02; // time scale
-                        const displacement = this.amplitude * Math.sin(-omega * t);
-                        const y = centerY - displacement;
-                        
-                        if (x === 0) {
-                            ctx.moveTo(x, y);
-                        } else {
-                            ctx.lineTo(x, y);
-                        }
-                    }
-                    
-                    ctx.stroke();
-                }
-            }
-            
-            animate() {
-                this.time += this.speed * 0.1;
-                this.drawDistanceWave();
-                this.drawTimeWave();
-                
-                if (this.isAnimating) {
-                    this.animationId = requestAnimationFrame(() => this.animate());
-                }
-            }
-            
-            toggleAnimation() {
-                const btn = document.getElementById('animateBtn');
-                
-                if (this.isAnimating) {
-                    this.isAnimating = false;
-                    cancelAnimationFrame(this.animationId);
-                    btn.textContent = 'Start Animation';
-                    btn.style.background = 'linear-gradient(45deg, #ff6b6b, #ee5a24)';
-                } else {
-                    this.isAnimating = true;
-                    this.timeData = []; // Reset time data
-                    btn.textContent = 'Stop Animation';
-                    btn.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
-                    this.animate();
-                }
-            }
-            
-            reset() {
-                // Stop animation if running
-                if (this.isAnimating) {
-                    this.toggleAnimation();
-                }
-                
-                // Reset all parameters to defaults
-                this.amplitude = 50;
-                this.frequency = 1.0;
-                this.speed = 100;
-                this.time = 0;
-                this.timeData = [];
-                
-                // Reset sliders and displays
-                document.getElementById('amplitudeSlider').value = 50;
-                document.getElementById('amplitudeValue').textContent = '50';
-                document.getElementById('frequencySlider').value = 1.0;
-                document.getElementById('frequencyValue').textContent = '1.0';
-                document.getElementById('speedSlider').value = 100;
-                document.getElementById('speedValue').textContent = '100';
-                
-                // Redraw initial waves
-                this.drawInitialWaves();
-            }
-        }
-        
-        // Initialize simulation when page loads
-        window.addEventListener('load', () => {
-            new WaveSimulation();
+    <div class="controls">
+      <div class="control-group">
+        <h3>Amplitude</h3>
+        <div class="slider-container">
+          <div class="slider-label"><span>Amp:</span><span id="amplitudeValue">50</span></div>
+          <input type="range" id="amplitudeSlider" min="10" max="100" value="50">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Frequency</h3>
+        <div class="slider-container">
+          <div class="slider-label"><span>Freq:</span><span id="frequencyValue">1.0</span></div>
+          <input type="range" id="frequencySlider" min="0.1" max="3.0" step="0.1" value="1.0">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Wave Speed</h3>
+        <div class="slider-container">
+          <div class="slider-label"><span>Speed:</span><span id="speedValue">100</span></div>
+          <input type="range" id="speedSlider" min="20" max="200" value="100">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Wavelength</h3>
+        <div class="slider-container">
+          <div class="slider-label"><span>λ (px):</span><span id="wavelengthValue">200</span></div>
+          <input type="range" id="wavelengthSlider" min="80" max="400" step="5" value="200">
+        </div>
+      </div>
+    </div>
+
+    <div class="button-container">
+      <button id="animateBtn">Start Animation</button>
+      <button id="resetBtn" class="reset-btn">Reset</button>
+    </div>
+
+    <div class="info">
+      <strong>Instructions:</strong> Adjust the sliders to change wave properties, then click Start Animation.
+      The top graph shows displacement vs distance, the bottom shows displacement vs time at a fixed point.
+    </div>
+  </div>
+
+  <script>
+    class WaveSimulation {
+      constructor() {
+        this.distanceCanvas = document.getElementById('distanceCanvas');
+        this.timeCanvas = document.getElementById('timeCanvas');
+        this.distanceCtx = this.distanceCanvas.getContext('2d');
+        this.timeCtx = this.timeCanvas.getContext('2d');
+
+        // Parameters
+        this.amplitude = 50;
+        this.frequency = 1.0;      // Hz
+        this.speed = 100;          // UI factor
+        this.wavelengthPx = 200;   // px per λ
+        this.maxYDisplay = 100;    // for y tick labels
+
+        // Time + history
+        this.isAnimating = false;
+        this.animationId = null;
+        this.tNow = 0;
+        this._lastPerf = null;
+
+        this.timeData = [];          // {t, y}
+        this.timeWindowSec = 5.0;    // visible window
+        this.sampleEverySec = 1/120; // ensure smoothness
+        this._sampleAccumulator = 0;
+
+        // HiDPI scaling and store logical sizes
+        this.scaleCanvas(this.distanceCanvas, this.distanceCtx);
+        this.scaleCanvas(this.timeCanvas, this.timeCtx);
+
+        this.setupEventListeners();
+        this.drawInitialWaves();
+      }
+
+      scaleCanvas(canvas, ctx) {
+        const dpr = Math.max(1, window.devicePixelRatio || 1);
+        // store logical (CSS) size derived from attributes
+        const cssW = canvas.getAttribute('width') ? Number(canvas.getAttribute('width')) : canvas.clientWidth;
+        const cssH = canvas.getAttribute('height') ? Number(canvas.getAttribute('height')) : canvas.clientHeight;
+        canvas._cssW = cssW;
+        canvas._cssH = cssH;
+
+        // set display size (CSS pixels)
+        canvas.style.width = cssW + 'px';
+        canvas.style.height = cssH + 'px';
+
+        // set actual buffer size (physical pixels)
+        canvas.width = Math.floor(cssW * dpr);
+        canvas.height = Math.floor(cssH * dpr);
+
+        // map 1 unit in code -> 1 CSS pixel on screen
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      // utilities to use logical size consistently
+      sizeOf(canvas) {
+        return { W: canvas._cssW, H: canvas._cssH };
+      }
+
+      setupEventListeners() {
+        const amplitudeSlider = document.getElementById('amplitudeSlider');
+        const frequencySlider = document.getElementById('frequencySlider');
+        const speedSlider = document.getElementById('speedSlider');
+        const animateBtn = document.getElementById('animateBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const wl = document.getElementById('wavelengthSlider');
+        const wlVal = document.getElementById('wavelengthValue');
+
+        amplitudeSlider.addEventListener('input', (e) => {
+          this.amplitude = parseInt(e.target.value, 10);
+          document.getElementById('amplitudeValue').textContent = this.amplitude;
+          if (!this.isAnimating) this.drawInitialWaves();
         });
-    </script>
+
+        frequencySlider.addEventListener('input', (e) => {
+          this.frequency = parseFloat(e.target.value);
+          document.getElementById('frequencyValue').textContent = this.frequency.toFixed(1);
+          if (!this.isAnimating) this.drawInitialWaves();
+        });
+
+        speedSlider.addEventListener('input', (e) => {
+          this.speed = parseInt(e.target.value, 10);
+          document.getElementById('speedValue').textContent = this.speed;
+          if (!this.isAnimating) this.drawInitialWaves();
+        });
+
+        wl.addEventListener('input', (e) => {
+          this.wavelengthPx = parseFloat(e.target.value);
+          wlVal.textContent = this.wavelengthPx.toFixed(0);
+          if (!this.isAnimating) this.drawInitialWaves();
+        });
+
+        animateBtn.addEventListener('click', () => this.toggleAnimation());
+        resetBtn.addEventListener('click', () => this.reset());
+      }
+
+drawGrid(ctx, canvas) {
+  const { W, H } = this.sizeOf(canvas);
+  ctx.clearRect(0, 0, W, H);
+
+  // draw only the midline (x-axis)
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, H/2);
+  ctx.lineTo(W, H/2);
+  ctx.stroke();
+}
+
+      drawAxes(ctx, canvas, xLabel, yLabel) {
+        const { W, H } = this.sizeOf(canvas);
+        ctx.save();
+        ctx.fillStyle = '#333';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(xLabel, W/2, H - 5);
+
+        ctx.save();
+        ctx.translate(15, H/2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText(yLabel, 0, 0);
+        ctx.restore();
+
+        // Y ticks
+        ctx.font = '10px Arial';
+        ctx.fillStyle = '#666';
+        const steps = 4;
+        for (let i = -steps; i <= steps; i++) {
+          if (i === 0) continue;
+          const y = H/2 - (i * this.maxYDisplay / steps);
+          const val = (i * this.maxYDisplay / steps).toFixed(0);
+          if (y > 15 && y < H - 35) {
+            ctx.textAlign = 'right';
+            ctx.fillText(val, 28, y + 3);
+          }
+        }
+        ctx.textAlign = 'right';
+        ctx.fillText('0', 28, H/2 + 3);
+        ctx.restore();
+      }
+
+    drawMovingTimeAxes(ctx, canvas) {
+      const { W, H } = this.sizeOf(canvas);
+      this.drawAxes(ctx, canvas, 'Time', 'Displacement');
+
+      ctx.save();
+      ctx.font = '10px Arial';
+      ctx.fillStyle = '#666';
+      ctx.textAlign = 'center';
+
+      const bottom = H - 20;
+      const divisions = 10;
+      const stepPx = W / divisions;
+
+      // BEFORE hitting the right edge: fixed [0, window]
+      // AFTER: sliding [tNow - window, tNow]
+      const tRight = (this.tNow < this.timeWindowSec) ? this.timeWindowSec : this.tNow;
+      const tLeft  = Math.max(0, tRight - this.timeWindowSec);
+
+      for (let i = 0; i <= divisions; i++) {
+        const x = i * stepPx;
+        const alpha = i / divisions;                // 0..1 across the width
+        const t = tLeft + alpha * (tRight - tLeft); // map to time range
+        ctx.fillText(`${t.toFixed(1)}s`, x, bottom);
+      }
+      ctx.restore();
+    }
+
+
+      drawDistanceWave() {
+        const ctx = this.distanceCtx;
+        const canvas = this.distanceCanvas;
+        const { W, H } = this.sizeOf(canvas);
+
+        this.drawGrid(ctx, canvas);
+        this.drawAxes(ctx, canvas, 'Distance', 'Displacement');
+
+        // wavelength markers
+        ctx.save();
+        ctx.font = '10px Arial';
+        ctx.fillStyle = '#666';
+        for (let i = 0; i * this.wavelengthPx < W; i++) {
+          const x = Math.round(i * this.wavelengthPx);
+          if (x > 30 && x < W - 30) ctx.fillText(`${i}λ`, x, H - 20);
+        }
+        ctx.restore();
+
+        // wave
+        ctx.strokeStyle = '#2196F3';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+
+        const k = (2 * Math.PI) / this.wavelengthPx;
+        const omega = 2 * Math.PI * this.frequency;
+        for (let x = 0; x < W; x++) {
+          const y = H/2 - this.amplitude * Math.sin(k * x - omega * this.tNow);
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // reference dot
+        const refX = 200;
+        const refY = H/2 - this.amplitude * Math.sin(k * refX - omega * this.tNow);
+        ctx.fillStyle = '#F44336';
+        ctx.beginPath(); ctx.arc(refX, refY, 6, 0, Math.PI * 2); ctx.fill();
+
+        // optional amplitude crest line
+        ctx.strokeStyle = 'rgba(33,150,243,0.35)';
+        ctx.setLineDash([6,4]);
+        ctx.beginPath(); ctx.moveTo(0, H/2 - this.amplitude); ctx.lineTo(W, H/2 - this.amplitude); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+    drawTimeWave() {
+      const ctx = this.timeCtx;
+      const canvas = this.timeCanvas;
+      const { W, H } = this.sizeOf(canvas);
+
+      this.drawGrid(ctx, canvas);
+      this.drawMovingTimeAxes(ctx, canvas);
+
+      // Determine visible time range
+      // - fixed [0, window] initially so the dot moves left -> right
+      // - sliding window once tNow >= window
+      const tMax = (this.tNow < this.timeWindowSec) ? this.timeWindowSec : this.tNow;
+      const tMin = Math.max(0, tMax - this.timeWindowSec);
+
+      // prune history to what can be shown
+      while (this.timeData.length && this.timeData[0].t < tMin) this.timeData.shift();
+      if (this.timeData.length < 1) return;
+
+      // Map [tMin, tMax] -> [0, W]
+      const range = (tMax - tMin);
+      if (range <= 0) return;
+      const mapX = (t) => ((t - tMin) / range) * W;
+
+      // Draw trace (interpolate from samples)
+      ctx.strokeStyle = '#4CAF50';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+
+      const first = this.timeData[0];
+      ctx.moveTo(mapX(first.t), H/2 - first.y);
+      for (let i = 1; i < this.timeData.length; i++) {
+        const { t, y } = this.timeData[i];
+        ctx.lineTo(mapX(t), H/2 - y);
+      }
+      ctx.stroke();
+
+      // Red dot at the *current* time (even if beyond last sample by a small dt)
+      const omega = 2 * Math.PI * this.frequency;
+      const yNow = this.amplitude * Math.sin(-omega * this.tNow);
+      const xNow = mapX(this.tNow);
+      ctx.fillStyle = '#F44336';
+      ctx.beginPath();
+      ctx.arc(xNow, H/2 - yNow, 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+      drawInitialWaves() {
+        // distance
+        this.drawDistanceWave();
+
+        // time (static preview)
+        const ctx = this.timeCtx;
+        const canvas = this.timeCanvas;
+        const { W, H } = this.sizeOf(canvas);
+        this.drawGrid(ctx, canvas);
+        this.drawAxes(ctx, canvas, 'Time', 'Displacement');
+
+        ctx.strokeStyle = '#4CAF50';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+
+        const omega = 2 * Math.PI * this.frequency;
+        for (let x = 0; x < W; x++) {
+          const t = (x / W) * this.timeWindowSec;
+          const y = H/2 - this.amplitude * Math.sin(omega * t);
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      animate = () => {
+        const perfNow = performance.now();
+        if (this._lastPerf == null) this._lastPerf = perfNow;
+        const dt = (perfNow - this._lastPerf) / 1000;
+        this._lastPerf = perfNow;
+
+        // progress time with speed factor
+        const dtScaled = dt * (this.speed / 100);
+        this.tNow += dtScaled;
+
+        // sample uniformly (independent of frame rate)
+        const omega = 2 * Math.PI * this.frequency;
+        this._sampleAccumulator += dtScaled;
+        while (this._sampleAccumulator >= this.sampleEverySec) {
+          const y = this.amplitude * Math.sin(-omega * this.tNow);
+          this.timeData.push({ t: this.tNow, y });
+          this._sampleAccumulator -= this.sampleEverySec;
+        }
+
+        this.drawDistanceWave();
+        this.drawTimeWave();
+
+        if (this.isAnimating) {
+          this.animationId = requestAnimationFrame(this.animate);
+        }
+      };
+
+      toggleAnimation() {
+        const btn = document.getElementById('animateBtn');
+        if (this.isAnimating) {
+          this.isAnimating = false;
+          cancelAnimationFrame(this.animationId);
+          btn.textContent = 'Start Animation';
+          btn.style.background = 'linear-gradient(45deg, #ff6b6b, #ee5a24)';
+        } else {
+          this.isAnimating = true;
+          this.timeData = [{ t: 0, y: 0 }];
+          this.tNow = 0;
+          this._lastPerf = null;
+          this._sampleAccumulator = 0;
+
+          btn.textContent = 'Stop Animation';
+          btn.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
+
+          this.animationId = requestAnimationFrame(this.animate);
+        }
+      }
+
+      reset() {
+        if (this.isAnimating) this.toggleAnimation();
+        this.amplitude = 50; this.frequency = 1.0; this.speed = 100; this.wavelengthPx = 200;
+        this.tNow = 0; this.timeData = []; this._lastPerf = null; this._sampleAccumulator = 0;
+
+        document.getElementById('amplitudeSlider').value = 50;
+        document.getElementById('amplitudeValue').textContent = '50';
+        document.getElementById('frequencySlider').value = 1.0;
+        document.getElementById('frequencyValue').textContent = '1.0';
+        document.getElementById('speedSlider').value = 100;
+        document.getElementById('speedValue').textContent = '100';
+        document.getElementById('wavelengthSlider').value = 200;
+        document.getElementById('wavelengthValue').textContent = '200';
+
+        this.drawInitialWaves();
+      }
+    }
+
+    window.addEventListener('load', () => new WaveSimulation());
+  </script>
 </body>
 </html>
