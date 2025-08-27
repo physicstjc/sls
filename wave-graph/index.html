@@ -240,6 +240,8 @@
         this.timeCanvas = document.getElementById('timeCanvas');
         this.distanceCtx = this.distanceCanvas.getContext('2d');
         this.timeCtx = this.timeCanvas.getContext('2d');
+        this.realTime = 0;         // seconds of real (wall-clock) time
+
 
         // State
         this.amplitude = 50;
@@ -249,7 +251,7 @@
         this.maxYDisplay = 100;    // y tick range
         this.timeWindowSec = 5.0;  // visible width (sec)
         this.sampleEverySec = 1/120;
-
+        this.lambdaScale = this.wavelengthPx / (this.speed / this.frequency); // = 200 / (100/1) = 2
         // Animation
         this.isAnimating = false;
         this.animationId = null;
@@ -296,20 +298,27 @@
         freq.addEventListener('input', e=>{
           this.frequency = +e.target.value;
           document.getElementById('frequencyValue').textContent = this.frequency.toFixed(1);
+          this.recomputeWavelengthFromVF();
           if(!this.isAnimating) this.drawInitialWaves();
         });
 
         spd.addEventListener('input', e=>{
           this.speed = +e.target.value;
           document.getElementById('speedValue').textContent = this.speed;
+          this.recomputeWavelengthFromVF();
           if(!this.isAnimating) this.drawInitialWaves();
         });
 
         wl.addEventListener('input', e=>{
           this.wavelengthPx = +e.target.value;
           document.getElementById('wavelengthValue').textContent = this.wavelengthPx.toFixed(0);
+
+          // CHANGE: adjust frequency so v = f λ while speed is unchanged
+          this.recomputeFrequencyFromVL();
+
           if(!this.isAnimating) this.drawInitialWaves();
         });
+
 
         animateBtn.addEventListener('click', ()=> this.toggleAnimation());
         resetBtn.addEventListener('click', ()=> this.reset());
@@ -397,8 +406,9 @@
         const stepPx = W / divisions;
 
         // fixed [0, window] then sliding
-        const tRight = (this.tNow < this.timeWindowSec) ? this.timeWindowSec : this.tNow;
+        const tRight = (this.realTime < this.timeWindowSec) ? this.timeWindowSec : this.realTime;
         const tLeft  = Math.max(0, tRight - this.timeWindowSec);
+
 
         const labelY = H/2 + 14; // directly below axis line
         for(let i=0;i<=divisions;i++){
@@ -461,15 +471,16 @@
         this.drawMovingTimeAxisTicks(ctx, canvas);
 
         // time window
-        const tMax = (this.tNow < this.timeWindowSec) ? this.timeWindowSec : this.tNow;
+        const tMax = (this.realTime < this.timeWindowSec) ? this.timeWindowSec : this.realTime;
         const tMin = Math.max(0, tMax - this.timeWindowSec);
+
 
         // prune & guard
         while(this.timeData.length && this.timeData[0].t < tMin) this.timeData.shift();
         const range = (tMax - tMin);
         if(!this.timeData.length || range <= 0) return;
 
-        const mapX = t => ((t - tMin)/range) * W;
+        const mapX = t => ((t - tMin) / (tMax - tMin)) * W;
 
         // trace
         ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--time-color') || '#4CAF50';
@@ -483,11 +494,11 @@
         ctx.stroke();
 
         // red dot at current t
-        const omega = 2*Math.PI*this.frequency;
-        const yNow = this.amplitude * Math.sin(-omega * this.tNow);
-        const xNow = mapX(this.tNow);
-        ctx.fillStyle = '#F44336';
+        const omega = 2 * Math.PI * this.frequency;
+        const yNow = this.amplitude * Math.sin(-omega * this.tNow);  // sim time
+        const xNow = mapX(this.realTime);                            // real time
         ctx.beginPath(); ctx.arc(xNow, H/2 - yNow, 6, 0, Math.PI*2); ctx.fill();
+
       }
 
       drawInitialWaves(){
@@ -522,24 +533,44 @@
         }
         ctx.stroke();
       }
+    
+    recomputeWavelengthFromVF() {
+      this.wavelengthPx = this.lambdaScale * (this.speed / this.frequency);
+      // keep the slider + label in sync
+      const wlSlider = document.getElementById('wavelengthSlider');
+      const wlLabel  = document.getElementById('wavelengthValue');
+      if (wlSlider) wlSlider.value = this.wavelengthPx.toFixed(0);
+      if (wlLabel)  wlLabel.textContent = this.wavelengthPx.toFixed(0);
+    }
+    recomputeFrequencyFromVL() {
+      this.frequency = (this.lambdaScale * this.speed) / this.wavelengthPx;    
+      const freqSlider = document.getElementById('frequencySlider');
+      const freqLabel  = document.getElementById('frequencyValue');
+      if (freqSlider) freqSlider.value = this.frequency.toFixed(1);
+      if (freqLabel)  freqLabel.textContent = this.frequency.toFixed(1);
+    }
 
       // --- Animation loop ---
       animate = () => {
         const now = performance.now();
-        if(this._lastPerf == null) this._lastPerf = now;
-        const dt = (now - this._lastPerf)/1000;
+        if (this._lastPerf == null) this._lastPerf = now;
+        const dtReal = (now - this._lastPerf) / 1000;   // real seconds since last frame
         this._lastPerf = now;
 
-        const dtScaled = dt * (this.speed/100);
-        this.tNow += dtScaled;
+        const dtSim = dtReal * (this.speed / 100);      // simulation time scaled by speed
+        this.realTime += dtReal;                         // advance real time
+        this.tNow     += dtSim;                          // advance simulated time
 
-        const omega = 2*Math.PI*this.frequency;
-        this._sampleAccumulator += dtScaled;
-        while(this._sampleAccumulator >= this.sampleEverySec){
-          const y = this.amplitude * Math.sin(-omega * this.tNow);
-          this.timeData.push({ t: this.tNow, y });
+        const omega = 2 * Math.PI * this.frequency;
+
+        // sample at a fixed real-time cadence
+        this._sampleAccumulator += dtReal;
+        while (this._sampleAccumulator >= this.sampleEverySec) {
+          const y = this.amplitude * Math.sin(-omega * this.tNow);   // phase uses sim time
+          this.timeData.push({ t: this.realTime, y });               // x-axis uses real time
           this._sampleAccumulator -= this.sampleEverySec;
         }
+
 
         this.drawDistanceWave();
         this.drawTimeWave();
@@ -558,6 +589,7 @@
           this.isAnimating = true;
           this.timeData = [{ t: 0, y: 0 }];
           this.tNow = 0;
+          this.realTime = 0;  
           this._lastPerf = null;
           this._sampleAccumulator = 0;
           btn.textContent = 'Stop Animation';
@@ -569,7 +601,7 @@
       reset(){
         if(this.isAnimating) this.toggleAnimation();
         this.amplitude = 50; this.frequency = 1.0; this.speed = 100; this.wavelengthPx = 200;
-        this.tNow = 0; this.timeData = []; this._lastPerf = null; this._sampleAccumulator = 0;
+        this.tNow = 0; this.timeData = []; this.realTime = 0; this._lastPerf = null; this._sampleAccumulator = 0;
 
         document.getElementById('amplitudeSlider').value = 50;
         document.getElementById('amplitudeValue').textContent = '50';
