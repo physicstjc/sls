@@ -458,14 +458,14 @@
         const k = (2*Math.PI) / this.wavelengthPx;
         const omega = 2*Math.PI*this.frequency;
         for(let x=0;x<W;x++){
-          const y = H/2 - this.amplitude * Math.sin(k*x - omega*this.tNow);
+          const y = H/2 - this.amplitude * Math.sin(k * x - omega * this.realTime);
           if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
         }
         ctx.stroke();
 
         // reference point & amplitude line
         const refX = Math.min(200, Math.max(40, Math.round(W*0.28))); // keep sensible on mobile
-        const refY = H/2 - this.amplitude * Math.sin(k*refX - omega*this.tNow);
+        const refY = H/2 - this.amplitude * Math.sin(k * refX - omega * this.realTime);
         ctx.fillStyle = '#F44336';
         ctx.beginPath(); ctx.arc(refX, refY, 6, 0, Math.PI*2); ctx.fill();
 
@@ -508,8 +508,12 @@
 
         // red dot at current t
         const omega = 2 * Math.PI * this.frequency;
-        const yNow = this.amplitude * Math.sin(-omega * this.tNow);  // sim time
-        const xNow = mapX(this.realTime);                            // real time
+        const k = (2 * Math.PI) / this.wavelengthPx;
+        const { W: Wref } = this.sizeOf(this.distanceCanvas);
+        const x0 = Math.min(200, Math.max(40, Math.round(Wref * 0.28)));
+        const yNow = this.amplitude * Math.sin(k * x0 - omega * this.realTime);
+        const xNow = mapX(this.realTime);
+
         ctx.beginPath(); ctx.arc(xNow, H/2 - yNow, 6, 0, Math.PI*2); ctx.fill();
 
       }
@@ -606,28 +610,30 @@
       animate = () => {
         const now = performance.now();
         if (this._lastPerf == null) this._lastPerf = now;
-        const dtReal = (now - this._lastPerf) / 1000;   // real seconds since last frame
+        const dtReal = (now - this._lastPerf) / 1000;  // real seconds
         this._lastPerf = now;
 
-        const dtSim = dtReal * (this.speed / 100);      // simulation time scaled by speed
-        this.realTime += dtReal;                         // advance real time
-        this.tNow     += dtSim;                          // advance simulated time
+        // advance real time (no speed scaling here)
+        this.realTime += dtReal;
 
+        // sample y(t) at a fixed probe position x0 for the time graph
+        const { W } = this.sizeOf(this.distanceCanvas);
+        const x0 = Math.min(200, Math.max(40, Math.round(W * 0.28))); // same point as the red dot
         const omega = 2 * Math.PI * this.frequency;
+        const k = (2 * Math.PI) / this.wavelengthPx;
 
-        // sample at a fixed real-time cadence
         this._sampleAccumulator += dtReal;
         while (this._sampleAccumulator >= this.sampleEverySec) {
-          const y = this.amplitude * Math.sin(-omega * this.tNow);   // phase uses sim time
-          this.timeData.push({ t: this.realTime, y });               // x-axis uses real time
+          const t = this.realTime;                      // x-axis = real time
+          const y = this.amplitude * Math.sin(k * x0 - omega * t); // phase uses real time
+          this.timeData.push({ t, y });
           this._sampleAccumulator -= this.sampleEverySec;
         }
 
-
         this.drawDistanceWave();
         this.drawTimeWave();
+        if (this.isAnimating) this.animationId = requestAnimationFrame(this.animate);
 
-        if(this.isAnimating) this.animationId = requestAnimationFrame(this.animate);
       }
 
       toggleAnimation(){
