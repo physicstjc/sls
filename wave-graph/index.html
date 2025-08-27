@@ -513,7 +513,7 @@
         const x0 = Math.min(200, Math.max(40, Math.round(Wref * 0.28)));
         const yNow = this.amplitude * Math.sin(k * x0 - omega * this.realTime);
         const xNow = mapX(this.realTime);
-
+        ctx.fillStyle = '#F44336'; 
         ctx.beginPath(); ctx.arc(xNow, H/2 - yNow, 6, 0, Math.PI*2); ctx.fill();
 
       }
