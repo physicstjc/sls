@@ -217,7 +217,7 @@
 
       <div class="control">
         <h3>Wavelength</h3>
-        <div class="row"><span>λ (mm)</span><span id="wavelengthValue">200</span></div>
+        <div class="row"><span>λ (px)</span><span id="wavelengthValue">200</span></div>
         <input type="range" id="wavelengthSlider" min="80" max="400" step="5" value="200" />
       </div>
     </div>
@@ -259,6 +259,13 @@
         this._lastPerf = null;
         this._sampleAccumulator = 0;
         this.timeData = [];
+        // === Visual units model ===
+        // Treat 'speed' slider as visual speed in px/s (not a factor).
+        // Keep frequency in Hz. Wavelength is in pixels.
+        this.speedPxPerSec = this.speed;      // initialize from slider's value
+        this.lambdaPx      = this.wavelengthPx;
+
+        // One source of truth: whenever any 2 are known, derive the 3rd so v = f*λ.
 
         // Init
         this.bindUI();
@@ -296,28 +303,34 @@
         });
 
         freq.addEventListener('input', e=>{
+          if (this._programmatic) return;
           this.frequency = +e.target.value;
-          document.getElementById('frequencyValue').textContent = this.frequency.toFixed(1);
-          this.recomputeWavelengthFromVF();
+          document.getElementById('frequencyValue').textContent = this.frequency.toFixed(2);
+          // Hold v fixed, recompute λ
+          this.updateLambdaFromVF();
           if(!this.isAnimating) this.drawInitialWaves();
         });
 
         spd.addEventListener('input', e=>{
-          this.speed = +e.target.value;
-          document.getElementById('speedValue').textContent = this.speed;
-          this.recomputeWavelengthFromVF();
+          if (this._programmatic) return;
+          this.speedPxPerSec = +e.target.value;
+          this.speed = this.speedPxPerSec; // keep animation scale aligned
+          document.getElementById('speedValue').textContent = this.speedPxPerSec.toFixed(0);
+          // Hold f fixed, recompute λ
+          this.updateLambdaFromVF();
           if(!this.isAnimating) this.drawInitialWaves();
         });
 
         wl.addEventListener('input', e=>{
-          this.wavelengthPx = +e.target.value;
-          document.getElementById('wavelengthValue').textContent = this.wavelengthPx.toFixed(0);
-
-          // CHANGE: adjust frequency so v = f λ while speed is unchanged
-          this.recomputeFrequencyFromVL();
-
+          if (this._programmatic) return;
+          this.lambdaPx = +e.target.value;
+          this.wavelengthPx = this.lambdaPx;
+          document.getElementById('wavelengthValue').textContent = this.lambdaPx.toFixed(0);
+          // Hold v fixed, recompute f
+          this.updateFreqFromVL();
           if(!this.isAnimating) this.drawInitialWaves();
         });
+
 
 
         animateBtn.addEventListener('click', ()=> this.toggleAnimation());
@@ -542,6 +555,45 @@
       if (wlSlider) wlSlider.value = this.wavelengthPx.toFixed(0);
       if (wlLabel)  wlLabel.textContent = this.wavelengthPx.toFixed(0);
     }
+        
+        // Guard to prevent slider event recursion
+    _programmatic = false;
+
+    // v = f * λ  => derive λ when v,f change
+    updateLambdaFromVF() {
+      this.lambdaPx = this.speedPxPerSec / this.frequency;
+      this.wavelengthPx = this.lambdaPx; // keep old variable for drawing
+      this._programmatic = true;
+      const s = document.getElementById('wavelengthSlider');
+      const l = document.getElementById('wavelengthValue');
+      if (s) s.value = this.lambdaPx.toFixed(0);
+      if (l) l.textContent = this.lambdaPx.toFixed(0);
+      this._programmatic = false;
+    }
+
+    // v = f * λ  => derive f when v,λ change
+    updateFreqFromVL() {
+      this.frequency = this.speedPxPerSec / Math.max(1e-6, this.lambdaPx);
+      this._programmatic = true;
+      const s = document.getElementById('frequencySlider');
+      const l = document.getElementById('frequencyValue');
+      if (s) s.value = this.frequency.toFixed(2);
+      if (l) l.textContent = this.frequency.toFixed(2);
+      this._programmatic = false;
+    }
+
+    // v = f * λ  => derive v when f,λ change
+    updateSpeedFromFL() {
+      this.speedPxPerSec = this.frequency * this.lambdaPx;
+      this.speed = this.speedPxPerSec; // keep old variable for animation scaling if you like
+      this._programmatic = true;
+      const s = document.getElementById('speedSlider');
+      const l = document.getElementById('speedValue');
+      if (s) s.value = this.speedPxPerSec.toFixed(0);
+      if (l) l.textContent = this.speedPxPerSec.toFixed(0);
+      this._programmatic = false;
+    }
+    
     recomputeFrequencyFromVL() {
       this.frequency = (this.lambdaScale * this.speed) / this.wavelengthPx;    
       const freqSlider = document.getElementById('frequencySlider');
