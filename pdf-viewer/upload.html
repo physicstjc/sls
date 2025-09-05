@@ -1,117 +1,369 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload PDF</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .container {
-              max-width: 500px;
-              margin-top: 20px;
-              padding: 20px;
-              background-color: #fff;
-              border-radius: 8px;
-              box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            }
-
-        h2 {
-            margin-bottom: 20px;
-        }
-        input[type="file"] {
-            margin-bottom: 10px;
-        }
-        label {
-      display: block;
-      background-color: #007bff;
-      color: #fff;
-      padding: 10px 20px;
-      text-align: center;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Package PDF for SLS</title>
+  <style>
+    :root{
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #1f2a37;
+      --muted: #6b7280;
+      --accent: #2563eb;   /* blue */
+      --accent-2: #10b981; /* green */
+      --ring: rgba(37,99,235,.25);
+      --radius: 16px;
+      --shadow: 0 6px 24px rgba(0,0,0,.08), 0 2px 8px rgba(0,0,0,.06);
     }
 
-    label:hover {
-      background-color: #0056b3;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background: radial-gradient(1200px 600px at 80% -10%, #e8efff 0%, transparent 60%) ,
+                  radial-gradient(900px 500px at -10% 20%, #e6fff5 0%, transparent 60%) ,
+                  var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color: var(--text);
+      display:flex; align-items:center; justify-content:center;
+      padding: 24px;
     }
-        button {
-            padding: 10px 20px;
-            background-color: #28a745;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-    </style>
+
+    .container{
+      width: 100%;
+      max-width: 720px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: clip;
+    }
+
+    .header{
+      padding: 24px 28px 10px 28px;
+      display:flex; align-items:center; gap:14px;
+      border-bottom: 1px solid #eef2f7;
+    }
+    .logo{
+      width:42px; height:42px; border-radius:12px;
+      display:grid; place-items:center;
+      background: linear-gradient(135deg, #60a5fa, #34d399);
+      color:white;
+    }
+    .title{
+      margin:0; font-size:1.25rem; font-weight:700;
+    }
+    .subtitle{
+      margin:2px 0 0; font-size:.95rem; color:var(--muted);
+    }
+
+    .content{
+      padding: 24px 28px 28px;
+      display:grid; gap:18px;
+    }
+
+    .callout{
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 12px 14px;
+      color:#334155;
+      font-size:.95rem;
+    }
+    .callout a{ color: var(--accent); text-decoration: none; }
+    .callout a:hover{ text-decoration: underline; }
+
+    /* Dropzone */
+    .dropzone{
+      border: 2px dashed #c7d2fe;
+      background: #fafaff;
+      border-radius: 16px;
+      padding: 28px;
+      text-align:center;
+      transition: .15s ease;
+      outline: none;
+    }
+    .dropzone.highlight{
+      border-color: var(--accent);
+      background: #eef4ff;
+      box-shadow: 0 0 0 6px var(--ring);
+    }
+    .dz-icon{
+      width:52px; height:52px; margin:0 auto 10px;
+      border-radius: 14px; display:grid; place-items:center;
+      background: linear-gradient(135deg, #93c5fd, #6ee7b7);
+      color:#0f172a;
+    }
+    .dz-title{ margin:8px 0 4px; font-weight:700 }
+    .dz-sub{ margin:0; color:var(--muted); font-size:.95rem }
+
+    /* Controls */
+    .controls{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:center }
+    .btn, label[for="pdfFile"]{
+      appearance:none; border:none; border-radius: 12px;
+      padding: 10px 16px; font-weight:600; cursor:pointer;
+      transition: transform .06s ease, box-shadow .15s ease, background .2s ease;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    .btn:active, label[for="pdfFile"]:active{ transform: translateY(1px) }
+    .btn-primary{
+      background: var(--accent); color: #fff;
+    }
+    .btn-primary:hover{ filter: brightness(1.05) }
+    .btn-success{
+      background: var(--accent-2); color: #0b1b14;
+    }
+    label[for="pdfFile"]{
+      background:#e5edff; color:#1e3a8a;
+      border:1px solid #c7d2fe;
+    }
+    label[for="pdfFile"]:hover{ background:#dce6ff }
+
+    .file-meta{
+      display:flex; align-items:center; justify-content:center;
+      gap:10px; flex-wrap:wrap; font-size:.95rem; color:var(--muted);
+    }
+    .file-pill{
+      background:#f1f5f9; border:1px solid #e2e8f0;
+      padding:6px 10px; border-radius:999px; color:#334155;
+    }
+
+    .preview{
+      display:grid; gap:10px; justify-items:center;
+    }
+    .preview img{
+      max-width: 100%;
+      border-radius: 12px;
+      border:1px solid #e5e7eb;
+    }
+
+    .footer{
+      padding: 16px 28px;
+      border-top: 1px solid #eef2f7;
+      font-size:.9rem; color:var(--muted);
+      display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+    }
+
+    /* Accessibility focus */
+    .btn:focus-visible, label[for="pdfFile"]:focus-visible, .dropzone:focus-visible{
+      outline: none; box-shadow: 0 0 0 6px var(--ring);
+    }
+
+    /* Mobile niceties */
+    @media (max-width: 420px){
+      .header{ padding: 20px 18px 8px }
+      .content{ padding: 18px }
+      .footer{ padding: 14px 18px }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-    <h2>Packaging a PDF file for SLS</h2>
-    <p>Select a single pdf file that you would like to display in SLS without requiring students to download.</p>
-    <p>When the new zip file is uploaded into SLS, it will display the pdf file as shown below.</p>
-    <p>Note the <a href="https://www.learning.moe.edu.sg/teacher-user-guide/author/file-size-limits/">maximum file size limits</a>.</p>   
-    <p align="center"><img src="pdf-viewer.png">
-    <input type="file" id="pdfFile" accept=".pdf" required> 
-
-    <button onclick="handleUpload()">Process PDF</button>
-
+  <div class="container" role="region" aria-label="Package PDF into ZIP for SLS">
+    <div class="header">
+      <div class="logo" aria-hidden="true">
+        <!-- simple doc icon -->
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" opacity=".85"/>
+          <path d="M14 2v6h6" opacity=".6"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="title">Packaging a PDF file for SLS</h1>
+        <p class="subtitle">Embed your PDF in a ZIP so students can view it in-browser (no download required).</p>
+      </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
-    <script>
-        function handleUpload() {
-            const fileInput = document.getElementById('pdfFile');
-            const file = fileInput.files[0];
+    <div class="content">
+      <div class="callout">
+        Note the
+        <a href="https://www.learning.moe.edu.sg/teacher-user-guide/author/file-size-limits/" target="_blank" rel="noopener noreferrer">
+          maximum file size limits
+        </a>.
+      </div>
 
-            if (!file) {
-                alert('Please select a file.');
-                return;
-            }
+      <!-- Dropzone -->
+      <div id="dropzone" class="dropzone" tabindex="0" aria-label="Drag and drop your PDF here, or use the Choose PDF button">
+        <div class="dz-icon" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M5 20h14v-2H5zM19 9h-4V3H9v6H5l7 7z"></path>
+          </svg>
+        </div>
+        <div class="dz-title">Drop your PDF here</div>
+        <p class="dz-sub">…or use the button below</p>
+      </div>
 
-            const zip = new JSZip();
-		 const fileNameWithoutExtension = file.name.split('.').slice(0, -1).join('.'); // Extract filename without extension
-            zip.file(file.name, file); // Include the uploaded PDF file in the ZIP
+      <!-- Controls -->
+      <div class="controls">
+        <input id="pdfFile" type="file" accept="application/pdf,.pdf" hidden />
+        <label for="pdfFile" aria-label="Choose PDF file">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 13H5v-2h14v2z"/></svg>
+          Choose PDF
+        </label>
+        <button id="processBtn" class="btn btn-primary" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7V3z"/><path d="M12 7v6l5 3"/></svg>
+          Process PDF
+        </button>
+        <button id="resetBtn" class="btn btn-success" type="button" title="Clear selection">Reset</button>
+      </div>
 
-            zip.file('index.html', `<!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Download PDF</title>
-            <style>
-                #pdf-viewer {
-                    width: 100%;
-                    height: 100vh;
-                }
-            </style>
-            </head>
-            <body>
-                <div id="pdf-viewer">
-                    <embed src="${file.name}" type="application/pdf" width="100%" height="100%">
-                </div>
-            </body>
-            </html>`);
-            zip.generateAsync({ type: 'blob' }).then(blob => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${fileNameWithoutExtension}.zip`; // Set the zip file name
-                a.click();
-                URL.revokeObjectURL(url);
-            });
+      <!-- File meta -->
+      <div id="fileMeta" class="file-meta" style="display:none;">
+        <span class="file-pill" id="fileNamePill"></span>
+        <span class="file-pill" id="fileSizePill"></span>
+      </div>
+
+      <!-- Preview / help image -->
+      <div class="preview">
+        <img src="pdf-viewer.png" alt="Example of how the embedded PDF will appear in SLS" />
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Tip: Keep filenames simple (letters, numbers, dashes).</span>
+      <span id="statusText" aria-live="polite"></span>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js" integrity="sha512-4R6S3i2mX5c3VqTq1w6O3IhA6bP5Qxq6mIYtpC4e2r7+f5L8zD9n8lqQk0pQYb0WQ8r7bWb9gQxR7sQxgM9Zxg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    const fileInput = document.getElementById('pdfFile');
+    const processBtn = document.getElementById('processBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const statusText = document.getElementById('statusText');
+    const dropzone = document.getElementById('dropzone');
+    const fileMeta = document.getElementById('fileMeta');
+    const fileNamePill = document.getElementById('fileNamePill');
+    const fileSizePill = document.getElementById('fileSizePill');
+
+    let selectedFile = null;
+
+    // Helpers
+    const fmtBytes = (bytes) => {
+      if (bytes === 0) return '0 B';
+      const k = 1024, sizes = ['B','KB','MB','GB','TB'];
+      const i = Math.floor(Math.log(bytes)/Math.log(k));
+      return parseFloat((bytes/Math.pow(k,i)).toFixed(2))+' '+sizes[i];
+    };
+
+    const setStatus = (msg, ok=true) => {
+      statusText.textContent = msg;
+      statusText.style.color = ok ? '#065f46' : '#b91c1c';
+    };
+
+    const showMeta = (file) => {
+      fileNamePill.textContent = file.name;
+      fileSizePill.textContent = fmtBytes(file.size);
+      fileMeta.style.display = 'flex';
+    };
+
+    const clearSelection = () => {
+      selectedFile = null;
+      fileInput.value = '';
+      fileMeta.style.display = 'none';
+      setStatus('Selection cleared.');
+    };
+
+    // File selection via input
+    fileInput.addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      if (f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf')){
+        setStatus('Please choose a .pdf file.', false);
+        fileInput.value = '';
+        return;
+      }
+      selectedFile = f;
+      showMeta(f);
+      setStatus('PDF ready to process.');
+    });
+
+    // Drag & Drop
+    ;['dragenter','dragover'].forEach(evt =>
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault(); e.stopPropagation();
+        dropzone.classList.add('highlight');
+      })
+    );
+    ;['dragleave','drop'].forEach(evt =>
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault(); e.stopPropagation();
+        dropzone.classList.remove('highlight');
+      })
+    );
+    dropzone.addEventListener('drop', (e) => {
+      const f = e.dataTransfer.files?.[0];
+      if (!f) return;
+      if (f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf')){
+        setStatus('Please drop a .pdf file.', false);
+        return;
+      }
+      selectedFile = f;
+      showMeta(f);
+      setStatus('PDF ready to process.');
+    });
+
+    // Keyboard focus to trigger picker
+    dropzone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+
+    // Reset
+    resetBtn.addEventListener('click', clearSelection);
+
+    // Process
+    processBtn.addEventListener('click', async () => {
+      try{
+        if (!selectedFile){
+          setStatus('Please select a PDF first.', false);
+          return;
         }
-    </script>
-</body>
-</html>
+        processBtn.disabled = true;
+        processBtn.textContent = 'Processing…';
+        setStatus('Building ZIP… This stays entirely in your browser.');
+
+        const zip = new JSZip();
+        const fileName = selectedFile.name;
+        const baseName = fileName.replace(/\.pdf$/i,'') || 'document';
+
+        // Put the PDF inside
+        zip.file(fileName, selectedFile);
+
+        // Create a minimal, beautiful viewer page
+        const viewerHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${baseName}</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background:#0b1220; color:#e5e7eb}
+  .bar{
+    position:fixed; top:0; left:0; right:0;
+    background: rgba(15,23,42,.8); backdrop-filter: blur(6px);
+    border-bottom: 1px solid rgba(148,163,184,.25);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 14px; z-index:10;
+  }
+  .title{font-weight:700; font-size:14px; letter-spacing:.2px}
+  .btn{
+    color:#0b1b14; background:#22c55e; border:none; border-radius:999px; padding:6px 12px; font-weight:700; cursor:pointer;
+  }
+  .wrap{position:absolute; inset:48px 0 0 0}
+  .wrap embed, .wrap object{
+    width:100%; height:100%; border:0; background:#111827;
+  }
+  .fallback{
+    position:absolute; inset:48px 0 0 0; display:grid; place-items:center; text-align:center; padding:24px; color:#cbd5e1;
+  }
+  a { color:#93c5fd }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <div class="title">${baseName}.pdf</div>
+    <button class="btn" onclick="downloadPDF()">Download</butt
