@@ -1,55 +1,62 @@
-﻿topic,term,definition
-Measurement,Base quantities,Base quantities are quantities that can be accurately and easily reproduced and are unchanging with time.
-Measurement,Derived quantities,Derived quantities are quantities that are obtained from the multiplication or division of base quantities.
-Measurement,Homogeneous equation,Any equation where each term has the same base units is said to be homogeneous. 
-Measurement,Systematic error,"A systematic error will result in all readings being either above or below the accepted value. The error may be reduced by improving the experimental techniques, or making corrections for it if its cause is known."
-Measurement,Random error ,A random error will result in readings being scattered around the accepted value. The error may be reduced by taking the mean of several measurements or by plotting a graph and drawing a best-fit line. 
-Measurement,Accuracy,The accuracy of an experiment is a measure of how close the experimental result is to the true value or accepted value. Accuracy depends on how well we can control or compensate for the systematic errors. Accurate measurement has a small systematic error.
-Measurement,Precision,The precision of an experiment is a measure of how exactly the experimental result is determined. It is also a measure of how close the experimental results are to each other. Precision depends on how well we can reduce the random errors. Precise measurement has a small random error.
-Measurement,Scalar quantity,A scalar quantity has magnitude only. 
-Measurement,Vector quantity,A vector quantity has both magnitude and direction.
-Kinematics,Distance,Distance is the length of the path taken. 
-Kinematics,Displacement,Displacement is the distance travelled along a specified direction.
-Kinematics,Speed,Speed is the rate of change of distance.
-Kinematics,Velocity,Velocity is the rate of change of displacement.
-Kinematics,Acceleration,Acceleration is the rate of change of velocity.
-Kinematics,Free Fall,An object is said to be in free fall if the only force acting on it is the gravitational force of the Earth.
-Dynamics,Newton's first law of motion,Newton's first law of motion states that a body will remain in its state of rest or uniform motion in a straight line unless acted upon by a resultant force.
-Dynamics,Newton's second law of motion,Newton's second law of motion states that the rate of change of momentum of a body is proportional to the resultant force acting on it and the change takes place in the direction of the resultant force.
-Dynamics,Newton's third law of motion,"Newton's third law of motion states that if body A exerts a force on body B, then body B exerts an equal and opposite force on body A."
-Dynamics,Mass,Mass of a body is a measure of its inertia.
-Dynamics,Inertia,Inertia is the property of a body that resists change in motion.
-Dynamics,Linear momentum,Llinear momentum of a body is defined as the product of its mass and its velocity.
-Dynamics,One newton,"One newton is defined as the force which, when acting on a 1 kilogram mass, produces an acceleration of 1 m s-2."
-Dynamics,Impulse,Impulse is defined as the product of the force acting on a body and the time interval during which the force is exerted. It is equal to the change in momentum of the body.
-Dynamics,Principle of conservation of momentum,The principle of conservation of momentum states that the total momentum of a system remains constant if no resultant external force acts on the system.
-Dynamics,Elastic collision,Elastic collision is a collision in which both momentum and kinetic energy are conserved.
-Dynamics,Inelastic collision,Inelastic collision is a collision in which momentum is conserved but kinetic energy is not.
-Dynamics,Completely inelastic collision,Completely inelastic collision is a collision in which momentum is conserved and the particles stick together after collision so that their final velocities are the same
-Forces,Hooke’s law,"Hooke’s law states that within the limit of proportionality, the extension x produced in a material is directly proportional to the load F applied. "
-Forces,,F = kx where k is the force constant.
-Forces,Moment of a force,The moment of a force is defined as the product of the force and the perpendicular distance of the line of action of the force from the pivot.
-Forces,Couple,A couple consists of two equal forces acting in opposite directions whose lines of action do not coincide. It tends to produce rotation only. 
-Forces,Torque,The torque of a couple is the product of one of the forces and the perpendicular distance between the lines of action of the forces.
-Forces,Principle of moments,"The principle of moments states that when a body is in equilibrium, the sum of the anticlockwise moment about a point is equal to the sum of the clockwise moment about the same point. "
-Forces,Equilibrium,An object is said to be in equilibrium if the resultant force acting on it is zero and the resultant torque acting on the object about every point is zero.
-Forces,Stable equilibrium,An object is in stable equilibrium if it returns to its original position after it has been displaced slightly. 
-Forces,Unstable equilibrium,An object is in unstable equilibrium if any displacement from its original position lowers its centre of gravity. Toppling occurs when the centre of gravity of an object falls outside its base. 
-Forces,Conditions for equilibrium,(i)   The sum of the forces in any direction must be zero.
-Forces,,(ii)  The sum of the moments of the forces about any point must be zero.
-Forces,Rigid body,A rigid body is one that does not change its shape appreciably when undergoing acceleration.
-Forces,Centre of mass,"The centre of mass of a body is the point at which the entire mass of the body can be considered to act. If a body is symmetrical and of uniform composition, the centre of mass is at the geometrical centre of the body."
-Forces,Centre of gravity,The centre of gravity of a body is the point at which the entire weight of the body may be considered to act. 
-Forces,Upthrust,Upthrust is the upward force acing on a body by the fluid due to the fluid displaced.
-Forces,Archimedes’ Principle,Archimedes’ Principle states that Upthrust is equal in magnitude and opposite in direction to the weight of the fluid displaced by a submerged or floating object.
-Forces,Principle of Flotation,"Principle of Flotation states for an object floating in equilibrium, the upthrust is equal in magnitude and opposite in direction to the weight of the object. "
-"Work, Energy and Power",Work done ,Work done by a force is defined as the product of the force and the displacement in the direction of the force. 
-"Work, Energy and Power",One joule,One joule is defined as the work done by a force of 1 newton when its point of application moves through a distance of 1 metre in the direction of the force.
-"Work, Energy and Power",Energy,Energy is defined as the stored ability to do work.
-"Work, Energy and Power",Principle of Conservation of Energy,The Principle of Conservation of Energy states that energy can neither be created nor destroyed in any process. It can be transformed from one form to another.
-"Work, Energy and Power",Kinetic energy,Kinetic energy is defined as the energy of a body by virtue of its motion.  
-"Work, Energy and Power",Potential energy,Potential energy is defined as the energy of a body by virtue of its position.
-"Work, Energy and Power",Internal energy,Internal energy is determined by the state of the system. It is can be expressed as the sum of a random distribution of kinetic and potential energies associated with the molecules of a system.
-"Work, Energy and Power",Work energy theorem,The Work-Energy Theorem states that the net work done by external forces acting on a particle is equal to the change in kinetic energy of the particle.
-"Work, Energy and Power",Principle of conservation of mechanical energy,"When work is done by conservative forces, the total mechanical energy (ie. total kinetic energy and potential energy) of a system is conserved. In other words, the gain in kinetic energy is equal to the loss in potential energy for the conservative system and vice versa."
-"Work, Energy and Power",Power,Power is defined as the work done per unit time.
+topic,term,definition
+01. Measurement,Scalar quantity,a physical quantity which has magnitude only
+01. Measurement,Vector quantity,a physical quantity which has both magnitude and direction
+02. Kinematics,"Acceleration, a",the rate of change of velocity
+02. Kinematics,"Displacement, s",the distance measured in a straight line in a specified direction
+02. Kinematics,Distance,total length travelled by a body regardless of the direction of motion
+02. Kinematics,Speed,the distance traveled per unit time
+02. Kinematics,"Velocity, v",the rate of change of displacement
+03. Dynamics,Gravitational field,a region in which a mass experiences a force due to gravitational attraction
+03. Dynamics,"Gravitational field strength, g",gravitational force per unit mass placed at that point
+03. Dynamics,Mass,a measure of the amount of matter in a body
+03. Dynamics,Weight,the force of gravity acting on a body
+03. Dynamics,Newton's First Law of Motion,A body will remain in its state of rest or uniform motion in a straight line unless acted upon by a resultant force.
+03. Dynamics,Newton's Second Law of Motion,"The resultant force acting on an object of a constant mass is the product of the mass and acceleration of the object. The object accelerates in the direction of the resultant force. Fres = ma F A a B Considering entire system, F = (mA + mB)a a a"
+03. Dynamics,Newton's Third Law of Motion,"If body A exerts a force on body B, then body B exerts an equal and opposite force on body A."
+04. Turning Effect of Forces,Centre of gravity,the point through which the entire weight of a body appears to act for any orientation of the object
+04. Turning Effect of Forces,Moment of a force,the product of the force and the perpendicular distance between the axis of rotation and the line of action of the force.
+04. Turning Effect of Forces,Stability,the ability of an object to return to its original position after it has been displaced slightly
+04. Turning Effect of Forces,Equilibrium,when a system experiences no resultant force and no resultant torque
+05. Pressure,Pressure,the amount of force acting perpendicularly on per unit area. P = F/A
+06. Energy,Efficiency,the ratio of useful energy output to the total energy input
+06. Energy,Power,rate of energy transfer
+06. Energy,Principle of Conservation of Energy,Energy cannot be created or destroyed but can be transferred from one store to another. The total energy of an isolated system remains constant.
+06. Energy,Work done,the product of force and the distance moved in the direction of the force
+07. Light,Refractive Index,the ratio of speed of light in vacuum and in the medium
+07. Light,"Critical angle, c",the angle of incidence in a medium with a higher refractive index for which the angle of refraction in the medium with a lower refractive index is 90�.
+07. Light,"Focal length, f",The distance between the optical centre and focal point
+07. Light,Total internal reflection,phenomenon that occurs when a light ray traveling from a medium with a higher refractive index to a medium with a lower refractive index is completely reflected back into the denser medium. This occurs when the incident angle is larger than the critical angle.
+08. General Properties of Waves,Amplitude,the magnitude of maximum displacement of the particle from its equilibrium position.
+08. General Properties of Waves,"Frequency, f",the number of complete waves produce per unit time
+08. General Properties of Waves,Longitudinal waves,waves in which the displacement of the particles of the medium is parallel to the direction of energy transfer.
+08. General Properties of Waves,"Period, T",the time for a particle in the wave to complete one cycle of vibration
+08. General Properties of Waves,Transverse waves,waves in which the displacement of the particles of the medium is perpendicular to the direction of the direction of energy transfer
+08. General Properties of Waves,"Wave speed, v",the distance a wave travels per unit
+08. General Properties of Waves,Wavefront,an imaginary line or surface that joins points of a wave that are in phase.
+08. General Properties of Waves,"Wavelength, _",the shortest distance between 2 points which are vibrating in phase.
+10. Static Electricity,Electric field,a region in which an electric charge experiences an electric force.
+11. Current Electricity,Current,the rate of flow of charge
+11. Current Electricity,Electromotive force (e.m.f.),the work done by a source in driving a unit charge around a complete circuit
+11. Current Electricity,Potential difference across an electrical device,the work done per unit charge in driving chargfes through a component
+11. Current Electricity,Resistance of a component,the ratio of the potential difference across the component to the current flowing through it
+13. Practical Electricity,Circuit breaker,a safety device connected to the live wire which switches off the electrical supply when a excessive current flows through it
+13. Practical Electricity,Double insulation,"two layers of protection to prevent users from coming into contact with live electrical parts, eliminating the need for an earth connection"
+13. Practical Electricity,Earth wire,"wire providing a path for electrical current to flow safely into the ground in case of a fault, preventing the appliance's exterior from becoming live and reducing the risk of electric shock."
+13. Practical Electricity,Fuse,"a safety device connected to the live wire and is designed to melt/break, thus creating an open circuit, when the current passing through it exceeds a specified."
+13. Practical Electricity,Live wire,wire carrying the current at a high voltage from the power source to the electrical appliance.
+13. Practical Electricity,Neutral wire,"wire completing the circuit by carrying current back to the power source, maintaining a low potential close to zero volts."
+18. Thermal Properties of Matter,"Heat capacity, C",The amount of thermal energy absorbed or emitted by a substance per unit temperature change
+18. Thermal Properties of Matter,Internal energy,total kinetic energy and total potential energy of particles in a system
+18. Thermal Properties of Matter,"Latent heat, L",amount of energy transferred to change the state of a substance at constant temperature.
+18. Thermal Properties of Matter,"Specific heat capacity, c",The amount of thermal energy absorbed or emitted by a substance per unit mass per unit temperature change
+18. Thermal Properties of Matter,"Specific latent heat of fusion, lf",amount of energy transferred per unit mass of a substance to change be- tween the solid and liquid states at constant temperature.
+18. Thermal Properties of Matter,"Specific latent heat of vaporisation, lv",amount of energy transferred per unit mass of a substance to change between the liquid and gaseous states at constant temperature.
+18. Thermal Properties of Matter,"Specific latent heat, l",amount of energy transferred per unit mass of a substance to change its state at con- stant temperature. L = ml
+19. Radioactivity,Background radiation,ionizing radiation present in the environment
+19. Radioactivity,Half-life,time taken for half of the radioactive atoms in a sample to undergo radioactive decay.
+19. Radioactivity,Nuclear fusion,"a nuclear reaction in which two or more atomic nuclei combine to form a single, more massive nucleus, along with the release of a significant amount of energy."
+19. Radioactivity,Isotopes,atoms of the same element that have the same number of protons but different numbers of neutrons.
+19. Radioactivity,Nuclear decay,a random and spontaneous process whereby an unstable nucleus loses energy by emitting radiation
+19. Radioactivity,"Nucleon number, A",the sum of number of protons and neutrons in a nucleus
+19. Radioactivity,Nuclide,a species of an atom consisting of a particular number of protons and neutrons
+19. Radioactivity,Nuclear fission,"a nuclear reaction in which the nucleus of an atom splits into two or more smaller nuclei, along with the release of a significant amount of energy."

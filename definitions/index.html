@@ -1,149 +1,568 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Revision Page</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Flashcards — Colour Edition (460px) + Review Checklist</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-  }
-  .container {
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 10px;
-    border: 1px solid #ccc;
-  }
-
-  .filter {
-    margin-bottom: 10px;
-  }
-
-  .term-display {
-    margin-bottom: 20px;
+  :root{
+    --radius:18px;
+    --pad:14px;
+    --border: rgba(255,255,255,.35);
+    --ink:#0b1020;
+    --ink-soft: rgba(11,16,32,.7);
+    --card-bg: rgba(255,255,255,.82);
+    --shadow: 0 12px 28px rgba(0,0,0,.18);
+    --primary:#111827;
+    --accent:#6366f1;
+    --bg1:#a78bfa;
+    --bg2:#f472b6;
   }
 
-  .definition {
-    display: none;
-    margin-top: 20px;
+  html,body{height:100%}
+  body{
+    margin:0; font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    background: linear-gradient(135deg, var(--bg1), var(--bg2));
+    background-size: 200% 200%;
+    animation: bgshift 12s ease-in-out infinite;
+    display:flex; align-items:center; justify-content:center;
+    padding:10px;
+  }
+  @keyframes bgshift{
+    0%{ background-position: 0% 50% }
+    50%{ background-position: 100% 50% }
+    100%{ background-position: 0% 50% }
   }
 
-  .definition.show {
-    display: block;
+  /* App frame: locked to 460px (with positioned overlay) */
+  .app{
+    position:relative;
+    width:min(920px, 96vw);
+    max-height:460px;
+    height:460px;
+    background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.12));
+    border:1px solid var(--border);
+    border-radius:22px;
+    backdrop-filter: blur(8px) saturate(120%);
+    box-shadow: var(--shadow);
+    display:flex; flex-direction:column; overflow:hidden;
+    color: var(--ink);
   }
+
+  .topbar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    padding:10px 12px; border-bottom:1px solid var(--border);
+    background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.35));
+    backdrop-filter: blur(8px);
+    flex-shrink:0;
+  }
+  .chip, select, button{
+    font-size:14px; border-radius:999px; border:1px solid var(--border);
+    background: rgba(255,255,255,.9); padding:8px 12px; color:var(--ink);
+  }
+  .chip-ghost{ background: rgba(255,255,255,.5); }
+  .chip-accent{ background: var(--accent); border-color: transparent; color:#fff; }
+  .chip-count{ background: rgba(255,255,255,.75); color: var(--ink-soft); }
+  .spacer{flex:1}
+  label{font-weight:700; margin-right:6px}
+
+  .main{
+    position:relative; flex:1; display:flex; align-items:center; justify-content:center;
+    padding:12px;
+  }
+
+  .card{
+    width:min(820px, 96%); height:100%;
+    background: var(--card-bg);
+    border:1px solid var(--border); border-radius:var(--radius);
+    display:flex; flex-direction:column; padding:18px;
+    box-sizing:border-box;
+    box-shadow: 0 10px 24px rgba(0,0,0,.12);
+    transition: transform .18s ease;
+  }
+  .card:hover{ transform: translateY(-2px) }
+
+  .topic-row{
+    display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:2px;
+    font-size:12px; color:var(--ink-soft); text-transform:uppercase; font-weight:700;
+  }
+  .star-indicator{ user-select:none }
+  .star-on{ color:#f59e0b }
+  .star-off{ color:#cbd5e1 }
+
+  .term{
+    font-weight:900; letter-spacing:.2px;
+    font-size: clamp(22px, 3.5vw, 34px);
+    text-align:center; margin:6px 0 8px 0; padding:4px 6px 0;
+    color:#0b0f1a;
+    text-shadow: 0 1px 0 rgba(255,255,255,.6);
+  }
+
+  .divider{height:1px; background:linear-gradient(90deg, transparent, var(--border), transparent); margin:8px 0 6px 0}
+
+  .definition{
+    flex:1; overflow:auto; padding:10px 8px;
+    font-size: clamp(15px, 2.1vw, 18px); line-height:1.45; text-align:center; color:#0b0f1a;
+    opacity:0; transform:translateY(6px) scale(.98); transition:.18s ease;
+  }
+  .definition.show{opacity:1; transform:translateY(0) scale(1)}
+  .hint{color:var(--ink-soft); font-size:12px; margin-top:6px}
+
+  .bottombar{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    border-top:1px solid var(--border);
+    padding:8px; background: linear-gradient(180deg, rgba(255,255,255,.4), rgba(255,255,255,.65));
+    flex-shrink:0;
+  }
+  .ctrl{
+    padding:10px 14px; border-radius:999px; border:1px solid var(--border);
+    cursor:pointer; transition:.15s ease; font-weight:700;
+    background: rgba(255,255,255,.95);
+  }
+  .ctrl:hover{ transform: translateY(-1px) }
+  .primary{ background: var(--primary); color:#fff; border-color:transparent; }
+  .secondary{ background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(255,255,255,.75)); }
+  .ctrl.star{ border-color:#f59e0b; }
+  .ctrl.star.on{ background:#f59e0b; color:#fff; }
+
+  .card.clickable{cursor:pointer}
+
+  /* Fallback banner when CSV not loaded via fetch */
+  .fallback{ display:none; align-items:center; gap:8px; }
+  .fallback.show{ display:flex; }
+
+  /* Checklist modal (inside app; stays within 460px) */
+  .modal{
+    position:absolute; inset:0; display:none;
+    background: rgba(0,0,0,.25);
+    backdrop-filter: blur(2px);
+    align-items:center; justify-content:center;
+  }
+  .modal.show{ display:flex; }
+  .sheet{
+    width:min(880px,94%); height:min(420px, 88%);
+    background:#ffffffeb; border:1px solid #e5e7eb; border-radius:16px; box-shadow: var(--shadow);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .sheet-head{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid #e5e7eb; background:#fafafa;
+  }
+  .sheet-head .spacer{flex:1}
+  .sheet-body{
+    flex:1; overflow:auto; padding:10px 12px;
+  }
+  .sheet-body ul{ list-style:none; padding:0; margin:0; }
+  .sheet-body li{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 6px; border-bottom:1px dashed #eee; }
+  .mini{ font-size:12px; color:#6b7280; }
+  .pill{ font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid #e5e7eb; background:#fff; }
+  .danger{ background:#fee2e2; border-color:#fecaca; color:#991b1b; }
+  .success{ background:#dcfce7; border-color:#bbf7d0; color:#14532d; }
 </style>
 </head>
 <body>
+  <div class="app" id="app">
+    <div class="topbar">
+      <label for="topicFilter">Topic</label>
+      <select id="topicFilter" aria-label="Filter by topic" class="chip"></select>
 
-  <div class="container">
-    <div class="filter">
-      <label for="topicFilter">Filter by Topic:</label>
-      <select id="topicFilter"></select>  
+      <label class="chip chip-ghost"><input type="checkbox" id="reviewOnly"> Review only</label>
+      <label class="chip chip-ghost"><input type="checkbox" id="shuffleToggle"> Shuffle</label>
+      <button id="randomBtn" class="chip chip-accent">Random</button>
+      <button id="checklistBtn" class="chip">Checklist</button>
+
+      <div class="spacer"></div>
+      <span id="counts" class="chip chip-count">0 / 0</span>
+      <span id="markedCount" class="chip chip-count" title="Marked for review">Marked: 0</span>
+
+      <div id="fallback" class="fallback">
+        <input id="csvInput" type="file" accept=".csv" class="chip" />
+        <span class="chip chip-ghost">Use “Load CSV” if opened from file://</span>
+      </div>
     </div>
-    <div class="content">
-  <h1>Definitions for Physics</h1>
-<table><tr><div class="term-display">
-    <td><button id="prevBtn">&lt; Prev</button>
-        <span id="term"></span>
-    <button id="nextBtn">Next &gt;</button></td></div></tr>
-<tr><td>
-    <button id="definitionBtn">Show Definitions</button>  
-    <p id="definition"></p>
-        </td>
-</tr></table>    
+
+    <div class="main">
+      <div id="card" class="card clickable">
+        <div class="topic-row">
+          <div id="topicTag"></div>
+          <div id="starIndicator" class="star-indicator star-off">★</div>
+        </div>
+        <div id="term" class="term">(loading…)</div>
+        <div class="divider"></div>
+        <div id="definition" class="definition"></div>
+        <div class="hint">SPACE — show/hide • ←/→ — prev/next • Click the card to toggle</div>
+      </div>
+    </div>
+
+    <div class="bottombar">
+      <button id="prevBtn" class="ctrl secondary">← Prev</button>
+      <button id="nextBtn" class="ctrl secondary">Next →</button>
+      <button id="markBtn" class="ctrl star">★ Mark for Review</button>
+      <button id="definitionBtn" class="ctrl primary">Show Definition</button>
+    </div>
+
+    <!-- Checklist Modal -->
+    <div id="modal" class="modal" aria-hidden="true">
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="Review Checklist">
+        <div class="sheet-head">
+          <strong>Review Checklist</strong>
+          <span id="modalCount" class="pill">0 items</span>
+          <div class="spacer"></div>
+          <button id="startReviewBtn" class="chip success">Start Review Session</button>
+          <button id="clearDoneBtn" class="chip">Clear Done</button>
+          <button id="unmarkAllBtn" class="chip danger">Unmark All</button>
+          <button id="closeModalBtn" class="chip">Close</button>
+        </div>
+        <div class="sheet-body">
+          <ul id="checklist"></ul>
+        </div>
+      </div>
     </div>
   </div>
+
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const topicFilter = document.getElementById('topicFilter');
-      const termDisplay = document.getElementById('term');
-      const definitionDisplay = document.getElementById('definition');
-      const prevBtn = document.getElementById('prevBtn');
-      const nextBtn = document.getElementById('nextBtn');
-      const definitionBtn = document.getElementById('definitionBtn');
+    // ---------- Colour palette logic ----------
+    const PALETTES = [
+      ['#a78bfa','#f472b6','#1f2937','#7c3aed'], // violet -> pink
+      ['#60a5fa','#34d399','#0f172a','#2563eb'], // blue -> green
+      ['#fb7185','#f59e0b','#111827','#ef4444'], // rose -> amber
+      ['#22d3ee','#8b5cf6','#0b1020','#06b6d4'], // cyan -> violet
+      ['#f97316','#10b981','#111827','#ea580c'], // orange -> emerald
+      ['#f43f5e','#3b82f6','#0f172a','#ef4444'], // red -> blue
+      ['#14b8a6','#84cc16','#0b1020','#0ea5e9'], // teal -> lime
+    ];
+    function hashStr(s){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);} return h>>>0; }
+    function setPaletteForTopic(topic){
+      const idx = hashStr(topic || 'all') % PALETTES.length;
+      const [bg1,bg2,primary,accent] = PALETTES[idx];
+      document.documentElement.style.setProperty('--bg1', bg1);
+      document.documentElement.style.setProperty('--bg2', bg2);
+      document.documentElement.style.setProperty('--primary', primary);
+      document.documentElement.style.setProperty('--accent', accent);
+      document.documentElement.style.setProperty('--ink', '#0b1020');
+      document.documentElement.style.setProperty('--ink-soft', 'rgba(11,16,32,.72)');
+    }
 
-      let revisionData = []; // Array to store CSV data
-      let currentIndex = 0; // Current index of term being displayed
-      let showDefinition = false; // Flag to track if definition is shown or hidden
-
-      // Load CSV data
-      fetch('data.csv')
-        .then(response => response.text())
-        .then(data => {
-          const rows = data.trim().split('\n');
-          rows.forEach(row => {
-            const columns = row.split(',');
-            revisionData.push({
-              topic: columns[0],
-              term: columns[1],
-              definition: columns[2]
-            });
-          });
-          populateTopicFilter();
-          displayTerm();
-        });
-
-      // Populate topic filter dropdown
-      function populateTopicFilter() {
-        const topics = [...new Set(revisionData.map(item => item.topic))];
-        topics.forEach(topic => {
-          const option = document.createElement('option');
-          option.textContent = topic;
-          option.value = topic;
-          topicFilter.appendChild(option);
-        });
-        topicFilter.addEventListener('change', filterTerms);
-      }
-
-      // Filter terms based on selected topic
-      function filterTerms() {
-        currentIndex = 0; // Reset index when changing topic
-        displayTerm();
-      }
-
-      // Display term and definition
-      function displayTerm() {
-        const selectedTopic = topicFilter.value;
-        const filteredTerms = revisionData.filter(item => item.topic === selectedTopic);
-        if (filteredTerms.length === 0) {
-          termDisplay.textContent = 'No terms found';
-          definitionDisplay.textContent = '';
+    // ---------- CSV parsing (robust, header-aware) ----------
+    function parseCSV(text) {
+      text = text.replace(/^\uFEFF/, '');
+      const rows = [];
+      let i = 0, f = '', row = [], inQ = false;
+      while (i < text.length) {
+        const c = text[i];
+        if (inQ) {
+          if (c === '"') {
+            if (text[i+1] === '"') { f += '"'; i += 2; continue; }
+            inQ = false; i++; continue;
+          }
+          f += c; i++; continue;
         } else {
-          const term = filteredTerms[currentIndex].term;
-          const definition = filteredTerms[currentIndex].definition;
-          termDisplay.textContent = term;
-          definitionDisplay.textContent = showDefinition ? definition : '';
+          if (c === '"') { inQ = true; i++; continue; }
+          if (c === ',') { row.push(f); f=''; i++; continue; }
+          if (c === '\r') { i++; continue; }
+          if (c === '\n') { row.push(f); rows.push(row); row=[]; f=''; i++; continue; }
+          f += c; i++; continue;
+        }
+      }
+      if (f.length > 0 || row.length > 0) { row.push(f); rows.push(row); }
+      return rows;
+    }
+
+    // ---------- Storage Helpers ----------
+    const STORAGE_MARKED = 'flashcards_marked_v1';
+    const STORAGE_DONE   = 'flashcards_done_v1';
+
+    function loadMarked(){ try { return new Set(JSON.parse(localStorage.getItem(STORAGE_MARKED) || '[]')); } catch { return new Set(); } }
+    function saveMarked(set){ localStorage.setItem(STORAGE_MARKED, JSON.stringify([...set])); }
+    function loadDone(){ try { return JSON.parse(localStorage.getItem(STORAGE_DONE) || '{}'); } catch { return {}; } }
+    function saveDone(map){ localStorage.setItem(STORAGE_DONE, JSON.stringify(map)); }
+
+    // ---------- App ----------
+    document.addEventListener('DOMContentLoaded', init);
+
+    async function init(){
+      const topicFilter   = document.getElementById('topicFilter');
+      const reviewOnlyCb  = document.getElementById('reviewOnly');
+      const termEl        = document.getElementById('term');
+      const defEl         = document.getElementById('definition');
+      const prevBtn       = document.getElementById('prevBtn');
+      const nextBtn       = document.getElementById('nextBtn');
+      const defBtn        = document.getElementById('definitionBtn');
+      const shuffleToggle = document.getElementById('shuffleToggle');
+      const randomBtn     = document.getElementById('randomBtn');
+      const counts        = document.getElementById('counts');
+      const markedCount   = document.getElementById('markedCount');
+      const card          = document.getElementById('card');
+      const topicTag      = document.getElementById('topicTag');
+      const fallback      = document.getElementById('fallback');
+      const csvInput      = document.getElementById('csvInput');
+      const starIndicator = document.getElementById('starIndicator');
+      const markBtn       = document.getElementById('markBtn');
+      const checklistBtn  = document.getElementById('checklistBtn');
+
+      // Modal elements
+      const modal         = document.getElementById('modal');
+      const checklistUL   = document.getElementById('checklist');
+      const modalCount    = document.getElementById('modalCount');
+      const startReviewBtn= document.getElementById('startReviewBtn');
+      const clearDoneBtn  = document.getElementById('clearDoneBtn');
+      const unmarkAllBtn  = document.getElementById('unmarkAllBtn');
+      const closeModalBtn = document.getElementById('closeModalBtn');
+
+      let allData = [];
+      let idToItem = new Map();         // id -> item
+      let filtered = [];
+      let order = [];
+      let ptr = 0;
+      let showDef = false;
+
+      let markedSet = loadMarked();     // Set of ids
+      let doneMap   = loadDone();       // {id: boolean}
+
+      const norm = s => (s||'').trim();
+      const normH = s => norm(s).toLowerCase();
+      const itemId = (x) => `${x.topic}||${x.term}`;
+
+      // Initial CSV load
+      let loaded = false;
+      try {
+        const res = await fetch('data.csv', { cache:'no-store' });
+        if (!res.ok) throw new Error('HTTP '+res.status);
+        const txt = await res.text();
+        loadFromText(txt);
+        loaded = true;
+      } catch (e) {
+        console.warn('Fetch failed/blocked; using file picker fallback.', e);
+      }
+      if (!loaded){
+        fallback.classList.add('show');
+        termEl.textContent = 'Click “Load CSV” and select data.csv';
+        csvInput.addEventListener('change', async (ev)=>{
+          const file = ev.target.files && ev.target.files[0];
+          if (!file) return;
+          const txt = await file.text();
+          loadFromText(txt);
+          fallback.classList.remove('show');
+        });
+      }
+
+      function loadFromText(txt){
+        const rows = parseCSV(txt).filter(r => r.length && r.join('').trim());
+        if (!rows.length){ termEl.textContent = 'CSV is empty'; return; }
+
+        const hdr = rows[0].map(normH);
+        let iTopic = hdr.indexOf('topic'), iTerm = hdr.indexOf('term'), iDef = hdr.indexOf('definition');
+        let start = 1;
+        if (iTopic === -1 || iTerm === -1 || iDef === -1){ iTopic = 0; iTerm = 1; iDef = 2; start = 0; }
+
+        allData = rows.slice(start).map(r => ({
+          topic: norm(r[iTopic]),
+          term: norm(r[iTerm]),
+          definition: norm(r[iDef]),
+        })).filter(x => x.term || x.definition);
+
+        idToItem.clear();
+        allData.forEach(x => idToItem.set(itemId(x), x));
+
+        // dropdown topics
+        const topics = Array.from(new Set(allData.map(x=>x.topic))).sort((a,b)=>a.localeCompare(b));
+        topicFilter.innerHTML = '';
+        const optAll = document.createElement('option'); optAll.value = ''; optAll.textContent = 'All topics';
+        topicFilter.appendChild(optAll);
+        topics.forEach(t => {
+          const o = document.createElement('option'); o.value = t; o.textContent = t || '(untitled)';
+          topicFilter.appendChild(o);
+        });
+
+        applyFilter();
+        updateMarkedCount();
+      }
+
+      // --- Core filtering/order/render ---
+      function rebuildOrder(){
+        order = filtered.map((_,i)=>i);
+        if (shuffleToggle.checked){
+          for (let i = order.length - 1; i > 0; i--){
+            const j = Math.floor(Math.random()*(i+1));
+            [order[i], order[j]] = [order[j], order[i]];
+          }
+        }
+        ptr = 0;
+      }
+      function current(){ return filtered.length ? filtered[order[ptr]] : null; }
+      function updateCounts(){ counts.textContent = `${filtered.length ? (ptr+1) : 0} / ${filtered.length}`; }
+      function updateMarkedCount(){
+        // Marked count respects current topic filter if in Review only? We'll show global count for clarity.
+        document.getElementById('markedCount').textContent = `Marked: ${markedSet.size}`;
+      }
+      function render(){
+        const item = current();
+        if (!item){
+          document.getElementById('topicTag').textContent = '';
+          termEl.textContent = 'No terms found';
+          defEl.textContent = ''; defEl.classList.remove('show');
+          showDef = false; updateCounts(); updateStarUI(null); return;
+        }
+        document.getElementById('topicTag').textContent = item.topic || 'All topics';
+        termEl.textContent = item.term || '(no term)';
+        defEl.textContent = item.definition || '';
+        defEl.classList.toggle('show', showDef);
+        defBtn.textContent = showDef ? 'Hide Definition' : 'Show Definition';
+        updateCounts();
+        updateStarUI(item);
+      }
+      function applyFilter(){
+        const sel = topicFilter.value;
+        const reviewOnly = reviewOnlyCb.checked;
+        filtered = allData.filter(x => {
+          const topicOK = sel ? x.topic === sel : true;
+          const markOK = reviewOnly ? markedSet.has(itemId(x)) : true;
+          return topicOK && markOK;
+        });
+        setPaletteForTopic(sel || 'All');
+        rebuildOrder(); showDef = false; render();
+      }
+
+      function updateStarUI(item){
+        const on = item && markedSet.has(itemId(item));
+        const btn = markBtn;
+        const icon = document.getElementById('starIndicator');
+        if (on){
+          btn.classList.add('on');
+          btn.textContent = '★ Marked';
+          icon.classList.remove('star-off'); icon.classList.add('star-on');
+        } else {
+          btn.classList.remove('on');
+          btn.textContent = '★ Mark for Review';
+          icon.classList.remove('star-on'); icon.classList.add('star-off');
         }
       }
 
-      // Toggle definition display
-      definitionBtn.addEventListener('click', function() {
-        showDefinition = !showDefinition;
-        displayTerm();  
-        definitionDisplay.classList.toggle('show', showDefinition);
-        definitionBtn.textContent = showDefinition ? 'Hide Definitions' : 'Show Definitions';
+      function toggleMarkCurrent(){
+        const item = current(); if (!item) return;
+        const id = itemId(item);
+        if (markedSet.has(id)){ markedSet.delete(id); delete doneMap[id]; }
+        else { markedSet.add(id); }
+        saveMarked(markedSet); saveDone(doneMap);
+        updateMarkedCount();
+        // If we're in Review-only and we unmarked the current item, refilter to avoid a dead pointer
+        if (reviewOnlyCb.checked && !markedSet.has(id)) { applyFilter(); } else { updateStarUI(item); }
+        buildChecklist(); // keep modal in sync if open
+      }
+
+      // --- Initial events ---
+      topicFilter.addEventListener('change', applyFilter);
+      reviewOnlyCb.addEventListener('change', applyFilter);
+      shuffleToggle.addEventListener('change', ()=>{ rebuildOrder(); render(); });
+      randomBtn.addEventListener('click', ()=>{
+        if (!filtered.length) return;
+        ptr = Math.floor(Math.random()*filtered.length);
+        showDef = false; render();
+      });
+      prevBtn.addEventListener('click', ()=>{
+        if (!filtered.length) return;
+        ptr = Math.max(0, ptr-1); showDef = false; render();
+      });
+      nextBtn.addEventListener('click', ()=>{
+        if (!filtered.length) return;
+        ptr = Math.min(order.length-1, ptr+1); showDef = false; render();
+      });
+      defBtn.addEventListener('click', ()=>{ showDef = !showDef; render(); });
+      card.addEventListener('click', (e)=>{
+        if (['BUTTON','SELECT','INPUT','LABEL'].includes(e.target.tagName)) return;
+        showDef = !showDef; render();
+      });
+      markBtn.addEventListener('click', toggleMarkCurrent);
+
+      window.addEventListener('keydown', (e)=>{
+        if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
+        if (e.code === 'ArrowLeft'){ e.preventDefault(); prevBtn.click(); }
+        else if (e.code === 'ArrowRight'){ e.preventDefault(); nextBtn.click(); }
+        else if (e.code === 'Space'){ e.preventDefault(); defBtn.click(); }
+        else if (e.key === 'm' || e.key === 'M'){ e.preventDefault(); toggleMarkCurrent(); } // quick mark
       });
 
-      // Display previous term
-      prevBtn.addEventListener('click', function() {
-        const selectedTopic = topicFilter.value;
-        const filteredTerms = revisionData.filter(item => item.topic === selectedTopic);
-        if (currentIndex > 0) {
-          currentIndex--;
-          displayTerm();
-        }
+      // --- Checklist modal logic ---
+      function openModal(){ modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); buildChecklist(); }
+      function closeModal(){ modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); }
+      checklistBtn.addEventListener('click', openModal);
+      closeModalBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', (e)=>{ if (e.target === modal) closeModal(); });
+
+      function buildChecklist(){
+        const items = [...markedSet].map(id => idToItem.get(id)).filter(Boolean);
+        // Sort by topic then term
+        items.sort((a,b)=> (a.topic||'').localeCompare(b.topic||'') || a.term.localeCompare(b.term));
+        checklistUL.innerHTML = '';
+        items.forEach(it => {
+          const id = itemId(it);
+          const li = document.createElement('li');
+          const left = document.createElement('div');
+          const right = document.createElement('div');
+
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.checked = !!doneMap[id];
+          cb.addEventListener('change', ()=>{ doneMap[id] = cb.checked; saveDone(doneMap); });
+
+          const label = document.createElement('label');
+          label.style.cursor = 'pointer';
+          label.textContent = `${it.topic ? it.topic+' — ' : ''}${it.term}`;
+          label.className = 'mini';
+          label.addEventListener('click', ()=>{
+            // jump to this card
+            const sel = topicFilter.value;
+            // ensure filters include it (turn off reviewOnly restrictions if needed)
+            if (sel && sel !== it.topic){ topicFilter.value = it.topic || ''; }
+            applyFilter();
+            // find ptr to this id
+            const ix = filtered.findIndex(x => itemId(x) === id);
+            if (ix >= 0){ ptr = order.indexOf(ix); if (ptr === -1){ ptr = 0; } showDef = false; render(); }
+            closeModal();
+          });
+
+          left.appendChild(cb);
+          left.appendChild(document.createTextNode(' '));
+          left.appendChild(label);
+
+          const unmarkBtn = document.createElement('button');
+          unmarkBtn.className = 'pill';
+          unmarkBtn.textContent = 'Unmark';
+          unmarkBtn.addEventListener('click', ()=>{
+            markedSet.delete(id);
+            delete doneMap[id];
+            saveMarked(markedSet); saveDone(doneMap);
+            buildChecklist(); updateMarkedCount();
+            if (reviewOnlyCb.checked){ applyFilter(); } else { render(); }
+          });
+
+          right.appendChild(unmarkBtn);
+          li.appendChild(left); li.appendChild(right);
+          checklistUL.appendChild(li);
+        });
+        modalCount.textContent = `${items.length} item${items.length===1?'':'s'}`;
+      }
+
+      startReviewBtn.addEventListener('click', ()=>{
+        reviewOnlyCb.checked = true;
+        applyFilter();
+        closeModal();
       });
 
-      // Display next term
-      nextBtn.addEventListener('click', function() {
-        const selectedTopic = topicFilter.value;
-        const filteredTerms = revisionData.filter(item => item.topic === selectedTopic);
-        if (currentIndex < filteredTerms.length - 1) {
-          currentIndex++;
-          displayTerm();
-        }
+      clearDoneBtn.addEventListener('click', ()=>{
+        doneMap = {};
+        saveDone(doneMap);
+        buildChecklist();
       });
-    });
+
+      unmarkAllBtn.addEventListener('click', ()=>{
+        if (!markedSet.size) return;
+        if (!confirm('Unmark all items?')) return;
+        markedSet = new Set();
+        doneMap = {};
+        saveMarked(markedSet); saveDone(doneMap);
+        buildChecklist(); updateMarkedCount(); applyFilter();
+      });
+    }
   </script>
 </body>
 </html>
