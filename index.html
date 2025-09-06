@@ -1362,30 +1362,79 @@
 </header>    
     
     <div class="row">
-    
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img class="card-img-top" src="delight/delight.png" alt="Delight">
+    <div class="col-md-4">
+            <div class="card mb-4" id="template-interactive">
+                <img class="card-img-top" src="hangman/hangman.png" alt="Hangman">
                     <div class="card-body">
-                        <h3 class="card-title">Delight - A Turn-Based Board Game on Electricity</h3>
-                        <p class="card-text">Players will take turns to connect their own bulbs to the terminals while trying to sabotage their opponent's bulbs.</p>
-                        <p class="card-text">At lower levels, students can compete to see who has the most lit bulbs. However, they will need to be able to identify which light bulbs are lit.</p>
-                        <p class="card-text">Do watch out for short-circuits.</p>
-                        <p class="card-text">At higher levels, students can compete to see whose light bulbs has the most total electrical power, with some calculations involved.</p>
-                        <a href="delight/" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="delight/delight.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB1" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseB1">
+                        <h3 class="card-title">Template for SLS Interactive with Scores</h3>
+                        <p class="card-text">The player will pay hangman to guess a word.</p>
+                        <p class="card-text">If the player is correct, the app will send a score of 1 to SLS's Interactive Response Assistant. This score will be reflected in the SLS heatmap. Refer to the documentation <a href="https://www.learning.moe.edu.sg/teacher-user-guide/author/html5-content-development/">here</a>.</p>
+                        <a href="hangman/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="hangman/hangman.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB5" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseB5">
                             <div class="card mt-3">
                                 <div class="card-body">
                                     <h3 class="header1">Prompts</h3>
                                     <ol>
-                                        <li>Create a game board using 16 squares in a 4-by-4 grid with html and javascript. In each square, there is a space of 100 pixels by 100 pixels where an image can be placed. The squares will be the placeholders for the images.</li>
-                                        <li>On the top left corner, the image file "positive.png" is shown. On the bottom right corner, the image file "negative.png" is shown.</li>
-                                        <li>Below the 4 by 4 grid, there is a line if images two users can take turns to choose from: "cross-wires.png", "r-wires-0.png", "t-wires-0.png", "straight-wire-0.png", "yellow-light-0.png" and "red-light-0.png".</li>
-                                        <li>Change the css such that when an image is chosen, it will grey out slightly</li>
-                                        <li>Upon clicking an image that had been placed in the grids, the image will rotate by 90 degrees clockwise.</li>
-                                        <li>Include an undo button to reverse the last step.</li>
+                                        <li>For sending a score to SLS: Add these codes to send a score of 1 when the user gets it correct: 
+</li>    <pre>
+<code>
+&lt;script&gt;
+
+let score = 0;
+let attempts = 0;
+let questionNumber = 0;
+
+// XAPI Configuration
+const XAPIUtils = {
+  parameters: null,
+  getParameters: function () {
+    if (!this.parameters) {
+      var urlParams = new URLSearchParams(window.location.search);
+      var endpoint = urlParams.get('endpoint');
+      var auth = urlParams.get('auth');
+      var agent = JSON.parse(urlParams.get('agent'));
+      var stateId = urlParams.get('stateId');
+      var activityId = urlParams.get('activityId');
+      ADL.XAPIWrapper.changeConfig({
+        "endpoint": endpoint + "/",
+        "auth": `Basic ${auth}`
+      });
+      this.parameters = {
+        agent,
+        stateId,
+        activityId
+      };
+    }
+    return this.parameters;
+  }
+};
+
+document.addEventListener("DOMContentLoaded", function () {
+  XAPIUtils.getParameters();
+});
+
+function sendScore(score) {
+  try {
+    const parameters = XAPIUtils.getParameters();
+    const activityid = parameters.activityId;
+    const stateId = parameters.stateId;
+    const agent = parameters.agent;
+    const registration = null;
+    const stateValue = { score: score };
+    ADL.XAPIWrapper.sendState(activityid, agent, stateId, registration, stateValue);
+    console.log("Score sent successfully:", score);
+  } catch (err) {
+    console.error("An error has occurred!", err);
+  }
+}
+
+&lt;/script&gt;
+</code>
+    </pre>
+
+                                        <li>Include the javascript file <a href="hangman/hangman.zip" class="btn btn-secondary">"xapiwrapper.min.js"</a> into your zipped directory</li>
                                     </ol>
                                 </div>
                             </div>
@@ -1393,7 +1442,6 @@
                     </div>
             </div>
         </div>
-    
         <div class="col-md-4">
             <div class="card mb-4">
                 <img class="card-img-top" src="guess-word/guess-word.png" alt="Hangman Game">
@@ -1493,79 +1541,30 @@
                     </div>
             </div>
         </div>
+
                  <div class="col-md-4">
-            <div class="card mb-4" id="template-interactive">
-                <img class="card-img-top" src="hangman/hangman.png" alt="Hangman">
+            <div class="card mb-4">
+                <img class="card-img-top" src="delight/delight.png" alt="Delight">
                     <div class="card-body">
-                        <h3 class="card-title">Template for SLS Interactive with Scores</h3>
-                        <p class="card-text">The player will pay hangman to guess a word.</p>
-                        <p class="card-text">If the player is correct, the app will send a score of 1 to SLS's Interactive Response Assistant. This score will be reflected in the SLS heatmap. Refer to the documentation <a href="https://www.learning.moe.edu.sg/teacher-user-guide/author/html5-content-development/">here</a>.</p>
-                        <a href="hangman/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="hangman/hangman.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB5" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseB5">
+                        <h3 class="card-title">Delight - A Turn-Based Board Game on Electricity</h3>
+                        <p class="card-text">Players will take turns to connect their own bulbs to the terminals while trying to sabotage their opponent's bulbs.</p>
+                        <p class="card-text">At lower levels, students can compete to see who has the most lit bulbs. However, they will need to be able to identify which light bulbs are lit.</p>
+                        <p class="card-text">Do watch out for short-circuits.</p>
+                        <p class="card-text">At higher levels, students can compete to see whose light bulbs has the most total electrical power, with some calculations involved.</p>
+                        <a href="delight/" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="delight/delight.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB1" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseB1">
                             <div class="card mt-3">
                                 <div class="card-body">
                                     <h3 class="header1">Prompts</h3>
                                     <ol>
-                                        <li>For sending a score to SLS: Add these codes to send a score of 1 when the user gets it correct: 
-</li>    <pre>
-<code>
-&lt;script&gt;
-
-let score = 0;
-let attempts = 0;
-let questionNumber = 0;
-
-// XAPI Configuration
-const XAPIUtils = {
-  parameters: null,
-  getParameters: function () {
-    if (!this.parameters) {
-      var urlParams = new URLSearchParams(window.location.search);
-      var endpoint = urlParams.get('endpoint');
-      var auth = urlParams.get('auth');
-      var agent = JSON.parse(urlParams.get('agent'));
-      var stateId = urlParams.get('stateId');
-      var activityId = urlParams.get('activityId');
-      ADL.XAPIWrapper.changeConfig({
-        "endpoint": endpoint + "/",
-        "auth": `Basic ${auth}`
-      });
-      this.parameters = {
-        agent,
-        stateId,
-        activityId
-      };
-    }
-    return this.parameters;
-  }
-};
-
-document.addEventListener("DOMContentLoaded", function () {
-  XAPIUtils.getParameters();
-});
-
-function sendScore(score) {
-  try {
-    const parameters = XAPIUtils.getParameters();
-    const activityid = parameters.activityId;
-    const stateId = parameters.stateId;
-    const agent = parameters.agent;
-    const registration = null;
-    const stateValue = { score: score };
-    ADL.XAPIWrapper.sendState(activityid, agent, stateId, registration, stateValue);
-    console.log("Score sent successfully:", score);
-  } catch (err) {
-    console.error("An error has occurred!", err);
-  }
-}
-
-&lt;/script&gt;
-</code>
-    </pre>
-
-                                        <li>Include the javascript file <a href="hangman/hangman.zip" class="btn btn-secondary">"xapiwrapper.min.js"</a> into your zipped directory</li>
+                                        <li>Create a game board using 16 squares in a 4-by-4 grid with html and javascript. In each square, there is a space of 100 pixels by 100 pixels where an image can be placed. The squares will be the placeholders for the images.</li>
+                                        <li>On the top left corner, the image file "positive.png" is shown. On the bottom right corner, the image file "negative.png" is shown.</li>
+                                        <li>Below the 4 by 4 grid, there is a line if images two users can take turns to choose from: "cross-wires.png", "r-wires-0.png", "t-wires-0.png", "straight-wire-0.png", "yellow-light-0.png" and "red-light-0.png".</li>
+                                        <li>Change the css such that when an image is chosen, it will grey out slightly</li>
+                                        <li>Upon clicking an image that had been placed in the grids, the image will rotate by 90 degrees clockwise.</li>
+                                        <li>Include an undo button to reverse the last step.</li>
                                     </ol>
                                 </div>
                             </div>
@@ -1573,6 +1572,7 @@ function sendScore(score) {
                     </div>
             </div>
         </div>
+                 
     </div>
 </div>
     
