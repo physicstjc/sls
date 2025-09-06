@@ -1442,26 +1442,34 @@ function sendScore(score) {
                     </div>
             </div>
         </div>
-        <div class="col-md-4">
+
+                <div class="col-md-4">
             <div class="card mb-4">
-                <img class="card-img-top" src="guess-word/guess-word.png" alt="Hangman Game">
+                <img class="card-img-top" src="prime-game/prime-game.png" alt="Guess the Prime Number Game">
                     <div class="card-body">
-                        <h3 class="card-title">Hangman</h3>
-                        <p class="card-text">Can be used in-class, online or even as part of a virtual escape room. Open the HTML file in a web browser to play the game. The game will present physics keywords for the user to guess one word at a time. Teachers can edit the html to add new words into the list.</p>
-                        <a href="guess-word/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="guess-word/guess-word.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB2" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseB2">
+                        <h3 class="card-title">"Guess the Prime Number" Game</h3>
+                        <p class="card-text">The player will guess a prime number between 1 to 1000 that was randomly selected by the computer.</p>
+                        <p class="card-text">The computer will prompt the player if the number is non-prime, or if it is too big or too small.</p>
+                        <a href="prime-game/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="prime-game/prime-game.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB4" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseB4">
                             <div class="card mt-3">
                                 <div class="card-body">
                                     <h3 class="header1">Prompts</h3>
-                                    <ol><li>Create a hangman game based on keywords in physics such as "impulse", "momentum" and "inelastic" for the user to guess one word at a time.</li>
-                                    <li>The number of blanks that are shown is the number of letters in the selected word. </li>
-                                    <li>Leave a space between each blank. </li>
-                                    <li>The guessing is done letter by letter.</li>
-                                    <li>For each correct guess, add one point to the score</li>
-                                    <li>For each incorrect guess, deduct one point. Keep score until all the words are completed. </li>
-                                    <li>Display the score. Put all the codes in one html file. Celebrate the completion of each word.</li></ol>
+                                    <ol>
+                                        <li>Create a website with a game that allows users to guess a prime number between 1 to 1000.</li>
+                                        <li>When the user guesses correctly, there will be a congratulatory message.</li>
+                                        <li>When the user guesses wrongly, there will be a message telling the user if the number entered is not a prime number, or if the number entered is too small or too big.</li>
+                                        <li>A input box will be used to enter the number.</li>
+                                        <li>There will be a log of the guesses made as well as whether the guess is non-prime, or too big or too small.</li>
+                                        <li>Refinement 1: Put all these in a single file.</li>
+                                        <li>Refinement 2: The correct number must be randomly selected from a list of prime numbers from 1 to 1000. Inform the user whether the guess is too small or too big.</li>
+                                        <li>Refinement 3: Reject the entry if it is not a prime number. Inform the user if it is not a prime number.</li>
+                                        <li>Refinement 4: The randomly generated prime number should remain the same until the user guesses it correctly. </li>
+                                        <li>Create a button to restart the game and reset all the values.</li>
+                                        <li>Redesign the website to make it more aesthetically pleasing. For the list of guesses, make it such that each guess appears in a new row.</li>
+                                    </ol>
                                 </div>
                             </div>
                         </div>
@@ -1510,37 +1518,31 @@ function sendScore(score) {
     
         <div class="col-md-4">
             <div class="card mb-4">
-                <img class="card-img-top" src="prime-game/prime-game.png" alt="Guess the Prime Number Game">
+                <img class="card-img-top" src="guess-word/guess-word.png" alt="Hangman Game">
                     <div class="card-body">
-                        <h3 class="card-title">"Guess the Prime Number" Game</h3>
-                        <p class="card-text">The player will guess a prime number between 1 to 1000 that was randomly selected by the computer.</p>
-                        <p class="card-text">The computer will prompt the player if the number is non-prime, or if it is too big or too small.</p>
-                        <a href="prime-game/index.html" class="btn btn-primary" target="_blank">Test it out</a>
-                        <a href="prime-game/prime-game.zip" class="btn btn-secondary">Download for SLS</a>
-                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB4" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
-                        <div class="collapse" id="promptsCollapseB4">
+                        <h3 class="card-title">Hangman</h3>
+                        <p class="card-text">Can be used in-class, online or even as part of a virtual escape room. Open the HTML file in a web browser to play the game. The game will present physics keywords for the user to guess one word at a time. Teachers can edit the html to add new words into the list.</p>
+                        <a href="guess-word/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="guess-word/guess-word.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseB2" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseB2">
                             <div class="card mt-3">
                                 <div class="card-body">
                                     <h3 class="header1">Prompts</h3>
-                                    <ol>
-                                        <li>Create a website with a game that allows users to guess a prime number between 1 to 1000.</li>
-                                        <li>When the user guesses correctly, there will be a congratulatory message.</li>
-                                        <li>When the user guesses wrongly, there will be a message telling the user if the number entered is not a prime number, or if the number entered is too small or too big.</li>
-                                        <li>A input box will be used to enter the number.</li>
-                                        <li>There will be a log of the guesses made as well as whether the guess is non-prime, or too big or too small.</li>
-                                        <li>Refinement 1: Put all these in a single file.</li>
-                                        <li>Refinement 2: The correct number must be randomly selected from a list of prime numbers from 1 to 1000. Inform the user whether the guess is too small or too big.</li>
-                                        <li>Refinement 3: Reject the entry if it is not a prime number. Inform the user if it is not a prime number.</li>
-                                        <li>Refinement 4: The randomly generated prime number should remain the same until the user guesses it correctly. </li>
-                                        <li>Create a button to restart the game and reset all the values.</li>
-                                        <li>Redesign the website to make it more aesthetically pleasing. For the list of guesses, make it such that each guess appears in a new row.</li>
-                                    </ol>
+                                    <ol><li>Create a hangman game based on keywords in physics such as "impulse", "momentum" and "inelastic" for the user to guess one word at a time.</li>
+                                    <li>The number of blanks that are shown is the number of letters in the selected word. </li>
+                                    <li>Leave a space between each blank. </li>
+                                    <li>The guessing is done letter by letter.</li>
+                                    <li>For each correct guess, add one point to the score</li>
+                                    <li>For each incorrect guess, deduct one point. Keep score until all the words are completed. </li>
+                                    <li>Display the score. Put all the codes in one html file. Celebrate the completion of each word.</li></ol>
                                 </div>
                             </div>
                         </div>
                     </div>
             </div>
         </div>
+
 
                  <div class="col-md-4">
             <div class="card mb-4">
