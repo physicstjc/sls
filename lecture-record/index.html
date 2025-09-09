@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Lecture Overlay</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .tool-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            min-width: 50px;
+        }
+
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .tool-btn.active {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+        }
+
+        .color-picker, .size-picker {
+            margin-left: 10px;
+        }
+
+        .color-picker input, .size-picker input {
+            width: 40px;
+            height: 40px;
+            border: 2px solid white;
+            border-radius: 50%;
+            cursor: pointer;
+            background: none;
+        }
+
+        .size-picker input {
+            border-radius: 4px;
+            width: 60px;
+        }
+
+        .main-area {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+
+        #webcam {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        #drawingCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            border: 2px solid rgba(255, 0, 0, 0.3);
+        }
+
+        .start-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .start-button:hover {
+            background: #45a049;
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+
+        .webcam-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            z-index: 1000;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .webcam-controls button {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            z-index: 1000;
+            font-size: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-wrap: wrap;
+                max-width: calc(100vw - 40px);
+            }
+            
+            .tool-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button id="startBtn" class="start-button">Start Lecture</button>
+        
+        <div id="toolbar" class="toolbar hidden">
+            <button class="tool-btn active" data-tool="pen">✏️ Pen</button>
+            <button class="tool-btn" data-tool="marker">🖍️ Marker</button>
+            <button class="tool-btn" data-tool="eraser">🧽 Eraser</button>
+            
+            <div class="color-picker">
+                <input type="color" id="colorPicker" value="#ff0000" title="Choose color">
+            </div>
+            
+            <div class="size-picker">
+                <input type="range" id="sizePicker" min="2" max="20" value="4" title="Brush size">
+            </div>
+            
+            <button class="tool-btn" id="clearBtn">🗑️ Clear</button>
+            <button class="tool-btn" id="undoBtn">↶ Undo</button>
+            <button class="tool-btn" id="testBtn">🔴 Test</button>
+        </div>
+
+        <div class="status" id="status">Click "Start Lecture" to begin</div>
+
+        <div class="main-area">
+            <video id="webcam" autoplay muted playsinline class="hidden"></video>
+            <canvas id="drawingCanvas" class="hidden"></canvas>
+        </div>
+
+        <div id="webcamControls" class="webcam-controls hidden">
+            <button id="toggleVideo">📹</button>
+            <button id="toggleAudio">🎤</button>
+        </div>
+    </div>
+
+    <script>
+        class LectureApp {
+            constructor() {
+                this.canvas = document.getElementById('drawingCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.video = document.getElementById('webcam');
+                this.isDrawing = false;
+                this.currentTool = 'pen';
+                this.currentColor = '#ff0000';
+                this.currentSize = 4;
+                this.paths = [];
+                this.currentPath = [];
+                
+                this.initCanvas();
+                this.setupEventListeners();
+                this.setupTools();
+            }
+
+            initCanvas() {
+                // Set initial canvas size
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                this.canvas.style.width = window.innerWidth + 'px';
+                this.canvas.style.height = window.innerHeight + 'px';
+                
+                // Set default drawing properties
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                this.ctx.imageSmoothingEnabled = true;
+                
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
+
+            async startLecture() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        }, 
+                        audio: true 
+                    });
+                    
+                    this.video.srcObject = stream;
+                    this.stream = stream;
+                    
+                    // Show UI elements
+                    document.getElementById('startBtn').classList.add('hidden');
+                    document.getElementById('toolbar').classList.remove('hidden');
+                    document.getElementById('webcamControls').classList.remove('hidden');
+                    this.video.classList.remove('hidden');
+                    this.canvas.classList.remove('hidden');
+                    
+                    document.getElementById('status').textContent = 'Ready to draw! Canvas is active.';
+                    
+                    // Resize canvas when video loads
+                    this.video.addEventListener('loadedmetadata', () => {
+                        this.resizeCanvas();
+                        this.drawTestIndicators();
+                    });
+                    
+                } catch (error) {
+                    console.error('Error accessing webcam:', error);
+                    document.getElementById('status').textContent = 'Error: Could not access camera';
+                }
+            }
+
+            resizeCanvas() {
+                const rect = this.canvas.getBoundingClientRect();
+                this.canvas.width = rect.width;
+                this.canvas.height = rect.height;
+                this.redrawCanvas();
+            }
+
+            drawTestIndicators() {
+                // Draw visible indicators to confirm canvas is working
+                this.ctx.strokeStyle = '#ff0000';
+                this.ctx.lineWidth = 3;
+                this.ctx.globalAlpha = 0.8;
+                
+                // Draw corner indicators
+                this.ctx.beginPath();
+                this.ctx.moveTo(20, 20);
+                this.ctx.lineTo(50, 20);
+                this.ctx.moveTo(20, 20);
+                this.ctx.lineTo(20, 50);
+                this.ctx.stroke();
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.canvas.width - 20, 20);
+                this.ctx.lineTo(this.canvas.width - 50, 20);
+                this.ctx.moveTo(this.canvas.width - 20, 20);
+                this.ctx.lineTo(this.canvas.width - 20, 50);
+                this.ctx.stroke();
+                
+                // Draw center circle
+                this.ctx.beginPath();
+                this.ctx.arc(this.canvas.width / 2, this.canvas.height / 2, 20, 0, Math.PI * 2);
+                this.ctx.fillStyle = '#ff0000';
+                this.ctx.fill();
+                this.ctx.strokeStyle = '#ffffff';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+                
+                this.ctx.globalAlpha = 1;
+                
+                // Clear indicators after 3 seconds
+                setTimeout(() => {
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    this.redrawCanvas();
+                }, 3000);
+            }
+
+            setupEventListeners() {
+                // Mouse events
+                this.canvas.addEventListener('mousedown', this.startDrawing.bind(this));
+                this.canvas.addEventListener('mousemove', this.draw.bind(this));
+                this.canvas.addEventListener('mouseup', this.stopDrawing.bind(this));
+                this.canvas.addEventListener('mouseout', this.stopDrawing.bind(this));
+                
+                // Touch events for stylus/finger
+                this.canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const rect = this.canvas.getBoundingClientRect();
+                    const mouseEvent = {
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    };
+                    this.startDrawing(mouseEvent);
+                });
+                
+                this.canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const mouseEvent = {
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    };
+                    this.draw(mouseEvent);
+                });
+                
+                this.canvas.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.stopDrawing();
+                });
+
+                // Start button
+                document.getElementById('startBtn').addEventListener('click', () => {
+                    this.startLecture();
+                });
+
+                // Webcam controls
+                document.getElementById('toggleVideo').addEventListener('click', this.toggleVideo.bind(this));
+                document.getElementById('toggleAudio').addEventListener('click', this.toggleAudio.bind(this));
+            }
+
+            setupTools() {
+                // Tool buttons
+                document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.currentTool = e.target.dataset.tool;
+                        this.updateCursor();
+                    });
+                });
+
+                // Color picker
+                document.getElementById('colorPicker').addEventListener('change', (e) => {
+                    this.currentColor = e.target.value;
+                });
+
+                // Size picker
+                document.getElementById('sizePicker').addEventListener('input', (e) => {
+                    this.currentSize = parseInt(e.target.value);
+                });
+
+                // Clear button
+                document.getElementById('clearBtn').addEventListener('click', () => {
+                    this.clearCanvas();
+                });
+
+                // Undo button
+                document.getElementById('undoBtn').addEventListener('click', () => {
+                    this.undo();
+                });
+
+                // Test button
+                document.getElementById('testBtn').addEventListener('click', () => {
+                    this.drawTestIndicators();
+                });
+            }
+
+            updateCursor() {
+                const cursors = {
+                    pen: 'crosshair',
+                    marker: 'crosshair',
+                    eraser: 'grab'
+                };
+                this.canvas.style.cursor = cursors[this.currentTool] || 'crosshair';
+            }
+
+            getCoordinates(event) {
+                const rect = this.canvas.getBoundingClientRect();
+                return {
+                    x: event.clientX - rect.left,
+                    y: event.clientY - rect.top
+                };
+            }
+
+            startDrawing(event) {
+                this.isDrawing = true;
+                const coords = this.getCoordinates(event);
+                
+                this.currentPath = [{
+                    x: coords.x,
+                    y: coords.y,
+                    tool: this.currentTool,
+                    color: this.currentColor,
+                    size: this.currentSize
+                }];
+
+                // Immediate feedback - draw a dot
+                this.drawPoint(coords.x, coords.y);
+            }
+
+            draw(event) {
+                if (!this.isDrawing) return;
+                
+                const coords = this.getCoordinates(event);
+                this.currentPath.push({
+                    x: coords.x,
+                    y: coords.y,
+                    tool: this.currentTool,
+                    color: this.currentColor,
+                    size: this.currentSize
+                });
+                
+                // Draw the current stroke
+                if (this.currentPath.length >= 2) {
+                    const prevPoint = this.currentPath[this.currentPath.length - 2];
+                    this.drawLine(prevPoint, coords);
+                }
+            }
+
+            stopDrawing() {
+                if (this.isDrawing) {
+                    this.isDrawing = false;
+                    if (this.currentPath.length > 0) {
+                        this.paths.push([...this.currentPath]);
+                    }
+                    this.currentPath = [];
+                }
+            }
+
+            drawPoint(x, y) {
+                this.ctx.globalCompositeOperation = this.currentTool === 'eraser' ? 'destination-out' : 'source-over';
+                this.ctx.fillStyle = this.currentTool === 'eraser' ? 'rgba(0,0,0,1)' : this.currentColor;
+                this.ctx.globalAlpha = this.currentTool === 'marker' ? 0.7 : 1;
+                
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, this.currentSize / 2, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                this.ctx.globalAlpha = 1;
+            }
+
+            drawLine(from, to) {
+                this.ctx.globalCompositeOperation = this.currentTool === 'eraser' ? 'destination-out' : 'source-over';
+                this.ctx.strokeStyle = this.currentTool === 'eraser' ? 'rgba(0,0,0,1)' : this.currentColor;
+                this.ctx.lineWidth = this.currentSize * (this.currentTool === 'marker' ? 2 : 1);
+                this.ctx.globalAlpha = this.currentTool === 'marker' ? 0.7 : 1;
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(from.x, from.y);
+                this.ctx.lineTo(to.x, to.y);
+                this.ctx.stroke();
+                
+                this.ctx.globalAlpha = 1;
+            }
+
+            redrawCanvas() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                this.paths.forEach(path => {
+                    if (path.length > 0) {
+                        const point = path[0];
+                        this.ctx.globalCompositeOperation = point.tool === 'eraser' ? 'destination-out' : 'source-over';
+                        this.ctx.strokeStyle = point.tool === 'eraser' ? 'rgba(0,0,0,1)' : point.color;
+                        this.ctx.lineWidth = point.size * (point.tool === 'marker' ? 2 : 1);
+                        this.ctx.globalAlpha = point.tool === 'marker' ? 0.7 : 1;
+                        
+                        if (path.length === 1) {
+                            this.ctx.beginPath();
+                            this.ctx.arc(point.x, point.y, point.size / 2, 0, Math.PI * 2);
+                            this.ctx.fill();
+                        } else {
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(path[0].x, path[0].y);
+                            for (let i = 1; i < path.length; i++) {
+                                this.ctx.lineTo(path[i].x, path[i].y);
+                            }
+                            this.ctx.stroke();
+                        }
+                        
+                        this.ctx.globalAlpha = 1;
+                    }
+                });
+            }
+
+            clearCanvas() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.paths = [];
+                this.currentPath = [];
+            }
+
+            undo() {
+                if (this.paths.length > 0) {
+                    this.paths.pop();
+                    this.redrawCanvas();
+                }
+            }
+
+            toggleVideo() {
+                if (this.stream) {
+                    const videoTrack = this.stream.getVideoTracks()[0];
+                    if (videoTrack) {
+                        videoTrack.enabled = !videoTrack.enabled;
+                        document.getElementById('toggleVideo').textContent = videoTrack.enabled ? '📹' : '📹❌';
+                    }
+                }
+            }
+
+            toggleAudio() {
+                if (this.stream) {
+                    const audioTrack = this.stream.getAudioTracks()[0];
+                    if (audioTrack) {
+                        audioTrack.enabled = !audioTrack.enabled;
+                        document.getElementById('toggleAudio').textContent = audioTrack.enabled ? '🎤' : '🎤❌';
+                    }
+                }
+            }
+        }
+
+        // Initialize the app
+        const app = new LectureApp();
+    </script>
+</body>
+</html>
