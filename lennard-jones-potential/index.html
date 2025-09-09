@@ -16,7 +16,7 @@
             background: linear-gradient(135deg, #1e3c72, #2a5298);
             color: white;
             min-height: 100vh;
-            padding: 20px;
+            padding: min(20px, 4vw);
             overflow-x: hidden;
         }
         
@@ -25,100 +25,106 @@
             max-width: 1400px;
             margin: 0 auto;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 30px;
+            border-radius: min(20px, 4vw);
+            padding: clamp(15px, 3vw, 30px);
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            min-height: calc(100vh - 40px);
+            min-height: calc(100vh - min(40px, 8vw));
             display: flex;
             flex-direction: column;
         }
         
         h1 {
             text-align: center;
-            font-size: clamp(2em, 5vw, 3em);
-            margin-bottom: 30px;
+            font-size: clamp(1.5em, 5vw, 3em);
+            margin-bottom: clamp(15px, 3vw, 30px);
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            line-height: 1.2;
         }
         
         .main-content {
             flex: 1;
             display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 30px;
+            grid-template-columns: 1fr min(350px, 30vw);
+            gap: clamp(15px, 3vw, 30px);
             min-height: 0;
+            align-items: start;
         }
         
         .left-panel {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: clamp(10px, 2vw, 20px);
             min-height: 0;
         }
         
         .graph-container {
             flex: 1;
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 20px;
+            border-radius: min(15px, 3vw);
+            padding: clamp(10px, 2vw, 20px);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            min-height: 300px;
+            min-height: clamp(250px, 40vh, 400px);
+            display: flex;
+            flex-direction: column;
         }
         
         .explanation {
             background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 15px;
-            max-height: 300px;
+            padding: clamp(10px, 2vw, 20px);
+            border-radius: min(15px, 3vw);
+            max-height: min(300px, 35vh);
             overflow-y: auto;
-            font-size: 0.9em;
+            font-size: clamp(0.8em, 1.8vw, 0.9em);
             line-height: 1.5;
         }
         
         .explanation h3 {
-            margin-bottom: 15px;
+            margin-bottom: clamp(10px, 2vw, 15px);
             color: #4facfe;
-            font-size: 1.3em;
+            font-size: clamp(1.1em, 2.5vw, 1.3em);
         }
         
         .explanation-section {
-            margin-bottom: 15px;
-            padding: 12px;
+            margin-bottom: clamp(8px, 1.5vw, 15px);
+            padding: clamp(8px, 1.5vw, 12px);
             background: rgba(0, 0, 0, 0.2);
             border-radius: 8px;
         }
         
         .explanation-section h4 {
-            margin-bottom: 8px;
-            font-size: 1em;
+            margin-bottom: clamp(4px, 1vw, 8px);
+            font-size: clamp(0.9em, 2vw, 1em);
         }
         
         .explanation-section p {
             margin: 0;
-            font-size: 0.9em;
+            font-size: clamp(0.8em, 1.7vw, 0.9em);
         }
         
         .physics-note {
             background: rgba(79, 172, 254, 0.2);
-            padding: 15px;
+            padding: clamp(8px, 1.5vw, 15px);
             border-radius: 8px;
             border-left: 4px solid #4facfe;
-            font-size: 0.85em;
+            font-size: clamp(0.75em, 1.6vw, 0.85em);
         }
         
         .right-panel {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: clamp(10px, 2vw, 20px);
+            min-width: 0;
         }
         
         .atoms-container {
-            height: 200px;
+            height: clamp(120px, 25vh, 200px);
             background: rgba(0, 0, 0, 0.8);
-            border-radius: 15px;
+            border-radius: min(15px, 3vw);
             position: relative;
             border: 3px solid rgba(255, 255, 255, 0.3);
             overflow: hidden;
+            width: 100%;
         }
         
         .atom {
@@ -128,44 +134,54 @@
             border: 3px solid rgba(255, 255, 255, 0.6);
             box-shadow: 0 0 20px rgba(79, 172, 254, 0.8);
             transition: all 0.1s ease;
-            width: 50px;
-            height: 50px;
+            width: clamp(25px, 8vw, 50px);
+            height: clamp(25px, 8vw, 50px);
         }
         
         .atom1 {
-            left: 30px;
-            top: 75px;
+            left: clamp(15px, 4vw, 30px);
+            top: 50%;
+            transform: translateY(-50%);
         }
         
         .atom2 {
-            top: 75px;
+            top: 50%;
+            transform: translateY(-50%);
         }
         
         .controls {
             background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 15px;
+            padding: clamp(10px, 2vw, 20px);
+            border-radius: min(15px, 3vw);
             flex: 1;
         }
         
         .control-group h4 {
-            font-size: 1.1em;
-            margin-bottom: 15px;
+            font-size: clamp(0.95em, 2.2vw, 1.1em);
+            margin-bottom: clamp(8px, 1.5vw, 15px);
         }
         
         .slider-container {
-            margin-bottom: 20px;
+            margin-bottom: clamp(10px, 2vw, 20px);
         }
         
         .slider-row {
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 10px;
+            gap: clamp(8px, 1.5vw, 15px);
+            margin-bottom: clamp(5px, 1vw, 10px);
+            flex-wrap: wrap;
+        }
+        
+        .slider-row label {
+            font-size: clamp(0.8em, 1.7vw, 0.9em);
+            white-space: nowrap;
+            min-width: fit-content;
         }
         
         .slider {
             flex: 1;
+            min-width: 120px;
             height: 8px;
             border-radius: 4px;
             background: rgba(255, 255, 255, 0.3);
@@ -195,54 +211,58 @@
         }
         
         .value-display {
-            min-width: 70px;
+            min-width: clamp(50px, 12vw, 70px);
             background: rgba(0, 0, 0, 0.3);
-            padding: 8px 12px;
+            padding: clamp(4px, 1vw, 8px) clamp(8px, 1.5vw, 12px);
             border-radius: 5px;
             text-align: center;
             font-weight: bold;
-            font-size: 0.9em;
+            font-size: clamp(0.8em, 1.7vw, 0.9em);
         }
         
         .info-panel {
             background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
+            padding: clamp(8px, 1.5vw, 15px);
             border-radius: 10px;
-            font-size: 0.9em;
+            font-size: clamp(0.8em, 1.7vw, 0.9em);
             line-height: 1.4;
         }
         
         .info-panel h4 {
-            margin-bottom: 10px;
-            font-size: 1em;
+            margin-bottom: clamp(5px, 1vw, 10px);
+            font-size: clamp(0.9em, 2vw, 1em);
         }
         
         .status-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: clamp(4px, 1vw, 8px);
+            gap: 10px;
+            align-items: center;
         }
         
         canvas {
             width: 100%;
             height: 100%;
+            flex: 1;
             background: white;
             border-radius: 10px;
         }
         
         .force-indicator {
             position: absolute;
-            top: 15px;
+            top: clamp(8px, 2vw, 15px);
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.85em;
+            font-size: clamp(0.75em, 1.6vw, 0.85em);
             font-weight: bold;
-            padding: 6px 12px;
+            padding: clamp(4px, 1vw, 6px) clamp(8px, 1.5vw, 12px);
             border-radius: 15px;
             background: rgba(0, 0, 0, 0.7);
             color: white;
             pointer-events: none;
             z-index: 10;
+            white-space: nowrap;
         }
         
         .attractive { color: #ff6b6b; }
@@ -250,66 +270,40 @@
         .equilibrium { color: #45b7d1; }
         
         .legend {
-            font-size: 0.8em;
+            font-size: clamp(0.7em, 1.5vw, 0.8em);
             line-height: 1.3;
         }
         
         .legend-item {
-            margin-bottom: 5px;
+            margin-bottom: clamp(3px, 0.5vw, 5px);
         }
         
         /* Tablet responsive */
         @media (max-width: 1024px) {
-            .container {
-                padding: 20px;
-            }
-            
             .main-content {
-                grid-template-columns: 1fr 300px;
-                gap: 20px;
+                grid-template-columns: 1fr min(280px, 35vw);
+                gap: clamp(10px, 2vw, 20px);
             }
             
             .explanation {
-                max-height: 250px;
-            }
-            
-            .atoms-container {
-                height: 150px;
-            }
-            
-            .atom {
-                width: 40px;
-                height: 40px;
-            }
-            
-            .atom1 {
-                left: 25px;
-                top: 55px;
-            }
-            
-            .atom2 {
-                top: 55px;
+                max-height: min(250px, 30vh);
             }
         }
         
         /* Mobile responsive */
         @media (max-width: 768px) {
             body {
-                padding: 10px;
+                padding: min(10px, 2vw);
             }
             
             .container {
-                padding: 15px;
-                border-radius: 15px;
-            }
-            
-            h1 {
-                margin-bottom: 20px;
+                border-radius: min(15px, 3vw);
+                min-height: calc(100vh - min(20px, 4vw));
             }
             
             .main-content {
                 grid-template-columns: 1fr;
-                gap: 20px;
+                gap: clamp(10px, 2vw, 20px);
             }
             
             .left-panel {
@@ -318,60 +312,109 @@
             
             .right-panel {
                 order: 2;
-                flex-direction: row;
-                gap: 15px;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: clamp(8px, 2vw, 15px);
+                align-items: start;
             }
             
             .atoms-container {
-                flex: 1;
-                height: 120px;
+                grid-column: 1 / -1;
+                height: clamp(100px, 20vh, 140px);
+                order: 1;
             }
             
             .controls {
-                flex: 1;
-            }
-            
-            .atom {
-                width: 30px;
-                height: 30px;
-            }
-            
-            .atom1 {
-                left: 20px;
-                top: 45px;
-            }
-            
-            .atom2 {
-                top: 45px;
+                order: 2;
             }
             
             .explanation {
                 order: 3;
                 max-height: none;
+                grid-column: 1 / -1;
+            }
+            
+            .graph-container {
+                min-height: clamp(200px, 35vh, 300px);
             }
         }
         
         @media (max-width: 480px) {
             .right-panel {
+                grid-template-columns: 1fr;
+                gap: clamp(8px, 2vw, 15px);
+            }
+            
+            .atoms-container {
+                height: clamp(80px, 18vh, 120px);
+            }
+            
+            .slider-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: clamp(5px, 1vw, 8px);
+            }
+            
+            .slider-row label {
+                text-align: center;
+            }
+            
+            .slider {
+                min-width: unset;
+                width: 100%;
+            }
+            
+            .value-display {
+                align-self: center;
+                min-width: 60px;
+            }
+        }
+        
+        /* Extra small screens */
+        @media (max-width: 360px) {
+            .status-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+            }
+            
+            .explanation-section {
+                padding: clamp(6px, 1vw, 10px);
+            }
+        }
+        
+        /* Landscape mobile optimization */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .container {
+                min-height: calc(100vh - min(10px, 2vw));
+            }
+            
+            .main-content {
+                grid-template-columns: 1fr min(300px, 40vw);
+            }
+            
+            .right-panel {
+                display: flex;
                 flex-direction: column;
             }
             
             .atoms-container {
-                height: 100px;
+                height: clamp(80px, 25vh, 120px);
             }
             
+            .explanation {
+                max-height: min(200px, 25vh);
+            }
+        }
+        
+        /* High DPI display optimization */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
             .atom {
-                width: 25px;
-                height: 25px;
+                border-width: 2px;
             }
             
-            .atom1 {
-                left: 15px;
-                top: 37.5px;
-            }
-            
-            .atom2 {
-                top: 37.5px;
+            .atoms-container {
+                border-width: 2px;
             }
         }
     </style>
@@ -472,15 +515,23 @@
         const currentEnergy = document.getElementById('currentEnergy');
         const currentForce = document.getElementById('currentForce');
         
-        // Responsive canvas sizing
+        let resizeTimeout;
+        
+        // Improved responsive canvas sizing
         function resizeCanvas() {
             const container = canvas.parentElement;
             const rect = container.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
             
-            // Ensure minimum size
-            const width = Math.max(rect.width, 200);
-            const height = Math.max(rect.height, 150);
+            // Wait for container to stabilize
+            if (rect.width === 0 || rect.height === 0) {
+                setTimeout(resizeCanvas, 50);
+                return;
+            }
+            
+            // Ensure minimum size with better scaling
+            const width = Math.max(rect.width - 20, 180); // Account for padding
+            const height = Math.max(rect.height - 20, 120);
             
             canvas.width = width * dpr;
             canvas.height = height * dpr;
@@ -489,10 +540,17 @@
             
             ctx.scale(dpr, dpr);
             
-            // Force redraw after resize
-            setTimeout(() => {
+            // Force redraw after resize with small delay
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
                 drawGraph();
             }, 10);
+        }
+        
+        // Debounced resize handler
+        function handleResize() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(resizeCanvas, 100);
         }
         
         // Lennard-Jones potential parameters
@@ -515,19 +573,39 @@
             const height = canvas.offsetHeight;
             
             if (width <= 0 || height <= 0) {
-                setTimeout(drawGraph, 50);
+                requestAnimationFrame(drawGraph);
                 return;
             }
             
+            // Clear with full context reset
             ctx.clearRect(0, 0, width, height);
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
             
-            const padding = Math.min(width, height) * 0.12;
-            const graphWidth = width - 2 * padding;
-            const graphHeight = height - 2 * padding;
+            // Dynamic responsive padding based on screen size
+            const minPadding = 15;
+            const maxPadding = Math.min(width, height) * 0.15;
+            const padding = Math.max(minPadding, Math.min(maxPadding, 40));
+            const graphWidth = Math.max(width - 2 * padding, 100);
+            const graphHeight = Math.max(height - 2 * padding, 60);
+            
+            // Ensure minimum graph area for usability
+            if (graphWidth < 80 || graphHeight < 40) {
+                ctx.fillStyle = '#666';
+                ctx.font = `${Math.min(width, height) * 0.08}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText('Resize to see graph', width / 2, height / 2);
+                return;
+            }
+            
+            // Responsive stroke widths
+            const axisLineWidth = Math.max(1, Math.min(width, height) / 300);
+            const gridLineWidth = Math.max(0.5, axisLineWidth / 2);
+            const curveLineWidth = Math.max(2, Math.min(width, height) / 200);
             
             // Draw axes
             ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = axisLineWidth;
             ctx.beginPath();
             ctx.moveTo(padding, height - padding);
             ctx.lineTo(width - padding, height - padding);
@@ -535,14 +613,23 @@
             ctx.lineTo(padding, height - padding);
             ctx.stroke();
             
-            // Draw axis labels
-            ctx.fillStyle = '#333';
-            ctx.font = `${Math.min(width, height) * 0.035}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.fillText('Distance (r/σ)', width / 2, height - 15);
+            // Responsive font sizes with better scaling
+            const baseFontSize = Math.max(8, Math.min(width, height) / 25);
+            const labelFontSize = Math.max(7, baseFontSize * 0.75);
+            const titleFontSize = Math.max(9, baseFontSize * 1.1);
             
+            // Draw axis labels with better positioning
+            ctx.fillStyle = '#333';
+            ctx.font = `${titleFontSize}px Arial`;
+            ctx.textAlign = 'center';
+            
+            const bottomLabelY = height - Math.max(3, titleFontSize * 0.3);
+            ctx.fillText('Distance (r/σ)', width / 2, bottomLabelY);
+            
+            // Rotate and draw Y-axis label
             ctx.save();
-            ctx.translate(25, height / 2);
+            const leftLabelX = Math.max(8, titleFontSize * 0.8);
+            ctx.translate(leftLabelX, height / 2);
             ctx.rotate(-Math.PI / 2);
             ctx.fillText('Potential Energy (U/ε)', 0, 0);
             ctx.restore();
@@ -553,12 +640,16 @@
             const minU = -1.5;
             const maxU = 2.0;
             
-            // Draw grid lines
+            // Draw grid lines with adaptive density
             ctx.strokeStyle = '#ddd';
-            ctx.lineWidth = 1;
+            ctx.lineWidth = gridLineWidth;
+            
+            // Determine grid density based on available space
+            const verticalGridSpacing = graphWidth > 200 ? 0.5 : 1.0;
+            const horizontalGridSpacing = graphHeight > 150 ? 0.5 : 1.0;
             
             // Vertical grid lines
-            for (let r = 1.0; r <= 3.0; r += 0.5) {
+            for (let r = 1.0; r <= 3.0; r += verticalGridSpacing) {
                 const x = padding + (r - minR) / (maxR - minR) * graphWidth;
                 ctx.beginPath();
                 ctx.moveTo(x, padding);
@@ -567,7 +658,7 @@
             }
             
             // Horizontal grid lines
-            for (let u = -1.0; u <= 1.0; u += 0.5) {
+            for (let u = -1.0; u <= 1.0; u += horizontalGridSpacing) {
                 const y = height - padding - (u - minU) / (maxU - minU) * graphHeight;
                 ctx.beginPath();
                 ctx.moveTo(padding, y);
@@ -575,13 +666,16 @@
                 ctx.stroke();
             }
             
-            // Draw potential curve
+            // Draw potential curve with adaptive resolution
             ctx.strokeStyle = '#2196F3';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = curveLineWidth;
             ctx.beginPath();
             
             let first = true;
-            for (let r = minR; r <= maxR; r += 0.02) {
+            // Adaptive step size for smoother curves on larger screens
+            const step = Math.max(0.008, 0.3 / Math.max(graphWidth, 200));
+            
+            for (let r = minR; r <= maxR; r += step) {
                 const u = lennardJones(r);
                 if (u > maxU) continue;
                 
@@ -597,10 +691,13 @@
             }
             ctx.stroke();
             
-            // Draw zero energy line
+            // Draw reference lines with adaptive dash patterns
+            const dashSize = Math.max(2, Math.min(width, height) / 150);
+            
+            // Zero energy line
             ctx.strokeStyle = '#888';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = Math.max(1, curveLineWidth / 2);
+            ctx.setLineDash([dashSize * 2, dashSize]);
             const zeroY = height - padding - (0 - minU) / (maxU - minU) * graphHeight;
             ctx.beginPath();
             ctx.moveTo(padding, zeroY);
@@ -608,45 +705,65 @@
             ctx.stroke();
             ctx.setLineDash([]);
             
-            // Draw equilibrium line
+            // Equilibrium line
             const equilibriumR = Math.pow(2, 1/6);
             const equilibriumX = padding + (equilibriumR - minR) / (maxR - minR) * graphWidth;
             ctx.strokeStyle = '#45b7d1';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([3, 3]);
+            ctx.lineWidth = Math.max(1, curveLineWidth / 2);
+            ctx.setLineDash([dashSize, dashSize]);
             ctx.beginPath();
             ctx.moveTo(equilibriumX, padding);
             ctx.lineTo(equilibriumX, height - padding);
             ctx.stroke();
             ctx.setLineDash([]);
             
-            // Draw current position indicator
+            // Draw current position indicator with adaptive size
             const currentR = parseFloat(distanceSlider.value);
             const currentU = lennardJones(currentR);
             const currentX = padding + (currentR - minR) / (maxR - minR) * graphWidth;
             const currentY = height - padding - (currentU - minU) / (maxU - minU) * graphHeight;
             
+            const indicatorRadius = Math.max(3, Math.min(width, height) / 60);
             ctx.fillStyle = '#FF5722';
             ctx.beginPath();
-            ctx.arc(currentX, currentY, 6, 0, 2 * Math.PI);
+            ctx.arc(currentX, currentY, indicatorRadius, 0, 2 * Math.PI);
             ctx.fill();
             
-            // Draw scale numbers
+            // Add white border to indicator for better visibility
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = Math.max(1, indicatorRadius / 3);
+            ctx.beginPath();
+            ctx.arc(currentX, currentY, indicatorRadius, 0, 2 * Math.PI);
+            ctx.stroke();
+            
+            // Draw scale numbers with adaptive positioning
             ctx.fillStyle = '#333';
-            ctx.font = `${Math.min(width, height) * 0.03}px Arial`;
+            ctx.font = `${labelFontSize}px Arial`;
             ctx.textAlign = 'center';
             
-            // X-axis scale
-            for (let r = 1.0; r <= 3.0; r += 0.5) {
-                const x = padding + (r - minR) / (maxR - minR) * graphWidth;
-                ctx.fillText(r.toFixed(1), x, height - padding + 20);
+            // X-axis scale - only show if there's enough space
+            if (graphWidth > 120) {
+                const xLabelSpacing = graphWidth > 200 ? 0.5 : 1.0;
+                for (let r = 1.0; r <= 3.0; r += xLabelSpacing) {
+                    const x = padding + (r - minR) / (maxR - minR) * graphWidth;
+                    const labelY = height - padding + labelFontSize + 3;
+                    if (labelY < height - 2) {
+                        ctx.fillText(r.toFixed(1), x, labelY);
+                    }
+                }
             }
             
-            // Y-axis scale
-            ctx.textAlign = 'right';
-            for (let u = -1.0; u <= 1.0; u += 0.5) {
-                const y = height - padding - (u - minU) / (maxU - minU) * graphHeight;
-                ctx.fillText(u.toFixed(1), padding - 10, y + 4);
+            // Y-axis scale - only show if there's enough space
+            if (graphHeight > 80) {
+                ctx.textAlign = 'right';
+                const yLabelSpacing = graphHeight > 120 ? 0.5 : 1.0;
+                for (let u = -1.0; u <= 1.0; u += yLabelSpacing) {
+                    const y = height - padding - (u - minU) / (maxU - minU) * graphHeight;
+                    const labelX = padding - 3;
+                    if (labelX > 0) {
+                        ctx.fillText(u.toFixed(1), labelX, y + labelFontSize / 3);
+                    }
+                }
             }
         }
         
@@ -654,10 +771,19 @@
             const r = parseFloat(distanceSlider.value);
             distanceValue.textContent = r.toFixed(2);
             
-            // Update atom position with proper calibration
-            const containerWidth = atom2.parentElement.offsetWidth;
-            const atomSize = parseFloat(getComputedStyle(atom2).width) / 2; // Get actual atom radius
-            const atom1Left = parseFloat(getComputedStyle(document.querySelector('.atom1')).left);
+            // Improved atom positioning with better scaling
+            const container = atom2.parentElement;
+            const containerRect = container.getBoundingClientRect();
+            const containerWidth = containerRect.width;
+            const containerHeight = containerRect.height;
+            
+            // Get computed atom size
+            const atomStyle = getComputedStyle(atom2);
+            const atomSize = parseFloat(atomStyle.width) / 2; // Get actual atom radius
+            
+            const atom1 = document.querySelector('.atom1');
+            const atom1Style = getComputedStyle(atom1);
+            const atom1Left = parseFloat(atom1Style.left);
             const atom1Center = atom1Left + atomSize; // Center of first atom
             
             // Define the distance range we're visualizing
@@ -666,34 +792,30 @@
             const equilibriumR = Math.pow(2, 1/6); // ≈ 1.12
             
             // Available space for showing distances
-            const availableWidth = containerWidth - atom1Center - atomSize; // Space from atom1 center to right edge
+            const margin = atomSize; // Keep some margin from edge
+            const availableWidth = containerWidth - atom1Center - margin;
             
-            // At equilibrium (r = 1.12σ), we want atoms to just touch
-            // This means center-to-center distance should be 2 * atomSize
-            const equilibriumVisualDistance = atomSize * 2;
-            
-            // Scale the visual representation
-            // At r = equilibriumR: distance = 2 * atomSize (just touching)
-            // At r = minR (0.8): closer together (some overlap allowed)
-            // At r = maxR (3.0): maximum separation
-            
+            // Calculate visual distance with better scaling
             let centerToCenterDistance;
             
             if (r <= equilibriumR) {
                 // Below equilibrium: scale from compressed to touching
                 const compressionRatio = (r - minR) / (equilibriumR - minR);
-                const minDistance = atomSize * 1.2; // Allow some overlap but not complete
-                centerToCenterDistance = minDistance + (equilibriumVisualDistance - minDistance) * compressionRatio;
+                const minDistance = atomSize * 1.3; // Allow some overlap but not complete
+                const equilibriumDistance = atomSize * 2.1; // Just touching with small gap
+                centerToCenterDistance = minDistance + (equilibriumDistance - minDistance) * compressionRatio;
             } else {
                 // Above equilibrium: scale from touching to maximum separation
                 const expansionRatio = (r - equilibriumR) / (maxR - equilibriumR);
-                const maxDistance = Math.min(availableWidth, atomSize * 6); // Reasonable maximum visual distance
-                centerToCenterDistance = equilibriumVisualDistance + (maxDistance - equilibriumVisualDistance) * expansionRatio;
+                const equilibriumDistance = atomSize * 2.1;
+                const maxDistance = Math.min(availableWidth, containerWidth * 0.7); // Use most of available width
+                centerToCenterDistance = equilibriumDistance + (maxDistance - equilibriumDistance) * expansionRatio;
             }
             
             // Position atom2 based on center-to-center distance
             const atom2Left = atom1Center + centerToCenterDistance - atomSize;
-            atom2.style.left = Math.max(0, Math.min(atom2Left, containerWidth - atomSize * 2)) + 'px';
+            const clampedLeft = Math.max(0, Math.min(atom2Left, containerWidth - atomSize * 2));
+            atom2.style.left = clampedLeft + 'px';
             
             // Calculate current energy and force
             const energy = lennardJones(r);
@@ -716,7 +838,6 @@
             }
             
             // Update atom colors and visual effects
-            const atom1 = document.querySelector('.atom1');
             if (r < equilibriumR) {
                 // Repulsive - atoms glow red
                 atom1.style.background = 'radial-gradient(circle at 30% 30%, #ff6b6b, #ff4757)';
@@ -740,22 +861,41 @@
             drawGraph();
         }
         
+        // Event listeners
         distanceSlider.addEventListener('input', updateSimulation);
-        window.addEventListener('resize', () => {
-            setTimeout(resizeCanvas, 100);
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(handleResize, 100);
         });
         
-        // Initialize
-        setTimeout(() => {
-            resizeCanvas();
-        }, 100);
-        
-        // Also trigger on load
-        if (document.readyState === 'complete') {
-            resizeCanvas();
-        } else {
-            window.addEventListener('load', resizeCanvas);
+        // Initialize with proper timing
+        function initialize() {
+            // Wait for DOM to be fully loaded and styled
+            if (document.readyState === 'complete') {
+                setTimeout(() => {
+                    resizeCanvas();
+                    updateSimulation();
+                }, 100);
+            } else {
+                window.addEventListener('load', () => {
+                    setTimeout(() => {
+                        resizeCanvas();
+                        updateSimulation();
+                    }, 100);
+                });
+            }
         }
+        
+        // Start initialization
+        initialize();
+        
+        // Additional safety net for initialization
+        setTimeout(() => {
+            if (canvas.width === 0 || canvas.height === 0) {
+                resizeCanvas();
+                updateSimulation();
+            }
+        }, 500);
     </script>
 </body>
 </html>
