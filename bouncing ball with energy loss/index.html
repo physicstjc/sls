@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bouncing Ball Physics Simulation (Offset Vectors)</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:20px;background:#f0f0f0}
+    .container{display:flex;gap:20px;max-width:1200px;margin:0 auto;max-height:560px}
+    .simulation-area{flex:1;background:#fff;border-radius:10px;padding:15px;box-shadow:0 2px 10px rgba(0,0,0,.1);display:flex;flex-direction:column}
+    .graphs-area{width:400px;background:#fff;border-radius:10px;padding:15px;box-shadow:0 2px 10px rgba(0,0,0,.1);overflow-y:auto}
+    .controls{background:#fff;border-radius:10px;padding:12px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.1)}
+    canvas{border:2px solid #333;border-radius:5px;display:block;margin:0 auto}
+    .graph{margin-bottom:10px}
+    .graph h3{font-size:12px;margin:0 0 8px 0;font-weight:bold}
+    .graph canvas{border:1px solid #ccc;width:100%}
+    .control-group{margin-bottom:8px}
+    label{display:block;margin-bottom:5px;font-weight:bold}
+    input[type="range"]{width:100%;margin-bottom:5px}
+    button{background:#6366f1;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;margin-left:10px;font-size:14px}
+    button:hover{background:#5855eb}
+    button.reset{background:#8b5cf6}
+    button.reset:hover{background:#7c3aed}
+    .checkbox-group{display:flex;align-items:center;gap:10px}
+    .controls-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+    .checkbox-buttons-group{display:flex;align-items:center;gap:15px}
+    .vector-legend{margin-top:12px;font-size:12px}
+    .vector-legend-row{display:flex;gap:20px;align-items:center}
+    .vector-item{display:flex;align-items:center;gap:5px}
+    .vector-color{width:20px;height:3px}
+    @media (max-width: 1024px){
+      .container{flex-direction:column;max-height:none}
+      .graphs-area{width:100%}
+      .controls-row{flex-direction:column;align-items:flex-start;gap:10px}
+      .checkbox-buttons-group{flex-direction:row}
+    }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="simulation-area">
+      <div class="controls">
+        <div style="display:flex;gap:20px;flex-wrap:wrap">
+          <div class="control-group">
+            <label for="height">Height (h = <span id="heightValue">5.0</span> m)</label>
+            <input type="range" id="height" min="1" max="10" value="5" step="0.1">
+          </div>
+          <div class="control-group">
+            <label for="time">Time (t = <span id="timeValue">2.38</span> s)</label>
+            <input type="range" id="time" min="0" max="100" value="2.38" step="0.01">
+          </div>
+          <div class="control-group">
+            <label for="energyLoss">Energy Loss per bounce (<span id="energyLossValue">20</span>%)</label>
+            <input type="range" id="energyLoss" min="0" max="50" value="20" step="1">
+          </div>
+        </div>
+        <div class="controls-row">
+          <div class="checkbox-buttons-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="airResistance">
+              <label for="airResistance">Air Resistance</label>
+            </div>
+            <button id="playBtn">Play</button>
+            <button id="resetBtn" class="reset">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reduced width -->
+      <canvas id="simulationCanvas" width="420" height="300"></canvas>
+
+      <div class="vector-legend">
+        <div class="vector-legend-row">
+          <div class="vector-item">
+            <div class="vector-color" style="background:#22c55e"></div>
+            <span>Position (s)</span>
+          </div>
+          <div class="vector-item">
+            <div class="vector-color" style="background:#ec4899"></div>
+            <span>Velocity (v)</span>
+          </div>
+          <div class="vector-item">
+            <div class="vector-color" style="background:#3b82f6"></div>
+            <span>Acceleration (a)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="graphs-area">
+      <div class="graph">
+        <h3>Position (s) vs Time</h3>
+        <canvas id="positionGraph" width="360" height="120"></canvas>
+      </div>
+      <div class="graph">
+        <h3>Velocity (v) vs Time</h3>
+        <canvas id="velocityGraph" width="360" height="120"></canvas>
+      </div>
+      <div class="graph">
+        <h3>Acceleration (a) vs Time</h3>
+        <canvas id="accelerationGraph" width="360" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    class BouncingBallSimulation {
+      constructor(){
+        // Canvases
+        this.canvas = document.getElementById('simulationCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.posGraph = document.getElementById('positionGraph');
+        this.velGraph = document.getElementById('velocityGraph');
+        this.accGraph = document.getElementById('accelerationGraph');
+        this.posCtx = this.posGraph.getContext('2d');
+        this.velCtx = this.velGraph.getContext('2d');
+        this.accCtx = this.accGraph.getContext('2d');
+
+        // Physics constants
+        this.g = 9.81;                // m/s^2
+        this.dragCoeff = 0.8;         // s^-1 (linear drag factor when enabled)
+        this.pxPerMeter = 28;         // scale for drawing (slightly tighter)
+        this.ballRadius = 14;         // px
+        this.groundY = this.canvas.height - 40;
+
+        // Vector x offsets to avoid overlap (relative to ballX)
+        this.vecOffsets = { s: -60, v: 0, a: +60 };
+
+        // Controls
+        this.heightEl = document.getElementById('height');
+        this.heightValueEl = document.getElementById('heightValue');
+        this.timeEl = document.getElementById('time');
+        this.timeValueEl = document.getElementById('timeValue');
+        this.energyLossEl = document.getElementById('energyLoss');
+        this.energyLossValueEl = document.getElementById('energyLossValue');
+        this.airEl = document.getElementById('airResistance');
+        this.playBtn = document.getElementById('playBtn');
+        this.resetBtn = document.getElementById('resetBtn');
+
+        // State
+        this.reset();
+        this.setupUI();
+        this.draw();
+        this.updateGraphs();
+      }
+
+      reset(){
+        this.isPlaying = false;
+        this.accImpulseTimer = 0;
+        this.time = 0;
+        this.timeEl.value = 0;
+        this.timeValueEl.textContent = this.time.toFixed(2);
+
+        this.h0 = parseFloat(this.heightEl.value);                 // m
+        this.energyLoss = parseFloat(this.energyLossEl.value)/100; // fraction (0..1)
+        this.hasAir = !!this.airEl.checked;
+
+        // restitution from energy loss fraction L: e = sqrt(1 - L)
+        this.e = Math.sqrt(Math.max(0, 1 - this.energyLoss));
+
+        // Kinematics state (upward positive)
+        this.y = this.h0;     // m above ground
+        this.v = 0;           // m/s
+        this.a = -this.g;
+
+        this.ballX = this.canvas.width/2;
+
+        this.timeData = [];
+        this.positionData = [];
+        this.velocityData = [];
+        this.accelerationData = [];
+
+        this.clearGraphs();
+      }
+
+      setupUI(){
+        this.heightEl.addEventListener('input', e=>{
+          this.heightValueEl.textContent = parseFloat(e.target.value).toFixed(1);
+          if(!this.isPlaying){ this.reset(); this.draw(); this.updateGraphs(); }
+        });
+
+        this.energyLossEl.addEventListener('input', e=>{
+          this.energyLossValueEl.textContent = e.target.value;
+          this.energyLoss = parseFloat(e.target.value)/100;
+          this.e = Math.sqrt(Math.max(0, 1 - this.energyLoss));
+        });
+
+        this.airEl.addEventListener('change', e=>{
+          this.hasAir = !!e.target.checked;
+        });
+
+        this.timeEl.addEventListener('input', e=>{
+          const t = parseFloat(e.target.value);
+          this.timeValueEl.textContent = t.toFixed(2);
+          if(!this.isPlaying){
+            this.reset();
+            this.simulateToTime(t);
+            this.draw();
+            this.updateGraphs();
+          }
+        });
+
+        this.playBtn.addEventListener('click', ()=>{
+          this.isPlaying = !this.isPlaying;
+          this.playBtn.textContent = this.isPlaying ? 'Pause' : 'Play';
+          if(this.isPlaying) this.animate();
+        });
+
+        this.resetBtn.addEventListener('click', ()=>{
+          this.reset();
+          this.playBtn.textContent = 'Play';
+          this.draw(); this.updateGraphs();
+        });
+      }
+
+      simulateStep(dt){
+        // Acceleration: gravity + optional linear drag (opposes v)
+        const drag = this.hasAir ? -this.dragCoeff * this.v : 0;
+        this.a = -this.g + drag;
+
+        // Integrate (semi-implicit Euler)
+        this.v += this.a * dt;
+        this.y += this.v * dt;
+
+        // Ground collision
+        if(this.y <= 0){
+          this.y = 0;
+          if(this.v < 0){
+            this.v = -this.e * this.v;       // apply restitution
+            this.accImpulseTimer = 0.03;     // short upward spike for display
+          }
+        }
+
+        // Log
+        this.timeData.push(this.time);
+        this.positionData.push(this.y);
+        this.velocityData.push(this.v);
+        const aDisplay = (this.accImpulseTimer > 0) ? (+20) : this.a;
+        this.accelerationData.push(aDisplay);
+      }
+
+      simulateToTime(targetT){
+        const dt = 1/240;
+        while(this.time + 1e-9 < targetT){
+          const step = Math.min(dt, targetT - this.time);
+          this.time += step;
+          if(this.accImpulseTimer > 0) this.accImpulseTimer = Math.max(0, this.accImpulseTimer - step);
+          this.simulateStep(step);
+        }
+      }
+
+      animate(){
+        if(!this.isPlaying) return;
+        const dt = 1/60;
+        this.time += dt;
+        if(this.accImpulseTimer > 0) this.accImpulseTimer = Math.max(0, this.accImpulseTimer - dt);
+        this.simulateStep(dt);
+
+        this.timeEl.value = this.time; // Remove Math.min(10, this.time)
+        this.timeValueEl.textContent = this.time.toFixed(2);
+
+        this.draw();
+        this.updateGraphs();
+
+        // Remove the time limit completely
+        requestAnimationFrame(()=>this.animate());
+      }
+
+      // ===== Drawing =====
+      draw(){
+        const ctx = this.ctx;
+        ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+
+        // Ground
+        ctx.fillStyle = '#8b5a2b';
+        ctx.fillRect(0, this.groundY, this.canvas.width, this.canvas.height - this.groundY);
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0,this.groundY);
+        ctx.lineTo(this.canvas.width, this.groundY);
+        ctx.stroke();
+
+        // Ball
+        const ballCenterY = this.groundY - (this.y * this.pxPerMeter) - this.ballRadius;
+        ctx.fillStyle = '#ff6b35';
+        ctx.beginPath();
+        ctx.arc(this.ballX, ballCenterY, this.ballRadius, 0, Math.PI*2);
+        ctx.fill();
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Vectors at offset x-positions to avoid overlap
+        this.drawVectors(ballCenterY);
+      }
+
+drawVectors(ballCenterY){
+  const ctx = this.ctx;
+  const clampX = x => Math.max(30, Math.min(this.canvas.width-30, x));
+
+  const xS = clampX(this.ballX + this.vecOffsets.s);
+  const xV = clampX(this.ballX + this.vecOffsets.v);
+  const xA = clampX(this.ballX + this.vecOffsets.a);
+
+  // Helper to draw a vertical vector
+  const drawV = (x, y0, dy, color) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, y0);
+    ctx.lineTo(x, y0 + dy);
+    ctx.stroke();
+    this.drawArrowHead(x, y0, x, y0 + dy, color);
+  };
+
+  // Reference for displacement: lowest COM (when ball is resting)
+  const refY = this.groundY - this.ballRadius;
+
+  // Position vector (green): from lowest COM → current COM
+  drawV(xS, refY, ballCenterY - refY, '#22c55e');
+
+  // Velocity vector (pink): vertical, scaled
+  const vScale = 10;
+  if(Math.abs(this.v) > 1e-3){
+    const vy = -this.v * vScale;
+    drawV(xV, ballCenterY, vy, '#ec4899');
+  }
+
+  // Acceleration vector (blue): vertical
+  const aNow = this.accelerationData.length ? this.accelerationData[this.accelerationData.length-1] : -this.g;
+  const aScale = 6;
+  if(Math.abs(aNow) > 1e-3){
+    const ay = -aNow * aScale;
+    drawV(xA, ballCenterY, ay, '#3b82f6');
+  }
+}
+
+
+      drawArrowHead(fromX, fromY, toX, toY, color){
+        const angle = Math.atan2(toY - fromY, toX - fromX);
+        const L = 8;
+        const ctx = this.ctx;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(toX,toY);
+        ctx.lineTo(toX - L*Math.cos(angle - Math.PI/6), toY - L*Math.sin(angle - Math.PI/6));
+        ctx.lineTo(toX - L*Math.cos(angle + Math.PI/6), toY - L*Math.sin(angle + Math.PI/6));
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // ===== Graphs =====
+      clearGraphs(){
+        this.posCtx.clearRect(0,0,this.posGraph.width,this.posGraph.height);
+        this.velCtx.clearRect(0,0,this.velGraph.width,this.velGraph.height);
+        this.accCtx.clearRect(0,0,this.accGraph.width,this.accGraph.height);
+      }
+
+      updateGraphs(){
+        this.drawGraph(this.posCtx, this.positionData, this.timeData, '#22c55e');
+        this.drawGraph(this.velCtx, this.velocityData, this.timeData, '#ec4899');
+        this.drawGraph(this.accCtx, this.accelerationData, this.timeData, '#3b82f6');
+      }
+
+drawGraph(ctx, data, tdata, color){
+  if(data.length < 2) return;
+  ctx.clearRect(0,0,ctx.canvas.width, ctx.canvas.height);
+
+  // Grid (light gray)
+  ctx.strokeStyle = '#e5e7eb';
+  ctx.lineWidth = 1;
+  for(let i=0;i<=10;i++){
+    const x = (i/10)*ctx.canvas.width;
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,ctx.canvas.height); ctx.stroke();
+  }
+  for(let i=0;i<=5;i++){
+    const y = (i/5)*ctx.canvas.height;
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(ctx.canvas.width,y); ctx.stroke();
+  }
+
+  // Scaling
+  const tMax = Math.max(5, tdata[tdata.length-1] || 5);
+  let dMin = Math.min(...data);
+  let dMax = Math.max(...data);
+  if(dMax - dMin < 1e-6){ dMax = dMin + 1e-6; }
+
+  const yZero = ctx.canvas.height - ((0 - dMin)/(dMax - dMin)) * ctx.canvas.height;
+
+  // Axes in black
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  // vertical axis (t=0)
+  ctx.moveTo(0,0);
+  ctx.lineTo(0,ctx.canvas.height);
+  // horizontal axis (y=0 line if inside range)
+  if(yZero >= 0 && yZero <= ctx.canvas.height){
+    ctx.moveTo(0,yZero);
+    ctx.lineTo(ctx.canvas.width,yZero);
+  }
+  ctx.stroke();
+
+  // Data line
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for(let i=0;i<data.length;i++){
+    const x = (tdata[i]/tMax)*ctx.canvas.width;
+    const y = ctx.canvas.height - ((data[i]-dMin)/(dMax-dMin))*ctx.canvas.height;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+
+  // Current time indicator
+  const currentX = (Math.min(this.time, tMax)/tMax)*ctx.canvas.width;
+  ctx.strokeStyle = '#9ca3af';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5,5]);
+  ctx.beginPath(); ctx.moveTo(currentX,0); ctx.lineTo(currentX,ctx.canvas.height); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+
+    }
+
+    window.addEventListener('load', ()=> new BouncingBallSimulation());
+  </script>
+</body>
+</html>
