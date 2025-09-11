@@ -6,7 +6,7 @@
   <title>Bouncing Ball Physics Simulation (Offset Vectors)</title>
   <style>
     body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:20px;background:#f0f0f0}
-    .container{display:flex;gap:20px;max-width:800px;margin:0 auto;max-height:560px}
+    .container{display:flex;gap:20px;max-width:800px;margin:0 auto}
     .simulation-area{flex:1;background:#fff;border-radius:10px;padding:15px;box-shadow:0 2px 10px rgba(0,0,0,.1);display:flex;flex-direction:column}
     .graphs-area{width:400px;background:#fff;border-radius:10px;padding:15px;box-shadow:0 2px 10px rgba(0,0,0,.1);overflow-y:auto}
     .controls{background:#fff;border-radius:10px;padding:12px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.1)}
@@ -90,15 +90,15 @@
     <div class="graphs-area">
       <div class="graph">
         <h3>Position (s) vs Time</h3>
-        <canvas id="positionGraph" width="360" height="120"></canvas>
+        <canvas id="positionGraph" width="360" height="160"></canvas>
       </div>
       <div class="graph">
         <h3>Velocity (v) vs Time</h3>
-        <canvas id="velocityGraph" width="360" height="120"></canvas>
+        <canvas id="velocityGraph" width="360" height="160"></canvas>
       </div>
       <div class="graph">
         <h3>Acceleration (a) vs Time</h3>
-        <canvas id="accelerationGraph" width="360" height="120"></canvas>
+        <canvas id="accelerationGraph" width="360" height="160"></canvas>
       </div>
     </div>
   </div>
