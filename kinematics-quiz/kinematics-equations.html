@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kinematics Match & Drop (LaTeX)</title>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" defer></script>
+<style>
+  body{
+    margin:0; padding:0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    background:linear-gradient(135deg,#667eea33,#764ba233), #f7f7fb;
+    display:flex; justify-content:center; align-items:center;
+    min-height:100vh;
+  }
+  .app{
+    width:100%; max-width:800px;
+    height:100%; max-height:480px;
+    background:inherit;  /* same as body */
+    border-radius:14px;
+    overflow:auto;   /* enable scrolling if content overflows */
+    padding:12px;
+  }
+  h1{font-size:1.1rem; margin:0 0 10px; text-align:center}
+  .grid{display:grid; gap:14px; margin-top:10px}
+  @media(min-width:700px){.grid{grid-template-columns:1.2fr .8fr}}
+  .problems,.palette{
+    background:#fafafe; border:1px solid #eef; border-radius:14px; padding:10px
+  }
+  .section-title{font-weight:600; color:#4f46e5; margin-bottom:6px}
+  .problem{background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:10px;
+           display:grid; grid-template-columns:1fr 150px; gap:8px; align-items:center}
+  .drop{background:#e5e7eb; border:2px dashed #c7cbd1; border-radius:10px; min-height:42px;
+        display:flex; align-items:center; justify-content:center; padding:6px}
+  .drop[data-has="true"]{border-style:solid; background:#f3f4f6}
+  .eq{background:#fff; border:1px solid #d1d5db; border-radius:10px; padding:8px 10px;
+      font-size:.95rem; cursor:grab; user-select:none; box-shadow:0 4px 12px rgba(0,0,0,.06)}
+  .palette .eq{display:inline-block; margin:4px}
+  .toolbar{display:flex; gap:8px; justify-content:center; margin-top:10px}
+  button{border:0; padding:8px 12px; border-radius:999px; font-weight:600; cursor:pointer;
+         background:#4f46e5; color:white; font-size:.9rem}
+  button.secondary{background:#e5e7eb; color:#111827}
+  .msg{margin-top:6px; font-weight:600; text-align:center}
+  .ok{color:#16a34a}
+  .bad{color:#dc2626}
+  .correct{border-color:#16a34a !important; background:#ecfdf5 !important}
+  .incorrect{border-color:#dc2626 !important; background:#fef2f2 !important}
+</style>
+</head>
+<body>
+<main class="app">
+  <h1>Match the Kinematics Equation to the Problem</h1>
+  <div class="grid">
+    <!-- Problems -->
+    <section class="problems">
+      <div class="section-title">Problems</div>
+      <article class="problem" data-problem-id="p1">
+        <div>1) A sprinter reaches 12&nbsp;m/s after accelerating at 4&nbsp;m/s². How long did it take?</div>
+        <div class="drop" data-accepts="eq" data-has="false"></div>
+      </article>
+      <article class="problem" data-problem-id="p2">
+        <div>2) A lorry at 25&nbsp;m/s comes to rest after skidding 50&nbsp;m. What is its deceleration?</div>
+        <div class="drop" data-accepts="eq" data-has="false"></div>
+      </article>
+      <article class="problem" data-problem-id="p3">
+        <div>3) A ball dropped from rest falls 20&nbsp;m. How long does it take? (g = 9.8&nbsp;m/s²)</div>
+        <div class="drop" data-accepts="eq" data-has="false"></div>
+      </article>
+      <article class="problem" data-problem-id="p4">
+        <div>4) A car covers 180&nbsp;m in 6&nbsp;s, starting at 15&nbsp;m/s. What is its final velocity?</div>
+        <div class="drop" data-accepts="eq" data-has="false"></div>
+      </article>
+    </section>
+    <!-- Equations -->
+    <section class="palette">
+      <div class="section-title">Equation Cards</div>
+      <div id="eqBin"></div>
+    </section>
+  </div>
+  <div class="toolbar">
+    <button id="checkBtn">Check</button>
+    <button class="secondary" id="resetBtn">Reset</button>
+  </div>
+  <div id="feedback" class="msg"></div>
+</main>
+
+<script>
+const equations = [
+  { id: 'e1', latex: '\\( v = u + at \\)' },
+  { id: 'e2', latex: '\\( v^2 = u^2 + 2as \\)' },
+  { id: 'e3', latex: '\\( s = ut + \\tfrac{1}{2}at^2 \\)' },
+  { id: 'e4', latex: '\\( s = \\tfrac{1}{2}(u+v)t \\)' },
+];
+const answerKey = { p1:'e1', p2:'e2', p3:'e3', p4:'e4' };
+
+function shuffle(a){return a.sort(()=>Math.random()-0.5);}
+function renderPalette(){
+  const bin=document.getElementById('eqBin'); bin.innerHTML='';
+  shuffle([...equations]).forEach(eq=>{
+    const div=document.createElement('div');
+    div.className='eq'; div.dataset.eqId=eq.id;
+    div.innerHTML=eq.latex;
+    div.setAttribute('draggable','true');
+    div.addEventListener('dragstart', e=>{
+      e.dataTransfer.setData('text/plain', eq.id);
+    });
+    bin.appendChild(div);
+  });
+  if(window.MathJax) MathJax.typeset();
+}
+function placeEquation(eqId, drop){
+  const card=document.querySelector(`.eq[data-eq-id="${eqId}"]`);
+  if(!card) return;
+  const existing=drop.querySelector('.eq');
+  if(existing) document.getElementById('eqBin').appendChild(existing);
+  drop.appendChild(card);
+  drop.dataset.has='true';
+  if(window.MathJax) MathJax.typeset();
+}
+document.querySelectorAll('.drop').forEach(drop=>{
+  drop.addEventListener('dragover', e=>e.preventDefault());
+  drop.addEventListener('drop', e=>{
+    e.preventDefault();
+    placeEquation(e.dataTransfer.getData('text/plain'), drop);
+  });
+});
+document.getElementById('checkBtn').onclick=()=>{
+  let correct=0;
+  document.querySelectorAll('.problem').forEach(p=>{
+    const pid=p.dataset.problemId;
+    const drop=p.querySelector('.drop');
+    const card=drop.querySelector('.eq');
+    drop.classList.remove('correct','incorrect');
+    if(card && card.dataset.eqId===answerKey[pid]){
+      correct++; drop.classList.add('correct');
+    } else drop.classList.add('incorrect');
+  });
+  document.getElementById('feedback').textContent =
+    (correct===4) ? "Perfect! All matched correctly." : `You got ${correct}/4 correct.`;
+  document.getElementById('feedback').className='msg '+(correct===4?'ok':'bad');
+};
+document.getElementById('resetBtn').onclick=()=>{
+  renderPalette();
+  document.querySelectorAll('.drop').forEach(d=>{d.dataset.has='false'; d.innerHTML='';});
+  document.getElementById('feedback').textContent='';
+};
+renderPalette();
+</script>
+</body>
+</html>
