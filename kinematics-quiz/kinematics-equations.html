@@ -3,88 +3,122 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Kinematics Match & Drop (LaTeX)</title>
+<title>Kinematics Match & Drop (LaTeX + Touch)</title>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" defer></script>
 <style>
+  :root{
+    --bg1:#667eea33;
+    --bg2:#764ba233;
+    --panel:#fafafe;
+    --border:#eef;
+    --ink:#111827;
+    --mut:#6b7280;
+    --brand:#4f46e5;
+    --ok:#16a34a;
+    --bad:#dc2626;
+  }
+  *{box-sizing:border-box}
   body{
     margin:0; padding:0;
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-    background:linear-gradient(135deg,#667eea33,#764ba233), #f7f7fb;
-    display:flex; justify-content:center; align-items:center;
-    min-height:100vh;
+    color:var(--ink);
+    background:linear-gradient(135deg,var(--bg1),var(--bg2)), #f7f7fb;
+    display:flex; justify-content:center; align-items:center; min-height:100vh;
   }
   .app{
     width:100%; max-width:800px;
     height:100%; max-height:480px;
-    background:inherit;  /* same as body */
+    background:inherit; /* same as body */
     border-radius:14px;
-    overflow:auto;   /* enable scrolling if content overflows */
-    padding:12px;
+    overflow:auto;
+    padding:6px;
   }
-  h1{font-size:1.1rem; margin:0 0 10px; text-align:center}
-  .grid{display:grid; gap:14px; margin-top:10px}
+  h1{font-size:1.1rem; margin:0 0 8px; text-align:center}
+  .hint{color:var(--mut); font-size:.9rem; text-align:center}
+  .grid{display:grid; gap:6px; margin-top:6px}
   @media(min-width:700px){.grid{grid-template-columns:1.2fr .8fr}}
   .problems,.palette{
-    background:#fafafe; border:1px solid #eef; border-radius:14px; padding:10px
+    background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:10px
   }
-  .section-title{font-weight:600; color:#4f46e5; margin-bottom:6px}
-  .problem{background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:10px;
-           display:grid; grid-template-columns:1fr 150px; gap:8px; align-items:center}
-  .drop{background:#e5e7eb; border:2px dashed #c7cbd1; border-radius:10px; min-height:42px;
-        display:flex; align-items:center; justify-content:center; padding:6px}
+  .section-title{font-weight:600; color:var(--brand); margin-bottom:6px}
+  .problem{
+    background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:10px;
+    display:grid; grid-template-columns:1fr 150px; gap:8px; align-items:center
+  }
+  .drop{
+    background:#e5e7eb; border:2px dashed #c7cbd1; border-radius:10px; min-height:44px;
+    display:flex; align-items:center; justify-content:center; padding:6px; transition:.15s;
+    touch-action: manipulation;
+  }
   .drop[data-has="true"]{border-style:solid; background:#f3f4f6}
-  .eq{background:#fff; border:1px solid #d1d5db; border-radius:10px; padding:8px 10px;
-      font-size:.95rem; cursor:grab; user-select:none; box-shadow:0 4px 12px rgba(0,0,0,.06)}
-  .palette .eq{display:inline-block; margin:4px}
-  .toolbar{display:flex; gap:8px; justify-content:center; margin-top:10px}
-  button{border:0; padding:8px 12px; border-radius:999px; font-weight:600; cursor:pointer;
-         background:#4f46e5; color:white; font-size:.9rem}
-  button.secondary{background:#e5e7eb; color:#111827}
-  .msg{margin-top:6px; font-weight:600; text-align:center}
-  .ok{color:#16a34a}
-  .bad{color:#dc2626}
+  .drop.focus{outline:3px solid #c7d2fe}
+  .eq{
+    background:#fff; border:1px solid #d1d5db; border-radius:10px; padding:8px 10px;
+    font-size:.95rem; user-select:none; box-shadow:0 4px 12px rgba(0,0,0,.06);
+    display:inline-block; margin:4px; touch-action: manipulation;
+  }
+  /* Visual states */
+  .eq[data-draggable="true"]{cursor:grab}
+  .eq.selected{outline:3px solid #a5b4fc}
   .correct{border-color:#16a34a !important; background:#ecfdf5 !important}
   .incorrect{border-color:#dc2626 !important; background:#fef2f2 !important}
+  .toolbar{display:flex; gap:8px; justify-content:center; margin-top:10px}
+  button{
+    border:0; padding:8px 12px; border-radius:999px; font-weight:600; cursor:pointer;
+    background:var(--brand); color:white; font-size:.9rem
+  }
+  button.secondary{background:#e5e7eb; color:#111827}
+  .msg{margin-top:6px; font-weight:600; text-align:center}
+  .ok{color:var(--ok)} .bad{color:var(--bad)}
+  /* Small screens: tighten fonts so content fits */
+  @media (max-height:460px){
+    .eq{font-size:.9rem} .problem{grid-template-columns:1fr 140px}
+  }
 </style>
 </head>
 <body>
-<main class="app">
-  <h1>Match the Kinematics Equation to the Problem</h1>
+<main class="app" aria-labelledby="title">
+  <h1 id="title">Match the Kinematics Equation to the Problem</h1>
+  <div class="hint">Tip: tap an equation to select, then tap a drop zone to place. You can also drag with a mouse.</div>
+
   <div class="grid">
     <!-- Problems -->
-    <section class="problems">
+    <section class="problems" aria-label="Problems">
       <div class="section-title">Problems</div>
       <article class="problem" data-problem-id="p1">
         <div>1) A sprinter reaches 12&nbsp;m/s after accelerating at 4&nbsp;m/s². How long did it take?</div>
-        <div class="drop" data-accepts="eq" data-has="false"></div>
+        <div class="drop" data-accepts="eq" data-has="false" role="button" aria-label="Drop zone for Problem 1"></div>
       </article>
       <article class="problem" data-problem-id="p2">
         <div>2) A lorry at 25&nbsp;m/s comes to rest after skidding 50&nbsp;m. What is its deceleration?</div>
-        <div class="drop" data-accepts="eq" data-has="false"></div>
+        <div class="drop" data-accepts="eq" data-has="false" role="button" aria-label="Drop zone for Problem 2"></div>
       </article>
       <article class="problem" data-problem-id="p3">
         <div>3) A ball dropped from rest falls 20&nbsp;m. How long does it take? (g = 9.8&nbsp;m/s²)</div>
-        <div class="drop" data-accepts="eq" data-has="false"></div>
+        <div class="drop" data-accepts="eq" data-has="false" role="button" aria-label="Drop zone for Problem 3"></div>
       </article>
       <article class="problem" data-problem-id="p4">
         <div>4) A car covers 180&nbsp;m in 6&nbsp;s, starting at 15&nbsp;m/s. What is its final velocity?</div>
-        <div class="drop" data-accepts="eq" data-has="false"></div>
+        <div class="drop" data-accepts="eq" data-has="false" role="button" aria-label="Drop zone for Problem 4"></div>
       </article>
     </section>
+
     <!-- Equations -->
-    <section class="palette">
+    <section class="palette" aria-label="Equations palette">
       <div class="section-title">Equation Cards</div>
       <div id="eqBin"></div>
     </section>
   </div>
+
   <div class="toolbar">
     <button id="checkBtn">Check</button>
     <button class="secondary" id="resetBtn">Reset</button>
   </div>
-  <div id="feedback" class="msg"></div>
+  <div id="feedback" class="msg" aria-live="polite"></div>
 </main>
 
 <script>
+/* ---- Data ---- */
 const equations = [
   { id: 'e1', latex: '\\( v = u + at \\)' },
   { id: 'e2', latex: '\\( v^2 = u^2 + 2as \\)' },
@@ -93,58 +127,125 @@ const equations = [
 ];
 const answerKey = { p1:'e1', p2:'e2', p3:'e3', p4:'e4' };
 
-function shuffle(a){return a.sort(()=>Math.random()-0.5);}
+/* ---- Helpers ---- */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => [...document.querySelectorAll(sel)];
+const shuffle = a => a.sort(()=>Math.random()-0.5);
+let selectedCard = null;
+
 function renderPalette(){
-  const bin=document.getElementById('eqBin'); bin.innerHTML='';
+  const bin = $('#eqBin'); bin.innerHTML = '';
   shuffle([...equations]).forEach(eq=>{
-    const div=document.createElement('div');
-    div.className='eq'; div.dataset.eqId=eq.id;
-    div.innerHTML=eq.latex;
+    const div = document.createElement('div');
+    div.className = 'eq';
+    div.dataset.eqId = eq.id;
+    div.setAttribute('data-draggable','true'); // hint for mouse users
+    div.innerHTML = eq.latex;
+
+    // Mouse drag (desktop)
     div.setAttribute('draggable','true');
     div.addEventListener('dragstart', e=>{
       e.dataTransfer.setData('text/plain', eq.id);
     });
+
+    // Touch-friendly: tap to select
+    div.addEventListener('click', ()=>{
+      selectCard(div);
+    }, {passive:true});
+
     bin.appendChild(div);
   });
   if(window.MathJax) MathJax.typeset();
 }
+
+function selectCard(card){
+  if(selectedCard === card){
+    card.classList.remove('selected');
+    selectedCard = null;
+    return;
+  }
+  if(selectedCard) selectedCard.classList.remove('selected');
+  selectedCard = card;
+  selectedCard.classList.add('selected');
+  $('#feedback').textContent = 'Equation selected. Tap a drop zone to place.';
+}
+
 function placeEquation(eqId, drop){
-  const card=document.querySelector(`.eq[data-eq-id="${eqId}"]`);
+  const card = document.querySelector(`.eq[data-eq-id="${eqId}"]`);
   if(!card) return;
-  const existing=drop.querySelector('.eq');
-  if(existing) document.getElementById('eqBin').appendChild(existing);
+  // return existing card in drop to bin
+  const existing = drop.querySelector('.eq');
+  if(existing) $('#eqBin').appendChild(existing);
+
   drop.appendChild(card);
-  drop.dataset.has='true';
+  drop.dataset.has = 'true';
+  if(selectedCard){
+    selectedCard.classList.remove('selected');
+    selectedCard = null;
+  }
   if(window.MathJax) MathJax.typeset();
 }
-document.querySelectorAll('.drop').forEach(drop=>{
-  drop.addEventListener('dragover', e=>e.preventDefault());
+
+/* ---- Drop zone handlers (mouse + touch via tap) ---- */
+$$('.drop').forEach(drop=>{
+  // Mouse drag & drop
+  drop.addEventListener('dragover', e=>{
+    e.preventDefault();
+    drop.classList.add('focus');
+  });
+  drop.addEventListener('dragleave', ()=>{
+    drop.classList.remove('focus');
+  });
   drop.addEventListener('drop', e=>{
     e.preventDefault();
-    placeEquation(e.dataTransfer.getData('text/plain'), drop);
+    drop.classList.remove('focus');
+    const id = e.dataTransfer.getData('text/plain');
+    placeEquation(id, drop);
   });
+
+  // Tap-to-drop for touch devices
+  drop.addEventListener('click', ()=>{
+    if(selectedCard){
+      placeEquation(selectedCard.dataset.eqId, drop);
+    } else {
+      // If user taps a drop with an existing card, tapping again deselects it back to bin
+      const existing = drop.querySelector('.eq');
+      if(existing){
+        $('#eqBin').appendChild(existing);
+        drop.dataset.has = 'false';
+      }
+    }
+  }, {passive:true});
 });
-document.getElementById('checkBtn').onclick=()=>{
-  let correct=0;
-  document.querySelectorAll('.problem').forEach(p=>{
-    const pid=p.dataset.problemId;
-    const drop=p.querySelector('.drop');
-    const card=drop.querySelector('.eq');
+
+/* ---- Check & Reset ---- */
+function checkAnswers(){
+  let correct = 0;
+  $$('.problem').forEach(p=>{
+    const pid = p.dataset.problemId;
+    const drop = p.querySelector('.drop');
+    const card = drop.querySelector('.eq');
     drop.classList.remove('correct','incorrect');
-    if(card && card.dataset.eqId===answerKey[pid]){
-      correct++; drop.classList.add('correct');
-    } else drop.classList.add('incorrect');
+    if(card && card.dataset.eqId === answerKey[pid]){ correct++; drop.classList.add('correct'); }
+    else { drop.classList.add('incorrect'); }
   });
-  document.getElementById('feedback').textContent =
-    (correct===4) ? "Perfect! All matched correctly." : `You got ${correct}/4 correct.`;
-  document.getElementById('feedback').className='msg '+(correct===4?'ok':'bad');
-};
-document.getElementById('resetBtn').onclick=()=>{
-  renderPalette();
-  document.querySelectorAll('.drop').forEach(d=>{d.dataset.has='false'; d.innerHTML='';});
-  document.getElementById('feedback').textContent='';
-};
-renderPalette();
+  const msg = (correct===4) ? 'Perfect! All matched correctly.' : `You got ${correct}/4 correct.`;
+  $('#feedback').textContent = msg;
+  $('#feedback').className = 'msg ' + (correct===4?'ok':'bad');
+}
+function resetBoard(){
+  // Move all cards back
+  $$('.drop .eq').forEach(eq => $('#eqBin').appendChild(eq));
+  $$('.drop').forEach(d => { d.dataset.has = 'false'; d.classList.remove('correct','incorrect'); });
+  if(selectedCard){ selectedCard.classList.remove('selected'); selectedCard = null; }
+  $('#feedback').textContent = '';
+}
+
+$('#checkBtn').addEventListener('click', checkAnswers);
+$('#resetBtn').addEventListener('click', resetBoard);
+
+/* ---- Init ---- */
+document.addEventListener('DOMContentLoaded', renderPalette);
 </script>
 </body>
 </html>
