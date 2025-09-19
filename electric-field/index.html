@@ -1,287 +1,557 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Electric Field Simulation</title>
-<style>
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 10px; background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; }
-.container { width: 100%; max-width: 100%; margin: 0 auto; }
-.simulation-area { background: rgba(255,255,255,0.95); border-radius: 15px; padding: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); margin-bottom: 10px; }
-canvas { width: 100%; height: auto; max-height: 60vh; border: 2px solid #333; border-radius: 10px; background: radial-gradient(circle at center, #f8f9fa, #e9ecef); cursor: crosshair; }
-.controls { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
-.control-group { background: rgba(255,255,255,0.9); padding: 10px; border-radius: 10px; color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.1); font-size: 14px; }
-.control-group h3 { margin: 0 0 10px 0; font-size: 1em; }
-button { padding: 10px 20px; font-size: 14px; border-radius: 20px; }
-.value-display { font-size: 13px; }
-@media (min-width: 600px) { .controls { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); } }
-.slider-container { margin: 5px 0; }
-label { display: block; margin-bottom: 5px; font-weight: 500; }
-input[type="range"] { width: 100%; height: 8px; border-radius: 5px; background: #ddd; outline: none; -webkit-appearance: none; }
-input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #2a5298; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #2a5298; cursor: pointer; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-.value-display { font-weight: bold; color: #2a5298; margin-left: 10px; }
-button { padding: 8px 12px; border: none; border-radius: 20px; background: linear-gradient(45deg, #2a5298, #1e3c72); color: white; cursor: pointer; font-size: 16px; font-weight: 600; transition: all 0.3s ease; margin: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
-.info { background: rgba(255,255,255,0.9); padding: 15px; border-radius: 10px; color: #333; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-.charge-info { display: flex; align-items: center; gap: 10px; margin: 5px 0; }
-.charge-indicator { width: 20px; height: 20px; border-radius: 50%; border: 2px solid; }
-.positive { background: #ff4444; border-color: #cc3333; }
-.negative { background: #4444ff; border-color: #3333cc; }
-.test-positive { background: #44ff44; border-color: #33cc33; }
-.test-negative { background: #ffaa44; border-color: #cc8833; }
-select { padding: 8px; border: 1px solid #ddd; border-radius: 5px; background: white; font-size: 14px; }
-#toggleInstructions { padding: 8px 16px; border: none; border-radius: 10px; background: linear-gradient(45deg, #2a5298, #1e3c72); color: white; cursor: pointer; font-weight: 600; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.3s ease; }
-#toggleInstructions:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.3); }
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Electric Field Simulation</title>
+    <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 10px; background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; }
+        .container { width: 100%; max-width: 100%; margin: 0 auto; }
+        .simulation-area { background: rgba(255,255,255,0.95); border-radius: 15px; padding: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); margin-bottom: 10px; }
+        canvas { width: 100%; height: auto; max-height: 60vh; border: 2px solid #333; border-radius: 10px; background: radial-gradient(circle at center, #f8f9fa, #e9ecef); cursor: crosshair; }
+        .controls { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+        .control-group { background: rgba(255,255,255,0.9); padding: 10px; border-radius: 10px; color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.1); font-size: 14px; }
+        .control-group h3 { margin: 0 0 10px 0; font-size: 1em; }
+        button { padding: 10px 20px; font-size: 14px; border-radius: 20px; }
+        .value-display { font-size: 13px; }
+        @media (min-width: 600px) {
+            .controls { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+        }
+        .slider-container {
+            margin: 5px 0; /* reduced from 10px */
+        }
+        label { display: block; margin-bottom: 5px; font-weight: 500; }
+        input[type="range"] { width: 100%; height: 8px; border-radius: 5px; background: #ddd; outline: none; -webkit-appearance: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #2a5298; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #2a5298; cursor: pointer; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .value-display { font-weight: bold; color: #2a5298; margin-left: 10px; }
+        button { padding: 8px 12px; border: none; border-radius: 20px; background: linear-gradient(45deg, #2a5298, #1e3c72); color: white; cursor: pointer; font-size: 16px; font-weight: 600; transition: all 0.3s ease; margin: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        .info { background: rgba(255,255,255,0.9); padding: 15px; border-radius: 10px; color: #333; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .charge-info { display: flex; align-items: center; gap: 10px; margin: 5px 0; }
+        .charge-indicator { width: 20px; height: 20px; border-radius: 50%; border: 2px solid; }
+        .positive { background: #ff4444; border-color: #cc3333; }
+        .negative { background: #4444ff; border-color: #3333cc; }
+        .test-positive { background: #44ff44; border-color: #33cc33; }
+        .test-negative { background: #ffaa44; border-color: #cc8833; }
+        select { padding: 8px; border: 1px solid #ddd; border-radius: 5px; background: white; font-size: 14px; }
+        #toggleInstructions {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(45deg, #2a5298, #1e3c72);
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+#toggleInstructions:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+}
+
+    </style>
 </head>
 <body>
-<div class="container">
-<h3>Charge moving between two charged spheres</h3>
+    <div class="container">
+        <h3>Charge moving between two charged spheres</h3>
 
-<div class="simulation-area">
-<canvas id="canvas" width="780" height="600"></canvas>
+        <div class="simulation-area">
+            <canvas id="canvas" width="780" height="600"></canvas>
 
-<div class="controls">
-<div class="control-group">
-<h3>Charge 1</h3>
-<div class="slider-container">
-<label>Magnitude: <span class="value-display" id="charge1Value">5.0</span> μC</label>
-<input type="range" id="charge1" min="-10" max="10" value="5" step="0.1">
-</div>
-<h3>Charge 2</h3>
-<div class="slider-container">
-<label>Magnitude: <span class="value-display" id="charge2Value">3.0</span> μC</label>
-<input type="range" id="charge2" min="-10" max="10" value="3" step="0.1">
-</div>
-</div>
+            <div class="controls">
+                <div class="control-group">
+                    <h3>Charge 1</h3>
+                    <div class="slider-container">
+                        <label>Magnitude: <span class="value-display" id="charge1Value">5.0</span> μC</label>
+                        <input type="range" id="charge1" min="-10" max="10" value="5" step="0.1">
+                    </div>
+                    <h3>Charge 2</h3>
+                    <div class="slider-container">
+                        <label>Magnitude: <span class="value-display" id="charge2Value">3.0</span> μC</label>
+                        <input type="range" id="charge2" min="-10" max="10" value="3" step="0.1">
+                    </div>
+                </div>
 
-<div class="control-group">
-<h3>Mobile Charge</h3>
-<div class="slider-container">
-<label>Type:</label>
-<select id="testChargeType">
-<option value="positive">Positive (+)</option>
-<option value="negative" selected>Negative (-)</option>
-</select>
-</div>
-<div class="slider-container">
-<label>Magnitude: <span class="value-display" id="testChargeValue">1.0</span> μC</label>
-<input type="range" id="testCharge" min="0.1" max="5" value="1" step="0.1">
-</div>
-</div>
 
-<div class="control-group">
-<h3>Simulation</h3>
-<button id="playPause">▶ Play</button>
-<button id="reset">↻ Reset</button>
-<button id="showField">Show Field Lines</button>
-<div class="slider-container">
-<label>Speed: <span class="value-display" id="speedValue">25</span>×</label>
-<input type="range" id="speed" min="0.1" max="50" value="25" step="0.1">
-</div>
-</div>
-</div>
-</div>
+                <div class="control-group">
+                    <h3>Mobile Charge</h3>
+                    <div class="slider-container">
+                        <label>Type:</label>
+                        <select id="testChargeType">
+                            <option value="positive">Positive (+)</option>
+                            <option value="negative" selected>Negative (-)</option>
+                        </select>
+
+                    </div>
+                    <div class="slider-container">
+                        <label>Magnitude: <span class="value-display" id="testChargeValue">1.0</span> μC</label>
+                        <input type="range" id="testCharge" min="0.1" max="5" value="1" step="0.1">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Simulation</h3>
+                    <button id="playPause">▶ Play</button>
+                    <button id="reset">↻ Reset</button>
+                    <button id="showField">Show Field Lines</button>
+                    <div class="slider-container">
+                        <label>Speed: <span class="value-display" id="speedValue">25</span>×</label>
+                        <input type="range" id="speed" min="0.1" max="50" value="25" step="0.1">
+                    </div>
+                </div>
+            </div>
+        </div>
 
 <div class="info">
-<button id="toggleInstructions">Show Instructions ▼</button>
-<div id="instructionsContent" style="display:none;">
-<p>• <strong>Drag charges:</strong> Move the red and blue source charges along the horizontal axis.</p>
-<p>• <strong>Position test charge:</strong> Click and drag the green/orange test charge anywhere.</p>
-<p>• <strong>Set initial velocity:</strong> Hold <strong>Shift</strong>, click the test charge, drag to draw a velocity vector and release to set initial velocity.</p>
-<p>• <strong>Adjust magnitudes:</strong> Use sliders to change charge strengths.</p>
-<p>• <strong>Run simulation:</strong> Click Play to see the test charge move along the electric field.</p>
-<p>• <strong>Pan canvas:</strong> Click and drag anywhere on empty space to move the view.</p>
-</div>
-</div>
+    <button id="toggleInstructions">Show Instructions ▼</button>
+    <div id="instructionsContent" style="display:none;">
+        <p>• <strong>Drag charges:</strong> Move the red and blue source charges along the horizontal axis.</p>
+        <p>• <strong>Position test charge:</strong> Click and drag the green/orange test charge anywhere.</p>
+        <p>• <strong>Set initial velocity:</strong> Hold <strong>Shift</strong>, click the test charge, drag to draw a velocity vector and release to set initial velocity.</p>
+        <p>• <strong>Adjust magnitudes:</strong> Use sliders to change charge strengths.</p>
+        <p>• <strong>Run simulation:</strong> Click Play to see the test charge move along the electric field.</p>
+    </div>
 </div>
 
-<script>
-let sim; // global
+    </div>
 
-function resizeCanvas() {
-    const canvas = document.getElementById('canvas');
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = window.innerHeight * 0.4;
-    if (sim) sim.draw();
-}
+    <script>
+        let sim; // declare globally
 
-window.addEventListener('resize', resizeCanvas);
-
-class ElectricFieldSimulation {
-    constructor() {
-        this.canvas = document.getElementById('canvas');
-        this.ctx = this.canvas.getContext('2d');
-        this.k = 8.99e3;
-        this.dt = 0.016;
-        this.visualGain = 1e12;
-
-        this.charge1 = { x: 200, y: this.canvas.height/2, q: 5e-6, dragging: false };
-        this.charge2 = { x: this.canvas.width-200, y: this.canvas.height/2, q: 3e-6, dragging: false };
-        this.testCharge = { x: this.canvas.width/2, y: this.canvas.height/2-120, q: -1e-6, vx:0, vy:0, trail: [], dragging:false };
-
-        this.isPlaying = false;
-        this.showFieldLines = false;
-        this.animationId = null;
-        this.speed = 25;
-
-        this.settingVelocity = false;
-        this.velocityOrigin = null;
-        this.velocityPreview = null;
-        this.velocityScale = 0.06;
-
-        // pan support
-        this.isPanning = false;
-        this.panStart = null;
-        this.offsetX = 0;
-        this.offsetY = 0;
-
-        this.initializeControls();
-        this.initializeEvents();
-        this.draw();
-    }
-
-    initializeControls() {
-        const charge1Slider = document.getElementById('charge1');
-        const charge2Slider = document.getElementById('charge2');
-        const testChargeSlider = document.getElementById('testCharge');
-        const testChargeType = document.getElementById('testChargeType');
-        const speedSlider = document.getElementById('speed');
-
-        document.getElementById('charge1Value').textContent = charge1Slider.value;
-        document.getElementById('charge2Value').textContent = charge2Slider.value;
-        document.getElementById('testChargeValue').textContent = testChargeSlider.value;
-
-        charge1Slider.oninput = () => { this.charge1.q = parseFloat(charge1Slider.value)*1e-6; document.getElementById('charge1Value').textContent = charge1Slider.value; this.draw(); };
-        charge2Slider.oninput = () => { this.charge2.q = parseFloat(charge2Slider.value)*1e-6; document.getElementById('charge2Value').textContent = charge2Slider.value; this.draw(); };
-        testChargeSlider.oninput = () => { const mag=parseFloat(testChargeSlider.value)*1e-6; const sign=testChargeType.value==='positive'?1:-1; this.testCharge.q = mag*sign; document.getElementById('testChargeValue').textContent = testChargeSlider.value; this.draw(); };
-        testChargeType.onchange = () => { const mag=Math.abs(this.testCharge.q); const sign=testChargeType.value==='positive'?1:-1; this.testCharge.q = mag*sign; this.draw(); };
-        speedSlider.oninput = () => { this.speed = parseFloat(speedSlider.value); document.getElementById('speedValue').textContent = speedSlider.value; };
-
-        document.getElementById('playPause').onclick = () => this.togglePlayPause();
-        document.getElementById('reset').onclick = () => this.reset();
-        document.getElementById('showField').onclick = () => this.toggleFieldLines();
-    }
-
-    initializeEvents() {
-        this.canvas.addEventListener('mousedown', e => this.onMouseDown(e));
-        this.canvas.addEventListener('mousemove', e => this.onMouseMove(e));
-        this.canvas.addEventListener('mouseup', e => this.onMouseUp(e));
-        this.canvas.addEventListener('mouseleave', e => this.onMouseUp(e));
-        this.canvas.addEventListener('touchstart', e => { e.preventDefault(); this.onMouseDown(e.touches[0]); });
-        this.canvas.addEventListener('touchmove', e => { e.preventDefault(); this.onMouseMove(e.touches[0]); });
-        this.canvas.addEventListener('touchend', e => { e.preventDefault(); this.onMouseUp(e.changedTouches ? e.changedTouches[0] : e); });
-    }
-
-    getMousePos(e) {
-        const rect = this.canvas.getBoundingClientRect();
-        return { x:e.clientX-rect.left-this.offsetX, y:e.clientY-rect.top-this.offsetY };
-    }
-
-    isNearCharge(mousePos, charge, radius=25) { const dx=mousePos.x-charge.x; const dy=mousePos.y-charge.y; return Math.sqrt(dx*dx+dy*dy)<radius; }
-
-    onMouseDown(e) {
-        const mousePos = this.getMousePos(e);
-        if (this.isNearCharge(mousePos,this.charge1)) { this.charge1.dragging=true; this.canvas.style.cursor='grabbing'; }
-        else if (this.isNearCharge(mousePos,this.charge2)) { this.charge2.dragging=true; this.canvas.style.cursor='grabbing'; }
-        else if (this.isNearCharge(mousePos,this.testCharge)) {
-            if (e.shiftKey) { this.settingVelocity=true; this.velocityOrigin={x:this.testCharge.x,y:this.testCharge.y}; this.velocityPreview={x:mousePos.x,y:mousePos.y}; }
-            else { this.testCharge.dragging=true; this.testCharge.vx=0; this.testCharge.vy=0; this.testCharge.trail=[]; this.canvas.style.cursor='grabbing'; }
-        } else { this.isPanning = true; this.panStart = { x:e.clientX, y:e.clientY }; this.canvas.style.cursor = 'grab'; }
-    }
-
-    onMouseMove(e) {
-        const mousePos = this.getMousePos(e);
-        if (this.charge1.dragging) { this.charge1.x=Math.max(25,Math.min(this.canvas.width-25,mousePos.x)); this.draw(); }
-        else if (this.charge2.dragging) { this.charge2.x=Math.max(25,Math.min(this.canvas.width-25,mousePos.x)); this.draw(); }
-        else if (this.testCharge.dragging) { this.testCharge.x=Math.max(15,Math.min(this.canvas.width-15,mousePos.x)); this.testCharge.y=Math.max(15,Math.min(this.canvas.height-15,mousePos.y)); this.draw(); }
-        else if (this.settingVelocity) { this.velocityPreview={x:Math.max(15,Math.min(this.canvas.width-15,mousePos.x)),y:Math.max(15,Math.min(this.canvas.height-15,mousePos.y))}; this.draw(); }
-        else if (this.isPanning) {
-            const dx = e.clientX - this.panStart.x;
-            const dy = e.clientY - this.panStart.y;
-            this.offsetX += dx; this.offsetY += dy;
-            this.panStart = {x:e.clientX, y:e.clientY};
-            this.draw();
-        }
-    }
-
-    onMouseUp(e) {
-        if (this.settingVelocity) { const mousePos=this.getMousePos(e); this.testCharge.vx=(mousePos.x-this.velocityOrigin.x)*this.velocityScale; this.testCharge.vy=(mousePos.y-this.velocityOrigin.y)*this.velocityScale; this.settingVelocity=false; this.velocityOrigin=null; this.velocityPreview=null; }
-        this.charge1.dragging=false; this.charge2.dragging=false; this.testCharge.dragging=false; this.isPanning=false; this.canvas.style.cursor='crosshair';
-    }
-
-    calculateElectricField(x,y) {
-        let Ex=0,Ey=0;
-        const addField = c => { let dx=x-c.x, dy=y-c.y, r=Math.sqrt(dx*dx+dy*dy); if(r<10) r=10; let E=this.k*c.q/(r*r); Ex+=E*dx/r; Ey+=E*dy/r; };
-        addField(this.charge1); addField(this.charge2);
-        return {Ex,Ey};
-    }
-
-    updateTestCharge() {
-        if(this.testCharge.dragging||this.settingVelocity) return;
-        const f = this.calculateElectricField(this.testCharge.x,this.testCharge.y);
-        const Fx=this.testCharge.q*f.Ex, Fy=this.testCharge.q*f.Ey;
-        const sFx=Fx*this.visualGain, sFy=Fy*this.visualGain;
-        this.testCharge.vx += sFx*this.dt*this.speed; this.testCharge.vy += sFy*this.dt*this.speed;
-        this.testCharge.vx*=0.999; this.testCharge.vy*=0.999;
-        const maxSpeed=12, sp=Math.sqrt(this.testCharge.vx**2+this.testCharge.vy**2);
-        if(sp>maxSpeed){ this.testCharge.vx=this.testCharge.vx/sp*maxSpeed; this.testCharge.vy=this.testCharge.vy/sp*maxSpeed; }
-        let nextX=this.testCharge.x+this.testCharge.vx*this.dt*this.speed, nextY=this.testCharge.y+this.testCharge.vy*this.dt*this.speed;
-        [this.charge1,this.charge2].forEach(c=>{const dx=nextX-c.x,dy=nextY-c.y,dist=Math.sqrt(dx*dx+dy*dy); if(dist<40){nextX=this.testCharge.x; nextY=this.testCharge.y; this.testCharge.vx=0; this.testCharge.vy=0;}});
-        this.testCharge.x=nextX; this.testCharge.y=nextY;
-        this.testCharge.trail.push({x:this.testCharge.x,y:this.testCharge.y});
-        if(this.testCharge.trail.length>300) this.testCharge.trail.shift();
-    }
-
-    draw() {
-        const ctx=this.ctx;
-        ctx.setTransform(1,0,0,1,0,0);
-        ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
-        ctx.fillStyle='#f8f9fa'; ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
-        ctx.translate(this.offsetX,this.offsetY);
-
-        if(this.showFieldLines) this.drawFieldLines();
-        if(this.testCharge.trail.length>1){
-            ctx.strokeStyle='rgba(128,128,128,0.5)'; ctx.lineWidth=2;
-            ctx.beginPath(); ctx.moveTo(this.testCharge.trail[0].x,this.testCharge.trail[0].y);
-            for(let i=1;i<this.testCharge.trail.length;i++) ctx.lineTo(this.testCharge.trail[i].x,this.testCharge.trail[i].y);
-            ctx.stroke();
+        function resizeCanvas() {
+            const canvas = document.getElementById('canvas');
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = window.innerHeight * 0.4; // 60% of viewport height
+            if (sim) sim.draw(); // only draw if sim exists
         }
 
-        this.drawCharge(this.charge1,this.charge1.q>0?'#ff4444':'#4444ff',25);
-        this.drawCharge(this.charge2,this.charge2.q>0?'#ff4444':'#4444ff',25);
-        this.drawCharge(this.testCharge,this.testCharge.q>0?'#44ff44':'#ffaa44',15);
-    }
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+        });
 
-    drawCharge(charge,color,radius){
-        const ctx=this.ctx;
-        ctx.beginPath(); ctx.arc(charge.x,charge.y,radius,0,2*Math.PI);
-        ctx.fillStyle=color; ctx.fill();
-        ctx.strokeStyle='#333'; ctx.lineWidth=2; ctx.stroke();
-        ctx.fillStyle='white'; ctx.font='bold 18px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(charge.q>0?'+':'−',charge.x,charge.y);
-    }
+        window.addEventListener('DOMContentLoaded', () => {
+            resizeCanvas();
+            sim = new ElectricFieldSimulation(); // initialize globally
+        });
 
-    animate(){ if(this.isPlaying){ this.updateTestCharge(); this.draw(); this.animationId=requestAnimationFrame(()=>this.animate()); } }
+        class ElectricFieldSimulation {
+            constructor() {
+                this.canvas = document.getElementById('canvas');
+                this.ctx = this.canvas.getContext('2d');
 
-    togglePlayPause(){ this.isPlaying=!this.isPlaying; const btn=document.getElementById('playPause'); if(this.isPlaying){btn.textContent='⏸ Pause'; this.animate();} else {btn.textContent='▶ Play'; if(this.animationId) cancelAnimationFrame(this.animationId);} }
+                // visual Coulomb-like constant (tuned for pixels & μC input)
+                this.k = 8.99e3;
+                this.dt = 0.016; // time step
+                this.visualGain = 1e12; // increased so forces produce visible motion on canvas (tweak if needed) // multiply SI forces for visible motion; tune as needed
 
-    reset(){ this.isPlaying=false; document.getElementById('playPause').textContent='▶ Play'; this.testCharge.x=this.canvas.width/2; this.testCharge.y=this.canvas.height/2-120; this.testCharge.vx=0; this.testCharge.vy=0; this.testCharge.trail=[]; if(this.animationId) cancelAnimationFrame(this.animationId); this.draw(); }
+                // charges (q in coulombs)
+                this.charge1 = { x: 200, y: this.canvas.height/2, q: 5e-6, dragging: false };
+                this.charge2 = { x: this.canvas.width - 200, y: this.canvas.height/2, q: 3e-6, dragging: false };
+                this.testCharge = { x: this.canvas.width/2, y: this.canvas.height/2 - 120, q: -1e-6, vx: 0, vy: 0, trail: [], dragging: false };
 
-    toggleFieldLines(){ this.showFieldLines=!this.showFieldLines; document.getElementById('showField').textContent=this.showFieldLines?'Hide Field Lines':'Show Field Lines'; this.draw(); }
-}
+                // simulation state
+                this.isPlaying = false;
+                this.showFieldLines = false;
+                this.animationId = null;
+                this.speed = 25;
 
-window.addEventListener('DOMContentLoaded',()=>{
-    resizeCanvas();
-    sim=new ElectricFieldSimulation();
-});
+                // velocity-setting state (SHIFT + drag on test charge)
+                this.settingVelocity = false;
+                this.velocityOrigin = null; // {x,y}
+                this.velocityPreview = null; // {x,y}
+                this.velocityScale = 0.06; // pixels -> initial vx/vy (tune)
 
-document.getElementById('toggleInstructions').addEventListener('click', () => {
+                this.initializeControls();
+                this.initializeEvents();
+                this.draw();
+            }
+
+            initializeControls() {
+                const charge1Slider = document.getElementById('charge1');
+                const charge2Slider = document.getElementById('charge2');
+                const testChargeSlider = document.getElementById('testCharge');
+                const testChargeType = document.getElementById('testChargeType');
+                const speedSlider = document.getElementById('speed');
+
+                document.getElementById('charge1Value').textContent = charge1Slider.value;
+                document.getElementById('charge2Value').textContent = charge2Slider.value;
+                document.getElementById('testChargeValue').textContent = testChargeSlider.value;
+
+                charge1Slider.oninput = () => {
+                    this.charge1.q = parseFloat(charge1Slider.value) * 1e-6;
+                    document.getElementById('charge1Value').textContent = charge1Slider.value;
+                    this.draw();
+                };
+                charge2Slider.oninput = () => {
+                    this.charge2.q = parseFloat(charge2Slider.value) * 1e-6;
+                    document.getElementById('charge2Value').textContent = charge2Slider.value;
+                    this.draw();
+                };
+                testChargeSlider.oninput = () => {
+                    const magnitude = parseFloat(testChargeSlider.value) * 1e-6;
+                    const sign = testChargeType.value === 'positive' ? 1 : -1;
+                    this.testCharge.q = magnitude * sign;
+                    document.getElementById('testChargeValue').textContent = testChargeSlider.value;
+                    this.draw();
+                };
+                testChargeType.onchange = () => {
+                    const mag = Math.abs(this.testCharge.q);
+                    const sign = testChargeType.value === 'positive' ? 1 : -1;
+                    this.testCharge.q = mag * sign;
+                    this.draw();
+                };
+
+                speedSlider.oninput = () => {
+                    this.speed = parseFloat(speedSlider.value);
+                    document.getElementById('speedValue').textContent = speedSlider.value;
+                };
+
+                document.getElementById('playPause').onclick = () => this.togglePlayPause();
+                document.getElementById('reset').onclick = () => this.reset();
+                document.getElementById('showField').onclick = () => this.toggleFieldLines();
+            }
+
+            initializeEvents() {
+                // mouse
+                this.canvas.addEventListener('mousedown', (e) => this.onMouseDown(e));
+                this.canvas.addEventListener('mousemove', (e) => this.onMouseMove(e));
+                this.canvas.addEventListener('mouseup', (e) => this.onMouseUp(e));
+                this.canvas.addEventListener('mouseleave', (e) => this.onMouseUp(e));
+
+                // touch support
+                this.canvas.addEventListener('touchstart', (e) => { e.preventDefault(); this.onMouseDown(e.touches[0]); });
+                this.canvas.addEventListener('touchmove', (e) => { e.preventDefault(); this.onMouseMove(e.touches[0]); });
+                this.canvas.addEventListener('touchend', (e) => { e.preventDefault(); this.onMouseUp(e.changedTouches ? e.changedTouches[0] : e); });
+            }
+
+            getMousePos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            }
+
+            isNearCharge(mousePos, charge, radius = 25) {
+                const dx = mousePos.x - charge.x;
+                const dy = mousePos.y - charge.y;
+                return Math.sqrt(dx * dx + dy * dy) < radius;
+            }
+
+            onMouseDown(e) {
+                const mousePos = this.getMousePos(e);
+
+                if (this.isNearCharge(mousePos, this.charge1)) {
+                    this.charge1.dragging = true;
+                    this.canvas.style.cursor = 'grabbing';
+                } else if (this.isNearCharge(mousePos, this.charge2)) {
+                    this.charge2.dragging = true;
+                    this.canvas.style.cursor = 'grabbing';
+                } else if (this.isNearCharge(mousePos, this.testCharge)) {
+                    // SHIFT + click to set velocity; normal click to drag
+                    if (e.shiftKey) {
+                        this.settingVelocity = true;
+                        this.velocityOrigin = { x: this.testCharge.x, y: this.testCharge.y };
+                        this.velocityPreview = { x: mousePos.x, y: mousePos.y };
+                    } else {
+                        this.testCharge.dragging = true;
+                        this.testCharge.vx = 0;
+                        this.testCharge.vy = 0;
+                        this.testCharge.trail = [];
+                        this.canvas.style.cursor = 'grabbing';
+                    }
+                }
+            }
+
+            onMouseMove(e) {
+                const mousePos = this.getMousePos(e);
+
+                if (this.charge1.dragging) {
+                    this.charge1.x = Math.max(25, Math.min(this.canvas.width - 25, mousePos.x));
+                    this.draw();
+                } else if (this.charge2.dragging) {
+                    this.charge2.x = Math.max(25, Math.min(this.canvas.width - 25, mousePos.x));
+                    this.draw();
+                } else if (this.testCharge.dragging) {
+                    this.testCharge.x = Math.max(15, Math.min(this.canvas.width - 15, mousePos.x));
+                    this.testCharge.y = Math.max(15, Math.min(this.canvas.height - 15, mousePos.y));
+                    this.draw();
+                } else if (this.settingVelocity) {
+                    this.velocityPreview = { x: Math.max(15, Math.min(this.canvas.width - 15, mousePos.x)), y: Math.max(15, Math.min(this.canvas.height - 15, mousePos.y)) };
+                    this.draw();
+                }
+
+                // cursor update
+                const over = this.isNearCharge(mousePos, this.charge1) || this.isNearCharge(mousePos, this.charge2) || this.isNearCharge(mousePos, this.testCharge);
+                this.canvas.style.cursor = (over && !this.charge1.dragging && !this.charge2.dragging && !this.testCharge.dragging && !this.settingVelocity) ? 'grab' : this.canvas.style.cursor;
+            }
+
+            onMouseUp(e) {
+                // if setting velocity, compute and apply
+                if (this.settingVelocity) {
+                    const mousePos = this.getMousePos(e);
+                    const vx = (mousePos.x - this.velocityOrigin.x) * this.velocityScale;
+                    const vy = (mousePos.y - this.velocityOrigin.y) * this.velocityScale;
+                    this.testCharge.vx = vx;
+                    this.testCharge.vy = vy;
+                    this.settingVelocity = false;
+                    this.velocityOrigin = null;
+                    this.velocityPreview = null;
+                    // do not auto-play; user can press Play
+                }
+
+                this.charge1.dragging = false;
+                this.charge2.dragging = false;
+                this.testCharge.dragging = false;
+                this.canvas.style.cursor = 'crosshair';
+            }
+
+            calculateElectricField(x, y) {
+                let Ex = 0, Ey = 0;
+
+                const addField = (charge) => {
+                    let dx = x - charge.x;
+                    let dy = y - charge.y;
+                    let r = Math.sqrt(dx*dx + dy*dy);
+                    const minR = 10; if (r < minR) r = minR; // avoid singularity
+                    const E = this.k * charge.q / (r * r);
+                    Ex += E * (dx / r);
+                    Ey += E * (dy / r);
+                };
+
+                addField(this.charge1);
+                addField(this.charge2);
+
+                return { Ex, Ey };
+            }
+
+        updateTestCharge() {
+            if (this.testCharge.dragging || this.settingVelocity) return;
+
+            const field = this.calculateElectricField(this.testCharge.x, this.testCharge.y);
+
+            // Force on test charge
+            const Fx = this.testCharge.q * field.Ex;
+            const Fy = this.testCharge.q * field.Ey;
+
+            const sFx = Fx * this.visualGain;
+            const sFy = Fy * this.visualGain;
+
+            this.testCharge.vx += sFx * this.dt * this.speed;
+            this.testCharge.vy += sFy * this.dt * this.speed;
+
+            this.testCharge.vx *= 0.999;
+            this.testCharge.vy *= 0.999;
+            const maxSpeed = 12;
+            const sp = Math.sqrt(this.testCharge.vx*this.testCharge.vx + this.testCharge.vy*this.testCharge.vy);
+            if (sp > maxSpeed) {
+                this.testCharge.vx = (this.testCharge.vx / sp) * maxSpeed;
+                this.testCharge.vy = (this.testCharge.vy / sp) * maxSpeed;
+            }
+
+            // Predict next position
+            let nextX = this.testCharge.x + this.testCharge.vx * this.dt * this.speed;
+            let nextY = this.testCharge.y + this.testCharge.vy * this.dt * this.speed;
+
+            // Collision detection with source charges
+            const charges = [this.charge1, this.charge2];
+            let collided = false;
+            charges.forEach(c => {
+                const dx = nextX - c.x;
+                const dy = nextY - c.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 25 + 15) { // source radius + test charge radius
+                    collided = true;
+                    nextX = this.testCharge.x; 
+                    nextY = this.testCharge.y;
+                    this.testCharge.vx = 0;
+                    this.testCharge.vy = 0;
+                }
+            });
+
+            this.testCharge.x = nextX;
+            this.testCharge.y = nextY;
+
+            // trail
+            this.testCharge.trail.push({ x: this.testCharge.x, y: this.testCharge.y });
+            if (this.testCharge.trail.length > 300) this.testCharge.trail.shift();
+
+            // show speed along horizontal line between the charges
+            const lineY = this.canvas.height / 2;
+            if (!collided && Math.abs(this.testCharge.y - lineY) < 10) {
+                const speed = Math.sqrt(this.testCharge.vx*this.testCharge.vx + this.testCharge.vy*this.testCharge.vy);
+                this.ctx.fillStyle = '#000';
+                this.ctx.font = '16px Arial';
+                this.ctx.fillText(`Speed: ${speed.toFixed(2)} px/s`, this.canvas.width/2, lineY - 20);
+            }
+        }
+
+
+            drawFieldLines() {
+                const gridSize = 40;
+                const arrowSize = 10;
+                this.ctx.strokeStyle = 'rgba(100,100,100,0.5)';
+                this.ctx.lineWidth = 1;
+
+                for (let x = gridSize/2; x < this.canvas.width; x += gridSize) {
+                    for (let y = gridSize/2; y < this.canvas.height; y += gridSize) {
+                        const field = this.calculateElectricField(x, y);
+                        const magnitude = Math.sqrt(field.Ex*field.Ex + field.Ey*field.Ey);
+                        if (magnitude > 1e-6) {
+                            const ex = (field.Ex / magnitude) * arrowSize;
+                            const ey = (field.Ey / magnitude) * arrowSize;
+                            this.ctx.beginPath(); this.ctx.moveTo(x, y); this.ctx.lineTo(x + ex, y + ey); this.ctx.stroke();
+                            const angle = Math.atan2(ey, ex);
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(x + ex, y + ey);
+                            this.ctx.lineTo(x + ex - 4*Math.cos(angle - Math.PI/6), y + ey - 4*Math.sin(angle - Math.PI/6));
+                            this.ctx.moveTo(x + ex, y + ey);
+                            this.ctx.lineTo(x + ex - 4*Math.cos(angle + Math.PI/6), y + ey - 4*Math.sin(angle + Math.PI/6));
+                            this.ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            draw() {
+                // clear
+                this.ctx.fillStyle = '#f8f9fa';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // field lines
+                if (this.showFieldLines) this.drawFieldLines();
+
+                // trail
+                if (this.testCharge.trail.length > 1) {
+                    this.ctx.strokeStyle = 'rgba(128,128,128,0.5)';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.testCharge.trail[0].x, this.testCharge.trail[0].y);
+                    for (let i = 1; i < this.testCharge.trail.length; i++) this.ctx.lineTo(this.testCharge.trail[i].x, this.testCharge.trail[i].y);
+                    this.ctx.stroke();
+                }
+
+                // draw charges
+                this.drawCharge(this.charge1, this.charge1.q > 0 ? '#ff4444' : '#4444ff', 25);
+                this.drawCharge(this.charge2, this.charge2.q > 0 ? '#ff4444' : '#4444ff', 25);
+                const testColor = this.testCharge.q > 0 ? '#44ff44' : '#ffaa44';
+                this.drawCharge(this.testCharge, testColor, 15);
+
+                // labels
+                this.ctx.fillStyle = '#333';
+                this.ctx.font = 'bold 14px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(`${(this.charge1.q * 1e6).toFixed(1)}μC`, this.charge1.x, this.charge1.y - 35);
+                this.ctx.fillText(`${(this.charge2.q * 1e6).toFixed(1)}μC`, this.charge2.x, this.charge2.y - 35);
+                this.ctx.fillText(`${(Math.abs(this.testCharge.q) * 1e6).toFixed(1)}μC`, this.testCharge.x, this.testCharge.y - 25);
+
+                // draw velocity preview arrow when user is setting initial velocity (SHIFT + drag)
+                if (this.settingVelocity && this.velocityOrigin && this.velocityPreview) {
+                    this.drawArrow(this.velocityOrigin.x, this.velocityOrigin.y, this.velocityPreview.x, this.velocityPreview.y, 'rgba(0,0,0,0.7)');
+                    const dx = this.velocityPreview.x - this.velocityOrigin.x;
+                    const dy = this.velocityPreview.y - this.velocityOrigin.y;
+                    const mag = Math.sqrt(dx*dx + dy*dy) * this.velocityScale;
+                    this.ctx.fillStyle = '#000';
+                    this.ctx.font = '12px Arial';
+                    this.ctx.fillText(`v=${mag.toFixed(2)} m/s`, this.velocityOrigin.x, this.velocityOrigin.y - 50);
+                }
+
+                // show current velocity vector (small) when moving
+                const vlen = Math.sqrt(this.testCharge.vx*this.testCharge.vx + this.testCharge.vy*this.testCharge.vy);
+                if (!this.settingVelocity && vlen > 0.01) {
+                    const vxEnd = this.testCharge.x + (this.testCharge.vx / Math.max(vlen,1)) * 30;
+                    const vyEnd = this.testCharge.y + (this.testCharge.vy / Math.max(vlen,1)) * 30;
+                    this.drawArrow(this.testCharge.x, this.testCharge.y, vxEnd, vyEnd, 'rgba(0,128,0,0.8)');
+                }
+            }
+
+            drawCharge(charge, color, radius) {
+                this.ctx.beginPath();
+                this.ctx.arc(charge.x, charge.y, radius, 0, 2 * Math.PI);
+                this.ctx.fillStyle = color;
+                this.ctx.fill();
+                this.ctx.strokeStyle = '#333';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+
+                this.ctx.fillStyle = 'white';
+                this.ctx.font = 'bold 18px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText(charge.q > 0 ? '+' : '−', charge.x, charge.y);
+            }
+
+            // helper to draw an arrow from (x1,y1) to (x2,y2)
+            drawArrow(x1, y1, x2, y2, strokeStyle = 'rgba(0,0,0,0.8)') {
+                this.ctx.strokeStyle = strokeStyle;
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.moveTo(x1, y1);
+                this.ctx.lineTo(x2, y2);
+                this.ctx.stroke();
+                const angle = Math.atan2(y2 - y1, x2 - x1);
+                const ah = 6;
+                this.ctx.beginPath();
+                this.ctx.moveTo(x2, y2);
+                this.ctx.lineTo(x2 - ah * Math.cos(angle - Math.PI / 6), y2 - ah * Math.sin(angle - Math.PI / 6));
+                this.ctx.moveTo(x2, y2);
+                this.ctx.lineTo(x2 - ah * Math.cos(angle + Math.PI / 6), y2 - ah * Math.sin(angle + Math.PI / 6));
+                this.ctx.stroke();
+            }
+
+            animate() {
+                if (this.isPlaying) {
+                    this.updateTestCharge();
+                    this.draw();
+                    this.animationId = requestAnimationFrame(() => this.animate());
+                }
+            }
+
+            togglePlayPause() {
+                this.isPlaying = !this.isPlaying;
+                const button = document.getElementById('playPause');
+                if (this.isPlaying) {
+                    button.textContent = '⏸ Pause';
+                    this.animate();
+                } else {
+                    button.textContent = '▶ Play';
+                    if (this.animationId) cancelAnimationFrame(this.animationId);
+                }
+            }
+
+            reset() {
+                this.isPlaying = false;
+                document.getElementById('playPause').textContent = '▶ Play';
+                this.testCharge.x = this.canvas.width/2; this.testCharge.y = this.canvas.height/2 - 120; this.testCharge.vx = 0; this.testCharge.vy = 0; this.testCharge.trail = [];
+                if (this.animationId) cancelAnimationFrame(this.animationId);
+                this.draw();
+            }
+
+            toggleFieldLines() {
+                this.showFieldLines = !this.showFieldLines;
+                const button = document.getElementById('showField');
+                button.textContent = this.showFieldLines ? 'Hide Field Lines' : 'Show Field Lines';
+                this.draw();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const sim = new ElectricFieldSimulation();
+            document.getElementById('playPause').onclick = () => { sim.togglePlayPause(); };
+            document.getElementById('reset').onclick = () => { sim.reset(); };
+            document.getElementById('showField').onclick = () => { sim.toggleFieldLines(); };
+        });
+        document.getElementById('toggleInstructions').addEventListener('click', () => {
     const content = document.getElementById('instructionsContent');
-    if(content.style.display==='none'){content.style.display='block'; document.getElementById('toggleInstructions').textContent='Hide Instructions ▲';}
-    else{content.style.display='none'; document.getElementById('toggleInstructions').textContent='Show Instructions ▼';}
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        document.getElementById('toggleInstructions').textContent = 'Hide Instructions ▲';
+    } else {
+        content.style.display = 'none';
+        document.getElementById('toggleInstructions').textContent = 'Show Instructions ▼';
+    }
 });
-</script>
+
+    </script>
 </body>
 </html>
