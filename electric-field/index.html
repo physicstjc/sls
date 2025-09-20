@@ -235,6 +235,54 @@ class ElectricFieldSimulation {
         return {Ex,Ey};
     }
 
+    drawFieldLines() {
+        const grid = 40;          // spacing of sample points
+        const arrow = 10;         // arrow length
+        const ctx = this.ctx;
+
+        ctx.save();
+        ctx.strokeStyle = 'rgba(80,80,80,0.7)';
+        ctx.lineWidth = 1;
+
+        for (let x = grid / 2; x < this.canvas.width; x += grid) {
+            for (let y = grid / 2; y < this.canvas.height; y += grid) {
+                // convert from screen to simulated coords (remove pan offset)
+                const sx = x - this.offsetX;
+                const sy = y - this.offsetY;
+
+                const { Ex, Ey } = this.calculateElectricField(sx, sy);
+                const mag = Math.hypot(Ex, Ey);
+                if (mag < 1e-6) continue;
+
+                // Normalize and scale to arrow size
+                const ex = (Ex / mag) * arrow;
+                const ey = (Ey / mag) * arrow;
+
+                // Draw arrow in screen coords (add pan offset back)
+                const x1 = sx + this.offsetX;
+                const y1 = sy + this.offsetY;
+                const x2 = x1 + ex;
+                const y2 = y1 + ey;
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+
+                // arrow head
+                const ang = Math.atan2(ey, ex);
+                const ah = 5;
+                ctx.beginPath();
+                ctx.moveTo(x2, y2);
+                ctx.lineTo(x2 - ah * Math.cos(ang - Math.PI / 6), y2 - ah * Math.sin(ang - Math.PI / 6));
+                ctx.moveTo(x2, y2);
+                ctx.lineTo(x2 - ah * Math.cos(ang + Math.PI / 6), y2 - ah * Math.sin(ang + Math.PI / 6));
+                ctx.stroke();
+            }
+        }
+        ctx.restore();
+    }
+
     updateTestCharge() {
         if(this.testCharge.dragging||this.settingVelocity) return;
         const f = this.calculateElectricField(this.testCharge.x,this.testCharge.y);
@@ -276,23 +324,34 @@ class ElectricFieldSimulation {
 
     draw() {
         this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+        if (this.showFieldLines) this.drawFieldLines();
         // trails
         this.ctx.beginPath();
-        this.testCharge.trail.forEach((p,i)=>{ if(i===0)this.ctx.moveTo(p.x+this.offsetX,p.y+this.offsetY); else this.ctx.lineTo(p.x+this.offsetX,p.y+this.offsetY); });
-        this.ctx.strokeStyle="rgba(0,0,0,0.3)"; this.ctx.lineWidth=1; this.ctx.stroke();
+        this.testCharge.trail.forEach((p,i)=>{
+            if (i===0) this.ctx.moveTo(p.x+this.offsetX, p.y+this.offsetY);
+            else this.ctx.lineTo(p.x+this.offsetX, p.y+this.offsetY);
+        });
+        this.ctx.strokeStyle = "rgba(0,0,0,0.3)";
+        this.ctx.lineWidth = 1;
+        this.ctx.stroke();
 
+        // charges
         this.drawCharge(this.charge1, "#ff4444", (this.charge1.q>0?"+":"") + (this.charge1.q*1e6).toFixed(1));
         this.drawCharge(this.charge2, "#ff4444", (this.charge2.q>0?"+":"") + (this.charge2.q*1e6).toFixed(1));
         const testLabel = (this.testCharge.q>0?"+":"") + (Math.abs(this.testCharge.q*1e6)).toFixed(1);
         const testColor = this.testCharge.q>0 ? "#44ff44" : "#ffaa44";
         this.drawCharge(this.testCharge, testColor, testLabel);
 
-
-        if(this.settingVelocity && this.velocityOrigin && this.velocityPreview){
+        // velocity preview ...
+        if (this.settingVelocity && this.velocityOrigin && this.velocityPreview) {
             this.ctx.beginPath();
-            this.ctx.moveTo(this.velocityOrigin.x+this.offsetX,this.velocityOrigin.y+this.offsetY);
-            this.ctx.lineTo(this.velocityPreview.x+this.offsetX,this.velocityPreview.y+this.offsetY);
-            this.ctx.strokeStyle="orange"; this.ctx.lineWidth=2; this.ctx.setLineDash([5,5]); this.ctx.stroke(); this.ctx.setLineDash([]);
+            this.ctx.moveTo(this.velocityOrigin.x+this.offsetX, this.velocityOrigin.y+this.offsetY);
+            this.ctx.lineTo(this.velocityPreview.x+this.offsetX, this.velocityPreview.y+this.offsetY);
+            this.ctx.strokeStyle = "orange";
+            this.ctx.lineWidth = 2;
+            this.ctx.setLineDash([5,5]);
+            this.ctx.stroke();
+            this.ctx.setLineDash([]);
         }
     }
 
