@@ -290,8 +290,6 @@ class ElectricFieldSimulation {
         const sFx=Fx*this.visualGain, sFy=Fy*this.visualGain;
         this.testCharge.vx += sFx*this.dt*this.speed; this.testCharge.vy += sFy*this.dt*this.speed;
         this.testCharge.vx*=0.999; this.testCharge.vy*=0.999;
-        const maxSpeed=12, sp=Math.sqrt(this.testCharge.vx**2+this.testCharge.vy**2);
-        if(sp>maxSpeed){ this.testCharge.vx=this.testCharge.vx/sp*maxSpeed; this.testCharge.vy=this.testCharge.vy/sp*maxSpeed; }
         let nextX=this.testCharge.x+this.testCharge.vx*this.dt*this.speed, nextY=this.testCharge.y+this.testCharge.vy*this.dt*this.speed;
         [this.charge1,this.charge2].forEach(c=>{const dx=nextX-c.x,dy=nextY-c.y,dist=Math.sqrt(dx*dx+dy*dy); if(dist<40){nextX=this.testCharge.x; nextY=this.testCharge.y; this.testCharge.vx=0; this.testCharge.vy=0;}});
         this.testCharge.x=nextX; this.testCharge.y=nextY;
@@ -325,6 +323,14 @@ class ElectricFieldSimulation {
     draw() {
         this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
         if (this.showFieldLines) this.drawFieldLines();
+        
+        // Calculate and display speed
+        const speed = Math.sqrt(this.testCharge.vx**2 + this.testCharge.vy**2);
+        this.ctx.fillStyle = '#333';
+        this.ctx.font = 'bold 14px Arial';
+        this.ctx.textAlign = 'right';
+        this.ctx.fillText(`Speed: ${speed.toFixed(2)} m/s`, this.canvas.width - 10, 20);
+        
         // trails
         this.ctx.beginPath();
         this.testCharge.trail.forEach((p,i)=>{
