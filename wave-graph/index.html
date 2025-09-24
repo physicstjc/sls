@@ -174,7 +174,6 @@
 
     /* Mobile refinements */
     @media (max-width: 600px){
-      .container{ padding: 10px; }
       .graph{ padding: 8px; }
       canvas{ box-shadow: 0 2px 8px rgba(0,0,0,.2); }
       .buttons button{ min-width: 44%; padding: 10px 12px; }
@@ -206,26 +205,22 @@
 
     <div class="controls">
       <div class="control">
-        <h3>Amplitude</h3>
-        <div class="row"><span>Amp</span><span id="amplitudeValue">50</span></div>
+        <div class="row"><h3>Amplitude, A (mm)</h3><span id="amplitudeValue">50</span></div>
         <input type="range" id="amplitudeSlider" min="10" max="100" value="50" />
       </div>
 
       <div class="control">
-        <h3>Frequency</h3>
-        <div class="row"><span>Freq (Hz)</span><span id="frequencyValue">1.0</span></div>
+        <div class="row"><h3>Frequency, f (Hz)</h3> <span id="frequencyValue">1.0</span></div>
         <input type="range" id="frequencySlider" min="0.1" max="3.0" step="0.1" value="1.0" />
       </div>
 
       <div class="control">
-        <h3>Wave Speed</h3>
-        <div class="row"><span>Speed</span><span id="speedValue">100</span></div>
+        <div class="row"><h3>Wave Speed, v (mm/s)</h3><span id="speedValue">100</span></div>
         <input type="range" id="speedSlider" min="20" max="200" value="100" />
       </div>
 
       <div class="control">
-        <h3>Wavelength</h3>
-        <div class="row"><span>λ (px)</span><span id="wavelengthValue">200</span></div>
+        <div class="row"><h3>Wavelength, λ (mm)</h3><span id="wavelengthValue">200</span></div>
         <input type="range" id="wavelengthSlider" min="80" max="400" step="5" value="200" />
       </div>
     </div>
@@ -478,31 +473,38 @@
         setTimeout(() => { this._programmatic = false; }, 0);
       }
 
-      // --- Responsive canvas sizing ---
+      // --- Responsive canvas sizing --- 
       resizeAll() {
-      // Choose logical widths based on container width
-      const container = document.querySelector('.container');
-      const maxW = container.clientWidth - 2*12;
-      // Aspect ratio: keep graphs readable on phones
-      const h1 = Math.round(Math.max(120, maxW * 0.18)); // Reduced height for distance graph
-      const h2 = Math.round(Math.max(120, maxW * 0.18)); // Reduced height for time graph
-      
-      this.setCanvasSize(this.distanceCanvas, this.distanceCtx, maxW, h1);
-      this.setCanvasSize(this.timeCanvas, this.timeCtx, maxW, h2);
-      
-      // Initialize particle positions if first resize or not set
-      if (this.refX1 === null) {
-      // Set red dot position to 1 wavelength
-      this.refX1 = Math.max(40, Math.min(maxW - 40, this.wavelengthPx));
-      }
-      if (this.refX2 === null) {
-      // Set blue dot position to 1.5 wavelengths
-      this.refX2 = Math.max(40, Math.min(maxW - 40, this.wavelengthPx * 1.5));
-      }
-      
-      // Ensure particles are within new canvas bounds
-      this.refX1 = Math.max(0, Math.min(maxW, this.refX1));
-      this.refX2 = Math.max(0, Math.min(maxW, this.refX2));
+        // Get viewport dimensions
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        
+        // Choose logical widths based on container width
+        const container = document.querySelector('.container');
+        const maxW = container.clientWidth - 2*12;
+        
+        // Calculate appropriate heights based on viewport size and layout
+        // We'll use a percentage of viewport height while leaving room for other elements
+        const graphsSectionHeight = Math.min(viewportHeight * 0.6, viewportWidth * 0.7);
+        const h1 = Math.round(graphsSectionHeight * 0.5); // Equal height for both graphs
+        const h2 = h1;
+        
+        this.setCanvasSize(this.distanceCanvas, this.distanceCtx, maxW, h1);
+        this.setCanvasSize(this.timeCanvas, this.timeCtx, maxW, h2);
+        
+        // Initialize particle positions if first resize or not set
+        if (this.refX1 === null) {
+          // Set red dot position to 1 wavelength
+          this.refX1 = Math.max(40, Math.min(maxW - 40, this.wavelengthPx));
+        }
+        if (this.refX2 === null) {
+          // Set blue dot position to 1.5 wavelengths
+          this.refX2 = Math.max(40, Math.min(maxW - 40, this.wavelengthPx * 1.5));
+        }
+        
+        // Ensure particles are within new canvas bounds
+        this.refX1 = Math.max(0, Math.min(maxW, this.refX1));
+        this.refX2 = Math.max(0, Math.min(maxW, this.refX2));
       }
       
       // Reset method
@@ -544,7 +546,7 @@
 
       sizeOf(canvas){ return { W: canvas._cssW|0, H: canvas._cssH|0 }; }
 
-      // --- Clean white background + single horizontal axis line ---
+      // --- Clean white background + single horizontal axis line --- 
       drawAxisLine(ctx, canvas){
         const { W, H } = this.sizeOf(canvas);
         ctx.clearRect(0,0,W,H);
@@ -602,7 +604,7 @@
         // fixed [0, window] then sliding
         const tRight = (this.realTime < this.timeWindowSec) ? this.timeWindowSec : this.realTime;
         const tLeft  = Math.max(0, tRight - this.timeWindowSec);
-
+        
         const labelY = H/2 + 14; // directly below axis line
         for(let i=0;i<=divisions;i++){
           const x = i * stepPx;
@@ -613,7 +615,7 @@
         ctx.restore();
       }
 
-      // --- Waves ---
+      // --- Waves --- 
       drawDistanceWave(){
         const ctx = this.distanceCtx, canvas = this.distanceCanvas;
         const { W, H } = this.sizeOf(canvas);
