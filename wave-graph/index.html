@@ -5,6 +5,7 @@
   <!-- Mobile & responsive -->
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Wave Simulation</title>
+  <!-- 修改CSS部分 -->
   <style>
     :root{
       --container-max: 100%;
@@ -19,17 +20,17 @@
       --time-color: #4CAF50;
       --dot-color: #F44336;
     }
-
+  
     /* Base */
     html,body{height:100%}
     body{
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji", "Segoe UI Symbol";
       margin: 0;
-      padding: min(3vw, 16px);
+      padding: min(2vw, 12px); /* 减少页面边距 */
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: var(--text-light);
     }
-
+  
     .container{
       max-width: var(--container-max);
       margin: 0 auto;
@@ -41,7 +42,7 @@
       display: flex;
       flex-direction: column;
       gap: clamp(10px, 2vw, 16px);
-      padding: clamp(10px, 2vw, 16px);
+      padding: clamp(8px, 1.5vw, 12px); /* 减少容器内边距 */
     }
 
     h1{
@@ -258,7 +259,20 @@
         this.tNow = 0;
         this._lastPerf = null;
         this._sampleAccumulator = 0;
-        this.timeData = [];
+        this.timeData1 = []; // 第一个粒子的数据
+        this.timeData2 = []; // 第二个粒子的数据
+        
+        // 添加第二个粒子的配置
+        this.particle1Color = '#F44336'; // 红色 - 第一个粒子
+        this.particle2Color = '#2196F3'; // 蓝色 - 第二个粒子
+        this.waveColor = '#4CAF50';      // 绿色 - 波形线条
+        
+        // 添加可移动粒子的相关变量
+        this.particleRadius = 8;        // 粒子半径，用于碰撞检测
+        this.draggingParticle = null;   // 当前正在拖动的粒子 (1或2)
+        this.refX1 = null;              // 第一个粒子的X坐标
+        this.refX2 = null;              // 第二个粒子的X坐标
+        
         // === Visual units model ===
         // Treat 'speed' slider as visual speed in px/s (not a factor).
         // Keep frequency in Hz. Wavelength is in pixels.
@@ -288,7 +302,8 @@
         }, { passive: true });
       }
 
-      bindUI(){
+      bindUI() {
+        // 原有UI绑定代码
         const amp = document.getElementById('amplitudeSlider');
         const freq = document.getElementById('frequencySlider');
         const spd  = document.getElementById('speedSlider');
@@ -331,23 +346,185 @@
           if(!this.isAnimating) this.drawInitialWaves();
         });
 
-
-
         animateBtn.addEventListener('click', ()=> this.toggleAnimation());
         resetBtn.addEventListener('click', ()=> this.reset());
+        
+        // 添加粒子拖拽功能的事件监听
+        this.setupParticleDragging();
+      }
+      
+      // 设置粒子拖拽功能
+      setupParticleDragging() {
+        // 鼠标事件
+        this.distanceCanvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+        document.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+        document.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+        
+        // 触摸事件（移动设备支持）
+        this.distanceCanvas.addEventListener('touchstart', (e) => {
+          e.preventDefault(); // 阻止页面滚动
+          this.handleMouseDown(e.touches[0]);
+        });
+        document.addEventListener('touchmove', (e) => {
+          e.preventDefault(); // 阻止页面滚动
+          this.handleMouseMove(e.touches[0]);
+        });
+        document.addEventListener('touchend', (e) => {
+          this.handleMouseUp();
+        });
+      }
+      
+      // 获取鼠标/触摸在canvas上的坐标
+      getCanvasCoordinates(event) {
+        const rect = this.distanceCanvas.getBoundingClientRect();
+        return {
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top
+        };
+      }
+      
+      // 检测点是否在粒子上
+      isPointOnParticle(x, y, particleX, particleY) {
+        const dx = x - particleX;
+        const dy = y - particleY;
+        return Math.sqrt(dx * dx + dy * dy) <= this.particleRadius;
+      }
+      
+      // 处理鼠标按下事件
+      handleMouseDown(event) {
+        const { W, H } = this.sizeOf(this.distanceCanvas);
+        const coords = this.getCanvasCoordinates(event);
+        
+        const k = (2*Math.PI) / this.wavelengthPx;
+        const omega = 2*Math.PI*this.frequency;
+        
+        // 计算当前粒子位置
+        const refY1 = H/2 - this.amplitude * Math.sin(k * this.refX1 - omega * this.realTime);
+        const refY2 = H/2 - this.amplitude * Math.sin(k * this.refX2 - omega * this.realTime);
+        
+        // 检查是否点击了粒子
+        if (this.isPointOnParticle(coords.x, coords.y, this.refX1, refY1)) {
+          this.draggingParticle = 1;
+        } else if (this.isPointOnParticle(coords.x, coords.y, this.refX2, refY2)) {
+          this.draggingParticle = 2;
+        }
+        
+        // 如果正在拖动粒子，并且动画正在运行，重置时间数据
+        if (this.draggingParticle && this.isAnimating) {
+          this.timeData1 = [];
+          this.timeData2 = [];
+          this._sampleAccumulator = 0;
+        }
+      }
+      
+      // 处理鼠标移动事件
+      handleMouseMove(event) {
+        if (this.draggingParticle === null) return;
+        
+        const { W } = this.sizeOf(this.distanceCanvas);
+        const coords = this.getCanvasCoordinates(event);
+        
+        // 限制粒子在canvas范围内
+        const newX = Math.max(0, Math.min(W, coords.x));
+        
+        // 更新粒子位置
+        if (this.draggingParticle === 1) {
+          this.refX1 = newX;
+        } else {
+          this.refX2 = newX;
+        }
+        
+        // 重新绘制
+        if (!this.isAnimating) {
+          this.drawDistanceWave();
+          this.drawTimeWave();
+        }
+      }
+      
+      // 处理鼠标释放事件
+      handleMouseUp() {
+        this.draggingParticle = null;
       }
 
-      // --- Responsive canvas sizing ---
-      resizeAll(){
-        // Choose logical widths based on container width
-        const container = document.querySelector('.container');
-        const maxW = Math.min(container.clientWidth - 2*24, 1200); // padding guard
-        // Aspect ratio: keep graphs readable on phones
-        const h1 = Math.round(Math.max(140, maxW * 0.22)); // distance graph
-        const h2 = Math.round(Math.max(140, maxW * 0.22)); // time graph
+      // 根据波速和频率更新波长 (v = f*λ)
+      updateLambdaFromVF() {
+        // 设置程序化标志，防止触发循环更新
+        this._programmatic = true;
+        // 使用公式 λ = v/f 计算新的波长
+        this.lambdaPx = this.speedPxPerSec / this.frequency;
+        this.wavelengthPx = this.lambdaPx;
+        // 更新UI显示
+        document.getElementById('wavelengthSlider').value = this.lambdaPx;
+        document.getElementById('wavelengthValue').textContent = this.lambdaPx.toFixed(0);
+        // 清除程序化标志
+        setTimeout(() => { this._programmatic = false; }, 0);
+      }
 
-        this.setCanvasSize(this.distanceCanvas, this.distanceCtx, maxW, h1);
-        this.setCanvasSize(this.timeCanvas, this.timeCtx, maxW, h2);
+      // 根据波速和波长更新频率 (v = f*λ)
+      updateFreqFromVL() {
+        // 设置程序化标志，防止触发循环更新
+        this._programmatic = true;
+        // 使用公式 f = v/λ 计算新的频率
+        this.frequency = this.speedPxPerSec / this.lambdaPx;
+        // 更新UI显示
+        document.getElementById('frequencySlider').value = this.frequency;
+        document.getElementById('frequencyValue').textContent = this.frequency.toFixed(2);
+        // 清除程序化标志
+        setTimeout(() => { this._programmatic = false; }, 0);
+      }
+
+      // --- Responsive canvas sizing ---  
+      // 修改resizeAll方法中的粒子初始化代码
+      resizeAll() {
+      // Choose logical widths based on container width
+      const container = document.querySelector('.container');
+      const maxW = container.clientWidth - 2*12; // 减少内边距限制，移除1200px的上限
+      // Aspect ratio: keep graphs readable on phones
+      const h1 = Math.round(Math.max(140, maxW * 0.22)); // distance graph
+      const h2 = Math.round(Math.max(140, maxW * 0.22)); // time graph
+      
+      this.setCanvasSize(this.distanceCanvas, this.distanceCtx, maxW, h1);
+      this.setCanvasSize(this.timeCanvas, this.timeCtx, maxW, h2);
+      
+      // 如果是首次调整大小或粒子位置未设置，则初始化粒子位置
+      if (this.refX1 === null) {
+      // 设置红点位置为1个波长
+      this.refX1 = Math.max(40, Math.min(maxW - 40, this.wavelengthPx));
+      }
+      if (this.refX2 === null) {
+      // 设置蓝点位置为1.5个波长
+      this.refX2 = Math.max(40, Math.min(maxW - 40, this.wavelengthPx * 1.5));
+      }
+      
+      // 确保粒子在新的canvas尺寸范围内
+      this.refX1 = Math.max(0, Math.min(maxW, this.refX1));
+      this.refX2 = Math.max(0, Math.min(maxW, this.refX2));
+      }
+      
+      // 修改reset方法中的粒子位置重置代码
+      reset(){
+      if(this.isAnimating) this.toggleAnimation();
+      this.amplitude = 50; this.frequency = 1.0; this.speed = 100; this.wavelengthPx = 200;
+      this.tNow = 0; this.timeData1 = []; this.timeData2 = []; this.realTime = 0; this._lastPerf = null; this._sampleAccumulator = 0;
+      this.draggingParticle = null;
+      
+      // 重置粒子位置
+      const { W } = this.sizeOf(this.distanceCanvas);
+      // 设置红点位置为1个波长
+      this.refX1 = Math.max(40, Math.min(W - 40, this.wavelengthPx));
+      // 设置蓝点位置为1.5个波长
+      this.refX2 = Math.max(40, Math.min(W - 40, this.wavelengthPx * 1.5));
+      
+      document.getElementById('amplitudeSlider').value = 50;
+      document.getElementById('amplitudeValue').textContent = '50';
+      document.getElementById('frequencySlider').value = 1.0;
+      document.getElementById('frequencyValue').textContent = '1.0';
+      document.getElementById('speedSlider').value = 100;
+      document.getElementById('speedValue').textContent = '100';
+      document.getElementById('wavelengthSlider').value = 200;
+      document.getElementById('wavelengthValue').textContent = '200';
+      
+      this.drawInitialWaves();
       }
 
       setCanvasSize(canvas, ctx, cssW, cssH){
@@ -363,7 +540,7 @@
 
       sizeOf(canvas){ return { W: canvas._cssW|0, H: canvas._cssH|0 }; }
 
-      // --- Clean white background + single horizontal axis line ---
+      // --- Clean white background + single horizontal axis line ---  
       drawAxisLine(ctx, canvas){
         const { W, H } = this.sizeOf(canvas);
         ctx.clearRect(0,0,W,H);
@@ -433,7 +610,7 @@
         ctx.restore();
       }
 
-      // --- Waves ---
+      // --- Waves ---  
       drawDistanceWave(){
         const ctx = this.distanceCtx, canvas = this.distanceCanvas;
         const { W, H } = this.sizeOf(canvas);
@@ -451,8 +628,8 @@
         }
         ctx.restore();
 
-        // waveform
-        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--distance-color') || '#2196F3';
+        // waveform - 使用绿色
+        ctx.strokeStyle = this.waveColor;
         ctx.lineWidth = 3;
         ctx.beginPath();
         const k = (2*Math.PI) / this.wavelengthPx;
@@ -463,11 +640,25 @@
         }
         ctx.stroke();
 
-        // reference point & amplitude line
-        const refX = Math.min(200, Math.max(40, Math.round(W*0.28))); // keep sensible on mobile
-        const refY = H/2 - this.amplitude * Math.sin(k * refX - omega * this.realTime);
-        ctx.fillStyle = '#F44336';
-        ctx.beginPath(); ctx.arc(refX, refY, 6, 0, Math.PI*2); ctx.fill();
+        // 第一个参考点 & 振幅线
+        const refY1 = H/2 - this.amplitude * Math.sin(k * this.refX1 - omega * this.realTime);
+        ctx.fillStyle = this.particle1Color;
+        ctx.beginPath(); ctx.arc(this.refX1, refY1, this.particleRadius, 0, Math.PI*2); ctx.fill();
+        
+        // 添加粒子拖拽提示（白色外圈）
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(this.refX1, refY1, this.particleRadius + 2, 0, Math.PI*2); ctx.stroke();
+
+        // 第二个参考点
+        const refY2 = H/2 - this.amplitude * Math.sin(k * this.refX2 - omega * this.realTime);
+        ctx.fillStyle = this.particle2Color;
+        ctx.beginPath(); ctx.arc(this.refX2, refY2, this.particleRadius, 0, Math.PI*2); ctx.fill();
+        
+        // 添加粒子拖拽提示（白色外圈）
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(this.refX2, refY2, this.particleRadius + 2, 0, Math.PI*2); ctx.stroke();
 
         ctx.strokeStyle = 'rgba(33,150,243,0.35)';
         ctx.setLineDash([6,4]);
@@ -487,35 +678,54 @@
         const tMax = (this.realTime < this.timeWindowSec) ? this.timeWindowSec : this.realTime;
         const tMin = Math.max(0, tMax - this.timeWindowSec);
 
-
+        
         // prune & guard
-        while(this.timeData.length && this.timeData[0].t < tMin) this.timeData.shift();
+        while(this.timeData1.length && this.timeData1[0].t < tMin) this.timeData1.shift();
+        while(this.timeData2.length && this.timeData2[0].t < tMin) this.timeData2.shift();
         const range = (tMax - tMin);
-        if(!this.timeData.length || range <= 0) return;
+        if((!this.timeData1.length && !this.timeData2.length) || range <= 0) return;
 
         const mapX = t => ((t - tMin) / (tMax - tMin)) * W;
 
-        // trace
-        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--time-color') || '#4CAF50';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(mapX(this.timeData[0].t), H/2 - this.timeData[0].y);
-        for(let i=1;i<this.timeData.length;i++){
-          const d = this.timeData[i];
-          ctx.lineTo(mapX(d.t), H/2 - d.y);
+        // 绘制第一个粒子的轨迹
+        if (this.timeData1.length > 1) {
+          ctx.strokeStyle = this.particle1Color;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(mapX(this.timeData1[0].t), H/2 - this.timeData1[0].y);
+          for(let i=1;i<this.timeData1.length;i++){
+            const d = this.timeData1[i];
+            ctx.lineTo(mapX(d.t), H/2 - d.y);
+          }
+          ctx.stroke();
         }
-        ctx.stroke();
+        
+        // 绘制第二个粒子的轨迹
+        if (this.timeData2.length > 1) {
+          ctx.strokeStyle = this.particle2Color;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(mapX(this.timeData2[0].t), H/2 - this.timeData2[0].y);
+          for(let i=1;i<this.timeData2.length;i++){
+            const d = this.timeData2[i];
+            ctx.lineTo(mapX(d.t), H/2 - d.y);
+          }
+          ctx.stroke();
+        }
 
-        // red dot at current t
+        // 第一个粒子当前时间点的红点 - 使用实际粒子位置
         const omega = 2 * Math.PI * this.frequency;
         const k = (2 * Math.PI) / this.wavelengthPx;
-        const { W: Wref } = this.sizeOf(this.distanceCanvas);
-        const x0 = Math.min(200, Math.max(40, Math.round(Wref * 0.28)));
-        const yNow = this.amplitude * Math.sin(k * x0 - omega * this.realTime);
-        const xNow = mapX(this.realTime);
-        ctx.fillStyle = '#F44336'; 
-        ctx.beginPath(); ctx.arc(xNow, H/2 - yNow, 6, 0, Math.PI*2); ctx.fill();
-
+        const yNow1 = this.amplitude * Math.sin(k * this.refX1 - omega * this.realTime);
+        const xNow1 = mapX(this.realTime);
+        ctx.fillStyle = this.particle1Color;
+        ctx.beginPath(); ctx.arc(xNow1, H/2 - yNow1, 6, 0, Math.PI*2); ctx.fill();
+        
+        // 第二个粒子当前时间点的蓝点 - 使用实际粒子位置
+        const yNow2 = this.amplitude * Math.sin(k * this.refX2 - omega * this.realTime);
+        const xNow2 = mapX(this.realTime);
+        ctx.fillStyle = this.particle2Color;
+        ctx.beginPath(); ctx.arc(xNow2, H/2 - yNow2, 6, 0, Math.PI*2); ctx.fill();
       }
 
       drawInitialWaves(){
@@ -539,72 +749,36 @@
         }
         ctx.restore();
 
-        ctx.strokeStyle = '#4CAF50';
+        // 绘制初始的两个粒子轨迹预览
+        const { W: Wref } = this.sizeOf(this.distanceCanvas);
+        // 使用当前设置的粒子位置，如果未设置则使用默认位置
+        const x01 = this.refX1 || Math.min(200, Math.max(40, Math.round(Wref * 0.28)));
+        const x02 = this.refX2 || Math.min(600, Math.max(300, Math.round(Wref * 0.7)));
+        const omega = 2*Math.PI*this.frequency;
+        const k = (2 * Math.PI) / this.wavelengthPx;
+        
+        // 第一个粒子的初始预览线
+        ctx.strokeStyle = this.particle1Color;
         ctx.lineWidth = 3;
         ctx.beginPath();
-        const omega = 2*Math.PI*this.frequency;
         for(let x=0;x<W;x++){
           const t = (x/W) * this.timeWindowSec;
-          const y = H/2 - this.amplitude * Math.sin(omega * t);
+          const y = H/2 - this.amplitude * Math.sin(k * x01 - omega * t);
+          if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+        
+        // 第二个粒子的初始预览线
+        ctx.strokeStyle = this.particle2Color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        for(let x=0;x<W;x++){
+          const t = (x/W) * this.timeWindowSec;
+          const y = H/2 - this.amplitude * Math.sin(k * x02 - omega * t);
           if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
         }
         ctx.stroke();
       }
-    
-    recomputeWavelengthFromVF() {
-      this.wavelengthPx = this.lambdaScale * (this.speed / this.frequency);
-      // keep the slider + label in sync
-      const wlSlider = document.getElementById('wavelengthSlider');
-      const wlLabel  = document.getElementById('wavelengthValue');
-      if (wlSlider) wlSlider.value = this.wavelengthPx.toFixed(0);
-      if (wlLabel)  wlLabel.textContent = this.wavelengthPx.toFixed(0);
-    }
-        
-        // Guard to prevent slider event recursion
-    _programmatic = false;
-
-    // v = f * λ  => derive λ when v,f change
-    updateLambdaFromVF() {
-      this.lambdaPx = this.speedPxPerSec / this.frequency;
-      this.wavelengthPx = this.lambdaPx; // keep old variable for drawing
-      this._programmatic = true;
-      const s = document.getElementById('wavelengthSlider');
-      const l = document.getElementById('wavelengthValue');
-      if (s) s.value = this.lambdaPx.toFixed(0);
-      if (l) l.textContent = this.lambdaPx.toFixed(0);
-      this._programmatic = false;
-    }
-
-    // v = f * λ  => derive f when v,λ change
-    updateFreqFromVL() {
-      this.frequency = this.speedPxPerSec / Math.max(1e-6, this.lambdaPx);
-      this._programmatic = true;
-      const s = document.getElementById('frequencySlider');
-      const l = document.getElementById('frequencyValue');
-      if (s) s.value = this.frequency.toFixed(2);
-      if (l) l.textContent = this.frequency.toFixed(2);
-      this._programmatic = false;
-    }
-
-    // v = f * λ  => derive v when f,λ change
-    updateSpeedFromFL() {
-      this.speedPxPerSec = this.frequency * this.lambdaPx;
-      this.speed = this.speedPxPerSec; // keep old variable for animation scaling if you like
-      this._programmatic = true;
-      const s = document.getElementById('speedSlider');
-      const l = document.getElementById('speedValue');
-      if (s) s.value = this.speedPxPerSec.toFixed(0);
-      if (l) l.textContent = this.speedPxPerSec.toFixed(0);
-      this._programmatic = false;
-    }
-    
-    recomputeFrequencyFromVL() {
-      this.frequency = (this.lambdaScale * this.speed) / this.wavelengthPx;    
-      const freqSlider = document.getElementById('frequencySlider');
-      const freqLabel  = document.getElementById('frequencyValue');
-      if (freqSlider) freqSlider.value = this.frequency.toFixed(1);
-      if (freqLabel)  freqLabel.textContent = this.frequency.toFixed(1);
-    }
 
       // --- Animation loop ---
       animate = () => {
@@ -616,17 +790,22 @@
         // advance real time (no speed scaling here)
         this.realTime += dtReal;
 
-        // sample y(t) at a fixed probe position x0 for the time graph
+        // sample y(t) at fixed probe positions x0 and x1 for the time graph
         const { W } = this.sizeOf(this.distanceCanvas);
-        const x0 = Math.min(200, Math.max(40, Math.round(W * 0.28))); // same point as the red dot
+        // 使用当前设置的粒子位置
         const omega = 2 * Math.PI * this.frequency;
         const k = (2 * Math.PI) / this.wavelengthPx;
 
         this._sampleAccumulator += dtReal;
         while (this._sampleAccumulator >= this.sampleEverySec) {
           const t = this.realTime;                      // x-axis = real time
-          const y = this.amplitude * Math.sin(k * x0 - omega * t); // phase uses real time
-          this.timeData.push({ t, y });
+          // 第一个粒子的数据
+          const y1 = this.amplitude * Math.sin(k * this.refX1 - omega * t);
+          this.timeData1.push({ t, y: y1 });
+          // 第二个粒子的数据
+          const y2 = this.amplitude * Math.sin(k * this.refX2 - omega * t);
+          this.timeData2.push({ t, y: y2 });
+          
           this._sampleAccumulator -= this.sampleEverySec;
         }
 
@@ -645,7 +824,13 @@
           btn.style.background = 'linear-gradient(45deg, #ff6b6b, #ee5a24)';
         } else {
           this.isAnimating = true;
-          this.timeData = [{ t: 0, y: 0 }];
+          // 计算粒子的初始位移，而不是从0开始
+          const omega = 2 * Math.PI * this.frequency;
+          const k = (2 * Math.PI) / this.wavelengthPx;
+          const y1 = this.amplitude * Math.sin(k * this.refX1 - omega * 0); // t=0时的位移
+          const y2 = this.amplitude * Math.sin(k * this.refX2 - omega * 0); // t=0时的位移
+          this.timeData1 = [{ t: 0, y: y1 }];
+          this.timeData2 = [{ t: 0, y: y2 }];
           this.tNow = 0;
           this.realTime = 0;  
           this._lastPerf = null;
@@ -659,7 +844,13 @@
       reset(){
         if(this.isAnimating) this.toggleAnimation();
         this.amplitude = 50; this.frequency = 1.0; this.speed = 100; this.wavelengthPx = 200;
-        this.tNow = 0; this.timeData = []; this.realTime = 0; this._lastPerf = null; this._sampleAccumulator = 0;
+        this.tNow = 0; this.timeData1 = []; this.timeData2 = []; this.realTime = 0; this._lastPerf = null; this._sampleAccumulator = 0;
+        this.draggingParticle = null;
+        
+        // 重置粒子位置
+        const { W } = this.sizeOf(this.distanceCanvas);
+        this.refX1 = Math.min(200, Math.max(40, Math.round(W * 0.28)));
+        this.refX2 = Math.min(600, Math.max(300, Math.round(W * 0.7)));
 
         document.getElementById('amplitudeSlider').value = 50;
         document.getElementById('amplitudeValue').textContent = '50';
