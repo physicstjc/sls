@@ -179,39 +179,6 @@
     @media (prefers-reduced-motion: reduce){
       *{ animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
     }
-  /* 添加针对16:9宽屏的优化 */
-  @media (min-aspect-ratio: 16/10) {
-    .graphs {
-      grid-template-columns: 1fr;
-    }
-    
-    /* 在宽屏上调整图表高度以接近16:9的显示比例 */
-    .graph {
-      height: auto;
-    }
-    
-    /* 在宽屏上优化控件布局 */
-    .controls {
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    }
-  }
-  
-  /* 专门为16:9及更广屏幕优化的横向布局 */
-  @media (min-aspect-ratio: 16/9) {
-    body {
-      padding: min(1vw, 8px);
-    }
-    
-    .container {
-      padding: clamp(8px, 1vw, 12px);
-    }
-    
-    .graphs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: clamp(10px, 1.5vw, 16px);
-    }
-  }
   </style>
 </head>
 <body>
@@ -507,56 +474,32 @@
       }
 
       // --- Responsive canvas sizing ---  
-      // --- Responsive canvas sizing ---  
-    resizeAll() {
+      // 修改resizeAll方法中的粒子初始化代码
+      resizeAll() {
       // Choose logical widths based on container width
       const container = document.querySelector('.container');
       const maxW = container.clientWidth - 2*12; // 减少内边距限制，移除1200px的上限
+      // Aspect ratio: keep graphs readable on phones
+      const h1 = Math.round(Math.max(140, maxW * 0.22)); // distance graph
+      const h2 = Math.round(Math.max(140, maxW * 0.22)); // time graph
       
-      // 检测屏幕宽高比，优化16:9显示
-      const aspectRatio = window.innerWidth / window.innerHeight;
-      let h1, h2;
-      
-      if (aspectRatio >= 16/9) {
-        // 在16:9或更广的屏幕上，使用更适合宽屏的高度比例
-        // 将图表高度设为宽度的1/3.5，使两个图表垂直排列时更适合16:9屏幕
-        h1 = Math.round(Math.max(160, maxW / 3.5)); 
-        h2 = Math.round(Math.max(160, maxW / 3.5));
-        
-        // 检查是否为横向布局（宽屏）
-        if (window.innerWidth >= 1024) {
-          // 在宽屏下，将两个图表并排放置
-          const graphsContainer = document.querySelector('.graphs');
-          if (graphsContainer) {
-            graphsContainer.style.gridTemplateColumns = '1fr 1fr';
-          }
-          // 调整单图表高度为宽度的1/2.5
-          h1 = Math.round(Math.max(160, maxW / 5.5));
-          h2 = Math.round(Math.max(160, maxW / 5.5));
-        }
-      } else {
-        // 普通屏幕使用原有比例
-        h1 = Math.round(Math.max(140, maxW * 0.22));
-        h2 = Math.round(Math.max(140, maxW * 0.22));
-      }
-
       this.setCanvasSize(this.distanceCanvas, this.distanceCtx, maxW, h1);
       this.setCanvasSize(this.timeCanvas, this.timeCtx, maxW, h2);
       
       // 如果是首次调整大小或粒子位置未设置，则初始化粒子位置
       if (this.refX1 === null) {
-        // 设置红点位置为1个波长
-        this.refX1 = Math.max(40, Math.min(maxW - 40, this.wavelengthPx));
+      // 设置红点位置为1个波长
+      this.refX1 = Math.max(40, Math.min(maxW - 40, this.wavelengthPx));
       }
       if (this.refX2 === null) {
-        // 设置蓝点位置为1.5个波长
-        this.refX2 = Math.max(40, Math.min(maxW - 40, this.wavelengthPx * 1.5));
+      // 设置蓝点位置为1.5个波长
+      this.refX2 = Math.max(40, Math.min(maxW - 40, this.wavelengthPx * 1.5));
       }
       
       // 确保粒子在新的canvas尺寸范围内
       this.refX1 = Math.max(0, Math.min(maxW, this.refX1));
       this.refX2 = Math.max(0, Math.min(maxW, this.refX2));
-    }
+      }
       
       // 修改reset方法中的粒子位置重置代码
       reset(){
