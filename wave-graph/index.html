@@ -34,20 +34,15 @@
     .container{
       max-width: var(--container-max);
       margin: 0 auto;
+      background: var(--card-bg);
+      border: var(--glass-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(31,38,135,0.37);
       display: flex;
       flex-direction: column;
-      gap: clamp(8px, 1vw, 12px); /* Reduced gap */
-      padding: 0; /* Removed padding */
-    }
-    background: var(--card-bg);
-    border: var(--glass-border);
-    border-radius: var(--radius);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(31,38,135,0.37);
-    display: flex;
-    flex-direction: column;
-    gap: clamp(10px, 2vw, 16px);
-    padding: clamp(8px, 1.5vw, 12px); /* 减少容器内边距 */
+      gap: clamp(10px, 2vw, 16px);
+      padding: clamp(8px, 1.5vw, 12px); /* 减少容器内边距 */
     }
 
     h1{
@@ -223,6 +218,16 @@
         <div class="row"><h3>Wavelength, λ (mm)</h3><span id="wavelengthValue">200</span></div>
         <input type="range" id="wavelengthSlider" min="80" max="400" step="5" value="200" />
       </div>
+      
+      <div class="control">
+        <h3>Particle Visibility</h3>
+        <label>
+          <input type="checkbox" id="showRedDot" checked> Show Red Dot
+        </label><br>
+        <label>
+          <input type="checkbox" id="showBlueDot" checked> Show Blue Dot
+        </label>
+      </div>
     </div>
 
     <div class="buttons">
@@ -272,6 +277,8 @@
         this.draggingParticle = null;   // Currently dragging particle (1 or 2)
         this.refX1 = null;              // X coordinate of first particle
         this.refX2 = null;              // X coordinate of second particle
+        this.showParticle1 = true;      // Show/hide first particle (red dot)
+        this.showParticle2 = true;      // Show/hide second particle (blue dot)
         
         // === Visual units model ===
         // Treat 'speed' slider as visual speed in px/s (not a factor).
@@ -351,6 +358,9 @@
         
         // Set up particle dragging
         this.setupParticleDragging();
+        
+        // Bind particle visibility checkboxes
+        this.bindParticleVisibilityCheckboxes();
       }
       
       // Set up particle dragging functionality
@@ -647,23 +657,27 @@
 
         // First reference point & amplitude line
         const refY1 = H/2 - this.amplitude * Math.sin(k * this.refX1 - omega * this.realTime);
-        ctx.fillStyle = this.particle1Color;
-        ctx.beginPath(); ctx.arc(this.refX1, refY1, this.particleRadius, 0, Math.PI*2); ctx.fill();
-        
-        // Add particle drag hint (white outer circle)
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(this.refX1, refY1, this.particleRadius + 2, 0, Math.PI*2); ctx.stroke();
+        if (this.showParticle1) {
+          ctx.fillStyle = this.particle1Color;
+          ctx.beginPath(); ctx.arc(this.refX1, refY1, this.particleRadius, 0, Math.PI*2); ctx.fill();
+          
+          // Add particle drag hint (white outer circle)
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(this.refX1, refY1, this.particleRadius + 2, 0, Math.PI*2); ctx.stroke();
+        }
 
         // Second reference point
         const refY2 = H/2 - this.amplitude * Math.sin(k * this.refX2 - omega * this.realTime);
-        ctx.fillStyle = this.particle2Color;
-        ctx.beginPath(); ctx.arc(this.refX2, refY2, this.particleRadius, 0, Math.PI*2); ctx.fill();
-        
-        // Add particle drag hint (white outer circle)
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(this.refX2, refY2, this.particleRadius + 2, 0, Math.PI*2); ctx.stroke();
+        if (this.showParticle2) {
+          ctx.fillStyle = this.particle2Color;
+          ctx.beginPath(); ctx.arc(this.refX2, refY2, this.particleRadius, 0, Math.PI*2); ctx.fill();
+          
+          // Add particle drag hint (white outer circle)
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(this.refX2, refY2, this.particleRadius + 2, 0, Math.PI*2); ctx.stroke();
+        }
 
         ctx.strokeStyle = 'rgba(33,150,243,0.35)';
         ctx.setLineDash([6,4]);
@@ -693,7 +707,7 @@
         const mapX = t => ((t - tMin) / (tMax - tMin)) * W;
 
         // Draw first particle's trajectory
-        if (this.timeData1.length > 1) {
+        if (this.showParticle1 && this.timeData1.length > 1) {
           ctx.strokeStyle = this.particle1Color;
           ctx.lineWidth = 3;
           ctx.beginPath();
@@ -706,7 +720,7 @@
         }
         
         // Draw second particle's trajectory
-        if (this.timeData2.length > 1) {
+        if (this.showParticle2 && this.timeData2.length > 1) {
           ctx.strokeStyle = this.particle2Color;
           ctx.lineWidth = 3;
           ctx.beginPath();
@@ -721,16 +735,21 @@
         // First particle's current time point red dot - use actual particle position
         const omega = 2 * Math.PI * this.frequency;
         const k = (2 * Math.PI) / this.wavelengthPx;
-        const yNow1 = this.amplitude * Math.sin(k * this.refX1 - omega * this.realTime);
-        const xNow1 = mapX(this.realTime);
-        ctx.fillStyle = this.particle1Color;
-        ctx.beginPath(); ctx.arc(xNow1, H/2 - yNow1, 6, 0, Math.PI*2); ctx.fill();
+        
+        if (this.showParticle1) {
+          const yNow1 = this.amplitude * Math.sin(k * this.refX1 - omega * this.realTime);
+          const xNow1 = mapX(this.realTime);
+          ctx.fillStyle = this.particle1Color;
+          ctx.beginPath(); ctx.arc(xNow1, H/2 - yNow1, 6, 0, Math.PI*2); ctx.fill();
+        }
         
         // Second particle's current time point blue dot - use actual particle position
-        const yNow2 = this.amplitude * Math.sin(k * this.refX2 - omega * this.realTime);
-        const xNow2 = mapX(this.realTime);
-        ctx.fillStyle = this.particle2Color;
-        ctx.beginPath(); ctx.arc(xNow2, H/2 - yNow2, 6, 0, Math.PI*2); ctx.fill();
+        if (this.showParticle2) {
+          const yNow2 = this.amplitude * Math.sin(k * this.refX2 - omega * this.realTime);
+          const xNow2 = mapX(this.realTime);
+          ctx.fillStyle = this.particle2Color;
+          ctx.beginPath(); ctx.arc(xNow2, H/2 - yNow2, 6, 0, Math.PI*2); ctx.fill();
+        }
       }
 
       drawInitialWaves(){
@@ -763,26 +782,30 @@
         const k = (2 * Math.PI) / this.wavelengthPx;
         
         // First particle's initial preview line
-        ctx.strokeStyle = this.particle1Color;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        for(let x=0;x<W;x++){
-          const t = (x/W) * this.timeWindowSec;
-          const y = H/2 - this.amplitude * Math.sin(k * x01 - omega * t);
-          if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        if (this.showParticle1) {
+          ctx.strokeStyle = this.particle1Color;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          for(let x=0;x<W;x++){
+            const t = (x/W) * this.timeWindowSec;
+            const y = H/2 - this.amplitude * Math.sin(k * x01 - omega * t);
+            if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+          }
+          ctx.stroke();
         }
-        ctx.stroke();
         
         // Second particle's initial preview line
-        ctx.strokeStyle = this.particle2Color;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        for(let x=0;x<W;x++){
-          const t = (x/W) * this.timeWindowSec;
-          const y = H/2 - this.amplitude * Math.sin(k * x02 - omega * t);
-          if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        if (this.showParticle2) {
+          ctx.strokeStyle = this.particle2Color;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          for(let x=0;x<W;x++){
+            const t = (x/W) * this.timeWindowSec;
+            const y = H/2 - this.amplitude * Math.sin(k * x02 - omega * t);
+            if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+          }
+          ctx.stroke();
         }
-        ctx.stroke();
       }
 
       // --- Animation loop ---
@@ -865,8 +888,34 @@
         document.getElementById('speedValue').textContent = '100';
         document.getElementById('wavelengthSlider').value = 200;
         document.getElementById('wavelengthValue').textContent = '200';
+        
+        // Ensure particle visibility checkboxes are reset to checked
+        const showRedDot = document.getElementById('showRedDot');
+        const showBlueDot = document.getElementById('showBlueDot');
+        if (showRedDot) showRedDot.checked = true;
+        if (showBlueDot) showBlueDot.checked = true;
+        
+        this.showParticle1 = true;
+        this.showParticle2 = true;
 
         this.drawInitialWaves();
+      }
+      
+      bindParticleVisibilityCheckboxes() {
+        const showRedDot = document.getElementById('showRedDot');
+        const showBlueDot = document.getElementById('showBlueDot');
+        
+        if (showRedDot && showBlueDot) {
+          showRedDot.addEventListener('change', e => {
+            this.showParticle1 = e.target.checked;
+            if(!this.isAnimating) this.drawInitialWaves();
+          });
+          
+          showBlueDot.addEventListener('change', e => {
+            this.showParticle2 = e.target.checked;
+            if(!this.isAnimating) this.drawInitialWaves();
+          });
+        }
       }
     }
 
