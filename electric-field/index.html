@@ -344,7 +344,7 @@ class ElectricFieldSimulation {
         // charges
         this.drawCharge(this.charge1, "#ff4444", (this.charge1.q>0?"+":"") + (this.charge1.q*1e6).toFixed(1));
         this.drawCharge(this.charge2, "#ff4444", (this.charge2.q>0?"+":"") + (this.charge2.q*1e6).toFixed(1));
-        const testLabel = (this.testCharge.q>0?"+":"") + (Math.abs(this.testCharge.q*1e6)).toFixed(1);
+        const testLabel = (this.testCharge.q>0?"+":"-") + (Math.abs(this.testCharge.q*1e6)).toFixed(1);
         const testColor = this.testCharge.q>0 ? "#44ff44" : "#ffaa44";
         this.drawCharge(this.testCharge, testColor, testLabel);
 
