@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Four-Bulb Black Box Simulation</title>
+  <style>
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111827;margin:0;padding:16px}
+  </style>
+</head>
+<body>
+  
+
+  <h2>Four-Bulb Black Box</h2>
+  <p>Can you guess how the bulbs are connected? Drag the ammeter (A) or voltmeter (V) onto a bulb to measure its current or voltage. Click a bulb to remove it from the circuit. No battery is shown, but an internal emf drives the circuit.</p>
+
+  <div class="sim-wrap">
+    <style>
+      .sim-wrap{max-width:960px;margin:1.5rem auto;padding:18px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px}
+      .canvas{display:block;margin:0 auto;background:#fff;border:1px solid #d1d5db;border-radius:8px;width:100%;height:auto}
+      .meter-read{font-size:14px}
+    </style>
+    <svg id="box-svg" class="canvas" width="960" height="640" viewBox="0 0 960 640" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <marker id="arrow-current" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 L 3 5 z" fill="context-stroke"/>
+        </marker>
+        <radialGradient id="grad1" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop id="g1-mid" offset="70%" stop-color="#ffffff"/>
+          <stop id="g1-yellow" offset="100%" stop-color="#ffd200"/>
+        </radialGradient>
+        <radialGradient id="grad2" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop id="g2-mid" offset="70%" stop-color="#ffffff"/>
+          <stop id="g2-yellow" offset="100%" stop-color="#ffd200"/>
+        </radialGradient>
+        <radialGradient id="grad3" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop id="g3-mid" offset="70%" stop-color="#ffffff"/>
+          <stop id="g3-yellow" offset="100%" stop-color="#ffd200"/>
+        </radialGradient>
+        <radialGradient id="grad4" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop id="g4-mid" offset="70%" stop-color="#ffffff"/>
+          <stop id="g4-yellow" offset="100%" stop-color="#ffd200"/>
+        </radialGradient>
+        <filter id="glow1" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur id="glow1-blur" stdDeviation="0" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        <filter id="glow2" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur id="glow2-blur" stdDeviation="0" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        <filter id="glow3" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur id="glow3-blur" stdDeviation="0" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        <filter id="glow4" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur id="glow4-blur" stdDeviation="0" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      <!-- Hidden black box outline (wires/battery not shown) -->
+      <rect x="60" y="60" width="840" height="520" rx="12" ry="12" stroke="#111" stroke-width="2" fill="#fafafa"/>
+
+      <!-- Four bulbs arranged in a single line (same symbol style as series-parallel page) -->
+      <g id="bulb1" style="cursor:pointer">
+        <circle cx="320" cy="240" r="30" stroke="#000" stroke-width="2" fill="url(#grad1)" filter="url(#glow1)"/>
+        <line x1="300" y1="220" x2="340" y2="260" stroke="#000" stroke-width="2"/>
+        <line x1="300" y1="260" x2="340" y2="220" stroke="#000" stroke-width="2"/>
+        <text x="320" y="300" text-anchor="middle" font-size="18">Bulb 1</text>
+      </g>
+      <g id="bulb2" style="cursor:pointer">
+        <circle cx="640" cy="240" r="30" stroke="#000" stroke-width="2" fill="url(#grad2)" filter="url(#glow2)"/>
+        <line x1="620" y1="220" x2="660" y2="260" stroke="#000" stroke-width="2"/>
+        <line x1="620" y1="260" x2="660" y2="220" stroke="#000" stroke-width="2"/>
+        <text x="640" y="300" text-anchor="middle" font-size="18">Bulb 2</text>
+      </g>
+      <g id="bulb3" style="cursor:pointer">
+        <circle cx="320" cy="440" r="30" stroke="#000" stroke-width="2" fill="url(#grad3)" filter="url(#glow3)"/>
+        <line x1="300" y1="420" x2="340" y2="460" stroke="#000" stroke-width="2"/>
+        <line x1="300" y1="460" x2="340" y2="420" stroke="#000" stroke-width="2"/>
+        <text x="320" y="500" text-anchor="middle" font-size="18">Bulb 3</text>
+      </g>
+      <g id="bulb4" style="cursor:pointer">
+        <circle cx="640" cy="440" r="30" stroke="#000" stroke-width="2" fill="url(#grad4)" filter="url(#glow4)"/>
+        <line x1="620" y1="420" x2="660" y2="460" stroke="#000" stroke-width="2"/>
+        <line x1="620" y1="460" x2="660" y2="420" stroke="#000" stroke-width="2"/>
+        <text x="640" y="500" text-anchor="middle" font-size="18">Bulb 4</text>
+      </g>
+
+      <!-- Instruments -->
+      <g id="ammeter" transform="translate(120,90)" style="cursor:grab">
+        <circle cx="0" cy="0" r="18" stroke="#000" stroke-width="2" fill="#fff"/>
+        <text x="0" y="4" text-anchor="middle" font-size="16">A</text>
+        <text id="ammeter-reading" class="meter-read" x="0" y="24" text-anchor="middle"></text>
+      </g>
+      <g id="voltmeter" transform="translate(160,90)" style="cursor:grab">
+        <circle cx="0" cy="0" r="18" stroke="#000" stroke-width="2" fill="#fff"/>
+        <text x="0" y="4" text-anchor="middle" font-size="16">V</text>
+        <text id="voltmeter-reading" class="meter-read" x="0" y="24" text-anchor="middle"></text>
+      </g>
+      <g id="ammeter-wire"></g>
+      <g id="voltmeter-wires"></g>
+      <g id="reset-btn" transform="translate(920,610)" style="cursor:pointer">
+        <rect x="-36" y="-14" width="72" height="28" rx="6" ry="6" stroke="#000" stroke-width="2" fill="#fff"/>
+        <text x="0" y="4" text-anchor="middle" font-size="14">Reset</text>
+      </g>
+    </svg>
+  </div>
+
+  <script>
+  (function(){
+    const EMF = 12; // internal emf, battery not shown
+    const R = [2,2,2,2]; // default bulb resistances (Ω)
+    const present = [true,true,true,true];
+
+    const svg = document.getElementById('box-svg');
+    const bulbs = [
+      document.querySelector('#bulb1 circle'),
+      document.querySelector('#bulb2 circle'),
+      document.querySelector('#bulb3 circle'),
+      document.querySelector('#bulb4 circle')
+    ];
+    const groups = [
+      document.getElementById('bulb1'),
+      document.getElementById('bulb2'),
+      document.getElementById('bulb3'),
+      document.getElementById('bulb4')
+    ];
+    const ammeter = document.getElementById('ammeter');
+    const voltmeter = document.getElementById('voltmeter');
+    const aRead = document.getElementById('ammeter-reading');
+    const vRead = document.getElementById('voltmeter-reading');
+    const aWire = document.getElementById('ammeter-wire');
+    const wires = document.getElementById('voltmeter-wires');
+    const attach = { ammeter: null, voltmeter: null };
+    const midStops = [
+      document.getElementById('g1-mid'),
+      document.getElementById('g2-mid'),
+      document.getElementById('g3-mid'),
+      document.getElementById('g4-mid')
+    ];
+    const yellowStops = [
+      document.getElementById('g1-yellow'),
+      document.getElementById('g2-yellow'),
+      document.getElementById('g3-yellow'),
+      document.getElementById('g4-yellow')
+    ];
+    function sig2(x){
+      if(!isFinite(x)) return '0';
+      const s = Number(x).toPrecision(2);
+      return s.replace(/\.0+$/,'').replace(/(\..*?)0+$/,'$1');
+    }
+
+    const colorFor = (b) => {
+      const t = Math.max(0, Math.min(1, b / 100));
+      const r = 255;
+      const g = Math.round(255 - (255 - 180) * Math.pow(t, 0.85));
+      const bl = Math.round(255 - 255 * Math.pow(t, 0.9));
+      return `rgb(${r}, ${g}, ${bl})`;
+    };
+
+    function pairEq(i,j){
+      const p1 = present[i], p2 = present[j];
+      if (!p1 && !p2) return Infinity;
+      if (p1 && !p2) return R[i];
+      if (!p1 && p2) return R[j];
+      return (R[i]*R[j])/(R[i]+R[j]);
+    }
+
+    function solve(){
+      const RA = pairEq(0,1);
+      const RB = pairEq(2,3);
+      const Rtot = (RA===Infinity || RB===Infinity) ? Infinity : (RA + RB);
+      const Itot = Rtot===Infinity ? 0 : EMF / Rtot;
+      const VA = Rtot===Infinity ? 0 : Itot * RA;
+      const VB = Rtot===Infinity ? 0 : Itot * RB;
+      const Vs = [VA, VA, VB, VB];
+      const Is = [0,0,0,0];
+      const Ps = [0,0,0,0];
+      for (let i=0;i<4;i++){
+        if (present[i]){
+          Is[i] = Vs[i] / R[i];
+          Ps[i] = Vs[i]*Vs[i] / R[i];
+        }
+      }
+      return { Itot, Vs, Is, Ps };
+    }
+
+    function update(){
+      const {Vs,Is,Ps} = solve();
+      // brightness mapping absolute to EMF and a 0.5Ω reference
+      const maxPower = (EMF*EMF)/0.5;
+      const blurs = [
+        document.getElementById('glow1-blur'),
+        document.getElementById('glow2-blur'),
+        document.getElementById('glow3-blur'),
+        document.getElementById('glow4-blur')
+      ];
+      for (let i=0;i<4;i++){
+        const c = bulbs[i]; if (!c) continue;
+        if (!present[i]){
+          c.style.strokeDasharray = '4 4';
+          c.setAttribute('fill','none');
+          c.setAttribute('stroke','#000');
+          const cross = groups[i]?.querySelectorAll('line');
+          if (cross) cross.forEach(l => l.style.strokeDasharray = '4 4');
+          if (blurs[i]) blurs[i].setAttribute('stdDeviation','0');
+          continue;
+        }
+        c.style.strokeDasharray = '';
+        const cross = groups[i]?.querySelectorAll('line');
+        if (cross) cross.forEach(l => l.style.strokeDasharray = '');
+        const vBulb = Vs[i] || 0;
+        const shades = ['#ffffff','#fff2a8','#ffd766','#ffbf00'];
+        const glowMap = [0,4,8,12];
+        
+        let idx = 0;
+        if (vBulb < 2) idx = 0; else if (vBulb < 5) idx = 1; else if (vBulb < 7) idx = 2; else idx = 3; // nearest of {0,4,6,8}
+        c.setAttribute('fill', shades[idx]);
+        c.style.opacity = idx===0 ? '0.85' : '1';
+        c.setAttribute('stroke', '#000');
+        const sd = glowMap[idx];
+        if (blurs[i]) blurs[i].setAttribute('stdDeviation', String(sd));
+      }
+
+      // update meters
+      if (attach.ammeter!=null){
+        const i = attach.ammeter; const val = present[i] ? (Is[i] || 0) : 0;
+        if (aRead){ aRead.textContent = `I = ${sig2(val)} A`; aRead.setAttribute('y','-26'); }
+        const info = getInfo(bulbs[i]); placeAmmeter(info);
+      } else { if (aRead){ aRead.textContent = ''; aRead.setAttribute('y','24'); } if (aWire) aWire.innerHTML=''; }
+      if (attach.voltmeter!=null){
+        const i = attach.voltmeter; const val = Vs[i] || 0; if (vRead){ vRead.textContent = `V = ${sig2(val)} V`; vRead.setAttribute('y','-26'); }
+        const info = getInfo(bulbs[i]); placeVoltmeter(info);
+      } else { if (vRead){ vRead.textContent = ''; vRead.setAttribute('y','24'); } if (wires) wires.innerHTML = ''; }
+    }
+
+    function getInfo(circleEl){
+      return circleEl ? { cx: parseFloat(circleEl.getAttribute('cx')), cy: parseFloat(circleEl.getAttribute('cy')), r: parseFloat(circleEl.getAttribute('r')) } : null;
+    }
+    function placeAmmeter(info){
+      if (!info || !ammeter) return;
+      const x = info.cx - info.r - 32; const y = info.cy;
+      ammeter.setAttribute('transform', `translate(${x},${y})`);
+      if (aWire){
+        const t = ammeter.getAttribute('transform') || 'translate(0,0)';
+        const m = /translate\(([^,]+),([^\)]+)\)/.exec(t);
+        const ax = m ? parseFloat(m[1]) : 0; const ay = m ? parseFloat(m[2]) : 0;
+        const amCircle = ammeter.querySelector('circle');
+        const amR = amCircle ? parseFloat(amCircle.getAttribute('r')) : 12;
+        const x1 = ax + amR; const x2 = info.cx - info.r; const yy = info.cy;
+        aWire.innerHTML = `<line x1="${x1}" y1="${yy}" x2="${x2}" y2="${yy}" stroke="#000" stroke-width="2"/>`;
+      }
+    }
+    function placeVoltmeter(info){
+      if (!info || !voltmeter) return;
+      const x = info.cx; const y = info.cy - info.r - 28;
+      voltmeter.setAttribute('transform', `translate(${x},${y})`);
+      if (wires){
+        const vmCircle = voltmeter.querySelector('circle');
+        const vtR = vmCircle ? parseFloat(vmCircle.getAttribute('r')) : 12;
+        const leftTermX = x - vtR; const rightTermX = x + vtR; const yWire = y;
+        const bulbLeft = info.cx - info.r; const bulbRight = info.cx + info.r; const bulbY = info.cy;
+        wires.innerHTML = `
+          <line x1="${bulbLeft}" y1="${bulbY}" x2="${bulbLeft}" y2="${yWire}" stroke="#000" stroke-width="2"/>
+          <line x1="${bulbLeft}" y1="${yWire}" x2="${leftTermX}" y2="${yWire}" stroke="#000" stroke-width="2"/>
+          <line x1="${bulbRight}" y1="${bulbY}" x2="${bulbRight}" y2="${yWire}" stroke="#000" stroke-width="2"/>
+          <line x1="${bulbRight}" y1="${yWire}" x2="${rightTermX}" y2="${yWire}" stroke="#000" stroke-width="2"/>
+        `;
+      }
+    }
+
+    // dragging
+    const startDrag = (el, e) => {
+      const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+      const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+      const t = el.getAttribute('transform') || 'translate(0,0)';
+      const m = /translate\(([^,]+),([^\)]+)\)/.exec(t);
+      const ox = m ? parseFloat(m[1]) : 0; const oy = m ? parseFloat(m[2]) : 0;
+      el.__drag = { dx: loc.x - ox, dy: loc.y - oy };
+      svg.__dragEl = el;
+      svg.addEventListener('mousemove', onMove);
+      svg.addEventListener('mouseup', onUp);
+    };
+    const onMove = (e) => {
+      const el = svg.__dragEl; if (!el || !el.__drag) return;
+      const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+      const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+      const x = loc.x - el.__drag.dx; const y = loc.y - el.__drag.dy;
+      el.setAttribute('transform', `translate(${x},${y})`);
+    };
+    const nearestBulb = () => {
+      const pts = bulbs.map(c => ({ cx: parseFloat(c.getAttribute('cx')), cy: parseFloat(c.getAttribute('cy')) }));
+      const t = svg.__dragEl.getAttribute('transform'); const m = /translate\(([^,]+),([^\)]+)\)/.exec(t);
+      const x = m ? parseFloat(m[1]) : 0; const y = m ? parseFloat(m[2]) : 0;
+      let best = 0, dmin = Infinity;
+      pts.forEach((p,i)=>{ const d = Math.hypot(x - p.cx, y - p.cy); if (d < dmin){ dmin = d; best = i; } });
+      return { index: best, dist: dmin };
+    };
+    const onUp = () => {
+      const el = svg.__dragEl; svg.removeEventListener('mousemove', onMove); svg.removeEventListener('mouseup', onUp);
+      if (!el) return; const nb = nearestBulb();
+      if (nb.dist < 40){
+        const which = nb.index;
+        if (!present[which]){
+          if (el.id==='voltmeter'){ attach.voltmeter = null; if (wires) wires.innerHTML=''; if (vRead) vRead.textContent=''; }
+          if (el.id==='ammeter'){ attach.ammeter = null; if (aWire) aWire.innerHTML=''; if (aRead) aRead.textContent=''; }
+        } else {
+          if (el.id==='ammeter'){ attach.ammeter = which; placeAmmeter(getInfo(bulbs[which])); }
+          if (el.id==='voltmeter'){ attach.voltmeter = which; placeVoltmeter(getInfo(bulbs[which])); }
+        }
+        update();
+      } else {
+        if (el.id==='voltmeter'){ attach.voltmeter = null; if (wires) wires.innerHTML=''; if (vRead) vRead.textContent=''; }
+        if (el.id==='ammeter'){ attach.ammeter = null; if (aWire) aWire.innerHTML=''; if (aRead) aRead.textContent=''; }
+      }
+      svg.__dragEl = null; if (el) el.__drag = null;
+    };
+    const bind = (el) => { el.addEventListener('mousedown', (e)=> startDrag(el,e)); };
+    bind(ammeter); bind(voltmeter);
+
+    function resetAll(){
+      for(let i=0;i<present.length;i++) present[i]=true;
+      attach.ammeter=null; attach.voltmeter=null;
+      if(aWire) aWire.innerHTML=''; if(wires) wires.innerHTML='';
+      ammeter.setAttribute('transform','translate(120,90)');
+      voltmeter.setAttribute('transform','translate(160,90)');
+      if(aRead){ aRead.textContent=''; aRead.setAttribute('y','24'); }
+      if(vRead){ vRead.textContent=''; vRead.setAttribute('y','24'); }
+      update();
+    }
+    const resetBtn = document.getElementById('reset-btn');
+    if (resetBtn) resetBtn.addEventListener('click', resetAll);
+
+    function toggleBulb(i){
+      present[i] = !present[i];
+      if (!present[i]){
+        if (attach.ammeter === i){ attach.ammeter = null; if (aRead){ aRead.textContent=''; aRead.setAttribute('y','24'); } if (aWire) aWire.innerHTML=''; ammeter.setAttribute('transform','translate(120,90)'); }
+        if (attach.voltmeter === i){ attach.voltmeter = null; if (vRead){ vRead.textContent=''; vRead.setAttribute('y','24'); } voltmeter.setAttribute('transform','translate(160,90)'); if (wires) wires.innerHTML = ''; }
+      }
+      update();
+    }
+    bulbs.forEach((c, i) => { if (!c) return; c.style.pointerEvents = 'all'; c.addEventListener('click', () => toggleBulb(i)); });
+    groups.forEach((g, i) => {
+      const lines = g ? g.querySelectorAll('line') : [];
+      lines.forEach(l => { l.style.pointerEvents = 'all'; l.addEventListener('click', () => toggleBulb(i)); });
+    });
+
+    update();
+  })();
+  </script>
+
+</body>
+</html>
