@@ -11,8 +11,7 @@
 <body>
   
 
-  <h2>Four-Bulb Black Box</h2>
-  <p>Can you guess how the bulbs are connected? Drag the ammeter (A) or voltmeter (V) onto a bulb to measure its current or voltage. Click a bulb to remove it from the circuit. No battery is shown, but an internal emf drives the circuit.</p>
+  
 
   <div class="sim-wrap">
     <style>
@@ -77,6 +76,13 @@
 
       <!-- Hidden black box outline (wires/battery not shown) -->
       <rect x="60" y="60" width="840" height="520" rx="12" ry="12" stroke="#111" stroke-width="2" fill="#fafafa"/>
+      <g id="canvas-header">
+        <text x="480" y="92" text-anchor="middle" font-size="22" font-weight="600">Four-Bulb Black Box</text>
+        <text x="480" y="116" text-anchor="middle" font-size="14">
+          <tspan x="480" dy="0">Guess the hidden wiring. Drag A or V onto a bulb to measure.</tspan>
+          <tspan x="480" dy="18">Click a bulb to remove/restore. Internal emf is present.</tspan>
+        </text>
+      </g>
 
       <!-- Four bulbs arranged in a single line (same symbol style as series-parallel page) -->
       <g id="bulb1" style="cursor:pointer">
