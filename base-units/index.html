@@ -5,10 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Build SI Units</title>
 <link rel="stylesheet" href="style.css">
-<script>
-window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']]},svg:{fontCache:'global',scale:0.9}};
-</script>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 
   <script>
   function sendScore(score) {
@@ -55,13 +53,14 @@ window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']]},svg:{fontCache:'globa
 </div>
 <div class="readout">
 <div class="readout-row">
-<span>Current unit:</span>
+<span>Current:</span>
 <span id="current-formula"></span>
 </div>
 <div class="readout-row">
 <button id="check">Check</button>
 <span id="result"></span>
-<span id="instructions" class="instructions">Drag base units: drop above for positive, below for negative; drag out or back to palette to remove.</span>
+<button id="info-toggle" class="info-btn" aria-label="Show instructions"><i>i</i></button>
+<span id="instructions" class="instructions hidden">Drag base units: drop above for positive, below for negative; drag out or back to palette to remove.</span>
 <button id="clear-canvas" class="secondary">Clear</button>
 </div>
 </div>
