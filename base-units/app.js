@@ -5,9 +5,7 @@ const DERIVED_UNITS=[
 {symbol:"m²",name:"area",desc:"Area",hint:"area = length × length",hintTex:"A = l^2",dims:{m:2}},
 {symbol:"v",name:"velocity",desc:"Velocity",hint:"velocity = distance ÷ time",hintTex:"v = \\dfrac{d}{t}",termDims:{d:{m:1},t:{s:1}},dims:{m:1,s:-1}},
 {symbol:"a",name:"acceleration",desc:"Acceleration",hint:"acceleration = velocity ÷ time",hintTex:"a = \\dfrac{\\Delta v}{\\Delta t}",termDims:{v:{m:1,s:-1},t:{s:1}},dims:{m:1,s:-2}},
-{symbol:"p",name:"momentum",desc:"Momentum",hint:"momentum = mass × velocity",hintTex:"p = m\\,v",termDims:{m:{kg:1},v:{m:1,s:-1}},dims:{kg:1,m:1,s:-1}},
 {symbol:"τ",name:"torque",desc:"Torque",hint:"torque = force × radius",hintTex:"\\tau = F\\,r",termDims:{F:{kg:1,m:1,s:-2},r:{m:1}},dims:{kg:1,m:2,s:-2}},
-{symbol:"L",name:"angular momentum",desc:"Angular Momentum",hint:"angular momentum = mass × radius × velocity",hintTex:"L = m\\,r\\,v",termDims:{m:{kg:1},r:{m:1},v:{m:1,s:-1}},dims:{kg:1,m:2,s:-1}},
 {symbol:"N",si:"N",name:"newton",desc:"Force",hint:"force = mass × acceleration",hintTex:"F = m\\,a",termDims:{m:{kg:1},a:{m:1,s:-2}},dims:{kg:1,m:1,s:-2}},
 {symbol:"Pa",si:"Pa",name:"pascal",desc:"Pressure",hint:"pressure = force ÷ area",hintTex:"p = \\dfrac{F}{A}",termDims:{F:{kg:1,m:1,s:-2},A:{m:2}},dims:{kg:1,m:-1,s:-2}},
 {symbol:"J",si:"J",name:"joule",desc:"Energy",hint:"energy = force × distance",hintTex:"E = F\\,d",termDims:{F:{kg:1,m:1,s:-2},d:{m:1}},dims:{kg:1,m:2,s:-2}},
@@ -37,7 +35,7 @@ let target=null
 let tokens=[]
 let tokenSeq=0
 let quizIndex=0
-const QUIZ_ORDER=["ρ","m³","m²","v","a","p","τ","L","N","Pa","J","W"]
+const QUIZ_ORDER=["ρ","m³","m²","v","a","τ","N","Pa","J","W"]
 const QUIZ=QUIZ_ORDER.map(sym=>DERIVED_UNITS.find(u=>u.symbol===sym)).filter(Boolean)
 const TERM_NAMES={m:"mass",V:"volume",A:"area",d:"distance",t:"time",v:"velocity",a:"acceleration",F:"force",E:"energy",r:"radius",p:"momentum",L:"angular momentum",τ:"torque"}
 function initPalette(){BASE_UNITS.forEach(u=>{const el=document.createElement("div");el.className="palette-item";const t=document.createElement("div");t.className="token";t.draggable=true;t.dataset.symbol=u.symbol;const sym=document.createElement("span");sym.className="sym";sym.textContent=u.symbol;const name=document.createElement("span");name.className="name";name.textContent=u.name;t.appendChild(sym);t.appendChild(name);el.appendChild(t);palette.appendChild(el);t.addEventListener("dragstart",e=>{e.dataTransfer.setData("text/plain","base:"+u.symbol)})});palette.addEventListener("dragover",e=>{e.preventDefault()});palette.addEventListener("drop",e=>{e.preventDefault();const data=e.dataTransfer.getData("text/plain");if(data.startsWith("token:")){const id=data.slice(6);const idx=tokens.findIndex(t=>t.id===id);if(idx>=0){tokens[idx].el.remove();tokens.splice(idx,1);updateCurrent()}}})}
