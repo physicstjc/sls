@@ -1,0 +1,69 @@
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Arial,sans-serif;background:#f9fafb;color:#0f172a}
+.app{display:flex;flex-direction:column;min-height:100%}
+.header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e5e7eb;background:#ffffff}
+.header h1{margin:0;font-size:20px}
+.header-actions{display:flex;gap:8px}
+button{appearance:none;border:1px solid #93c5fd;background:#2563eb;color:#ffffff;padding:8px 12px;border-radius:8px;font-size:14px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
+button:hover{background:#1e40af}
+button.secondary{background:#e5e7eb;color:#0f172a;border-color:#e5e7eb}
+.main{display:grid;grid-template-columns:1fr max-content;gap:12px;padding:12px}
+.sidebar{background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.sidebar h2{margin:0 0 8px 0;font-size:16px}
+.unit-list{display:flex;flex-direction:column;gap:8px}
+.unit{display:flex;align-items:center;justify-content:space-between;padding:8px;border:1px solid #e5e7eb;border-radius:8px;background:#ffffff;cursor:pointer}
+.unit:hover{background:#f1f5f9}
+.unit .symbol{font-weight:600}
+.canvas-section{display:flex;flex-direction:column;gap:12px}
+.target{display:flex;flex-direction:column;gap:4px}
+.quantity-name{font-weight:700;color:#0f172a}
+.target-desc{color:#3b82f6}
+.target-formula{color:#16a34a}
+.concept-hint{color:#2563eb}
+.term-hints{color:#0f172a;display:flex;flex-wrap:wrap;gap:8px}
+.term-box{border:1px solid #e5e7eb;border-radius:8px;background:#ffffff;padding:8px 12px;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
+.hidden{display:none}
+.canvas{min-height:320px;border:2px dashed #93c5fd;border-radius:12px;background:#ffffff;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.fraction{display:flex;flex-direction:column;height:100%}
+.row{flex:1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
+.divider{height:2px;background:#e5e7eb;border-radius:2px;position:relative}
+.divider::before{content:"÷";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#ffffff;color:#0f172a;font-weight:700;padding:0 6px;border-radius:6px}
+.token{display:flex;align-items:center;gap:8px;background:#e0f2fe;border:1px solid #7dd3fc;border-radius:999px;padding:10px 14px;color:#0f172a;font-size:16px}
+.token .sym{font-weight:700;font-size:18px}
+.token .exp-controls{display:flex;align-items:center;gap:4px}
+.token .exp{min-width:18px;text-align:center}
+.token button{padding:2px 6px;border-radius:6px}
+.token .remove{color:#ef4444;border-color:#ef4444}
+.sep{color:#0f172a;margin:0 8px;font-weight:700;display:flex;align-items:center;font-size:18px;position:relative;top:2px}
+.readout{display:flex;flex-direction:column;gap:8px}
+.readout-row{display:flex;align-items:center;gap:8px}
+.palette{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.sidebar.right{width:max-content}
+.palette .token{white-space:nowrap}
+.palette-item{user-select:none}
+.palette .token{cursor:grab}
+.palette .token:active{cursor:grabbing}
+.row .token{cursor:grab}
+.row .token:active{cursor:grabbing}
+.footer{padding:8px 16px;color:#475569;border-top:1px solid #e5e7eb;background:#ffffff}
+
+@media (max-width: 460px){
+  .header{flex-direction:column;align-items:flex-start;gap:8px}
+  .header-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+  button{font-size:13px;padding:6px 10px}
+  .main{grid-template-columns:1fr}
+  .canvas{min-height:280px;padding:10px}
+  .fraction{height:100%}
+  .row{gap:6px}
+  #numerator,#denominator{min-height:64px}
+  .divider::before{font-size:16px;padding:0 4px}
+  .token{padding:8px 12px;font-size:15px}
+  .token .sym{font-size:17px}
+  .sep{font-size:17px;top:1px}
+  .palette{align-items:stretch}
+  .palette-item{width:100%}
+  .term-hints{flex-direction:column}
+  .term-box{width:100%}
+  .footer{font-size:12px}
+}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Build SI Units</title>
+<link rel="stylesheet" href="style.css">
+<script>
+window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']]},svg:{fontCache:'global'}};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+
+  <script>
+  function sendScore(score) {
+    try {
+      const parameters = XAPIUtils.getParameters(); // Retrieve parameters from store
+      const activityid = parameters.activityId;
+      const stateId = parameters.stateId;
+      const agent = parameters.agent;
+      const registration = null;
+      const stateValue = { score: score };
+      ADL.XAPIWrapper.sendState(activityid, agent, stateId, registration, stateValue);
+    } catch (err) { console.error("An error has occurred!", err); }
+  }
+  </script>
+
+</head>
+<body>
+<div class="app">
+<header class="header">
+<h1>Build SI Units</h1>
+<div class="header-actions">
+<button id="show-terms">Show Hints</button>
+<button id="reset">Reset</button>
+<button id="prev">Back</button>
+<button id="next">Next</button>
+</div>
+</header>
+<main class="main">
+<section class="canvas-section">
+<div class="target">
+<div id="quantity-name" class="quantity-name"></div>
+<div id="target-formula" class="target-formula hidden"></div>
+<div id="concept-hint" class="concept-hint"></div>
+<div id="term-hints" class="term-hints hidden"></div>
+</div>
+<div id="canvas" class="canvas" tabindex="0" aria-label="Drop base units here">
+<div class="fraction">
+<div id="numerator" class="row"></div>
+<div class="divider"></div>
+<div id="denominator" class="row"></div>
+</div>
+</div>
+<div class="readout">
+<div class="readout-row">
+<span>Current:</span>
+<span id="current-formula"></span>
+</div>
+<div class="readout-row">
+<button id="check">Check</button>
+<span id="result"></span>
+<button id="clear-canvas" class="secondary">Clear</button>
+</div>
+</div>
+</section>
+<aside class="sidebar right">
+<h2>Base Units</h2>
+<div id="palette" class="palette"></div>
+</aside>
+</main>
+<footer class="footer">
+<span>Drag base units: drop above for positive, below for negative; drag out of the canvas or back to the palette to remove.</span>
+</footer>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
