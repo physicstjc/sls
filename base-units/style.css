@@ -5,10 +5,10 @@ body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantare
 .header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e5e7eb;background:#ffffff}
 .header h1{margin:0;font-size:20px}
 .header-actions{display:flex;gap:8px}
-button{appearance:none;border:1px solid #93c5fd;background:#2563eb;color:#ffffff;padding:8px 12px;border-radius:8px;font-size:14px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
-button:hover{background:#1e40af}
-button.secondary{background:#e5e7eb;color:#0f172a;border-color:#e5e7eb}
-.main{display:grid;grid-template-columns:1fr max-content;gap:12px;padding:12px}
+button{appearance:none;border:1px solid #86efac;background:#16a34a;color:#ffffff;padding:8px 12px;border-radius:8px;font-size:14px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
+button:hover{background:#15803d}
+button.secondary{background:#f59e0b;color:#0f172a;border-color:#f59e0b}
+.main{display:grid;grid-template-columns:1fr 120px;gap:12px;padding:12px}
 .sidebar{background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
 .sidebar h2{margin:0 0 8px 0;font-size:16px}
 .unit-list{display:flex;flex-direction:column;gap:8px}
@@ -18,18 +18,18 @@ button.secondary{background:#e5e7eb;color:#0f172a;border-color:#e5e7eb}
 .canvas-section{display:flex;flex-direction:column;gap:12px}
 .target{display:flex;flex-direction:column;gap:4px}
 .quantity-name{font-weight:700;color:#0f172a}
-.target-desc{color:#3b82f6}
+.target-desc{color:#f59e0b}
 .target-formula{color:#16a34a}
-.concept-hint{color:#2563eb}
+.concept-hint{color:#f59e0b}
 .term-hints{color:#0f172a;display:flex;flex-wrap:wrap;gap:8px}
 .term-box{border:1px solid #e5e7eb;border-radius:8px;background:#ffffff;padding:8px 12px;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
 .hidden{display:none}
-.canvas{min-height:320px;border:2px dashed #93c5fd;border-radius:12px;background:#ffffff;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.canvas{height:280px;border:2px dashed #f59e0b;border-radius:12px;background:#ffffff;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
 .fraction{display:flex;flex-direction:column;height:100%}
 .row{flex:1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
-.divider{height:2px;background:#e5e7eb;border-radius:2px;position:relative}
+.divider{height:2px;background:#fde68a;border-radius:2px;position:relative}
 .divider::before{content:"÷";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#ffffff;color:#0f172a;font-weight:700;padding:0 6px;border-radius:6px}
-.token{display:flex;align-items:center;gap:8px;background:#e0f2fe;border:1px solid #7dd3fc;border-radius:999px;padding:10px 14px;color:#0f172a;font-size:16px}
+.token{display:flex;align-items:center;gap:8px;background:#fef9c3;border:1px solid #f59e0b;border-radius:999px;padding:10px 14px;color:#0f172a;font-size:16px}
 .token .sym{font-weight:700;font-size:18px}
 .token .exp-controls{display:flex;align-items:center;gap:4px}
 .token .exp{min-width:18px;text-align:center}
@@ -39,7 +39,11 @@ button.secondary{background:#e5e7eb;color:#0f172a;border-color:#e5e7eb}
 .readout{display:flex;flex-direction:column;gap:8px}
 .readout-row{display:flex;align-items:center;gap:8px}
 .palette{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
-.sidebar.right{width:max-content}
+.sidebar.right{width:120px;height:360px;overflow:auto}
+.palette-item{width:100%}
+.palette .token{padding:6px 8px;font-size:13px}
+.palette .token .sym{font-size:14px}
+.palette .token .name{display:none}
 .palette .token{white-space:nowrap}
 .palette-item{user-select:none}
 .palette .token{cursor:grab}
@@ -53,12 +57,12 @@ button.secondary{background:#e5e7eb;color:#0f172a;border-color:#e5e7eb}
   .header-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
   button{font-size:13px;padding:6px 10px}
   .main{grid-template-columns:1fr}
-  .canvas{min-height:280px;padding:10px}
+  .canvas{height:240px;padding:10px;border-color:#f59e0b}
   .fraction{height:100%}
   .row{gap:6px}
   #numerator,#denominator{min-height:64px}
   .divider::before{font-size:16px;padding:0 4px}
-  .token{padding:8px 12px;font-size:15px}
+  .token{padding:8px 12px;font-size:15px;border-color:#f59e0b;background:#fef9c3}
   .token .sym{font-size:17px}
   .sep{font-size:17px;top:1px}
   .palette{align-items:stretch}
@@ -66,4 +70,26 @@ button.secondary{background:#e5e7eb;color:#0f172a;border-color:#e5e7eb}
   .term-hints{flex-direction:column}
   .term-box{width:100%}
   .footer{font-size:12px}
+}
+
+@media (max-height: 450px){
+  .header{padding:8px 12px}
+  .header h1{font-size:18px}
+  .header-actions{gap:6px}
+  button{font-size:12px;padding:5px 8px}
+  .main{gap:8px;padding:8px}
+  .sidebar{padding:8px}
+  .canvas{height:180px;padding:8px;border-color:#f59e0b}
+  .fraction{height:100%}
+  #numerator,#denominator{min-height:56px}
+  .divider::before{font-size:14px;padding:0 4px}
+  .row{gap:6px}
+  .token{padding:6px 10px;font-size:14px;border-color:#f59e0b;background:#fef9c3}
+  .token .sym{font-size:16px}
+  .sep{font-size:16px;top:0}
+  .quantity-name{font-size:14px}
+  .concept-hint,.term-hints{font-size:13px}
+  .term-box{padding:6px 10px}
+  .footer{padding:6px 12px;font-size:12px}
+  .sidebar.right{max-height:150px;overflow:auto}
 }
