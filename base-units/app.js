@@ -43,7 +43,23 @@ let quizIndex=0
 const QUIZ_ORDER=["ρ","m³","m²","v","a","τ","N","Pa","J","Cₕ","c","L","M","C","V","Ω","W"]
 const QUIZ=QUIZ_ORDER.map(sym=>DERIVED_UNITS.find(u=>u.symbol===sym)).filter(Boolean)
 const TERM_NAMES={m:"mass",V:"volume",A:"area",l:"length",d:"distance",t:"time",v:"velocity",a:"acceleration",F:"force",E:"energy",r:"radius",p:"momentum",L:"angular momentum",τ:"torque"}
-function initPalette(){BASE_UNITS.forEach(u=>{const el=document.createElement("div");el.className="palette-item";const t=document.createElement("div");t.className="token";t.draggable=true;t.dataset.symbol=u.symbol;const sym=document.createElement("span");sym.className="sym";sym.textContent=u.symbol;const name=document.createElement("span");name.className="name";name.textContent=u.name;t.appendChild(sym);t.appendChild(name);el.appendChild(t);palette.appendChild(el);t.addEventListener("dragstart",e=>{e.dataTransfer.setData("text/plain","base:"+u.symbol)})});palette.addEventListener("dragover",e=>{e.preventDefault()});palette.addEventListener("drop",e=>{e.preventDefault();const data=e.dataTransfer.getData("text/plain");if(data.startsWith("token:")){const id=data.slice(6);const idx=tokens.findIndex(t=>t.id===id);if(idx>=0){tokens[idx].el.remove();tokens.splice(idx,1);updateCurrent()}}})}
+function initPalette(){
+  BASE_UNITS.forEach(u=>{
+    const el=document.createElement("div");el.className="palette-item";
+    const t=document.createElement("div");t.className="token";t.draggable=true;t.dataset.symbol=u.symbol;
+    const sym=document.createElement("span");sym.className="sym";sym.textContent=u.symbol;
+    const name=document.createElement("span");name.className="name";name.textContent=u.name;
+    t.appendChild(sym);t.appendChild(name);el.appendChild(t);palette.appendChild(el);
+    t.addEventListener("dragstart",e=>{e.dataTransfer.setData("text/plain","base:"+u.symbol)});
+    t.addEventListener("click",()=>{addToken(u.symbol,"num")});
+    let pressTimer=null, didLong=false;
+    t.addEventListener("touchstart",(e)=>{didLong=false;pressTimer=setTimeout(()=>{didLong=true;addToken(u.symbol,"den")},500)});
+    t.addEventListener("touchend",(e)=>{if(pressTimer){clearTimeout(pressTimer)}if(!didLong){addToken(u.symbol,"num")}e.preventDefault()});
+    t.addEventListener("touchmove",()=>{if(pressTimer){clearTimeout(pressTimer)}})
+  });
+  palette.addEventListener("dragover",e=>{e.preventDefault()});
+  palette.addEventListener("drop",e=>{e.preventDefault();const data=e.dataTransfer.getData("text/plain");if(data.startsWith("token:")){const id=data.slice(6);const idx=tokens.findIndex(t=>t.id===id);if(idx>=0){tokens[idx].el.remove();tokens.splice(idx,1);updateCurrent()}}})
+}
 function dimsToTeX(d){const order=["kg","m","s","A","K","mol","cd"];const parts=[];order.forEach(k=>{const v=d[k]||0;if(v===0)return;if(v===1){parts.push("\\mathrm{"+k+"}")}else{parts.push("\\mathrm{"+k+"}^{"+v+"}")}});return parts.length?parts.join("\\, "):"1"}
 function dimsToPlain(d){const order=["kg","m","s","A","K","mol","cd"];const parts=[];order.forEach(k=>{const v=d[k]||0;if(v===0)return;if(v===1){parts.push(k)}else{parts.push(k+"^"+v)}});return parts.length?parts.join(" "):"1"}
 function renderMath(el,tex){if(window.katex){katex.render(tex,el,{throwOnError:false})}else{el.textContent=tex}}
@@ -74,7 +90,19 @@ function renderTermHints(u){
 function setTarget(u){target=u;quantityName.textContent=u.desc||u.name;renderMath(targetFormula,"\\text{Base: } "+dimsToTeX(u.dims));if(u.hintTex){conceptHint.innerHTML="";renderMath(conceptHint,u.hintTex)}else{conceptHint.textContent=u.hint||""}renderTermHints(u)}
 function initUnits(){}
 function updateTargetFormulaVisibility(){if(targetFormula.classList.contains("hidden"))return;targetFormula.classList.remove("hidden")}
-function addToken(sym,side){const tokenEl=document.createElement("div");tokenEl.className="token";tokenEl.draggable=true;const symEl=document.createElement("span");symEl.className="sym";symEl.textContent=sym;tokenEl.appendChild(symEl);const id="t"+(++tokenSeq);const token={id,symbol:sym,side,el:tokenEl};tokens.push(token);tokenEl.addEventListener("dragstart",e=>{e.dataTransfer.setData("text/plain","token:"+id)});if(side==="num"){numerator.appendChild(tokenEl)}else{denominator.appendChild(tokenEl)}updateCurrent()}
+function addToken(sym,side){
+  const tokenEl=document.createElement("div");tokenEl.className="token";tokenEl.draggable=true;
+  const symEl=document.createElement("span");symEl.className="sym";symEl.textContent=sym;tokenEl.appendChild(symEl);
+  const id="t"+(++tokenSeq);const token={id,symbol:sym,side,el:tokenEl};tokens.push(token);
+  tokenEl.addEventListener("dragstart",e=>{e.dataTransfer.setData("text/plain","token:"+id)});
+  tokenEl.addEventListener("click",()=>{const idx=tokens.findIndex(t=>t.id===id);if(idx>=0){tokens[idx].el.remove();tokens.splice(idx,1);updateCurrent()}});
+  let rmTimer=null, didLong=false;
+  tokenEl.addEventListener("touchstart",()=>{didLong=false;rmTimer=setTimeout(()=>{didLong=true;const idx=tokens.findIndex(t=>t.id===id);if(idx>=0){tokens[idx].el.remove();tokens.splice(idx,1);updateCurrent()}},500)});
+  tokenEl.addEventListener("touchend",(e)=>{if(rmTimer){clearTimeout(rmTimer)}if(!didLong){const idx=tokens.findIndex(t=>t.id===id);if(idx>=0){tokens[idx].el.remove();tokens.splice(idx,1);updateCurrent()}}e.preventDefault()});
+  tokenEl.addEventListener("touchmove",()=>{if(rmTimer){clearTimeout(rmTimer)}})
+  if(side==="num"){numerator.appendChild(tokenEl)}else{denominator.appendChild(tokenEl)}
+  updateCurrent()
+}
 function clearCanvas(){tokens.forEach(t=>t.el.remove());tokens=[];updateCurrent();result.textContent=""}
 function compareDims(a,b){const keys=["kg","m","s","A","K","mol","cd"];return keys.every(k=>(a[k]||0)===(b[k]||0))}
 function diffHint(a,b){const keys=["kg","m","s","A","K","mol","cd"];const parts=keys.map(k=>{const da=(a[k]||0),db=(b[k]||0);const d=db-da;if(d!==0)return k+(d>0?" "+toSup(d):" "+toSup(d));return null}).filter(Boolean);return parts.length?("Adjust: "+parts.join(" · ")):""}

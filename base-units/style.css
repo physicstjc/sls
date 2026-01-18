@@ -43,8 +43,8 @@ button.secondary{background:#f59e0b;color:#0f172a;border-color:#f59e0b}
 .row{flex:1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
 .divider{height:2px;background:#fde68a;border-radius:2px;position:relative}
 .divider::before{content:"÷";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#ffffff;color:#0f172a;font-weight:700;padding:0 6px;border-radius:6px}
-.token{display:flex;align-items:center;gap:8px;background:#fef9c3;border:1px solid #f59e0b;border-radius:999px;padding:10px 14px;color:#0f172a;font-size:16px}
-.token .sym{font-weight:700;font-size:18px}
+.token{display:flex;align-items:center;gap:6px;background:#fef9c3;border:1px solid #f59e0b;border-radius:999px;padding:8px 7px;color:#0f172a;font-size:15px}
+.token .sym{font-weight:700;font-size:16px}
 .token .exp-controls{display:flex;align-items:center;gap:4px}
 .token .exp{min-width:18px;text-align:center}
 .token button{padding:2px 6px;border-radius:6px}
@@ -73,19 +73,21 @@ button.secondary{background:#f59e0b;color:#0f172a;border-color:#f59e0b}
   .header{flex-direction:column;align-items:flex-start;gap:8px}
   .header-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
   button{font-size:13px;padding:6px 10px}
-  .main{grid-template-columns:1fr}
+  .main{grid-template-columns:1fr 120px}
   .canvas{height:240px;padding:10px;border-color:#f59e0b}
   .fraction{height:100%}
   .row{gap:6px}
   #numerator,#denominator{min-height:64px}
   .divider::before{font-size:16px;padding:0 4px}
-  .token{padding:8px 12px;font-size:15px;border-color:#f59e0b;background:#fef9c3}
-  .token .sym{font-size:17px}
-  .sep{font-size:17px;top:1px}
+  .token{padding:4px 5px;font-size:12px;border-color:#f59e0b;background:#fef9c3;max-width:100%}
+  .token .sym{font-size:13px}
+  .sep{font-size:13px;top:0}
   .palette{align-items:stretch}
   .palette-item{width:100%}
   .term-hints{flex-direction:column}
-  .term-box{width:100%}
+  .term-box{width:100%;padding:4px 8px}
+  .palette .token{padding:4px 6px;font-size:12px}
+  .palette .token .sym{font-size:13px}
   .footer{font-size:12px}
 }
 
