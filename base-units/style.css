@@ -19,9 +19,10 @@ button.secondary{background:#f59e0b;color:#0f172a;border-color:#f59e0b}
 .target{display:flex;flex-direction:column;gap:4px}
 .quantity-name{font-weight:700;color:#0f172a}
 .target-desc{color:#f59e0b}
-.target-formula{color:#16a34a}
-.concept-hint{color:#f59e0b}
-.term-hints{color:#0f172a;display:flex;flex-wrap:wrap;gap:8px}
+.target-formula{color:#111827}
+.concept-hint{color:#111827}
+.term-hints{color:#111827;display:flex;flex-wrap:wrap;gap:8px}
+.readout #current-formula{color:#111827}
 .term-box{border:1px solid #e5e7eb;border-radius:8px;background:#ffffff;padding:8px 12px;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
 .hidden{display:none}
 .canvas{height:280px;border:2px dashed #f59e0b;border-radius:12px;background:#ffffff;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
