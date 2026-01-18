@@ -25,7 +25,7 @@ button.secondary{background:#f59e0b;color:#0f172a;border-color:#f59e0b}
 .readout #current-formula{color:#111827}
 .term-box{border:1px solid #e5e7eb;border-radius:8px;background:#ffffff;padding:8px 12px;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
 .hidden{display:none}
-.canvas{height:280px;border:2px dashed #f59e0b;border-radius:12px;background:#ffffff;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.canvas{height:240px;border:2px dashed #f59e0b;border-radius:12px;background:#ffffff;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
 .fraction{display:flex;flex-direction:column;height:100%}
 .row{flex:1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
 .divider{height:2px;background:#fde68a;border-radius:2px;position:relative}
@@ -40,7 +40,7 @@ button.secondary{background:#f59e0b;color:#0f172a;border-color:#f59e0b}
 .readout{display:flex;flex-direction:column;gap:8px}
 .readout-row{display:flex;align-items:center;gap:8px}
 .palette{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
-.sidebar.right{width:120px;height:360px;overflow:auto}
+.sidebar.right{width:120px;height:320px;overflow:auto}
 .palette-item{width:100%}
 .palette .token{padding:6px 8px;font-size:13px}
 .palette .token .sym{font-size:14px}
