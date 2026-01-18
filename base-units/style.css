@@ -17,6 +17,8 @@ button.secondary{background:#f59e0b;color:#0f172a;border-color:#f59e0b}
 .unit .symbol{font-weight:600}
 .canvas-section{display:flex;flex-direction:column;gap:12px}
 .target{display:flex;flex-direction:column;gap:4px}
+.equation-row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.concept-hint,.term-hints{display:inline-flex;align-items:baseline}
 .quantity-name{font-weight:700;color:#0f172a}
 .target-desc{color:#f59e0b}
 .target-formula{color:#111827}
@@ -39,6 +41,7 @@ button.secondary{background:#f59e0b;color:#0f172a;border-color:#f59e0b}
 .sep{color:#0f172a;margin:0 8px;font-weight:700;display:flex;align-items:center;font-size:18px;position:relative;top:2px}
 .readout{display:flex;flex-direction:column;gap:8px}
 .readout-row{display:flex;align-items:center;gap:8px}
+.instructions{margin-left:auto;color:#475569;font-size:12px}
 .palette{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .sidebar.right{width:120px;height:320px;overflow:auto}
 .palette-item{width:100%}

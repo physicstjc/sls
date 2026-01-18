@@ -41,8 +41,10 @@ window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']]},svg:{fontCache:'globa
 <div class="target">
 <div id="quantity-name" class="quantity-name"></div>
 <div id="target-formula" class="target-formula hidden"></div>
+<div class="equation-row">
 <div id="concept-hint" class="concept-hint"></div>
 <div id="term-hints" class="term-hints hidden"></div>
+</div>
 </div>
 <div id="canvas" class="canvas" tabindex="0" aria-label="Drop base units here">
 <div class="fraction">
@@ -59,6 +61,7 @@ window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']]},svg:{fontCache:'globa
 <div class="readout-row">
 <button id="check">Check</button>
 <span id="result"></span>
+<span id="instructions" class="instructions">Drag base units: drop above for positive, below for negative; drag out or back to palette to remove.</span>
 <button id="clear-canvas" class="secondary">Clear</button>
 </div>
 </div>
@@ -69,7 +72,7 @@ window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']]},svg:{fontCache:'globa
 </aside>
 </main>
 <footer class="footer">
-<span>Drag base units: drop above for positive, below for negative; drag out of the canvas or back to the palette to remove.</span>
+<span class="hidden"></span>
 </footer>
 </div>
 <script src="app.js"></script>
