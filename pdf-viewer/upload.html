@@ -225,7 +225,7 @@
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js" integrity="sha512-4R6S3i2mX5c3VqTq1w6O3IhA6bP5Qxq6mIYtpC4e2r7+f5L8zD9n8lqQk0pQYb0WQ8r7bWb9gQxR7sQxgM9Zxg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
   <script>
     const fileInput = document.getElementById('pdfFile');
     const processBtn = document.getElementById('processBtn');
@@ -277,7 +277,6 @@
       showMeta(f);
       setStatus('PDF ready to process.');
     });
-
     // Drag & Drop
     ;['dragenter','dragover'].forEach(evt =>
       dropzone.addEventListener(evt, (e) => {
@@ -329,41 +328,39 @@
         const fileName = selectedFile.name;
         const baseName = fileName.replace(/\.pdf$/i,'') || 'document';
 
-        // Put the PDF inside
         zip.file(fileName, selectedFile);
-
-        // Create a minimal, beautiful viewer page
-        const viewerHTML = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${baseName}</title>
-<style>
-  html,body{height:100%;margin:0}
-  body{font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background:#0b1220; color:#e5e7eb}
-  .bar{
-    position:fixed; top:0; left:0; right:0;
-    background: rgba(15,23,42,.8); backdrop-filter: blur(6px);
-    border-bottom: 1px solid rgba(148,163,184,.25);
-    display:flex; align-items:center; justify-content:space-between;
-    padding:8px 14px; z-index:10;
-  }
-  .title{font-weight:700; font-size:14px; letter-spacing:.2px}
-  .btn{
-    color:#0b1b14; background:#22c55e; border:none; border-radius:999px; padding:6px 12px; font-weight:700; cursor:pointer;
-  }
-  .wrap{position:absolute; inset:48px 0 0 0}
-  .wrap embed, .wrap object{
-    width:100%; height:100%; border:0; background:#111827;
-  }
-  .fallback{
-    position:absolute; inset:48px 0 0 0; display:grid; place-items:center; text-align:center; padding:24px; color:#cbd5e1;
-  }
-  a { color:#93c5fd }
-</style>
-</head>
-<body>
-  <div class="bar">
-    <div class="title">${baseName}.pdf</div>
-    <button class="btn" onclick="downloadPDF()">Download</butt
+        let viewerHTML = '';
+        try{
+          const res = await fetch('viewer.html', { cache: 'no-store' });
+          viewerHTML = await res.text();
+        } catch(e){
+          setStatus('Failed to load viewer template.', false);
+          processBtn.disabled = false;
+          processBtn.textContent = 'Process PDF';
+          return;
+        }
+        viewerHTML = viewerHTML
+          .replace(/__TITLE__/g, baseName)
+          .replace(/__FILE_NAME__/g, fileName);
+        zip.file('index.html', viewerHTML);
+        const zipName = baseName + '-viewer.zip';
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = zipName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        setStatus('ZIP downloaded: ' + zipName);
+        processBtn.disabled = false;
+        processBtn.textContent = 'Process PDF';
+      } catch (err) {
+        setStatus('Failed to build ZIP: ' + (err && err.message ? err.message : 'Unknown error'), false);
+        processBtn.disabled = false;
+        processBtn.textContent = 'Process PDF';
+      }
+    });
+  </script>
+</body>
+</html>
