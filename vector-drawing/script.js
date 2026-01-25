@@ -309,20 +309,35 @@ function setupEventListeners() {
     drawingCanvas.addEventListener('mousemove', draw);
     drawingCanvas.addEventListener('mouseup', stopDrawing);
     drawingCanvas.addEventListener('mouseout', stopDrawing);
+    
+    // Touch support for drawing
+    drawingCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); }, { passive: false });
+    drawingCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, { passive: false });
+    drawingCanvas.addEventListener('touchend', (e) => { e.preventDefault(); stopDrawing(e); });
 
     // Draggable Interactions (Protractor & Ruler)
     const draggables = document.querySelectorAll('.draggable');
     draggables.forEach(el => {
         el.addEventListener('mousedown', startDragItem);
+        el.addEventListener('touchstart', (e) => { 
+            if (e.target.classList.contains('pivot')) return; // let pivot handle it
+            e.preventDefault(); 
+            startDragItem(e); 
+        }, { passive: false });
     });
 
     const pivots = document.querySelectorAll('.pivot');
     pivots.forEach(el => {
         el.addEventListener('mousedown', startRotateItem);
+        el.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); startRotateItem(e); }, { passive: false });
     });
 
     document.addEventListener('mousemove', moveItem);
     document.addEventListener('mouseup', stopDragItem);
+    
+    // Touch support for dragging/rotating
+    document.addEventListener('touchmove', (e) => { if(draggableState.isDragging || draggableState.isRotating) e.preventDefault(); moveItem(e); }, { passive: false });
+    document.addEventListener('touchend', stopDragItem);
     
     // Toolbar
     clearBtn.addEventListener('click', () => {
@@ -500,9 +515,17 @@ function updateStep(change) {
 // Drawing Logic
 function getMousePos(evt) {
     const rect = drawingCanvas.getBoundingClientRect();
+    let clientX = evt.clientX;
+    let clientY = evt.clientY;
+    
+    if (evt.touches && evt.touches.length > 0) {
+        clientX = evt.touches[0].clientX;
+        clientY = evt.touches[0].clientY;
+    }
+    
     return {
-        x: evt.clientX - rect.left,
-        y: evt.clientY - rect.top
+        x: clientX - rect.left,
+        y: clientY - rect.top
     };
 }
 
@@ -692,10 +715,18 @@ function startDragItem(evt) {
     // Simpler approach: We track center in draggableState.
     // Offset = MousePos - CenterPos
     
+    let clientX = evt.clientX;
+    let clientY = evt.clientY;
+    
+    if (evt.touches && evt.touches.length > 0) {
+        clientX = evt.touches[0].clientX;
+        clientY = evt.touches[0].clientY;
+    }
+    
     const state = draggableState.items[type];
     const rect = canvasContainer.getBoundingClientRect();
-    const mouseX = evt.clientX - rect.left;
-    const mouseY = evt.clientY - rect.top;
+    const mouseX = clientX - rect.left;
+    const mouseY = clientY - rect.top;
     
     draggableState.dragOffset.x = mouseX - state.x;
     draggableState.dragOffset.y = mouseY - state.y;
@@ -743,8 +774,16 @@ function getPivotLocalPos(type, pivotId) {
 
 function moveItem(evt) {
     const rect = canvasContainer.getBoundingClientRect();
-    const mouseX = evt.clientX - rect.left;
-    const mouseY = evt.clientY - rect.top;
+    let clientX = evt.clientX;
+    let clientY = evt.clientY;
+    
+    if (evt.touches && evt.touches.length > 0) {
+        clientX = evt.touches[0].clientX;
+        clientY = evt.touches[0].clientY;
+    }
+
+    const mouseX = clientX - rect.left;
+    const mouseY = clientY - rect.top;
 
     if (draggableState.isDragging && draggableState.activeElement) {
         const type = draggableState.activeElement;
