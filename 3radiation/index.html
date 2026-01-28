@@ -1,1 +1,977 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuclear Radiation Simulation</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 28px;
+        }
+        
+        h2 {
+            color: #444;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        
+        h3 {
+            color: #555;
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        /* Control Panels */
+        .panel-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .panel {
+            flex: 1;
+            min-width: 250px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        /* Buttons */
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-default {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        
+        .btn-default:hover:not(:disabled) {
+            background-color: #dee2e6;
+        }
+        
+        .btn-selected {
+            background-color: #4361ee;
+            color: white;
+        }
+        
+        .btn-primary {
+            background-color: #3a86ff;
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background-color: #2667ff;
+        }
+        
+        .btn-success {
+            background-color: #38b000;
+            color: white;
+        }
+        
+        .btn-success:hover:not(:disabled) {
+            background-color: #2d9600;
+        }
+        
+        .btn-warning {
+            background-color: #ffaa00;
+            color: white;
+        }
+        
+        .btn-warning:hover:not(:disabled) {
+            background-color: #ff9500;
+        }
+        
+        .btn-danger {
+            background-color: #e63946;
+            color: white;
+        }
+        
+        .btn-danger:hover:not(:disabled) {
+            background-color: #dc2f3c;
+        }
+        
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        
+        /* Simulation Area */
+        .simulation-area {
+            position: relative;
+            height: 280px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .radiation-source {
+            position: absolute;
+            top: 50%;
+            left: 60px;
+            transform: translateY(-50%);
+            width: 70px;
+            height: 70px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .source-icon {
+            width: 40px;
+            height: 40px;
+            fill: none;
+            stroke: #495057;
+            stroke-width: 2px;
+        }
+        
+        .barrier {
+            position: absolute;
+            height: 100%;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+        }
+        
+        .barrier-label {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .detector {
+            position: absolute;
+            top: 50%;
+            right: 60px;
+            transform: translateY(-50%);
+            width: 70px;
+            height: 70px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .detector-icon {
+            width: 40px;
+            height: 40px;
+            fill: none;
+            stroke: #495057;
+            stroke-width: 2px;
+        }
+        
+        /* Radiation particles */
+        .radiation-particle {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            transition: left 1.5s linear;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .particle-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .alpha-particle {
+            width: 24px;
+            height: 24px;
+            background-color: #ef476f;
+            border-radius: 50%;
+        }
+        
+        .beta-particle {
+            width: 12px;
+            height: 12px;
+            background-color: #06d6a0;
+            border-radius: 50%;
+        }
+        
+        .gamma-wave {
+            width: 40px;
+            height: 20px;
+        }
+        
+        /* Messages */
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .success-message {
+            background-color: #d9f2e6;
+            border: 1px solid #b2e0cc;
+            color: #1b7a46;
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            border: 1px solid #f5c2c7;
+            color: #842029;
+        }
+        
+        .warning-message {
+            background-color: #fff3cd;
+            border: 1px solid #ffecb5;
+            color: #664d03;
+        }
+        
+        /* Details Panel */
+        .details-panel {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        ul {
+            margin-left: 25px;
+        }
+        
+        li {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        /* Challenge Mode */
+        .challenge-container {
+            display: none;
+        }
+        
+        /* Attribution */
+        .attribution {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .panel-container {
+                flex-direction: column;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .action-buttons button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Nuclear Radiation Simulation</h1>
+        
+        <!-- Normal Mode -->
+        <div id="normal-mode">
+            <div class="panel-container">
+                <div class="panel">
+                    <h2>Radiation Type</h2>
+                    <div class="btn-group" id="radiation-buttons">
+                        <button class="btn-selected" data-type="alpha">Alpha Particles (α)</button>
+                        <button class="btn-default" data-type="beta">Beta Particles (β)</button>
+                        <button class="btn-default" data-type="gamma">Gamma Rays (γ)</button>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>Barrier Material</h2>
+                    <div class="btn-group" id="barrier-buttons">
+                        <button class="btn-selected" data-barrier="paper">Paper</button>
+                        <button class="btn-default" data-barrier="aluminum">Aluminum</button>
+                        <button class="btn-default" data-barrier="lead">Lead</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="start-button" class="btn-primary">Start Simulation</button>
+                <button id="details-button" class="btn-default">Show Details</button>
+                <button id="challenge-radiation-button" class="btn-warning">Challenge: Identify Radiation</button>
+                <button id="challenge-barrier-button" class="btn-warning">Challenge: Identify Barrier</button>
+            </div>
+        </div>
+        
+        <!-- Challenge Mode -->
+        <div id="challenge-mode" class="challenge-container">
+            <div id="challenge-info" class="message warning-message">
+                <h2>Challenge Mode: <span id="challenge-title">Identify the Radiation Type</span></h2>
+                <p id="challenge-description">An unknown radiation type is being tested against Paper. Observe the behavior and identify the radiation.</p>
+            </div>
+            
+            <div class="panel-container">
+                <div class="panel" id="challenge-known-panel">
+                    <h2 id="challenge-known-title">Barrier Material</h2>
+                    <div class="btn-group" id="challenge-known-buttons">
+                        <!-- Will be filled dynamically -->
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>Your Guess</h2>
+                    <div class="btn-group" id="challenge-guess-buttons">
+                        <!-- Will be filled dynamically -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="run-test-button" class="btn-primary">Run Test</button>
+                <button id="submit-guess-button" class="btn-success">Submit Guess</button>
+                <button id="try-another-button" class="btn-warning">Try Another One</button>
+                <button id="exit-challenge-button" class="btn-danger">Exit Challenge</button>
+            </div>
+        </div>
+        
+        <!-- Simulation Area -->
+        <div class="simulation-area">
+            <!-- Radiation Source -->
+            <div class="radiation-source">
+                <svg class="source-icon" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="8"></circle>
+                    <line x1="12" y1="4" x2="12" y2="20"></line>
+                    <line x1="4" y1="12" x2="20" y2="12"></line>
+                </svg>
+            </div>
+            
+            <!-- Barrier -->
+            <div id="barrier" class="barrier">
+                <span id="barrier-label" class="barrier-label">Paper</span>
+            </div>
+            
+            <!-- Detector -->
+            <div class="detector">
+                <svg id="detector-icon" class="detector-icon" viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+            </div>
+            
+            <!-- Radiation Particle -->
+            <div id="radiation-particle" class="radiation-particle">
+                <div id="particle-content"></div>
+                <span id="particle-label" class="particle-label"></span>
+            </div>
+        </div>
+        
+        <!-- Result Message -->
+        <div id="result-message" style="display: none;"></div>
+        
+        <!-- Challenge Result -->
+        <div id="guess-result" style="display: none;"></div>
+        
+        <!-- Details Panel -->
+        <div id="details-panel" class="details-panel" style="display: none;">
+            <h2 id="radiation-detail-title">Alpha (α) Properties</h2>
+            <ul>
+                <li><strong>Composition:</strong> <span id="radiation-composition">Helium nucleus (2 protons, 2 neutrons)</span></li>
+                <li><strong>Ionizing Power:</strong> <span id="radiation-ionizing">Very high</span></li>
+                <li><strong>Penetrating Power:</strong> <span id="radiation-penetrating">Very low</span></li>
+                <li id="radiation-description">Alpha particles are relatively large and carry a positive charge. They have high ionizing power but very low penetrating power.</li>
+            </ul>
+            
+            <h3>Shielding Requirements:</h3>
+            <ul>
+                <li><strong>Alpha Particles (α):</strong> Stopped by paper, skin, or a few centimeters of air</li>
+                <li><strong>Beta Particles (β):</strong> Stopped by aluminum foil, glass, or plastic</li>
+                <li><strong>Gamma Rays (γ):</strong> Stopped by thick lead (several cm) or very thick concrete walls</li>
+            </ul>
+            
+            <h3>Ionization Effects:</h3>
+            <ul>
+                <li><strong>Alpha Particles (α):</strong> Creates intense ionization over short distances; can cause significant cell damage if ingested or inhaled</li>
+                <li><strong>Beta Particles (β):</strong> Moderate ionization over medium distances; can penetrate skin and cause tissue damage</li>
+                <li><strong>Gamma Rays (γ):</strong> Sparse ionization over long distances; can penetrate deeply into body tissue and damage cells throughout</li>
+            </ul>
+        </div>
+        
+        <!-- Attribution -->
+        <div class="attribution">
+            Made by Tan Xiang Yeow and James Kua
+        </div>
+    </div>
+
+    <script>
+        // Radiation Types Data
+        const radiationTypes = {
+            alpha: {
+                name: 'Alpha Particles (α)',
+                composition: 'Helium nucleus (2 protons, 2 neutrons)',
+                ionizingPower: 'Very high',
+                penetratingPower: 'Very low',
+                stopsAt: ['paper', 'aluminum', 'lead'],
+                description: 'Alpha particles are relatively large and carry a positive charge. They have high ionizing power but very low penetrating power.',
+                type: 'particle',
+                cssClass: 'alpha-particle'
+            },
+            beta: {
+                name: 'Beta Particles (β)',
+                composition: 'High-energy electron',
+                ionizingPower: 'Medium',
+                penetratingPower: 'Medium',
+                stopsAt: ['aluminum', 'lead'],
+                description: 'Beta particles are high-energy electrons with a negative charge. They have medium ionizing power and can penetrate paper but are stopped by aluminum foil.',
+                type: 'particle',
+                cssClass: 'beta-particle'
+            },
+            gamma: {
+                name: 'Gamma Rays (γ)',
+                composition: 'High-energy photon (electromagnetic wave)',
+                ionizingPower: 'Low',
+                penetratingPower: 'Very high',
+                stopsAt: ['lead'], // Changed to be stopped by lead
+                description: 'Gamma rays are high-energy photons with no mass or charge. They have low ionizing power but very high penetrating power, requiring thick lead to block.',
+                type: 'wave',
+                cssClass: 'gamma-wave'
+            }
+        };
+
+        // Barrier Types Data
+        const barriers = {
+            paper: {
+                thickness: 20,
+                color: '#f5f5dc',
+                name: 'Paper',
+                description: 'A thin sheet of paper (0.1mm)'
+            },
+            aluminum: {
+                thickness: 40,
+                color: '#d3d3d3',
+                name: 'Aluminum',
+                description: 'Aluminum foil (few mm)'
+            },
+            lead: {
+                thickness: 60,
+                color: '#708090',
+                name: 'Lead',
+                description: 'Lead sheet (several cm)'
+            }
+        };
+
+        // App State
+        let state = {
+            radiationType: 'alpha',
+            barrier: 'paper',
+            isAnimating: false,
+            showDetails: false,
+            challengeMode: false,
+            challengeType: 'radiation',
+            hiddenRadiationType: '',
+            hiddenBarrier: '',
+            userGuess: '',
+            guessResult: null,
+            triesCount: 0,
+            penetrated: false
+        };
+
+        // DOM Elements
+        const normalMode = document.getElementById('normal-mode');
+        const challengeMode = document.getElementById('challenge-mode');
+        const radiationButtons = document.getElementById('radiation-buttons');
+        const barrierButtons = document.getElementById('barrier-buttons');
+        const startButton = document.getElementById('start-button');
+        const detailsButton = document.getElementById('details-button');
+        const challengeRadiationButton = document.getElementById('challenge-radiation-button');
+        const challengeBarrierButton = document.getElementById('challenge-barrier-button');
+        const runTestButton = document.getElementById('run-test-button');
+        const submitGuessButton = document.getElementById('submit-guess-button');
+        const tryAnotherButton = document.getElementById('try-another-button');
+        const exitChallengeButton = document.getElementById('exit-challenge-button');
+        const barrier = document.getElementById('barrier');
+        const barrierLabel = document.getElementById('barrier-label');
+        const radiationParticle = document.getElementById('radiation-particle');
+        const particleContent = document.getElementById('particle-content');
+        const particleLabel = document.getElementById('particle-label');
+        const detectorIcon = document.getElementById('detector-icon');
+        const resultMessage = document.getElementById('result-message');
+        const guessResult = document.getElementById('guess-result');
+        const detailsPanel = document.getElementById('details-panel');
+        const challengeTitle = document.getElementById('challenge-title');
+        const challengeDescription = document.getElementById('challenge-description');
+        const challengeKnownPanel = document.getElementById('challenge-known-panel');
+        const challengeKnownTitle = document.getElementById('challenge-known-title');
+        const challengeKnownButtons = document.getElementById('challenge-known-buttons');
+        const challengeGuessButtons = document.getElementById('challenge-guess-buttons');
+        const radiationDetailTitle = document.getElementById('radiation-detail-title');
+        const radiationComposition = document.getElementById('radiation-composition');
+        const radiationIonizing = document.getElementById('radiation-ionizing');
+        const radiationPenetrating = document.getElementById('radiation-penetrating');
+        const radiationDescription = document.getElementById('radiation-description');
+
+        // Initialize
+        updateRadiationParticle();
+        updateBarrier();
+
+        // Event Listeners
+        startButton.addEventListener('click', startSimulation);
+        detailsButton.addEventListener('click', toggleDetails);
+        challengeRadiationButton.addEventListener('click', () => startChallenge('radiation'));
+        challengeBarrierButton.addEventListener('click', () => startChallenge('barrier'));
+        runTestButton.addEventListener('click', startSimulation);
+        submitGuessButton.addEventListener('click', checkGuess);
+        tryAnotherButton.addEventListener('click', () => startChallenge(state.challengeType));
+        exitChallengeButton.addEventListener('click', exitChallenge);
+
+        // Add event listeners to radiation buttons
+        radiationButtons.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', () => {
+                if (state.isAnimating) return;
+                const type = button.getAttribute('data-type');
+                state.radiationType = type;
+                updateRadiationButtonsUI();
+                updateRadiationParticle();
+                updateRadiationDetails();
+            });
+        });
+
+        // Add event listeners to barrier buttons
+        barrierButtons.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', () => {
+                if (state.isAnimating) return;
+                const barrierType = button.getAttribute('data-barrier');
+                state.barrier = barrierType;
+                updateBarrierButtonsUI();
+                updateBarrier();
+            });
+        });
+
+        // Functions
+        function updateRadiationButtonsUI() {
+            radiationButtons.querySelectorAll('button').forEach(button => {
+                const type = button.getAttribute('data-type');
+                button.className = type === state.radiationType ? 'btn-selected' : 'btn-default';
+            });
+        }
+
+        function updateBarrierButtonsUI() {
+            barrierButtons.querySelectorAll('button').forEach(button => {
+                const type = button.getAttribute('data-barrier');
+                button.className = type === state.barrier ? 'btn-selected' : 'btn-default';
+            });
+        }
+
+        function createGammaWave() {
+            return `
+                <svg width="40" height="20" viewBox="0 0 40 20">
+                    <path d="M0,10 C3.5,3 8.5,17 12,10 C15.5,3 20.5,17 24,10 C27.5,3 32.5,17 36,10 C38,7 40,10 40,10" 
+                          stroke="#118ab2" 
+                          stroke-width="2"
+                          fill="none" />
+                </svg>
+            `;
+        }
+
+        function updateRadiationParticle() {
+            // Clear previous content
+            particleContent.innerHTML = '';
+            particleContent.className = '';
+            
+            let currentRadiationType;
+            
+            if (state.challengeMode && state.challengeType === 'radiation') {
+                // Hidden radiation in challenge mode
+                particleContent.className = 'unknown-particle';
+                particleContent.style.width = '16px';
+                particleContent.style.height = '16px';
+                particleContent.style.backgroundColor = '#888888';
+                particleContent.style.borderRadius = '50%';
+                particleLabel.textContent = '???';
+            } else {
+                // Normal mode or challenge mode with known radiation
+                currentRadiationType = state.radiationType;
+                const currentRadiation = radiationTypes[currentRadiationType];
+                
+                if (currentRadiation.type === 'wave') {
+                    // Create wave for gamma
+                    particleContent.innerHTML = createGammaWave();
+                    particleContent.className = currentRadiation.cssClass;
+                } else {
+                    // Create particle for alpha/beta
+                    particleContent.className = currentRadiation.cssClass;
+                }
+                
+                particleLabel.textContent = currentRadiation.name;
+            }
+            
+            // Reset particle position without transition
+            radiationParticle.style.transition = 'none';
+            radiationParticle.style.left = '15%';
+            
+            // Force reflow to apply changes immediately
+            void radiationParticle.offsetWidth;
+        }
+
+        function updateBarrier() {
+            let currentBarrier;
+            
+            if (state.challengeMode && state.challengeType === 'barrier') {
+                // Hidden barrier in challenge mode
+                currentBarrier = {
+                    thickness: 40,
+                    color: '#999999',
+                    name: '???'
+                };
+            } else {
+                currentBarrier = barriers[state.barrier];
+            }
+            
+            barrier.style.width = `${currentBarrier.thickness}px`;
+            barrier.style.backgroundColor = currentBarrier.color;
+            barrierLabel.textContent = currentBarrier.name;
+        }
+
+        function startSimulation() {
+            if (state.isAnimating) return;
+            
+            state.isAnimating = true;
+            state.penetrated = false;
+            updateButtonStates();
+            
+            // Reset particle position without transition
+            radiationParticle.style.transition = 'none';
+            radiationParticle.style.left = '15%';
+            
+            // Force reflow to apply changes immediately
+            void radiationParticle.offsetWidth;
+            
+            // Determine if radiation penetrates barrier
+            let currentRadiation, currentBarrier;
+            
+            if (state.challengeMode) {
+                if (state.challengeType === 'radiation') {
+                    currentRadiation = radiationTypes[state.hiddenRadiationType];
+                    currentBarrier = state.barrier;
+                } else {
+                    currentRadiation = radiationTypes[state.radiationType];
+                    currentBarrier = state.hiddenBarrier;
+                }
+            } else {
+                currentRadiation = radiationTypes[state.radiationType];
+                currentBarrier = state.barrier;
+            }
+            
+            const canPenetrate = !currentRadiation.stopsAt.includes(currentBarrier);
+            
+            // Animate particle
+            setTimeout(() => {
+                // Enable transition for animation
+                radiationParticle.style.transition = 'left 1.5s linear';
+                radiationParticle.style.left = canPenetrate ? '85%' : '45%';
+                
+                setTimeout(() => {
+                    state.penetrated = canPenetrate;
+                    detectorIcon.style.stroke = canPenetrate ? '#38b000' : '#e63946';
+                    displayResult();
+                    
+                    setTimeout(() => {
+                        state.isAnimating = false;
+                        updateButtonStates();
+                    }, 200);
+                }, 1500);
+            }, 50);
+        }
+
+        function displayResult() {
+            if (state.challengeMode) {
+                resultMessage.className = state.penetrated ? 'message success-message' : 'message error-message';
+                resultMessage.innerHTML = state.penetrated 
+                    ? 'The radiation has penetrated the barrier.'
+                    : 'The radiation was blocked by the barrier.';
+            } else {
+                resultMessage.className = state.penetrated ? 'message success-message' : 'message error-message';
+                resultMessage.innerHTML = state.penetrated 
+                    ? `The ${radiationTypes[state.radiationType].name} radiation has penetrated the ${barriers[state.barrier].name} barrier.`
+                    : `The ${radiationTypes[state.radiationType].name} radiation was blocked by the ${barriers[state.barrier].name} barrier.`;
+            }
+            
+            resultMessage.style.display = 'block';
+        }
+
+        function toggleDetails() {
+            state.showDetails = !state.showDetails;
+            detailsPanel.style.display = state.showDetails ? 'block' : 'none';
+            detailsButton.textContent = state.showDetails ? 'Hide Details' : 'Show Details';
+            detailsButton.className = state.showDetails ? 'btn-selected' : 'btn-default';
+            updateRadiationDetails();
+        }
+
+        function updateRadiationDetails() {
+            const radiation = radiationTypes[state.radiationType];
+            radiationDetailTitle.textContent = `${radiation.name} Properties`;
+            radiationComposition.textContent = radiation.composition;
+            radiationIonizing.textContent = radiation.ionizingPower;
+            radiationPenetrating.textContent = radiation.penetratingPower;
+            radiationDescription.textContent = radiation.description;
+        }
+
+        function startChallenge(type) {
+            state.challengeType = type;
+            state.challengeMode = true;
+            state.guessResult = null;
+            state.triesCount = 0;
+            state.userGuess = '';
+            state.penetrated = false;
+            
+            // Hide normal mode, show challenge mode
+            normalMode.style.display = 'none';
+            challengeMode.style.display = 'block';
+            resultMessage.style.display = 'none';
+            guessResult.style.display = 'none';
+            detailsPanel.style.display = 'none';
+            
+            if (type === 'radiation') {
+                // Hide radiation, show barrier
+                const radiationKeys = Object.keys(radiationTypes);
+                state.hiddenRadiationType = radiationKeys[Math.floor(Math.random() * radiationKeys.length)];
+                state.hiddenBarrier = '';
+                state.barrier = 'paper';
+                
+                challengeTitle.textContent = 'Identify the Radiation Type';
+                challengeDescription.textContent = `An unknown radiation type is being tested against ${barriers[state.barrier].name}. Observe the behavior and identify the radiation.`;
+                
+                challengeKnownTitle.textContent = 'Barrier Material';
+                
+                // Create barrier buttons
+                challengeKnownButtons.innerHTML = '';
+                Object.keys(barriers).forEach(barrierType => {
+                    const button = document.createElement('button');
+                    button.textContent = barriers[barrierType].name;
+                    button.className = barrierType === state.barrier ? 'btn-selected' : 'btn-default';
+                    button.setAttribute('data-barrier', barrierType);
+                    button.addEventListener('click', () => {
+                        if (state.isAnimating) return;
+                        state.barrier = barrierType;
+                        challengeKnownButtons.querySelectorAll('button').forEach(btn => {
+                            btn.className = btn.getAttribute('data-barrier') === barrierType ? 'btn-selected' : 'btn-default';
+                        });
+                        updateBarrier();
+                        challengeDescription.textContent = `An unknown radiation type is being tested against ${barriers[state.barrier].name}. Observe the behavior and identify the radiation.`;
+                    });
+                    challengeKnownButtons.appendChild(button);
+                });
+                
+                // Create radiation guess buttons
+                challengeGuessButtons.innerHTML = '';
+                Object.keys(radiationTypes).forEach(radiationType => {
+                    const button = document.createElement('button');
+                    button.textContent = radiationTypes[radiationType].name;
+                    button.className = 'btn-default';
+                    button.setAttribute('data-radiation', radiationType);
+                    button.addEventListener('click', () => {
+                        if (state.isAnimating) return;
+                        state.userGuess = radiationType;
+                        challengeGuessButtons.querySelectorAll('button').forEach(btn => {
+                            btn.className = btn.getAttribute('data-radiation') === radiationType ? 'btn-selected' : 'btn-default';
+                        });
+                        updateSubmitButtonState();
+                    });
+                    challengeGuessButtons.appendChild(button);
+                });
+            } else {
+                // Hide barrier, show radiation
+                const barrierKeys = Object.keys(barriers);
+                state.hiddenBarrier = barrierKeys[Math.floor(Math.random() * barrierKeys.length)];
+                state.hiddenRadiationType = '';
+                state.radiationType = 'alpha';
+                
+                challengeTitle.textContent = 'Identify the Barrier Material';
+                challengeDescription.textContent = `${radiationTypes[state.radiationType].name} radiation is being tested against an unknown barrier. Observe the behavior and identify the barrier.`;
+                
+                challengeKnownTitle.textContent = 'Radiation Type';
+                
+                // Create radiation buttons
+                challengeKnownButtons.innerHTML = '';
+                Object.keys(radiationTypes).forEach(radiationType => {
+                    const button = document.createElement('button');
+                    button.textContent = radiationTypes[radiationType].name;
+                    button.className = radiationType === state.radiationType ? 'btn-selected' : 'btn-default';
+                    button.setAttribute('data-radiation', radiationType);
+                    button.addEventListener('click', () => {
+                        if (state.isAnimating) return;
+                        state.radiationType = radiationType;
+                        challengeKnownButtons.querySelectorAll('button').forEach(btn => {
+                            btn.className = btn.getAttribute('data-radiation') === radiationType ? 'btn-selected' : 'btn-default';
+                        });
+                        updateRadiationParticle();
+                        challengeDescription.textContent = `${radiationTypes[state.radiationType].name} radiation is being tested against an unknown barrier. Observe the behavior and identify the barrier.`;
+                    });
+                    challengeKnownButtons.appendChild(button);
+                });
+                
+                // Create barrier guess buttons
+                challengeGuessButtons.innerHTML = '';
+                Object.keys(barriers).forEach(barrierType => {
+                    const button = document.createElement('button');
+                    button.textContent = barriers[barrierType].name;
+                    button.className = 'btn-default';
+                    button.setAttribute('data-barrier', barrierType);
+                    button.addEventListener('click', () => {
+                        if (state.isAnimating) return;
+                        state.userGuess = barrierType;
+                        challengeGuessButtons.querySelectorAll('button').forEach(btn => {
+                            btn.className = btn.getAttribute('data-barrier') === barrierType ? 'btn-selected' : 'btn-default';
+                        });
+                        updateSubmitButtonState();
+                    });
+                    challengeGuessButtons.appendChild(button);
+                });
+            }
+            
+            updateRadiationParticle();
+            updateBarrier();
+            updateButtonStates();
+        }
+
+        function exitChallenge() {
+            state.challengeMode = false;
+            state.guessResult = null;
+            
+            // Hide challenge mode, show normal mode
+            normalMode.style.display = 'block';
+            challengeMode.style.display = 'none';
+            resultMessage.style.display = 'none';
+            guessResult.style.display = 'none';
+            
+            // Reset detector color
+            detectorIcon.style.stroke = '#495057';
+            
+            // Reset particle
+            updateRadiationParticle();
+            updateBarrier();
+        }
+
+        function checkGuess() {
+            state.triesCount++;
+            
+            let isCorrect = false;
+            if (state.challengeType === 'radiation') {
+                isCorrect = state.userGuess === state.hiddenRadiationType;
+            } else {
+                isCorrect = state.userGuess === state.hiddenBarrier;
+            }
+            
+            state.guessResult = isCorrect ? 'correct' : 'incorrect';
+            
+            guessResult.className = isCorrect ? 'message success-message' : 'message error-message';
+            guessResult.innerHTML = isCorrect 
+                ? `<p><strong>Correct!</strong> It was ${state.challengeType === 'radiation' 
+                    ? radiationTypes[state.hiddenRadiationType].name 
+                    : barriers[state.hiddenBarrier].name}.</p>
+                   <p>Number of attempts: ${state.triesCount}</p>
+                   <p style="margin-top: 10px;">Press "Try Another One" for a new challenge!</p>`
+                : `<p><strong>Incorrect guess.</strong> Try again after running another test.</p>
+                   <p>Number of attempts: ${state.triesCount}</p>`;
+            
+            guessResult.style.display = 'block';
+            updateButtonStates();
+        }
+
+        function updateButtonStates() {
+            // Normal mode buttons
+            startButton.disabled = state.isAnimating;
+            challengeRadiationButton.disabled = state.isAnimating;
+            challengeBarrierButton.disabled = state.isAnimating;
+            
+            // Challenge mode buttons
+            runTestButton.disabled = state.isAnimating;
+            submitGuessButton.disabled = state.isAnimating || !state.userGuess || state.guessResult === 'correct';
+            tryAnotherButton.disabled = state.isAnimating;
+            exitChallengeButton.disabled = state.isAnimating;
+            
+            // Update submit button style
+            if (state.isAnimating || !state.userGuess || state.guessResult === 'correct') {
+                submitGuessButton.className = 'btn-default';
+            } else {
+                submitGuessButton.className = 'btn-success';
+            }
+        }
+
+        function updateSubmitButtonState() {
+            submitGuessButton.disabled = !state.userGuess || state.guessResult === 'correct';
+            submitGuessButton.className = (!state.userGuess || state.guessResult === 'correct') ? 'btn-default' : 'btn-success';
+        }
+    </script>
+</body>
+</html>
