@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projectile Physics Lab - Gorilla Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        body {
+            background-color: #1a202c;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        canvas {
+            image-rendering: pixelated;
+            cursor: crosshair;
+            background: linear-gradient(to bottom, #000033 0%, #000066 100%);
+            border: 4px solid #4a5568;
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            max-height: 70vh;
+        }
+
+        .glass {
+            background: rgba(26, 32, 44, 0.9);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .control-panel {
+            width: 100%;
+            max-width: 800px;
+            margin-top: 1rem;
+        }
+
+        input[type=range] {
+            accent-color: #fbbf24;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-start min-h-screen p-4">
+
+    <div class="mb-4 text-center">
+        <h1 class="text-2xl font-bold text-yellow-400">PROJECTILE PHYSICS LAB</h1>
+    </div>
+
+    <div class="relative w-full max-w-4xl flex justify-center">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <!-- Integrated Control Panel -->
+    <div class="control-panel glass p-6 rounded-xl shadow-2xl">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+            
+            <!-- Angle Control -->
+            <div class="flex flex-col gap-2">
+                <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Angle (θ°)</label>
+                <div class="flex items-center gap-3">
+                    <input type="range" id="angleInput" min="0" max="90" value="45" class="flex-grow h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                    <span id="angleValue" class="w-12 text-xl font-mono text-yellow-400">45°</span>
+                </div>
+            </div>
+
+            <!-- Velocity Control -->
+            <div class="flex flex-col gap-2">
+                <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Velocity (v₀)</label>
+                <div class="flex items-center gap-3">
+                    <input type="range" id="velocityInput" min="10" max="150" value="60" class="flex-grow h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                    <span id="velocityValue" class="w-12 text-xl font-mono text-yellow-400">60</span>
+                </div>
+            </div>
+
+            <!-- Physics Data Display -->
+            <div class="bg-black/40 p-3 rounded-lg border border-white/5 grid grid-cols-2 gap-2">
+                <div>
+                    <p class="text-[10px] text-blue-400 uppercase font-bold">Δx (Target)</p>
+                    <p id="dist-calc" class="text-sm font-mono text-white">---</p>
+                </div>
+                <div>
+                    <p class="text-[10px] text-red-400 uppercase font-bold">Δy (Target)</p>
+                    <p id="height-calc" class="text-sm font-mono text-white">---</p>
+                </div>
+                <div class="col-span-2 pt-1 border-t border-white/10">
+                    <p class="text-[10px] text-gray-500 uppercase">Gravity</p>
+                    <select id="gravityInput" class="bg-transparent text-xs font-mono text-yellow-200 outline-none w-full cursor-pointer">
+                        <option value="9.8" class="bg-gray-800">Earth: 9.8 m/s²</option>
+                        <option value="1.6" class="bg-gray-800">Moon: 1.6 m/s²</option>
+                        <option value="3.7" class="bg-gray-800">Mars: 3.7 m/s²</option>
+                        <option value="24.8" class="bg-gray-800">Jupiter: 24.8 m/s²</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <button id="throwBtn" class="h-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 px-4 rounded-lg shadow-lg transform active:scale-95 transition-all uppercase text-lg">
+                Throw!
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const angleInput = document.getElementById('angleInput');
+        const velocityInput = document.getElementById('velocityInput');
+        const angleValue = document.getElementById('angleValue');
+        const velocityValue = document.getElementById('velocityValue');
+        const gravityInput = document.getElementById('gravityInput');
+        const throwBtn = document.getElementById('throwBtn');
+
+        let gameState = {
+            width: 800,
+            height: 450,
+            buildings: [],
+            p1: { x: 0, y: 0, score: 0 },
+            p2: { x: 0, y: 0, score: 0 },
+            turn: 1,
+            isProjectileActive: false,
+            projectile: null,
+            gravity: 9.8
+        };
+
+        function init() {
+            canvas.width = gameState.width;
+            canvas.height = gameState.height;
+            generateBuildings();
+            resetPositions();
+            updatePhysicsDisplay();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function generateBuildings() {
+            gameState.buildings = [];
+            let currentX = 0;
+            const colors = ['#4a5568', '#2d3748', '#718096', '#1a202c', '#a0aec0'];
+            while (currentX < gameState.width) {
+                const w = 60 + Math.random() * 80;
+                const h = 80 + Math.random() * 200;
+                gameState.buildings.push({
+                    x: currentX, y: gameState.height - h, w: Math.min(w, gameState.width - currentX), h: h,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    windows: generateWindows(currentX, gameState.height - h, w, h)
+                });
+                currentX += w;
+            }
+        }
+
+        function generateWindows(bx, by, bw, bh) {
+            const windows = [];
+            for (let x = bx + 10; x < bx + bw - 10; x += 20) {
+                for (let y = by + 10; y < gameState.height - 10; y += 25) {
+                    if (Math.random() > 0.3) windows.push({ x, y, lit: Math.random() > 0.8 });
+                }
+            }
+            return windows;
+        }
+
+        function resetPositions() {
+            const b1 = gameState.buildings[0];
+            gameState.p1.x = b1.x + b1.w / 2;
+            gameState.p1.y = b1.y - 12;
+            const b2 = gameState.buildings[gameState.buildings.length - 1];
+            gameState.p2.x = b2.x + b2.w / 2;
+            gameState.p2.y = b2.y - 12;
+        }
+
+        function updatePhysicsDisplay() {
+            const v0 = parseInt(velocityInput.value);
+            const displayAngle = parseInt(angleInput.value);
+            
+            angleValue.textContent = `${displayAngle}°`;
+            velocityValue.textContent = v0;
+            gameState.gravity = parseFloat(gravityInput.value);
+
+            // Determine active player and target
+            const active = gameState.turn === 1 ? gameState.p1 : gameState.p2;
+            const target = gameState.turn === 1 ? gameState.p2 : gameState.p1;
+            
+            // Calculate Δx and Δy
+            const dx = Math.abs(target.x - active.x);
+            // In canvas, Y increases downwards, so we invert it for real-world height logic
+            const dy = active.y - target.y;
+
+            document.getElementById('dist-calc').textContent = `${dx.toFixed(1)} m`;
+            document.getElementById('height-calc').textContent = `${dy.toFixed(1)} m`;
+        }
+
+        function throwProjectile() {
+            if (gameState.isProjectileActive) return;
+            const v0 = parseInt(velocityInput.value);
+            const displayAngle = parseInt(angleInput.value);
+            
+            // Mirror logic: P1 shoots 0-90 (right), P2 shoots 180 - (0-90) (left)
+            const worldAngle = gameState.turn === 1 ? displayAngle : (180 - displayAngle);
+            const activePlayer = gameState.turn === 1 ? gameState.p1 : gameState.p2;
+            
+            gameState.projectile = {
+                startX: activePlayer.x, startY: activePlayer.y,
+                x: activePlayer.x, y: activePlayer.y,
+                v0: v0, angle: worldAngle, time: 0, path: []
+            };
+            gameState.isProjectileActive = true;
+            throwBtn.disabled = true;
+            throwBtn.style.opacity = "0.5";
+        }
+
+        function checkCollision(x, y) {
+            if (x < 0 || x > gameState.width || y > gameState.height) return 'miss';
+            for (const b of gameState.buildings) {
+                if (x >= b.x && x <= b.x + b.w && y >= b.y) return 'building';
+            }
+            const target = gameState.turn === 1 ? gameState.p2 : gameState.p1;
+            if (Math.hypot(x - target.x, y - (target.y - 5)) < 18) return 'hit';
+            return null;
+        }
+
+        function endTurn(result) {
+            gameState.isProjectileActive = false;
+            throwBtn.disabled = false;
+            throwBtn.style.opacity = "1";
+
+            if (result === 'hit') {
+                if (gameState.turn === 1) gameState.p1.score++; else gameState.p2.score++;
+                generateBuildings();
+                resetPositions();
+            }
+
+            gameState.turn = gameState.turn === 1 ? 2 : 1;
+            updatePhysicsDisplay();
+        }
+
+        function drawHUD() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            
+            // Score P1
+            ctx.fillRect(10, 10, 140, 50);
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(10, 10, 140, 50);
+            
+            // Score P2
+            ctx.fillRect(gameState.width - 150, 10, 140, 50);
+            ctx.strokeStyle = '#ef4444';
+            ctx.strokeRect(gameState.width - 150, 10, 140, 50);
+
+            // Turn Indicator
+            const turnColor = gameState.turn === 1 ? '#3b82f6' : '#ef4444';
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.fillRect(gameState.width / 2 - 80, 10, 160, 30);
+            ctx.strokeStyle = turnColor;
+            ctx.strokeRect(gameState.width / 2 - 80, 10, 160, 30);
+
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textBaseline = 'top';
+
+            // P1 Score Text
+            ctx.fillStyle = '#60a5fa';
+            ctx.fillText('PLAYER 1', 20, 18);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 18px monospace';
+            ctx.fillText(`Score: ${gameState.p1.score}`, 20, 34);
+
+            // P2 Score Text
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#f87171';
+            ctx.fillText('PLAYER 2', gameState.width - 20, 18);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 18px monospace';
+            ctx.fillText(`Score: ${gameState.p2.score}`, gameState.width - 20, 34);
+
+            // Turn Text
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = turnColor;
+            ctx.fillText(`PLAYER ${gameState.turn} TURN`, gameState.width / 2, 18);
+            
+            ctx.textAlign = 'start';
+            ctx.lineWidth = 1;
+        }
+
+        function drawGorilla(x, y, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x - 8, y - 12, 16, 16);
+            ctx.fillRect(x - 5, y - 18, 10, 8);
+            ctx.fillRect(x - 12, y - 8, 4, 8);
+            ctx.fillRect(x + 8, y - 8, 4, 8);
+            ctx.fillStyle = 'white';
+            ctx.fillRect(x - 3, y - 16, 2, 2);
+            ctx.fillRect(x + 1, y - 16, 2, 2);
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            gameState.buildings.forEach(b => {
+                ctx.fillStyle = b.color;
+                ctx.fillRect(b.x, b.y, b.w, b.h);
+                b.windows.forEach(w => {
+                    ctx.fillStyle = w.lit ? '#fbbf24' : '#1a202c';
+                    ctx.fillRect(w.x, w.y, 6, 8);
+                });
+            });
+
+            drawHUD();
+            drawGorilla(gameState.p1.x, gameState.p1.y, '#3b82f6');
+            drawGorilla(gameState.p2.x, gameState.p2.y, '#ef4444');
+
+            if (gameState.isProjectileActive && gameState.projectile) {
+                const p = gameState.projectile;
+                p.time += 0.25;
+                const t = p.time * 0.15;
+                const rad = (p.angle * Math.PI) / 180;
+                
+                const vx_initial = p.v0 * Math.cos(rad);
+                const vy_initial = p.v0 * Math.sin(rad);
+                
+                const dx = vx_initial * t * 5;
+                const dy = (vy_initial * t - 0.5 * gameState.gravity * t * t) * 5;
+
+                p.x = p.startX + dx;
+                p.y = p.startY - dy;
+
+                p.path.push({x: p.x, y: p.y});
+                if (p.path.length > 30) p.path.shift();
+
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.setLineDash([2, 4]);
+                p.path.forEach((pt, i) => i === 0 ? ctx.moveTo(pt.x, pt.y) : ctx.lineTo(pt.x, pt.y));
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.fillStyle = '#fde047';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Physics Vectors (Visual Aid)
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#3b82f6';
+                ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + 25 * (vx_initial > 0 ? 1 : -1), p.y); ctx.stroke();
+                ctx.strokeStyle = '#ef4444';
+                const curVy = (vy_initial - gameState.gravity * t) * 0.4;
+                ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y - curVy); ctx.stroke();
+                ctx.lineWidth = 1;
+
+                const collision = checkCollision(p.x, p.y);
+                if (collision) {
+                    ctx.fillStyle = '#f97316';
+                    ctx.beginPath(); ctx.arc(p.x, p.y, 25, 0, Math.PI*2); ctx.fill();
+                    gameState.projectile = null;
+                    setTimeout(() => endTurn(collision), 400);
+                }
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        angleInput.addEventListener('input', updatePhysicsDisplay);
+        velocityInput.addEventListener('input', updatePhysicsDisplay);
+        gravityInput.addEventListener('change', updatePhysicsDisplay);
+        throwBtn.addEventListener('click', throwProjectile);
+        init();
+    </script>
+</body>
+</html>
