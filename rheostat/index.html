@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rheostat Simulation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            position: relative;
+            background: white;
+            padding: 0;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            border-radius: 0;
+            cursor: default;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="rheostatCanvas" width="640" height="500"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('rheostatCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configuration
+        const MAX_RESISTANCE = 20; // Ohms
+        const COIL_WIDTH = 400; // Reduced to fit 640px
+        const COIL_X = 120;     // Centered: (640-400)/2
+        const COIL_Y = 230;     // Moved down
+        const COIL_HEIGHT = 100;
+        const ROD_Y = 170;      // Moved down
+        const SLIDER_WIDTH = 40;
+        const COIL_SPACING = 10;
+        
+        // UI Configuration
+        const resetButton = { x: 480, y: 440, w: 140, h: 40, text: "Reset Connections" };
+        
+        // State
+        let sliderPos = 0.5; // 0.0 to 1.0
+        let isDragging = false;
+        let connections = []; // Array of connected terminal IDs
+        let currentFlow = 0; // for animation offset
+        let resistanceText = "Resistance: Open Circuit";
+
+        // Define Terminals
+        const terminals = {
+            A: { x: COIL_X + 20, y: COIL_Y + COIL_HEIGHT + 10, label: 'A', id: 'A', color: '#333' }, 
+            B: { x: COIL_X + COIL_WIDTH - 20, y: COIL_Y + COIL_HEIGHT + 10, label: 'B', id: 'B', color: '#333' }, 
+            C: { x: COIL_X - 40, y: ROD_Y, label: 'C', id: 'C', color: '#333' } 
+        };
+
+        // Input Handling
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseup', handleMouseUp);
+
+        function getSliderRect() {
+            const sliderX = COIL_X + (sliderPos * COIL_WIDTH);
+            return {
+                x: sliderX - SLIDER_WIDTH/2,
+                y: ROD_Y - 10,
+                w: SLIDER_WIDTH,
+                h: COIL_Y - ROD_Y + COIL_HEIGHT + 10
+            };
+        }
+
+        function handleMouseDown(e) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            // Check Reset Button
+            if (mouseX >= resetButton.x && mouseX <= resetButton.x + resetButton.w &&
+                mouseY >= resetButton.y && mouseY <= resetButton.y + resetButton.h) {
+                resetSimulation();
+                return;
+            }
+
+            // Check terminals
+            for (let key in terminals) {
+                const t = terminals[key];
+                const dist = Math.sqrt((mouseX - t.x)**2 + (mouseY - t.y)**2);
+                if (dist < 20) {
+                    toggleConnection(t.id);
+                    return;
+                }
+            }
+
+            // Check slider
+            const slider = getSliderRect();
+            // Expanded hit area for slider handle (top part)
+            if (mouseX >= slider.x && mouseX <= slider.x + slider.w &&
+                mouseY >= ROD_Y - 20 && mouseY <= ROD_Y + 40) {
+                isDragging = true;
+            }
+        }
+
+        function handleMouseMove(e) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            if (isDragging) {
+                let newPos = (mouseX - COIL_X) / COIL_WIDTH;
+                newPos = Math.max(0, Math.min(1, newPos));
+                sliderPos = newPos;
+                updatePhysics();
+            } else {
+                // Hover effects
+                let hovering = false;
+                
+                // Check terminals
+                for (let key in terminals) {
+                    const t = terminals[key];
+                    const dist = Math.sqrt((mouseX - t.x)**2 + (mouseY - t.y)**2);
+                    if (dist < 20) hovering = true;
+                }
+                
+                // Check slider
+                const slider = getSliderRect();
+                if (mouseX >= slider.x && mouseX <= slider.x + slider.w &&
+                    mouseY >= ROD_Y - 20 && mouseY <= ROD_Y + 40) hovering = true;
+                    
+                // Check reset button
+                if (mouseX >= resetButton.x && mouseX <= resetButton.x + resetButton.w &&
+                    mouseY >= resetButton.y && mouseY <= resetButton.y + resetButton.h) hovering = true;
+
+                canvas.style.cursor = hovering ? 'pointer' : 'default';
+            }
+        }
+
+        function handleMouseUp() {
+            isDragging = false;
+        }
+
+        function toggleConnection(id) {
+            const index = connections.indexOf(id);
+            if (index > -1) {
+                connections.splice(index, 1);
+            } else {
+                if (connections.length < 2) {
+                    connections.push(id);
+                } else {
+                    // Replace the second one to make it easier to switch
+                    connections[1] = id;
+                }
+            }
+            updatePhysics();
+        }
+
+        function resetSimulation() {
+            connections = [];
+            sliderPos = 0.5;
+            updatePhysics();
+        }
+
+        function updatePhysics() {
+            // Calculate Resistance
+            let resistance = null;
+            let path = null; // 'AB', 'AC', 'BC'
+
+            if (connections.length === 2) {
+                if (connections.includes('A') && connections.includes('B')) {
+                    resistance = MAX_RESISTANCE;
+                    path = 'AB';
+                } else if (connections.includes('A') && connections.includes('C')) {
+                    resistance = sliderPos * MAX_RESISTANCE;
+                    path = 'AC';
+                } else if (connections.includes('B') && connections.includes('C')) {
+                    resistance = (1 - sliderPos) * MAX_RESISTANCE;
+                    path = 'BC';
+                }
+            }
+
+            if (resistance !== null) {
+                resistanceText = `Resistance: ${resistance.toFixed(2)} Ω`;
+            } else {
+                resistanceText = `Resistance: Open Circuit`;
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            drawUI();
+            drawRheostatBody();
+            drawWires();
+            drawSlider();
+            drawTerminals();
+            drawCurrentAnimation();
+
+            requestAnimationFrame(draw);
+        }
+
+        function drawUI() {
+            // Title
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 24px Segoe UI, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Rheostat Simulation', canvas.width / 2, 40);
+
+            // Instructions
+            ctx.fillStyle = '#555';
+            ctx.font = '14px Segoe UI, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Click on the terminals (Black knobs) to connect/disconnect wires.', canvas.width / 2, 70);
+            ctx.fillText('Connect exactly two wires. Drag the slider handle to adjust resistance.', canvas.width / 2, 90);
+
+            // Resistance Display
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = 'bold 20px Segoe UI, Arial, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(resistanceText, 20, 465);
+
+            // Reset Button
+            ctx.fillStyle = '#ff5722';
+            ctx.beginPath();
+            ctx.roundRect(resetButton.x, resetButton.y, resetButton.w, resetButton.h, 5);
+            ctx.fill();
+            
+            // Button Hover Effect (simple visual feedback logic handled in mousemove but we can add simpler hover color here if we tracked hover state, skipping for now to keep simple)
+            
+            ctx.fillStyle = 'white';
+            ctx.font = '14px Segoe UI, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(resetButton.text, resetButton.x + resetButton.w/2, resetButton.y + resetButton.h/2);
+            
+            // Reset text baseline for other draws
+            ctx.textBaseline = 'alphabetic';
+        }
+
+
+        function drawRheostatBody() {
+            // Draw Coil (Cylinder)
+            // Core
+            ctx.fillStyle = '#8d6e63'; // Ceramic/Insulator color
+            ctx.fillRect(COIL_X, COIL_Y, COIL_WIDTH, COIL_HEIGHT);
+            
+            // Windings
+            ctx.strokeStyle = '#b0bec5'; // Wire color
+            ctx.lineWidth = 5; // Thicker wires
+            for (let x = COIL_X; x <= COIL_X + COIL_WIDTH; x += COIL_SPACING) {
+                ctx.beginPath();
+                ctx.moveTo(x, COIL_Y);
+                ctx.lineTo(x, COIL_Y + COIL_HEIGHT);
+                ctx.stroke();
+            }
+            
+            // Rod
+            ctx.fillStyle = '#cfd8dc'; // Metal rod
+            ctx.fillRect(COIL_X - 10, ROD_Y, COIL_WIDTH + 20, 15);
+            
+            // Supports
+            ctx.fillStyle = '#37474f';
+            ctx.fillRect(COIL_X - 20, ROD_Y - 10, 20, COIL_HEIGHT + (COIL_Y - ROD_Y) + 20); // Left Support
+            ctx.fillRect(COIL_X + COIL_WIDTH, ROD_Y - 10, 20, COIL_HEIGHT + (COIL_Y - ROD_Y) + 20); // Right Support
+        }
+
+        function drawTerminals() {
+            for (let key in terminals) {
+                const t = terminals[key];
+                
+                // Connection Wire to internal components
+                ctx.beginPath();
+                ctx.strokeStyle = '#555';
+                ctx.lineWidth = 4;
+                ctx.moveTo(t.x, t.y);
+                if (key === 'A') ctx.lineTo(COIL_X, COIL_Y + COIL_HEIGHT);
+                if (key === 'B') ctx.lineTo(COIL_X + COIL_WIDTH, COIL_Y + COIL_HEIGHT);
+                if (key === 'C') ctx.lineTo(COIL_X - 10, ROD_Y + 7);
+                ctx.stroke();
+
+                // Terminal Knob
+                ctx.beginPath();
+                ctx.arc(t.x, t.y, 15, 0, Math.PI * 2);
+                ctx.fillStyle = connections.includes(t.id) ? '#4CAF50' : '#212121'; // Green if connected
+                ctx.fill();
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Label
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(t.label, t.x, t.y);
+            }
+        }
+
+        function drawSlider() {
+            const sliderX = COIL_X + (sliderPos * COIL_WIDTH);
+            
+            // Vertical contact
+            ctx.fillStyle = '#B8860B'; // Dark GoldenRod for better contrast
+            ctx.fillRect(sliderX - 5, ROD_Y, 10, COIL_Y - ROD_Y + 20);
+            
+            // Handle
+            ctx.fillStyle = '#212121'; // Black handle
+            ctx.beginPath();
+            ctx.roundRect(sliderX - 15, ROD_Y - 25, 30, 40, 5);
+            ctx.fill();
+            
+            // Contact point on coil
+            ctx.beginPath();
+            ctx.arc(sliderX, COIL_Y + 20, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#B8860B';
+            ctx.fill();
+        }
+
+        function drawWires() {
+            // Draw external wires if connected
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            
+            connections.forEach((id, index) => {
+                const t = terminals[id];
+                ctx.beginPath();
+                ctx.strokeStyle = index === 0 ? '#d32f2f' : '#1976D2'; // Red and Blue wires
+                ctx.moveTo(t.x, t.y);
+                
+                // Draw wire going off screen outwards
+                // Logic depends on which terminal it is to avoid crossing the body
+                
+                let cp1x, cp1y, cp2x, cp2y, endx, endy;
+                
+                if (id === 'A') {
+                    // Left Bottom - Curve strictly Left and slightly Up/Flat to avoid bottom UI
+                    cp1x = t.x - 40; cp1y = t.y;
+                    cp2x = t.x - 80; cp2y = t.y - 10;
+                    endx = t.x - 140; endy = t.y - 10;
+                } else if (id === 'B') {
+                    // Right Bottom - Curve strictly Right and slightly Up/Flat to avoid bottom UI
+                    cp1x = t.x + 40; cp1y = t.y;
+                    cp2x = t.x + 80; cp2y = t.y - 10;
+                    endx = t.x + 140; endy = t.y - 10;
+                } else if (id === 'C') {
+                    // Top Left - Curve Left and Up (Away from center title)
+                    cp1x = t.x - 40; cp1y = t.y;
+                    cp2x = t.x - 80; cp2y = t.y - 40;
+                    endx = t.x - 100; endy = t.y - 80;
+                }
+                
+                ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, endx, endy);
+                ctx.stroke();
+            });
+        }
+
+        function drawCurrentAnimation() {
+            if (connections.length !== 2) return;
+            
+            ctx.strokeStyle = 'rgba(255, 235, 59, 0.8)';
+            ctx.lineWidth = 5; // Thicker current
+            currentFlow -= 1; // Slow down
+            const dashPattern = [10, 10];
+            
+            let distAccumulator = 0;
+            
+            // Helper to draw a segment with correct dash offset
+            function drawSegment(x1, y1, x2, y2) {
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const len = Math.sqrt(dx*dx + dy*dy);
+                
+                ctx.beginPath();
+                ctx.setLineDash(dashPattern);
+                // Offset = global movement - distance traveled so far
+                ctx.lineDashOffset = currentFlow - distAccumulator;
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+                
+                distAccumulator += len;
+            }
+            
+            function skipSegment(len) {
+                distAccumulator += len;
+            }
+            
+            function traceCoil(xStart, xEnd, startAtTop = false) {
+                const step = COIL_SPACING;
+                const diagLen = Math.sqrt(step*step + COIL_HEIGHT*COIL_HEIGHT);
+                const dir = xStart < xEnd ? 1 : -1;
+                
+                let currentX = xStart;
+                const endLimit = xEnd + (dir * 0.1); 
+                
+                while ((dir === 1 && currentX <= endLimit) || (dir === -1 && currentX >= endLimit)) {
+                    if (startAtTop) {
+                         // Down the front face
+                         drawSegment(currentX, COIL_Y, currentX, COIL_Y + COIL_HEIGHT);
+                    } else {
+                         // Up the front face
+                         drawSegment(currentX, COIL_Y + COIL_HEIGHT, currentX, COIL_Y);
+                    }
+                    
+                    currentX += (dir * step);
+                    
+                    if ((dir === 1 && currentX <= endLimit) || (dir === -1 && currentX >= endLimit)) {
+                         skipSegment(diagLen);
+                    }
+                }
+            }
+
+            // Identify Start (Red) and End (Blue)
+            const startId = connections[0];
+            const endId = connections[1];
+            
+            const ptA = { x: terminals.A.x, y: terminals.A.y };
+            const ptB = { x: terminals.B.x, y: terminals.B.y };
+            const ptC = { x: terminals.C.x, y: terminals.C.y };
+            const coilStartBot = { x: COIL_X, y: COIL_Y + COIL_HEIGHT };
+            const coilEndBot = { x: COIL_X + COIL_WIDTH, y: COIL_Y + COIL_HEIGHT };
+            
+            // Slider geometry
+            const exactX = COIL_X + (sliderPos * COIL_WIDTH);
+            const relX = exactX - COIL_X;
+            const steps = Math.round(relX / COIL_SPACING);
+            const snappedX = COIL_X + (steps * COIL_SPACING);
+            const sliderContactTop = { x: snappedX, y: COIL_Y };
+            const rodContact = { x: snappedX, y: ROD_Y + 7 };
+            const rodLeft = { x: COIL_X - 10, y: ROD_Y + 7 };
+
+            // A -> B
+            if (startId === 'A' && endId === 'B') {
+                drawSegment(ptA.x, ptA.y, coilStartBot.x, coilStartBot.y);
+                traceCoil(COIL_X, COIL_X + COIL_WIDTH, false); // Bot->Top
+                skipSegment(COIL_HEIGHT); 
+                drawSegment(coilEndBot.x, coilEndBot.y, ptB.x, ptB.y);
+            }
+            // B -> A
+            else if (startId === 'B' && endId === 'A') {
+                drawSegment(ptB.x, ptB.y, coilEndBot.x, coilEndBot.y);
+                traceCoil(COIL_X + COIL_WIDTH, COIL_X, false); // Bot->Top
+                skipSegment(COIL_HEIGHT);
+                drawSegment(coilStartBot.x, coilStartBot.y, ptA.x, ptA.y);
+            }
+            // A -> C
+            else if (startId === 'A' && endId === 'C') {
+                drawSegment(ptA.x, ptA.y, coilStartBot.x, coilStartBot.y);
+                traceCoil(COIL_X, snappedX, false); // Bot->Top
+                // Ends at Top
+                drawSegment(sliderContactTop.x, sliderContactTop.y, rodContact.x, rodContact.y);
+                drawSegment(rodContact.x, rodContact.y, rodLeft.x, rodLeft.y);
+                drawSegment(rodLeft.x, rodLeft.y, ptC.x, ptC.y);
+            }
+            // C -> A
+            else if (startId === 'C' && endId === 'A') {
+                drawSegment(ptC.x, ptC.y, rodLeft.x, rodLeft.y);
+                drawSegment(rodLeft.x, rodLeft.y, rodContact.x, rodContact.y);
+                drawSegment(rodContact.x, rodContact.y, sliderContactTop.x, sliderContactTop.y);
+                traceCoil(snappedX, COIL_X, true); // Top->Bot
+                // Ends at Bot
+                drawSegment(coilStartBot.x, coilStartBot.y, ptA.x, ptA.y);
+            }
+            // B -> C
+            else if (startId === 'B' && endId === 'C') {
+                drawSegment(ptB.x, ptB.y, coilEndBot.x, coilEndBot.y);
+                traceCoil(COIL_X + COIL_WIDTH, snappedX, false); // Bot->Top
+                // Ends at Top
+                drawSegment(sliderContactTop.x, sliderContactTop.y, rodContact.x, rodContact.y);
+                drawSegment(rodContact.x, rodContact.y, rodLeft.x, rodLeft.y);
+                drawSegment(rodLeft.x, rodLeft.y, ptC.x, ptC.y);
+            }
+            // C -> B
+            else if (startId === 'C' && endId === 'B') {
+                drawSegment(ptC.x, ptC.y, rodLeft.x, rodLeft.y);
+                drawSegment(rodLeft.x, rodLeft.y, rodContact.x, rodContact.y);
+                drawSegment(rodContact.x, rodContact.y, sliderContactTop.x, sliderContactTop.y);
+                traceCoil(snappedX, COIL_X + COIL_WIDTH, true); // Top->Bot
+                // Ends at Bot
+                drawSegment(coilEndBot.x, coilEndBot.y, ptB.x, ptB.y);
+            }
+
+            ctx.setLineDash([]); // Reset
+        }
+
+        // Start loop
+        draw();
+
+    </script>
+</body>
+</html>
