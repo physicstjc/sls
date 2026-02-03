@@ -38,6 +38,21 @@
         const canvas = document.getElementById('rheostatCanvas');
         const ctx = canvas.getContext('2d');
 
+        // High-DPI Display Support
+        function setupHiDPICanvas(w, h) {
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = w * dpr;
+            canvas.height = h * dpr;
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+            ctx.scale(dpr, dpr);
+            return dpr;
+        }
+
+        const CANVAS_WIDTH = 640;
+        const CANVAS_HEIGHT = 500;
+        setupHiDPICanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+
         // Configuration
         const MAX_RESISTANCE = 20; // Ohms
         const COIL_WIDTH = 400; // Reduced to fit 640px
@@ -196,7 +211,7 @@
         }
 
         function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
             
             drawUI();
             drawRheostatBody();
@@ -213,14 +228,14 @@
             ctx.fillStyle = '#333';
             ctx.font = 'bold 24px Segoe UI, Arial, sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('Rheostat Simulation', canvas.width / 2, 40);
+            ctx.fillText('Rheostat Simulation', CANVAS_WIDTH / 2, 40);
 
             // Instructions
             ctx.fillStyle = '#555';
             ctx.font = '14px Segoe UI, Arial, sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('Click on the terminals (black knobs) to connect/disconnect wires.', canvas.width / 2, 70);
-            ctx.fillText('Connect exactly two wires. Drag the slider handle to adjust resistance.', canvas.width / 2, 90);
+            ctx.fillText('Click on the terminals (black knobs) to connect/disconnect wires.', CANVAS_WIDTH / 2, 70);
+            ctx.fillText('Connect exactly two wires. Drag the slider handle to adjust resistance.', CANVAS_WIDTH / 2, 90);
 
             // Resistance Display
             ctx.fillStyle = '#2c3e50';
@@ -234,8 +249,7 @@
             ctx.roundRect(resetButton.x, resetButton.y, resetButton.w, resetButton.h, 5);
             ctx.fill();
             
-            // Button Hover Effect (simple visual feedback logic handled in mousemove but we can add simpler hover color here if we tracked hover state, skipping for now to keep simple)
-            
+            // Button Hover Effect
             ctx.fillStyle = 'white';
             ctx.font = '14px Segoe UI, Arial, sans-serif';
             ctx.textAlign = 'center';
@@ -342,15 +356,15 @@
                 let cp1x, cp1y, cp2x, cp2y, endx, endy;
                 
                 if (id === 'A') {
-                    // Left Bottom - Curve strictly Left and slightly Up/Flat to avoid bottom UI
-                    cp1x = t.x - 40; cp1y = t.y;
-                    cp2x = t.x - 80; cp2y = t.y - 10;
-                    endx = t.x - 140; endy = t.y - 10;
+                    // Left Bottom - Curve Left and slightly Downward
+                    cp1x = t.x - 50; cp1y = t.y + 20;
+                    cp2x = t.x - 100; cp2y = t.y + 40;
+                    endx = t.x - 150; endy = t.y + 60;
                 } else if (id === 'B') {
-                    // Right Bottom - Curve strictly Right and slightly Up/Flat to avoid bottom UI
-                    cp1x = t.x + 40; cp1y = t.y;
-                    cp2x = t.x + 80; cp2y = t.y - 10;
-                    endx = t.x + 140; endy = t.y - 10;
+                    // Right Bottom - Curve Right and slightly Downward
+                    cp1x = t.x + 50; cp1y = t.y + 20;
+                    cp2x = t.x + 100; cp2y = t.y + 40;
+                    endx = t.x + 150; endy = t.y + 60;
                 } else if (id === 'C') {
                     // Top Left - Curve Left and Up (Away from center title)
                     cp1x = t.x - 40; cp1y = t.y;
