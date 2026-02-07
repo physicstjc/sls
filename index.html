@@ -77,6 +77,42 @@
         font-size: 14px;
         margin-top: 4px;
     }
+
+    .row {
+        flex-direction: column;
+    }
+
+    .col-md-4 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .card {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+    }
+
+    .card-img-top {
+        width: 240px;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .card-body {
+        flex: 1 1 auto;
+    }
+
+    @media (max-width: 768px) {
+        .card {
+            flex-direction: column;
+        }
+
+        .card-img-top {
+            width: 100%;
+            height: auto;
+        }
+    }
     
 
 
@@ -99,9 +135,9 @@
 <div class="container">
     <h1 class="mt-4 mb-4">AI-Generated Apps for Student Learning Space</h1>
     
-    <p>This is a series of apps that were produced using codes given by Generative AI such as ChatGPT and Claude. More recently, I have been using Trae.ai.</p><p>The prompts used are provided for your reference. However, you may still have to refine the prompts as the output may not always be consistent. While it is possible to generate a working app without any changes to the code, you can customise the app much faster if you know a bit of html or javascript. You may even ask the AI to teach you how to do so! </p>
+    <p>This is a series of apps that were produced using codes given by Generative AI such as ChatGPT, Gemini and Claude. More recently, I have been using Trae.ai and VS Code - AI-powered integrated development environments.</p><p>The prompts used are provided for your reference. However, you may still have to refine the prompts as the output may not always be consistent. While it is possible to generate a working app without any changes to the code, you can customise the app much faster if you know a bit of html or javascript. You may even ask the AI to teach you how to do so! </p>
     
-    <p>Check out the step-by-step guide to produce and deploy your app. This <a href="converter/index.html">html file generator</a> helps you to save the code into a html file and test it out.</p>
+    <p>Check out the step-by-step guide to produce and deploy your app. This <a href="converter/index.html">html file generator</a> helps you to save the code into a html file and test it out. Pages hosted on the physicstjc GitHub page are whitelisted on SLS so you can just paste the URL into the embed website feature.</p>
     <p>How to: <a href="how-to.html">Generate your own apps</a> | <a href="https://www.learning.moe.edu.sg/teacher-user-guide/author/insert-media-objects/" target="_blank">Upload to SLS as Media Objects</a></p>
     <p>In one of the more recent releases of SLS (since Dec 2024), we can programme html5 interactives to send data in the form of a score to SLS. Check out this template <a href="#template-interactive">here</a>.</p>
     </div>
@@ -685,7 +721,74 @@
             </div>
     </div>
     
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="electrostatic-precipitator/electrostatic-precipitator.png" alt="Electrostatic Precipitator">
+                    <div class="card-body">
+                        <h3 class="card-title">Electrostatic Precipitator</h3>
+                        <p class="card-text">This simulation demonstrates how electrostatic precipitators remove dust and smoke particles from air using electric fields. Students can observe particles being charged at negative plates and then attracted to positive collection plates.</p>
+                        <p class="card-text">The simulation shows clean air particles, dust/smoke particles, and the charging and collection process in real-time.</p>
+                        <a href="electrostatic-precipitator/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="electrostatic-precipitator/electrostatic-precipitator.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseD19" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseD19">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create an interactive simulation of an electrostatic precipitator that demonstrates how dust and smoke particles are removed from air.</li>
+                                        <li>Show a chamber with an inlet on the left and outlet on the right.</li>
+                                        <li>Include negative charging plates on the left side and positive collection plates on the right side.</li>
+                                        <li>Animate particles flowing from left to right, getting charged when passing through the negative plates, and being attracted to the positive plates.</li>
+                                        <li>Include buttons to turn the system on and off, and to reset the simulation.</li>
+                                        <li>Display the system status, particle count, and collection statistics.</li>
+                                        <li>Use different colors to distinguish between clean air, dust/smoke, charged particles, and the plates.</li>
+                                        <li>Make the canvas responsive and scale appropriately.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img class="card-img-top" src="rheostat/rheostat.png" alt="Rheostat Simulation">
+                    <div class="card-body">
+                        <h3 class="card-title">Rheostat Simulation</h3>
+                        <p class="card-text">This interactive simulation demonstrates how a rheostat (variable resistor) works in an electrical circuit. Students can click on terminals to connect wires and drag the slider to adjust resistance values.</p>
+                        <p class="card-text">The simulation shows three terminals (A, B, C) and displays real-time resistance calculations based on slider position and terminal connections.</p>
+                        <a href="rheostat/index.html" class="btn btn-primary" target="_blank">Test it out</a>
+                        <a href="rheostat/rheostat.zip" class="btn btn-secondary">Download for SLS</a>
+                        <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#promptsCollapseD20" aria-expanded="false" aria-controls="promptsCollapse">Prompts</button>
+                        <div class="collapse" id="promptsCollapseD20">
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h3 class="header1">Prompts</h3>
+                                    <ol>
+                                        <li>Create an interactive rheostat simulation showing a variable resistor with three terminals (A, B, C).</li>
+                                        <li>Include a resistive coil that can be adjusted by dragging a slider handle.</li>
+                                        <li>Allow users to click on terminals to connect/disconnect wires.</li>
+                                        <li>Display the resistance value dynamically based on slider position and which terminals are connected.</li>
+                                        <li>Show animated current flow through connected wires and the active portion of the coil.</li>
+                                        <li>Include instructions and a reset button to return to initial state.</li>
+                                        <li>Display "Open Circuit" when fewer or more than two terminals are connected.</li>
+                                        <li>Make the canvas 640x500 pixels with clear visual representation of the rheostat components.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+
 </div>
+
 <div class="container" id="Sensors">
 
 <header class="container-header">    
