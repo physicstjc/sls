@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinematics Graph Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        canvas { touch-action: none; }
+        .graph-container { position: relative; height: 160px; width: 100%; border: 1px solid #e5e7eb; border-radius: 0.5rem; background: #fff; }
+        
+        /* Custom Slider Styling */
+        .slider-thumb { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; background: transparent; outline: none; z-index: 20; position: relative; }
+        .slider-thumb::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3); margin-top: -5px; }
+        .slider-thumb::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .slider-track-bg { position: absolute; top: 50%; left: 0; width: 100%; height: 6px; background: #e5e7eb; transform: translateY(-50%); border-radius: 3px; z-index: 0; }
+
+        /* Time Scrubber Specifics */
+        .time-scrubber::-webkit-slider-thumb { background: #ef4444; width: 20px; height: 20px; margin-top: -7px; transition: transform 0.1s; }
+        .time-scrubber::-webkit-slider-thumb:hover { transform: scale(1.1); }
+        .time-scrubber::-moz-range-thumb { background: #ef4444; width: 20px; height: 20px; }
+
+        /* Markers */
+        .event-marker { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 12px; height: 12px; border-radius: 50%; z-index: 30; cursor: pointer; transition: all 0.2s; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .event-marker:hover { transform: translate(-50%, -50%) scale(1.3); z-index: 40; }
+        .marker-bounce { background-color: #ef4444; top: 120%; border-radius: 0 50% 50% 50%; transform: translate(-50%, 0) rotate(45deg); }
+        .marker-peak { background-color: #10b981; top: -20%; border-radius: 50% 50% 50% 0; transform: translate(-50%, -100%) rotate(45deg); }
+        
+        /* Tooltip for Markers */
+        .event-marker::after { content: attr(data-label); position: absolute; bottom: 140%; left: 50%; transform: translateX(-50%) rotate(-45deg); background: rgba(0,0,0,0.8); color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .marker-bounce::after { bottom: auto; top: 140%; transform: translateX(-50%) rotate(-45deg); }
+        .event-marker:hover::after { opacity: 1; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shadow-sm z-10">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 text-white p-2 rounded-lg">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h1 class="text-xl font-bold tracking-tight text-gray-900">Kinematics Explorer</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <button onclick="toggleDirection()" id="dirBtn" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-100 hover:bg-gray-200 rounded-md transition-colors border border-gray-300">
+                <i class="fas fa-arrows-alt-v"></i>
+                <span>Positive: UP</span>
+            </button>
+            <div class="h-6 w-px bg-gray-300"></div>
+            <button onclick="resetSimulation()" class="text-gray-600 hover:text-blue-600 transition-colors" title="Reset">
+                <i class="fas fa-undo"></i>
+            </button>
+            <button onclick="togglePlay()" id="playBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium transition-colors shadow-sm flex items-center gap-2">
+                <i class="fas fa-play"></i> Start
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Sidebar Controls -->
+        <aside class="w-80 bg-white border-r border-gray-200 flex flex-col overflow-y-auto z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+            <div class="p-5 space-y-6">
+                
+                <!-- Presets -->
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Scenarios</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="setPreset('constV')" class="p-2 text-sm border rounded hover:bg-blue-50 hover:border-blue-200 text-left transition">Const. Velocity</button>
+                        <button onclick="setPreset('constA')" class="p-2 text-sm border rounded hover:bg-blue-50 hover:border-blue-200 text-left transition">Const. Accel</button>
+                        <button onclick="setPreset('drop')" class="p-2 text-sm border rounded hover:bg-blue-50 hover:border-blue-200 text-left transition">Free Fall</button>
+                        <button onclick="setPreset('throw')" class="p-2 text-sm border rounded hover:bg-blue-50 hover:border-blue-200 text-left transition">Throw Up</button>
+                        <button onclick="setPreset('bounceElastic')" class="p-2 text-sm border rounded hover:bg-blue-50 hover:border-blue-200 text-left transition">Elastic Bounce</button>
+                        <button onclick="setPreset('bounceInelastic')" class="p-2 text-sm border rounded hover:bg-blue-50 hover:border-blue-200 text-left transition">Inelastic Bounce</button>
+                    </div>
+                </div>
+
+                <!-- Parameters -->
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Initial Conditions</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <label>Initial Position (y₀)</label>
+                                <span class="font-mono text-blue-600" id="val_y0">0 m</span>
+                            </div>
+                            <div class="relative h-6">
+                                <div class="slider-track-bg"></div>
+                                <input type="range" min="0" max="100" value="0" id="input_y0" class="slider-thumb" oninput="updateParams()">
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <label>Initial Velocity (v₀)</label>
+                                <span class="font-mono text-blue-600" id="val_v0">0 m/s</span>
+                            </div>
+                            <div class="relative h-6">
+                                <div class="slider-track-bg"></div>
+                                <input type="range" min="-50" max="50" value="0" id="input_v0" class="slider-thumb" oninput="updateParams()">
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <label>Acceleration (a)</label>
+                                <span class="font-mono text-blue-600" id="val_a">0 m/s²</span>
+                            </div>
+                            <div class="relative h-6">
+                                <div class="slider-track-bg"></div>
+                                <input type="range" min="-20" max="20" step="0.5" value="0" id="input_a" class="slider-thumb" oninput="updateParams()">
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <label>Bounciness (e)</label>
+                                <span class="font-mono text-blue-600" id="val_e">0.8</span>
+                            </div>
+                            <div class="relative h-6">
+                                <div class="slider-track-bg"></div>
+                                <input type="range" min="0" max="1" step="0.1" value="0.8" id="input_e" class="slider-thumb" oninput="updateParams()">
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">1.0 = No Energy Loss</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-gray-100">
+                    <div class="bg-blue-50 p-3 rounded text-xs text-blue-800 leading-relaxed">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <strong>Tip:</strong> Toggle "Positive Direction" to see how vector graphs (Left Column) flip, while scalar graphs (Right Column) remain additive.
+                    </div>
+                    <div class="mt-4 text-[11px] text-gray-400 text-center font-medium">
+                        Made by James Kua, Temasek Junior College
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="flex-1 flex flex-col bg-gray-50 overflow-hidden">
+            
+            <div class="flex flex-1 overflow-hidden">
+                <!-- Animation Canvas (Left center) -->
+                <div class="w-1/3 h-full p-4 flex flex-col border-r border-gray-200 bg-white relative">
+                    <h3 class="text-sm font-semibold text-gray-500 mb-2 flex items-center gap-2">
+                        <i class="fas fa-film"></i> Animation
+                    </h3>
+                    <div class="flex-1 relative bg-gray-50 border border-gray-200 rounded-lg overflow-hidden" id="animContainer">
+                        <!-- Ground -->
+                        <div class="absolute bottom-0 w-full h-4 bg-gray-300 border-t border-gray-400 z-0"></div>
+                        <!-- Canvas -->
+                        <canvas id="animCanvas" class="w-full h-full z-10 block"></canvas>
+                        
+                        <!-- Axis Labels -->
+                        <div class="absolute left-2 top-2 text-xs text-gray-400 font-mono">100m</div>
+                        <div class="absolute left-2 bottom-6 text-xs text-gray-400 font-mono">0m</div>
+                    </div>
+                </div>
+
+                <!-- Graphs Grid (Right) -->
+                <div class="w-2/3 h-full overflow-y-auto p-6 bg-gray-50">
+                    <div class="grid grid-cols-2 gap-x-6 gap-y-6 max-w-5xl mx-auto">
+                        
+                        <!-- Headers -->
+                        <div class="text-center pb-2 border-b-2 border-blue-500">
+                            <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Vector Quantities (Direction Matters)</h2>
+                        </div>
+                        <div class="text-center pb-2 border-b-2 border-green-500">
+                            <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Scalar Quantities (Magnitude Only)</h2>
+                        </div>
+
+                        <!-- Row 1: Displacement vs Distance -->
+                        <div class="graph-container p-2 shadow-sm">
+                            <div class="absolute top-2 left-3 text-xs font-bold text-blue-600 z-10 bg-white/80 px-1 rounded">Displacement - Time</div>
+                            <canvas id="dispGraph"></canvas>
+                        </div>
+                        <div class="graph-container p-2 shadow-sm">
+                            <div class="absolute top-2 left-3 text-xs font-bold text-green-600 z-10 bg-white/80 px-1 rounded">Distance - Time</div>
+                            <canvas id="distGraph"></canvas>
+                        </div>
+
+                        <!-- Row 2: Velocity vs Speed -->
+                        <div class="graph-container p-2 shadow-sm">
+                            <div class="absolute top-2 left-3 text-xs font-bold text-blue-600 z-10 bg-white/80 px-1 rounded">Velocity - Time</div>
+                            <canvas id="velGraph"></canvas>
+                        </div>
+                        <div class="graph-container p-2 shadow-sm">
+                            <div class="absolute top-2 left-3 text-xs font-bold text-green-600 z-10 bg-white/80 px-1 rounded">Speed - Time</div>
+                            <canvas id="spdGraph"></canvas>
+                        </div>
+
+                        <!-- Row 3: Acceleration -->
+                        <div class="graph-container p-2 shadow-sm">
+                            <div class="absolute top-2 left-3 text-xs font-bold text-blue-600 z-10 bg-white/80 px-1 rounded">Acceleration - Time</div>
+                            <canvas id="accGraph"></canvas>
+                        </div>
+                        <div class="flex items-center justify-center text-center p-4 text-gray-400 text-sm italic border border-dashed border-gray-300 rounded">
+                            Scalars don't have a specific "Acceleration" equivalent graph typically taught at this level (Magnitude of Acceleration is constant).
+                        </div>
+
+                    </div>
+                    <div class="h-10"></div> <!-- Spacer -->
+                </div>
+            </div>
+
+            <!-- Timeline Scrubber -->
+            <div class="h-20 bg-white border-t border-gray-200 px-6 flex items-center gap-4 z-20 shrink-0 select-none">
+                <button onclick="togglePlay()" id="scrubPlayBtn" class="text-gray-500 hover:text-blue-600 transition-colors w-8">
+                    <i class="fas fa-play text-lg"></i>
+                </button>
+                
+                <!-- Track Container -->
+                <div class="flex-1 relative group h-8 flex items-center">
+                    
+                    <!-- Markers Container (Behind Input) -->
+                    <div id="timelineMarkers" class="absolute top-0 left-0 w-full h-full pointer-events-none">
+                        <!-- Markers injected via JS -->
+                    </div>
+
+                    <!-- Visual Track Background -->
+                    <div class="absolute top-1/2 left-0 w-full h-2 bg-gray-200 rounded-lg transform -translate-y-1/2 z-0"></div>
+
+                    <!-- Range Input -->
+                    <input type="range" min="0" max="100" value="0" step="0.1" id="timeScrubber" class="slider-thumb time-scrubber w-full h-full cursor-pointer z-10" oninput="scrub(this.value)">
+                    
+                    <!-- Time Labels -->
+                    <div class="absolute top-6 w-full flex justify-between text-xs text-gray-400 px-1 pointer-events-none">
+                        <span>0.0s</span>
+                        <span>5.0s</span>
+                        <span>10.0s</span>
+                    </div>
+                </div>
+
+                <div class="font-mono text-lg font-bold text-blue-600 w-20 text-right" id="timeDisplay">
+                    0.00s
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // --- State Management ---
+        const CONSTANTS = {
+            dt: 0.016, // Physics time step
+            simDuration: 10, // Max simulation time in seconds
+            maxY: 100 // Height of simulation world in meters
+        };
+
+        const state = {
+            running: false,
+            currentTime: 0,
+            
+            // Simulation Parameters
+            params: {
+                y0: 0,
+                v0: 0,
+                a: 0,
+                restitution: 0.8,
+                positiveUp: true
+            },
+
+            // Pre-calculated Trajectory Data
+            trajectory: { t: [], y: [], v: [], a: [], d: [], s: [] },
+            events: [], // Stores { time, type } for bounces/peaks
+            
+            // Canvas Contexts
+            animCtx: null,
+            graphs: {}
+        };
+
+        // --- Initialization ---
+        window.onload = function() {
+            // Setup Canvases
+            setupCanvas('animCanvas');
+            state.animCtx = document.getElementById('animCanvas').getContext('2d');
+            
+            const graphIds = ['dispGraph', 'velGraph', 'accGraph', 'distGraph', 'spdGraph'];
+            graphIds.forEach(id => {
+                setupCanvas(id);
+                state.graphs[id] = document.getElementById(id).getContext('2d');
+            });
+
+            // Initial UI update
+            updateParams(); // This triggers runSimulation() and drawFrame()
+            setPreset('drop'); // Default preset
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                setupCanvas('animCanvas');
+                graphIds.forEach(id => setupCanvas(id));
+                drawFrame();
+            });
+        };
+
+        function setupCanvas(id) {
+            const canvas = document.getElementById(id);
+            const parent = canvas.parentElement;
+            canvas.width = parent.clientWidth * window.devicePixelRatio;
+            canvas.height = parent.clientHeight * window.devicePixelRatio;
+            // Scale context for retina displays
+            const ctx = canvas.getContext('2d');
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            // Store logical size for drawing logic
+            canvas.logicalWidth = parent.clientWidth;
+            canvas.logicalHeight = parent.clientHeight;
+        }
+
+        // --- Controls & Logic ---
+
+        function updateParams() {
+            state.params.y0 = parseFloat(document.getElementById('input_y0').value);
+            state.params.v0 = parseFloat(document.getElementById('input_v0').value);
+            state.params.a = parseFloat(document.getElementById('input_a').value);
+            state.params.restitution = parseFloat(document.getElementById('input_e').value);
+
+            // Update UI Labels
+            document.getElementById('val_y0').textContent = `${state.params.y0} m`;
+            document.getElementById('val_v0').textContent = `${state.params.v0} m/s`;
+            document.getElementById('val_a').textContent = `${state.params.a} m/s²`;
+            document.getElementById('val_e').textContent = state.params.restitution;
+
+            // Re-calculate the entire future trajectory immediately
+            runSimulation();
+            
+            // Reset to start if not running, or just redraw
+            if (!state.running) {
+                state.currentTime = 0;
+                updateScrubberUI();
+                drawFrame();
+            }
+        }
+
+        function resetSimulation() {
+            state.running = false;
+            updatePlayButton();
+            state.currentTime = 0;
+            updateScrubberUI();
+            drawFrame();
+        }
+
+        function togglePlay() {
+            state.running = !state.running;
+            updatePlayButton();
+            if (state.running) {
+                if (state.currentTime >= CONSTANTS.simDuration) {
+                    state.currentTime = 0;
+                }
+                requestAnimationFrame(animationLoop);
+            }
+        }
+
+        function updatePlayButton() {
+            const btn = document.getElementById('playBtn');
+            const scrubBtn = document.getElementById('scrubPlayBtn');
+            
+            if (state.running) {
+                btn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+                btn.classList.replace('bg-blue-600', 'bg-amber-500');
+                btn.classList.replace('hover:bg-blue-700', 'hover:bg-amber-600');
+                scrubBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            } else {
+                btn.innerHTML = '<i class="fas fa-play"></i> Start';
+                btn.classList.replace('bg-amber-500', 'bg-blue-600');
+                btn.classList.replace('hover:bg-amber-600', 'hover:bg-blue-700');
+                scrubBtn.innerHTML = '<i class="fas fa-play"></i>';
+            }
+        }
+
+        function toggleDirection() {
+            state.params.positiveUp = !state.params.positiveUp;
+            const btn = document.getElementById('dirBtn');
+            if (state.params.positiveUp) {
+                btn.innerHTML = '<i class="fas fa-long-arrow-alt-up"></i> Positive: UP';
+                btn.classList.remove('bg-red-50', 'text-red-700', 'border-red-200');
+                btn.classList.add('bg-gray-100');
+            } else {
+                btn.innerHTML = '<i class="fas fa-long-arrow-alt-down"></i> Positive: DOWN';
+                btn.classList.remove('bg-gray-100');
+                btn.classList.add('bg-red-50', 'text-red-700', 'border-red-200');
+            }
+            drawFrame();
+        }
+
+        function setPreset(type) {
+            state.running = false;
+            updatePlayButton();
+            state.currentTime = 0;
+
+            let y0 = 0, v0 = 0, a = 0, e = 0.8;
+
+            switch(type) {
+                case 'constV':
+                    y0 = 10; v0 = 10; a = 0;
+                    break;
+                case 'constA':
+                    y0 = 0; v0 = 0; a = 5;
+                    break;
+                case 'drop':
+                    y0 = 90; v0 = 0; a = -9.8; e = 0;
+                    break;
+                case 'throw':
+                    y0 = 0; v0 = 40; a = -9.8; e = 0;
+                    break;
+                case 'bounceElastic':
+                    y0 = 80; v0 = 0; a = -9.8; e = 1.0;
+                    break;
+                case 'bounceInelastic':
+                    y0 = 80; v0 = 0; a = -9.8; e = 0.7;
+                    break;
+            }
+
+            document.getElementById('input_y0').value = y0;
+            document.getElementById('input_v0').value = v0;
+            document.getElementById('input_a').value = a;
+            document.getElementById('input_e').value = e;
+            
+            updateParams();
+        }
+
+        function scrub(percent) {
+            state.running = false;
+            updatePlayButton();
+            state.currentTime = (percent / 100) * CONSTANTS.simDuration;
+            updateScrubberUI();
+            drawFrame();
+        }
+        
+        // Jump to absolute time (used by markers)
+        function jumpToTime(t) {
+            state.running = false;
+            updatePlayButton();
+            state.currentTime = parseFloat(t);
+            updateScrubberUI();
+            drawFrame();
+        }
+
+        function updateScrubberUI() {
+            const percent = (state.currentTime / CONSTANTS.simDuration) * 100;
+            document.getElementById('timeScrubber').value = percent;
+            document.getElementById('timeDisplay').textContent = state.currentTime.toFixed(2) + 's';
+        }
+
+        // --- Physics Engine (Pre-calculation) ---
+
+        function runSimulation() {
+            state.trajectory = { t: [], y: [], v: [], a: [], d: [], s: [] };
+            state.events = [];
+            
+            let t = 0;
+            let y = state.params.y0;
+            let v = state.params.v0;
+            let a = state.params.a;
+            let dist = 0;
+            const dt = CONSTANTS.dt;
+
+            // Generate full data for CONSTANTS.simDuration
+            while (t <= CONSTANTS.simDuration) {
+                // Peak detection (change in sign of velocity from + to -)
+                // We check if previous velocity was positive and current is negative/zero
+                if (state.trajectory.v.length > 0) {
+                    const prevV = state.trajectory.v[state.trajectory.v.length - 1];
+                    // Standard peak (going up then down)
+                    if (prevV > 0 && v <= 0) {
+                         state.events.push({ time: t, type: 'peak' });
+                    }
+                }
+
+                state.trajectory.t.push(t);
+                state.trajectory.y.push(y);
+                state.trajectory.v.push(v);
+                state.trajectory.a.push(a);
+                state.trajectory.d.push(dist);
+                state.trajectory.s.push(Math.abs(v));
+
+                y += v * dt;
+                v += a * dt;
+                const speed = Math.abs(v);
+                dist += speed * dt;
+
+                // Collision
+                if (y < 0) {
+                    y = 0;
+                    // Register Bounce Event
+                    if (Math.abs(v) > 0.5) { // Only log significant bounces
+                        state.events.push({ time: t, type: 'bounce' });
+                    }
+
+                    if (state.params.restitution > 0 && Math.abs(v) > 1.0) {
+                        v = -v * state.params.restitution;
+                    } else {
+                        if (a < 0) { v = 0; a = 0; y = 0; }
+                    }
+                }
+
+                t += dt;
+            }
+            
+            renderMarkers();
+        }
+
+        function renderMarkers() {
+            const container = document.getElementById('timelineMarkers');
+            container.innerHTML = '';
+            
+            state.events.forEach(evt => {
+                const percent = (evt.time / CONSTANTS.simDuration) * 100;
+                if (percent > 100) return;
+
+                const marker = document.createElement('div');
+                marker.className = `event-marker marker-${evt.type}`;
+                marker.style.left = `${percent}%`;
+                marker.style.pointerEvents = 'auto'; // Re-enable clicks
+                
+                // Tooltip text
+                marker.setAttribute('data-label', `${evt.type === 'bounce' ? 'Bounce' : 'Peak'} @ ${evt.time.toFixed(2)}s`);
+                
+                // Interaction
+                marker.onclick = (e) => {
+                    e.stopPropagation(); // Prevent bubbling if needed
+                    jumpToTime(evt.time);
+                };
+                
+                container.appendChild(marker);
+            });
+        }
+
+        function animationLoop() {
+            if (!state.running) return;
+
+            state.currentTime += CONSTANTS.dt;
+            if (state.currentTime >= CONSTANTS.simDuration) {
+                state.currentTime = CONSTANTS.simDuration;
+                state.running = false;
+                updatePlayButton();
+            }
+
+            updateScrubberUI();
+            drawFrame();
+            
+            if (state.running) {
+                requestAnimationFrame(animationLoop);
+            }
+        }
+
+        // --- Drawing System ---
+
+        function getCurrentState() {
+            const index = Math.min(
+                Math.floor(state.currentTime / CONSTANTS.dt), 
+                state.trajectory.t.length - 1
+            );
+            return {
+                y: state.trajectory.y[index],
+                v: state.trajectory.v[index],
+                a: state.trajectory.a[index],
+                index: index
+            };
+        }
+
+        function drawFrame() {
+            const current = getCurrentState();
+            drawAnimation(current.y, current.v);
+            drawGraphs(current.index);
+        }
+
+        function drawAnimation(y, v) {
+            const canvas = document.getElementById('animCanvas');
+            const ctx = state.animCtx;
+            const w = canvas.logicalWidth;
+            const h = canvas.logicalHeight;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Draw Ruler Lines
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            for(let i=0; i<=100; i+=10) {
+                const yPos = h - (i / CONSTANTS.maxY) * (h - 20) - 20; 
+                ctx.beginPath();
+                ctx.moveTo(0, yPos);
+                ctx.lineTo(w, yPos);
+                ctx.stroke();
+            }
+
+            // Draw Ball
+            const radius = 12;
+            let visualY = h - (y / CONSTANTS.maxY) * (h - 20) - 20 - radius; 
+
+            // Shadow
+            ctx.beginPath();
+            ctx.ellipse(w/2, h - 15, radius * (1 - Math.min(y/100, 1)), radius * 0.3 * (1 - Math.min(y/100, 1)), 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.1)';
+            ctx.fill();
+
+            // Ball Body
+            ctx.beginPath();
+            ctx.arc(w/2, visualY + radius, radius, 0, Math.PI * 2);
+            const gradient = ctx.createRadialGradient(w/2 - 4, visualY + radius - 4, 2, w/2, visualY + radius, radius);
+            gradient.addColorStop(0, '#60a5fa');
+            gradient.addColorStop(1, '#2563eb');
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.strokeStyle = '#1e40af';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Velocity Vector Arrow
+            if (Math.abs(v) > 0.1) {
+                const vScale = 2; 
+                const vy = -v * vScale; 
+                ctx.beginPath();
+                ctx.moveTo(w/2 + radius + 5, visualY + radius);
+                ctx.lineTo(w/2 + radius + 5, visualY + radius + vy);
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        function drawGraphs(currentIndex) {
+            const traj = state.trajectory;
+            const sign = state.params.positiveUp ? 1 : -1;
+
+            // Vectors: Multiply by sign
+            renderGraph('dispGraph', traj.t, traj.y.map(v => v * sign), '#2563eb', true, currentIndex);
+            renderGraph('velGraph', traj.t, traj.v.map(v => v * sign), '#2563eb', true, currentIndex);
+            renderGraph('accGraph', traj.t, traj.a.map(v => v * sign), '#2563eb', true, currentIndex);
+
+            // Scalars: Always positive
+            renderGraph('distGraph', traj.t, traj.d, '#16a34a', false, currentIndex);
+            renderGraph('spdGraph', traj.t, traj.s, '#16a34a', false, currentIndex);
+        }
+
+        function renderGraph(canvasId, tData, yData, color, isVector, currentIndex) {
+            const ctx = state.graphs[canvasId];
+            const canvas = document.getElementById(canvasId);
+            const w = canvas.logicalWidth;
+            const h = canvas.logicalHeight;
+
+            ctx.clearRect(0, 0, w, h);
+
+            if (tData.length === 0) return;
+
+            let maxY = -Infinity;
+            let minY = Infinity;
+            
+            for(let v of yData) {
+                if (v > maxY) maxY = v;
+                if (v < minY) minY = v;
+            }
+
+            let range = maxY - minY;
+            if (range === 0) range = 10;
+            maxY += range * 0.1;
+            minY -= range * 0.1;
+
+            if (isVector) {
+                if (minY > 0) minY = 0;
+                if (maxY < 0) maxY = 0;
+            } else {
+                if (minY > 0) minY = 0;
+            }
+
+            const rangeY = maxY - minY;
+            const maxT = CONSTANTS.simDuration; 
+
+            const getX = (t) => (t / maxT) * w;
+            const getY = (val) => h - ((val - minY) / rangeY) * h;
+
+            // 1. Draw Zero Line (Horizontal Y=0)
+            if (minY <= 0 && maxY >= 0) {
+                const zeroY = getY(0);
+                ctx.beginPath();
+                ctx.moveTo(0, zeroY);
+                ctx.lineTo(w, zeroY);
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // 2. Draw Full "Ghost" Trajectory
+            ctx.beginPath();
+            ctx.moveTo(getX(tData[0]), getY(yData[0]));
+            for (let i = 1; i < tData.length; i++) {
+                ctx.lineTo(getX(tData[i]), getY(yData[i]));
+            }
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 3. Draw Active Trajectory
+            if (currentIndex > 0) {
+                ctx.beginPath();
+                ctx.moveTo(getX(tData[0]), getY(yData[0]));
+                for (let i = 1; i <= currentIndex; i++) {
+                    ctx.lineTo(getX(tData[i]), getY(yData[i]));
+                }
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                const lastX = getX(tData[currentIndex]);
+                const lastY = getY(yData[currentIndex]);
+                ctx.beginPath();
+                ctx.arc(lastX, lastY, 4, 0, Math.PI*2);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Value Label
+                ctx.fillStyle = '#374151';
+                ctx.font = '10px Inter';
+                let labelY = lastY - 10;
+                if (labelY < 10) labelY = lastY + 20;
+                ctx.fillText(yData[currentIndex].toFixed(1), lastX - 10, labelY);
+            }
+        }
+    </script>
+</body>
+</html>
