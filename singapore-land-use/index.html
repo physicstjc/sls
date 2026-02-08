@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SG Urban Analytics - 1950-2020 Historical</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map { height: 100vh; width: 100%; z-index: 1; background: #f1f5f9; }
+        .glass {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        .legend-item i {
+            width: 14px;
+            height: 14px;
+            float: left;
+            margin-right: 10px;
+            border-radius: 2px;
+            border: 1px solid rgba(0,0,0,0.15);
+        }
+        .custom-tooltip {
+            background: rgba(15, 23, 42, 0.9) !important;
+            border: none !important;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1) !important;
+            border-radius: 6px !important;
+            padding: 6px 10px !important;
+            font-size: 11px !important;
+            color: white !important;
+            font-weight: 500 !important;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #4f46e5;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 overflow-hidden font-sans">
+
+    <!-- Primary Dashboard -->
+    <div class="fixed top-6 left-6 z-[1000] w-80 flex flex-col gap-4">
+        <div class="glass p-6 rounded-3xl shadow-2xl border-slate-200/50">
+            <div class="flex items-center gap-2 mb-1">
+                <div class="w-2.5 h-2.5 rounded-full bg-indigo-600 shadow-[0_0_8px_rgba(79,70,229,0.6)]"></div>
+                <h1 class="text-xs font-black text-slate-900 tracking-widest uppercase">Historical Explorer</h1>
+            </div>
+            <p class="text-[10px] text-slate-400 mb-6 font-bold tracking-tight">Singapore Urban Evolution (1950 - 2020)</p>
+            
+            <div class="space-y-6">
+                <!-- Mode Toggle -->
+                <div class="grid grid-cols-2 p-1 bg-slate-200/50 rounded-2xl">
+                    <button onclick="setMode('pop')" id="btn-pop" class="py-2.5 rounded-xl text-[10px] font-black transition-all bg-white shadow-sm text-indigo-600">DENSITY</button>
+                    <button onclick="setMode('land')" id="btn-land" class="py-2.5 rounded-xl text-[10px] font-black transition-all text-slate-500 hover:text-slate-700">ZONING</button>
+                </div>
+
+                <!-- Timeline Slider -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Chronology</label>
+                        <span id="year-label" class="text-xs font-black bg-indigo-600 text-white px-3 py-1 rounded-full shadow-lg shadow-indigo-200 transition-all">2020</span>
+                    </div>
+                    <input type="range" min="0" max="4" step="1" value="4" id="year-slider" 
+                           class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                    <div class="flex justify-between text-[9px] font-black text-slate-400 mt-3 px-1 italic">
+                        <span>1950</span>
+                        <span>1970</span>
+                        <span>1990</span>
+                        <span>2010</span>
+                        <span>2020</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Data Insights -->
+        <div id="info-card" class="glass p-6 rounded-3xl shadow-2xl hidden translate-y-0 opacity-100 transition-all duration-300">
+            <div class="flex flex-col gap-1 mb-4">
+                <h2 id="area-name" class="text-lg font-black text-slate-800 tracking-tighter leading-none">Planning Area</h2>
+                <span id="region-tag" class="text-[9px] font-black text-indigo-500 uppercase">Region</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Pop.</p>
+                    <p id="pop-val" class="text-sm font-black text-slate-700">0</p>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Land Use</p>
+                    <p id="land-val" class="text-sm font-black text-slate-700">--</p>
+                </div>
+            </div>
+            <div class="relative pt-1">
+                <div class="flex mb-2 items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-black inline-block py-1 px-2 uppercase rounded-full text-indigo-600 bg-indigo-100">Density Index</span>
+                    </div>
+                    <div class="text-right">
+                        <span id="stat-pct" class="text-[10px] font-black inline-block text-indigo-600">0%</span>
+                    </div>
+                </div>
+                <div class="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-slate-100">
+                    <div id="stat-bar" style="width:0%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500 transition-all duration-1000"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Legend -->
+    <div id="legend" class="fixed bottom-8 right-8 z-[1000] glass px-5 py-4 rounded-3xl shadow-2xl text-[10px] w-52">
+        <h3 id="legend-title" class="font-black text-slate-800 mb-3 uppercase tracking-widest border-b border-slate-100 pb-2">Density (sq/km)</h3>
+        <div id="legend-content" class="space-y-2">
+            <!-- Dynamic Content -->
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script>
+        let map, geoLayer;
+        let currentMode = 'pop';
+        let currentYearIdx = 4;
+        const years = ["1950", "1970", "1990", "2010", "2020"];
+
+        // URA Official Zoning Colors
+        const landStyles = {
+            'Residential': { color: '#fdb462', label: 'Residential' },
+            'Commercial': { color: '#fb8072', label: 'Commercial' },
+            'Industrial': { color: '#80b1d3', label: 'Industrial' },
+            'Institution': { color: '#bebada', label: 'Institution' },
+            'Park': { color: '#8dd3c7', label: 'Nature' },
+            'Mixed': { color: '#b3de69', label: 'Mixed Use' },
+            'Airport': { color: '#d9d9d9', label: 'Utility' },
+            'Rural': { color: '#e2e8f0', label: 'Rural/Swamp' }
+        };
+
+        const districts = [
+            { 
+                name: "Jurong West", 
+                region: "West", 
+                history: [
+                    { pop: 500, land: "Rural" },
+                    { pop: 5000, land: "Industrial" },
+                    { pop: 120000, land: "Industrial" },
+                    { pop: 265000, land: "Residential" },
+                    { pop: 262000, land: "Residential" }
+                ], 
+                poly: [[1.35,103.68],[1.36,103.71],[1.33,103.72],[1.32,103.69]] 
+            },
+            { 
+                name: "Tampines", 
+                region: "East", 
+                history: [
+                    { pop: 2000, land: "Rural" },
+                    { pop: 15000, land: "Rural" },
+                    { pop: 180000, land: "Residential" },
+                    { pop: 248000, land: "Residential" },
+                    { pop: 259000, land: "Residential" }
+                ], 
+                poly: [[1.34,103.93],[1.37,103.95],[1.35,103.97],[1.33,103.95]] 
+            },
+            { 
+                name: "Punggol", 
+                region: "North-East", 
+                history: [
+                    { pop: 800, land: "Rural" },
+                    { pop: 2000, land: "Rural" },
+                    { pop: 15000, land: "Rural" },
+                    { pop: 54000, land: "Mixed" },
+                    { pop: 174000, land: "Mixed" }
+                ], 
+                poly: [[1.39,103.90],[1.41,103.91],[1.40,103.93],[1.38,103.92]] 
+            },
+            { 
+                name: "Downtown Core", 
+                region: "Central", 
+                history: [
+                    { pop: 15000, land: "Commercial" },
+                    { pop: 12000, land: "Commercial" },
+                    { pop: 5000, land: "Commercial" },
+                    { pop: 3000, land: "Commercial" },
+                    { pop: 2500, land: "Commercial" }
+                ], 
+                poly: [[1.28,103.84],[1.30,103.85],[1.29,103.87],[1.27,103.86]] 
+            },
+            { 
+                name: "Woodlands", 
+                region: "North", 
+                history: [
+                    { pop: 1000, land: "Rural" },
+                    { pop: 12000, land: "Rural" },
+                    { pop: 100000, land: "Residential" },
+                    { pop: 235000, land: "Residential" },
+                    { pop: 252000, land: "Residential" }
+                ], 
+                poly: [[1.43,103.77],[1.45,103.79],[1.43,103.81],[1.41,103.78]] 
+            },
+            { 
+                name: "Tuas", 
+                region: "West", 
+                history: [
+                    { pop: 0, land: "Rural" },
+                    { pop: 0, land: "Rural" },
+                    { pop: 10, land: "Industrial" },
+                    { pop: 10, land: "Industrial" },
+                    { pop: 20, land: "Industrial" }
+                ], 
+                poly: [[1.26,103.62],[1.30,103.64],[1.28,103.67],[1.24,103.65]] 
+            },
+            { 
+                name: "Central Water Catchment", 
+                region: "Central", 
+                history: [
+                    { pop: 0, land: "Nature" },
+                    { pop: 0, land: "Nature" },
+                    { pop: 0, land: "Nature" },
+                    { pop: 0, land: "Park" },
+                    { pop: 0, land: "Park" }
+                ], 
+                poly: [[1.36,103.79],[1.40,103.81],[1.38,103.84],[1.35,103.82]] 
+            },
+            { 
+                name: "Bedok", 
+                region: "East", 
+                history: [
+                    { pop: 5000, land: "Rural" },
+                    { pop: 45000, land: "Residential" },
+                    { pop: 250000, land: "Residential" },
+                    { pop: 292000, land: "Residential" },
+                    { pop: 276000, land: "Residential" }
+                ], 
+                poly: [[1.31,103.91],[1.33,103.94],[1.31,103.96],[1.30,103.93]] 
+            }
+        ];
+
+        function initMap() {
+            map = L.map('map', {
+                center: [1.3521, 103.8198],
+                zoom: 12,
+                zoomControl: false,
+                attributionControl: false
+            });
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 18,
+                minZoom: 11
+            }).addTo(map);
+
+            updateVisualization();
+        }
+
+        function getPopColor(val) {
+            return val > 200000 ? '#4338ca' :
+                   val > 100000 ? '#6366f1' :
+                   val > 50000  ? '#818cf8' :
+                   val > 10000  ? '#a5b4fc' :
+                   val > 1000   ? '#c7d2fe' : '#e2e8f0';
+        }
+
+        function updateVisualization() {
+            if (geoLayer) map.removeLayer(geoLayer);
+
+            const polygons = districts.map(district => {
+                const data = district.history[currentYearIdx];
+                const pop = data.pop;
+                const style = currentMode === 'pop' 
+                    ? {
+                        fillColor: getPopColor(pop),
+                        fillOpacity: 0.75,
+                        color: 'white',
+                        weight: 1.5
+                      }
+                    : {
+                        fillColor: (landStyles[data.land] || landStyles['Rural']).color,
+                        fillOpacity: 0.8,
+                        color: 'white',
+                        weight: 2
+                      };
+
+                const poly = L.polygon(district.poly, style);
+                
+                poly.on('mouseover', function() {
+                    this.setStyle({ weight: 4, color: '#4f46e5', fillOpacity: 0.9 });
+                });
+                
+                poly.on('mouseout', function() {
+                    this.setStyle(style);
+                });
+
+                poly.on('click', () => showDetails(district));
+
+                poly.bindTooltip(`<strong>${district.name}</strong>`, { 
+                    className: 'custom-tooltip', 
+                    direction: 'top', 
+                    sticky: true 
+                });
+
+                return poly;
+            });
+
+            geoLayer = L.featureGroup(polygons).addTo(map);
+            updateLegend();
+        }
+
+        function showDetails(district) {
+            const card = document.getElementById('info-card');
+            const data = district.history[currentYearIdx];
+            
+            card.classList.remove('hidden');
+            document.getElementById('area-name').innerText = district.name;
+            document.getElementById('region-tag').innerText = district.region + " Region";
+            document.getElementById('pop-val').innerText = data.pop.toLocaleString();
+            document.getElementById('land-val').innerText = (landStyles[data.land] || landStyles['Rural']).label;
+            
+            const pct = Math.min((data.pop / 300000) * 100, 100);
+            document.getElementById('stat-pct').innerText = Math.round(pct) + "%";
+            document.getElementById('stat-bar').style.width = pct + "%";
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('btn-pop').className = mode === 'pop' 
+                ? "py-2.5 rounded-xl text-[10px] font-black transition-all bg-white shadow-sm text-indigo-600"
+                : "py-2.5 rounded-xl text-[10px] font-black transition-all text-slate-500 hover:text-slate-700";
+            
+            document.getElementById('btn-land').className = mode === 'land' 
+                ? "py-2.5 rounded-xl text-[10px] font-black transition-all bg-white shadow-sm text-indigo-600"
+                : "py-2.5 rounded-xl text-[10px] font-black transition-all text-slate-500 hover:text-slate-700";
+            
+            updateVisualization();
+        }
+
+        function updateLegend() {
+            const content = document.getElementById('legend-content');
+            const title = document.getElementById('legend-title');
+            
+            if (currentMode === 'pop') {
+                title.innerText = "Density Intensity";
+                content.innerHTML = `
+                    <div class="legend-item"><i style="background: #4338ca"></i> Very High (>200k)</div>
+                    <div class="legend-item"><i style="background: #6366f1"></i> High (>100k)</div>
+                    <div class="legend-item"><i style="background: #a5b4fc"></i> Moderate</div>
+                    <div class="legend-item"><i style="background: #e2e8f0"></i> Rural/Low</div>
+                `;
+            } else {
+                title.innerText = "Land Use State";
+                content.innerHTML = `
+                    <div class="legend-item"><i style="background: #fdb462"></i> Residential</div>
+                    <div class="legend-item"><i style="background: #fb8072"></i> Commercial</div>
+                    <div class="legend-item"><i style="background: #80b1d3"></i> Industrial</div>
+                    <div class="legend-item"><i style="background: #b3de69"></i> Mixed Use</div>
+                    <div class="legend-item"><i style="background: #8dd3c7"></i> Nature Reserve</div>
+                    <div class="legend-item"><i style="background: #e2e8f0"></i> Rural/Agriculture</div>
+                `;
+            }
+        }
+
+        document.getElementById('year-slider').addEventListener('input', (e) => {
+            currentYearIdx = parseInt(e.target.value);
+            document.getElementById('year-label').innerText = years[currentYearIdx];
+            updateVisualization();
+        });
+
+        window.onload = initMap;
+    </script>
+</body>
+</html>
