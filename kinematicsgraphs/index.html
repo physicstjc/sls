@@ -10,7 +10,11 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         canvas { touch-action: none; }
-        .graph-container { position: relative; height: 160px; width: 100%; border: 1px solid #e5e7eb; border-radius: 0.5rem; background: #fff; }
+        
+        /* New Graph Card Styling */
+        .graph-card { border: 1px solid #e5e7eb; border-radius: 0.5rem; background: #fff; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .graph-canvas-container { position: relative; height: 160px; width: 100%; border-bottom: 1px solid #f3f4f6; }
+        .graph-footer { background: #f9fafb; padding: 8px 12px; font-size: 0.75rem; color: #4b5563; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; line-height: 1.4; }
         
         /* Custom Slider Styling */
         .slider-thumb { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; background: transparent; outline: none; z-index: 20; position: relative; }
@@ -33,6 +37,17 @@
         .event-marker::after { content: attr(data-label); position: absolute; bottom: 140%; left: 50%; transform: translateX(-50%) rotate(-45deg); background: rgba(0,0,0,0.8); color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
         .marker-bounce::after { bottom: auto; top: 140%; transform: translateX(-50%) rotate(-45deg); }
         .event-marker:hover::after { opacity: 1; }
+
+        /* Calculation Formula Style */
+        .calc-formula { 
+            display: block; 
+            margin-top: 4px; 
+            color: #6b7280; 
+            font-size: 0.7rem; 
+            white-space: normal; /* Changed from nowrap to normal to allow wrapping */
+            word-break: break-word; /* Ensure long formulas break correctly */
+            line-height: 1.5; 
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 h-screen flex flex-col overflow-hidden">
@@ -177,32 +192,70 @@
                         </div>
 
                         <!-- Row 1: Displacement vs Distance -->
-                        <div class="graph-container p-2 shadow-sm">
-                            <div class="absolute top-2 left-3 text-xs font-bold text-blue-600 z-10 bg-white/80 px-1 rounded">Displacement - Time</div>
-                            <canvas id="dispGraph"></canvas>
+                        <div class="graph-card">
+                            <div class="px-3 py-2 border-b border-gray-100 bg-gray-50 text-xs font-bold text-blue-600 uppercase tracking-wide">Displacement - Time</div>
+                            <div class="graph-canvas-container">
+                                <canvas id="dispGraph" class="w-full h-full"></canvas>
+                            </div>
+                            <div class="graph-footer">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-500">Gradient (Velocity):</span>
+                                    <span class="font-bold text-blue-700" id="calc-disp-grad">--</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="graph-container p-2 shadow-sm">
-                            <div class="absolute top-2 left-3 text-xs font-bold text-green-600 z-10 bg-white/80 px-1 rounded">Distance - Time</div>
-                            <canvas id="distGraph"></canvas>
+
+                        <div class="graph-card">
+                            <div class="px-3 py-2 border-b border-gray-100 bg-gray-50 text-xs font-bold text-green-600 uppercase tracking-wide">Distance - Time</div>
+                            <div class="graph-canvas-container">
+                                <canvas id="distGraph" class="w-full h-full"></canvas>
+                            </div>
                         </div>
 
                         <!-- Row 2: Velocity vs Speed -->
-                        <div class="graph-container p-2 shadow-sm">
-                            <div class="absolute top-2 left-3 text-xs font-bold text-blue-600 z-10 bg-white/80 px-1 rounded">Velocity - Time</div>
-                            <canvas id="velGraph"></canvas>
+                        <div class="graph-card">
+                            <div class="px-3 py-2 border-b border-gray-100 bg-gray-50 text-xs font-bold text-blue-600 uppercase tracking-wide">Velocity - Time</div>
+                            <div class="graph-canvas-container">
+                                <canvas id="velGraph" class="w-full h-full"></canvas>
+                            </div>
+                            <div class="graph-footer space-y-1">
+                                <div class="flex justify-between items-center border-b border-gray-100 pb-1">
+                                    <span class="text-gray-500">Gradient (Accel):</span>
+                                    <span class="font-bold text-blue-700" id="calc-vel-grad">--</span>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-500">Area (Change in Disp):</span>
+                                        <span class="font-bold text-blue-700" id="calc-vel-area">--</span>
+                                    </div>
+                                    <span class="calc-formula" id="calc-vel-formula"></span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="graph-container p-2 shadow-sm">
-                            <div class="absolute top-2 left-3 text-xs font-bold text-green-600 z-10 bg-white/80 px-1 rounded">Speed - Time</div>
-                            <canvas id="spdGraph"></canvas>
+
+                        <div class="graph-card">
+                            <div class="px-3 py-2 border-b border-gray-100 bg-gray-50 text-xs font-bold text-green-600 uppercase tracking-wide">Speed - Time</div>
+                            <div class="graph-canvas-container">
+                                <canvas id="spdGraph" class="w-full h-full"></canvas>
+                            </div>
                         </div>
 
                         <!-- Row 3: Acceleration -->
-                        <div class="graph-container p-2 shadow-sm">
-                            <div class="absolute top-2 left-3 text-xs font-bold text-blue-600 z-10 bg-white/80 px-1 rounded">Acceleration - Time</div>
-                            <canvas id="accGraph"></canvas>
+                        <div class="graph-card">
+                            <div class="px-3 py-2 border-b border-gray-100 bg-gray-50 text-xs font-bold text-blue-600 uppercase tracking-wide">Acceleration - Time</div>
+                            <div class="graph-canvas-container">
+                                <canvas id="accGraph" class="w-full h-full"></canvas>
+                            </div>
+                            <div class="graph-footer">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-500">Area (Change in Vel):</span>
+                                    <span class="font-bold text-blue-700" id="calc-acc-area">--</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex items-center justify-center text-center p-4 text-gray-400 text-sm italic border border-dashed border-gray-300 rounded">
-                            Scalars don't have a specific "Acceleration" equivalent graph typically taught at this level (Magnitude of Acceleration is constant).
+
+                        <div class="flex items-center justify-center text-center p-4 text-gray-400 text-sm italic border border-dashed border-gray-300 rounded h-full">
+                            Scalars don't have a specific "Acceleration" equivalent graph typically taught at this level.
                         </div>
 
                     </div>
@@ -269,7 +322,7 @@
 
             // Pre-calculated Trajectory Data
             trajectory: { t: [], y: [], v: [], a: [], d: [], s: [] },
-            events: [], // Stores { time, type } for bounces/peaks
+            events: [], // Stores { time, type, vIn, vOut }
             
             // Canvas Contexts
             animCtx: null,
@@ -407,7 +460,7 @@
                     y0 = 90; v0 = 0; a = -9.8; e = 0;
                     break;
                 case 'throw':
-                    y0 = 0; v0 = 40; a = -9.8; e = 0;
+                    y0 = 0; v0 = 40; a = -10; e = 0; 
                     break;
                 case 'bounceElastic':
                     y0 = 80; v0 = 0; a = -9.8; e = 1.0;
@@ -433,7 +486,6 @@
             drawFrame();
         }
         
-        // Jump to absolute time (used by markers)
         function jumpToTime(t) {
             state.running = false;
             updatePlayButton();
@@ -463,16 +515,7 @@
 
             // Generate full data for CONSTANTS.simDuration
             while (t <= CONSTANTS.simDuration) {
-                // Peak detection (change in sign of velocity from + to -)
-                // We check if previous velocity was positive and current is negative/zero
-                if (state.trajectory.v.length > 0) {
-                    const prevV = state.trajectory.v[state.trajectory.v.length - 1];
-                    // Standard peak (going up then down)
-                    if (prevV > 0 && v <= 0) {
-                         state.events.push({ time: t, type: 'peak' });
-                    }
-                }
-
+                // 1. Save current state
                 state.trajectory.t.push(t);
                 state.trajectory.y.push(y);
                 state.trajectory.v.push(v);
@@ -480,23 +523,60 @@
                 state.trajectory.d.push(dist);
                 state.trajectory.s.push(Math.abs(v));
 
-                y += v * dt;
-                v += a * dt;
-                const speed = Math.abs(v);
-                dist += speed * dt;
+                const prevY = y;
+                const prevV = v;
 
-                // Collision
+                // 2. Predict Peak
+                let nextV = v + a * dt;
+
+                // Check if velocity crosses from Positive to Negative (Peak)
+                if (prevV > 0 && nextV < 0) {
+                    const dtPeak = -prevV / a;
+                    const tPeak = t + dtPeak;
+                    const yPeak = prevY + prevV * dtPeak + 0.5 * a * dtPeak * dtPeak;
+                    const distPeak = dist + Math.abs(yPeak - prevY); // Approx dist add
+
+                    // Insert "Peak" Data Point
+                    state.trajectory.t.push(tPeak);
+                    state.trajectory.y.push(yPeak);
+                    state.trajectory.v.push(0); 
+                    state.trajectory.a.push(a);
+                    state.trajectory.d.push(distPeak);
+                    state.trajectory.s.push(0);
+
+                    state.events.push({ time: tPeak, type: 'peak', vIn: 0, vOut: 0 });
+                }
+
+                // 3. Evolve State
+                y += v * dt + 0.5 * a * dt * dt;
+                v += a * dt;
+                
+                dist += Math.abs(y - prevY);
+
+                // 4. Handle Ground Collision
                 if (y < 0) {
                     y = 0;
-                    // Register Bounce Event
-                    if (Math.abs(v) > 0.5) { // Only log significant bounces
-                        state.events.push({ time: t, type: 'bounce' });
-                    }
+                    
+                    const vBeforeBounce = v;
+                    let vAfterBounce = v;
 
+                    // Bounce Physics
                     if (state.params.restitution > 0 && Math.abs(v) > 1.0) {
-                        v = -v * state.params.restitution;
+                        vAfterBounce = -v * state.params.restitution;
                     } else {
-                        if (a < 0) { v = 0; a = 0; y = 0; }
+                        if (a < 0) { vAfterBounce = 0; a = 0; y = 0; }
+                    }
+                    
+                    v = vAfterBounce;
+
+                    // Register Bounce Event with both velocities
+                    if (Math.abs(vBeforeBounce) > 0.5) { 
+                        state.events.push({ 
+                            time: t, 
+                            type: 'bounce', 
+                            vIn: vBeforeBounce, 
+                            vOut: vAfterBounce 
+                        });
                     }
                 }
 
@@ -553,10 +633,29 @@
         // --- Drawing System ---
 
         function getCurrentState() {
-            const index = Math.min(
-                Math.floor(state.currentTime / CONSTANTS.dt), 
-                state.trajectory.t.length - 1
-            );
+            const tTarget = state.currentTime;
+            const times = state.trajectory.t;
+            
+            let low = 0, high = times.length - 1;
+            let index = 0;
+
+            while (low <= high) {
+                let mid = Math.floor((low + high) / 2);
+                if (times[mid] < tTarget) {
+                    low = mid + 1;
+                } else {
+                    high = mid - 1;
+                }
+            }
+            
+            if (low >= times.length) index = times.length - 1;
+            else if (low <= 0) index = 0;
+            else {
+                const diff1 = Math.abs(times[low] - tTarget);
+                const diff2 = Math.abs(times[low-1] - tTarget);
+                index = diff1 < diff2 ? low : low - 1;
+            }
+
             return {
                 y: state.trajectory.y[index],
                 v: state.trajectory.v[index],
@@ -569,6 +668,119 @@
             const current = getCurrentState();
             drawAnimation(current.y, current.v);
             drawGraphs(current.index);
+            updateCalculations(current.index);
+        }
+
+        function updateCalculations(idx) {
+            const traj = state.trajectory;
+            const sign = state.params.positiveUp ? 1 : -1;
+            
+            // 1. Disp Gradient
+            const currentVel = traj.v[idx] * sign;
+            document.getElementById('calc-disp-grad').textContent = `${currentVel.toFixed(2)} m/s`;
+
+            // 2. Vel Gradient
+            const currentAcc = traj.a[idx] * sign;
+            document.getElementById('calc-vel-grad').textContent = `${currentAcc.toFixed(2)} m/s²`;
+
+            // 3. Vel Area (Total)
+            const initialPos = traj.y[0] * sign;
+            const currentPos = traj.y[idx] * sign;
+            const deltaS = currentPos - initialPos;
+            document.getElementById('calc-vel-area').textContent = `${deltaS.toFixed(2)} m`;
+
+            // 4. Area Breakdown Formula
+            updateAreaCalculationDisplay(idx, sign);
+
+            // 5. Acc Area
+            const initialVel = traj.v[0] * sign;
+            const deltaV = currentVel - initialVel;
+            document.getElementById('calc-acc-area').textContent = `${deltaV.toFixed(2)} m/s`;
+        }
+
+        function updateAreaCalculationDisplay(idx, sign) {
+            const currentTime = state.trajectory.t[idx];
+            
+            // 1. Identify Boundaries (Start, Events, Current)
+            // Start with t=0
+            let boundaries = [ { time: 0, v: state.trajectory.v[0] * sign } ];
+            
+            // Add intermediate events
+            state.events.forEach(e => {
+                if (e.time > 0 && e.time < currentTime) {
+                    boundaries.push({
+                        time: e.time,
+                        type: e.type,
+                        vIn: e.vIn * sign,
+                        vOut: e.vOut * sign
+                    });
+                }
+            });
+
+            // Add current time
+            boundaries.push({ time: currentTime, v: state.trajectory.v[idx] * sign });
+
+            // Sort just in case, though order is largely preserved
+            boundaries.sort((a, b) => a.time - b.time);
+
+            let htmlParts = [];
+            let totalCheck = 0;
+            let hasPrintedFirst = false;
+
+            for (let i = 0; i < boundaries.length - 1; i++) {
+                const b1 = boundaries[i];
+                const b2 = boundaries[i + 1];
+
+                const dt = b2.time - b1.time;
+                if (dt < 0.001) continue; // Skip insignificant steps
+
+                // Determine Velocities for this segment
+                const v1 = (b1.type === 'bounce') ? b1.vOut : (b1.v !== undefined ? b1.v : b1.vOut || 0);
+                const v2 = (b2.type === 'bounce') ? b2.vIn : (b2.v !== undefined ? b2.v : b2.vIn || 0);
+
+                // Calculate Area
+                const area = 0.5 * (v1 + v2) * dt;
+                
+                // Identify Shape
+                const isRectangle = Math.abs(v1 - v2) < 0.01;
+                const isTriangle = !isRectangle && (Math.abs(v1) < 0.01 || Math.abs(v2) < 0.01);
+                
+                // Format String
+                let partStr = "";
+                
+                if (isRectangle) {
+                    // Rectangle: breadth (velocity) x length (time)
+                    partStr = `(${Math.abs(v1).toFixed(1)} × ${dt.toFixed(1)})`;
+                } else if (isTriangle) {
+                    // Triangle: 0.5 * height * base
+                    const h = (Math.abs(v1) > Math.abs(v2)) ? Math.abs(v1) : Math.abs(v2);
+                    partStr = `(0.5 × ${h.toFixed(1)} × ${dt.toFixed(1)})`;
+                } else {
+                    // Trapezoid: 0.5 * (h1 + h2) * base
+                    partStr = `(0.5 × (${Math.abs(v1).toFixed(1)} + ${Math.abs(v2).toFixed(1)}) × ${dt.toFixed(1)})`;
+                }
+
+                // Add Line with Operator
+                let lineStr = "";
+                if (!hasPrintedFirst) {
+                    if (area < 0) lineStr = "- ";
+                    hasPrintedFirst = true;
+                } else {
+                    lineStr = (area >= 0) ? "+ " : "- ";
+                }
+                
+                htmlParts.push(lineStr + partStr);
+                totalCheck += area;
+            }
+            
+            // Construct Final HTML
+            if (htmlParts.length === 0) {
+                 document.getElementById('calc-vel-formula').innerHTML = "";
+            } else {
+                 const formulaHTML = htmlParts.join('<br>') + 
+                     `<div style="margin-top:4px; padding-top:4px; border-top:1px solid #e5e7eb; font-weight:600; color:#374151;">= ${totalCheck.toFixed(1)} m</div>`;
+                 document.getElementById('calc-vel-formula').innerHTML = formulaHTML;
+            }
         }
 
         function drawAnimation(y, v) {
@@ -629,12 +841,9 @@
             const traj = state.trajectory;
             const sign = state.params.positiveUp ? 1 : -1;
 
-            // Vectors: Multiply by sign
             renderGraph('dispGraph', traj.t, traj.y.map(v => v * sign), '#2563eb', true, currentIndex);
             renderGraph('velGraph', traj.t, traj.v.map(v => v * sign), '#2563eb', true, currentIndex);
             renderGraph('accGraph', traj.t, traj.a.map(v => v * sign), '#2563eb', true, currentIndex);
-
-            // Scalars: Always positive
             renderGraph('distGraph', traj.t, traj.d, '#16a34a', false, currentIndex);
             renderGraph('spdGraph', traj.t, traj.s, '#16a34a', false, currentIndex);
         }
@@ -649,24 +858,30 @@
 
             if (tData.length === 0) return;
 
-            let maxY = -Infinity;
-            let minY = Infinity;
+            let maxY, minY;
+
+            // Find data range
+            let dataMax = -Infinity;
+            let dataMin = Infinity;
             
             for(let v of yData) {
-                if (v > maxY) maxY = v;
-                if (v < minY) minY = v;
+                if (v > dataMax) dataMax = v;
+                if (v < dataMin) dataMin = v;
             }
 
-            let range = maxY - minY;
-            if (range === 0) range = 10;
-            maxY += range * 0.1;
-            minY -= range * 0.1;
-
             if (isVector) {
-                if (minY > 0) minY = 0;
-                if (maxY < 0) maxY = 0;
+                let absLimit = Math.max(Math.abs(dataMax), Math.abs(dataMin));
+                if (absLimit === 0) absLimit = 10;
+                const padding = absLimit * 0.15;
+                maxY = absLimit + padding;
+                minY = -(absLimit + padding);
             } else {
-                if (minY > 0) minY = 0;
+                let range = dataMax - dataMin;
+                if (range === 0) range = 10;
+                maxY = dataMax + (range * 0.1);
+                minY = dataMin - (range * 0.1);
+                if (minY > 0) minY = -(range * 0.05);
+                if (dataMin >= 0 && minY < -1) minY = -1;
             }
 
             const rangeY = maxY - minY;
@@ -681,7 +896,7 @@
                 ctx.beginPath();
                 ctx.moveTo(0, zeroY);
                 ctx.lineTo(w, zeroY);
-                ctx.strokeStyle = '#000000';
+                ctx.strokeStyle = '#9ca3af'; 
                 ctx.lineWidth = 1;
                 ctx.setLineDash([4, 4]);
                 ctx.stroke();
@@ -719,7 +934,6 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                // Value Label
                 ctx.fillStyle = '#374151';
                 ctx.font = '10px Inter';
                 let labelY = lastY - 10;
