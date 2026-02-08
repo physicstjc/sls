@@ -3,1175 +3,944 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kinematics Explorer: 1D Motion</title>
+    <title>Kinematics Graph Explorer</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Custom slider styling */
-        input[type=range] {
-            -webkit-appearance: none; 
-            background: transparent; 
-        }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 16px;
-            width: 16px;
-            border-radius: 50%;
-            background: #3b82f6;
-            margin-top: -6px; 
-            cursor: pointer;
-            box-shadow: 0 0 0 2px white, 0 2px 4px rgba(0,0,0,0.1);
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #e5e7eb;
-            border-radius: 2px;
-        }
-        .canvas-container {
-            position: relative;
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.5rem;
-            overflow: hidden;
-        }
-        /* Mode selector styling */
-        .mode-select {
-            font-size: 0.7rem;
-            padding: 2px 4px;
-            border-radius: 4px;
-            background-color: #e2e8f0;
-            border: 1px solid #cbd5e1;
-            width: 100%;
-            margin-top: 4px;
-        }
-        /* Slider markers */
-        .slider-marker {
-            position: absolute;
-            top: 10px;
-            transform: translateX(-50%);
-            font-size: 0.65rem;
-            font-weight: bold;
-            color: #64748b;
-            pointer-events: none;
-            white-space: nowrap;
-        }
-        .slider-tick {
-            position: absolute;
-            top: 2px;
-            height: 6px;
-            width: 2px;
-            background-color: #cbd5e1;
-            transform: translateX(-50%);
-            pointer-events: none;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        canvas { touch-action: none; }
+        
+        /* New Graph Card Styling */
+        .graph-card { border: 1px solid #e5e7eb; border-radius: 0.5rem; background: #fff; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .graph-canvas-container { position: relative; height: 160px; width: 100%; border-bottom: 1px solid #f3f4f6; }
+        .graph-footer { background: #f9fafb; padding: 8px 12px; font-size: 0.75rem; color: #4b5563; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; line-height: 1.4; }
+        
+        /* Custom Slider Styling */
+        .slider-thumb { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; background: transparent; outline: none; z-index: 20; position: relative; }
+        .slider-thumb::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3); margin-top: -5px; }
+        .slider-thumb::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .slider-track-bg { position: absolute; top: 50%; left: 0; width: 100%; height: 6px; background: #e5e7eb; transform: translateY(-50%); border-radius: 3px; z-index: 0; }
+
+        /* Time Scrubber Specifics */
+        .time-scrubber::-webkit-slider-thumb { background: #ef4444; width: 20px; height: 20px; margin-top: -7px; transition: transform 0.1s; }
+        .time-scrubber::-webkit-slider-thumb:hover { transform: scale(1.1); }
+        .time-scrubber::-moz-range-thumb { background: #ef4444; width: 20px; height: 20px; }
+
+        /* Markers */
+        .event-marker { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 12px; height: 12px; border-radius: 50%; z-index: 30; cursor: pointer; transition: all 0.2s; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .event-marker:hover { transform: translate(-50%, -50%) scale(1.3); z-index: 40; }
+        .marker-bounce { background-color: #ef4444; top: 120%; border-radius: 0 50% 50% 50%; transform: translate(-50%, 0) rotate(45deg); }
+        .marker-peak { background-color: #10b981; top: -20%; border-radius: 50% 50% 50% 0; transform: translate(-50%, -100%) rotate(45deg); }
+        
+        /* Tooltip for Markers */
+        .event-marker::after { content: attr(data-label); position: absolute; bottom: 140%; left: 50%; transform: translateX(-50%) rotate(-45deg); background: rgba(0,0,0,0.8); color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .marker-bounce::after { bottom: auto; top: 140%; transform: translateX(-50%) rotate(-45deg); }
+        .event-marker:hover::after { opacity: 1; }
+
+        /* Calculation Formula Style */
+        .calc-formula { 
+            display: block; 
+            margin-top: 4px; 
+            color: #6b7280; 
+            font-size: 0.7rem; 
+            white-space: normal; /* Changed from nowrap to normal to allow wrapping */
+            word-break: break-word; /* Ensure long formulas break correctly */
+            line-height: 1.5; 
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans p-4 md:p-8">
+<body class="bg-gray-50 text-gray-800 h-screen flex flex-col overflow-hidden">
 
-    <div class="max-w-7xl mx-auto space-y-6">
-        
-        <!-- Header -->
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-4 mb-4">
-            <div>
-                <h1 class="text-3xl font-bold text-slate-900">Kinematics Explorer</h1>
-                <p class="text-slate-500">Motion in 1D: Displacement, Velocity, and Graphs</p>
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shadow-sm z-10">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 text-white p-2 rounded-lg">
+                <i class="fas fa-chart-line"></i>
             </div>
-            <div class="mt-4 md:mt-0 flex gap-2">
-                <button onclick="loadPreset1()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded shadow-sm text-sm font-medium transition">
-                    Load Question 1
-                </button>
-                <button onclick="loadPreset2()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded shadow-sm text-sm font-medium transition">
-                    Load Question 2
-                </button>
-                <button onclick="resetSim()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded shadow-sm text-sm font-medium transition">
-                    Clear / Reset
-                </button>
-            </div>
-        </header>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            <!-- LEFT PANEL: Controls & Data -->
-            <div class="lg:col-span-5 space-y-6">
-                
-                <!-- Data Input Table -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                    <div class="flex justify-between items-center mb-3">
-                        <h2 class="font-semibold text-lg flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                            Journey Segments
-                        </h2>
-                        <span id="segmentCountBadge" class="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full">1/6</span>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left">
-                            <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b">
-                                <tr>
-                                    <th class="px-1 py-2 w-20">Segment</th>
-                                    <th class="px-1 py-2 text-center w-24">Direction</th>
-                                    <th class="px-1 py-2 w-16">Time (s)</th>
-                                    <th class="px-1 py-2 w-20">Distance (m)</th>
-                                    <th class="px-1 py-2 w-20">Speed (m/s)</th>
-                                    <th class="px-1 py-2 w-6"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="segmentsBody">
-                                <!-- Generated via JS -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="mt-4 flex gap-2">
-                        <button onclick="addSegment()" id="btnAdd" class="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded text-sm font-medium border border-blue-200 transition flex items-center justify-center gap-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                            Add Segment
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Live Stats & Calculations -->
-                <div class="space-y-4">
-                    <!-- Basic Live Stats -->
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <h2 class="font-semibold text-lg mb-3 text-slate-700">Live Statistics</h2>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="p-3 bg-blue-50 rounded-lg">
-                                <div class="text-xs text-blue-600 font-bold uppercase">Time Elapsed</div>
-                                <div class="text-xl font-mono" id="statTime">0.0 s</div>
-                            </div>
-                            <div class="p-3 bg-emerald-50 rounded-lg">
-                                <div class="text-xs text-emerald-600 font-bold uppercase">Current Speed</div>
-                                <div class="text-xl font-mono" id="statVel">0.0 m/s</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RIGHT PANEL: Simulation & Graphs -->
-            <div class="lg:col-span-7 space-y-6">
-                
-                <!-- Main Animation Canvas -->
-                <div class="bg-white p-1 rounded-xl shadow-sm border border-slate-200">
-                    <div class="flex flex-col md:flex-row justify-between items-center px-4 py-2 border-b border-slate-100 bg-slate-50 rounded-t-lg gap-4">
-                        <span class="font-semibold text-slate-700 shrink-0">Simulation View</span>
-                        
-                        <!-- Wide Controls Area -->
-                        <div class="flex items-center gap-4 flex-grow w-full max-w-2xl">
-                            <button id="playBtn" onclick="togglePlay()" class="flex-shrink-0 flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
-                                Play
-                            </button>
-                            
-                            <!-- Slider Container with Labels -->
-                            <div class="relative flex-grow h-8 group">
-                                <input type="range" id="timeSlider" min="0" max="100" value="0" step="any" list="snapPoints" class="w-full absolute top-1 z-20 opacity-80 hover:opacity-100 transition" oninput="scrubTime(this.value)">
-                                <datalist id="snapPoints"></datalist>
-                                <!-- Labels rendered here -->
-                                <div id="timelineLabels" class="w-full h-full absolute top-0 pointer-events-none"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="canvas-container h-64 w-full bg-white relative">
-                        <canvas id="simCanvas" width="800" height="256" class="w-full h-full block"></canvas>
-                        <!-- Origin Marker Overlay -->
-                        <div class="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-slate-400 font-mono">x=0</div>
-                    </div>
-                </div>
-
-                <!-- Detailed Calculation Breakdown (Moved here) -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                    <h2 class="font-semibold text-lg mb-3 text-slate-700 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                        Calculations Breakdown
-                    </h2>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        
-                        <!-- Total Distance -->
-                        <div>
-                            <div class="text-xs font-bold text-slate-500 uppercase mb-1">Total Distance (Scalar)</div>
-                            <div class="bg-slate-50 p-2 rounded border border-slate-200 font-mono text-slate-700 break-words">
-                                <div class="mb-1 text-xs text-slate-400">Sum of absolute lengths:</div>
-                                <div id="calcDistSteps" class="mb-1">0</div>
-                                <div class="font-bold border-t border-slate-300 pt-1 text-indigo-600">= <span id="calcDistResult">0.0</span> m</div>
-                            </div>
-                        </div>
-
-                        <!-- Displacement -->
-                        <div>
-                            <div class="text-xs font-bold text-slate-500 uppercase mb-1">Total Displacement (Vector)</div>
-                            <div class="bg-slate-50 p-2 rounded border border-slate-200 font-mono text-slate-700 break-words">
-                                <div class="mb-1 text-xs text-slate-400">Sum of directed positions (right +, left -):</div>
-                                <div id="calcDispSteps" class="mb-1">0</div>
-                                <div class="font-bold border-t border-slate-300 pt-1 text-indigo-600">= <span id="calcDispResult">0.0</span> m</div>
-                            </div>
-                        </div>
-
-                        <!-- Average Speed -->
-                        <div>
-                            <div class="text-xs font-bold text-slate-500 uppercase mb-1">Average Speed</div>
-                            <div class="bg-slate-50 p-2 rounded border border-slate-200 font-mono text-slate-700">
-                                <div class="flex items-center gap-2">
-                                    <div class="text-center">
-                                        <div class="border-b border-slate-400 pb-1 mb-1">Total Distance</div>
-                                        <div>Total Time</div>
-                                    </div>
-                                    <span class="text-xl">=</span>
-                                    <div class="text-center">
-                                        <div class="border-b border-slate-400 pb-1 mb-1" id="calcAvgNum">0 m</div>
-                                        <div id="calcAvgDen">0 s</div>
-                                    </div>
-                                    <span class="text-xl text-emerald-600 font-bold">= <span id="calcAvgResult">0.0</span> m/s</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Average Velocity -->
-                        <div>
-                            <div class="text-xs font-bold text-slate-500 uppercase mb-1">Average Velocity</div>
-                            <div class="bg-slate-50 p-2 rounded border border-slate-200 font-mono text-slate-700">
-                                <div class="flex items-center gap-2">
-                                    <div class="text-center">
-                                        <div class="border-b border-slate-400 pb-1 mb-1">Total Disp.</div>
-                                        <div>Total Time</div>
-                                    </div>
-                                    <span class="text-xl">=</span>
-                                    <div class="text-center">
-                                        <div class="border-b border-slate-400 pb-1 mb-1" id="calcAvgVelNum">0 m</div>
-                                        <div id="calcAvgVelDen">0 s</div>
-                                    </div>
-                                    <span class="text-xl text-indigo-600 font-bold">= <span id="calcAvgVelResult">0.0</span> m/s</span>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- Graph Controls -->
-                <div class="bg-white px-4 py-3 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center gap-4">
-                    <span class="text-sm font-bold text-slate-700 mr-2">Show Graphs:</span>
-                    <label class="inline-flex items-center cursor-pointer">
-                        <input type="checkbox" onchange="toggleGraph('Dist')" class="rounded border-slate-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                        <span class="ml-2 text-sm text-slate-600">Distance</span>
-                    </label>
-                    <label class="inline-flex items-center cursor-pointer">
-                        <input type="checkbox" onchange="toggleGraph('Speed')" class="rounded border-slate-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                        <span class="ml-2 text-sm text-slate-600">Speed</span>
-                    </label>
-                    <label class="inline-flex items-center cursor-pointer">
-                        <input type="checkbox" onchange="toggleGraph('Disp')" class="rounded border-slate-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                        <span class="ml-2 text-sm text-slate-600">Displacement</span>
-                    </label>
-                    <label class="inline-flex items-center cursor-pointer">
-                        <input type="checkbox" onchange="toggleGraph('Vel')" class="rounded border-slate-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                        <span class="ml-2 text-sm text-slate-600">Velocity</span>
-                    </label>
-                </div>
-
-                <!-- Graphs Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Graph 1: Distance-Time -->
-                    <div id="wrapperGraphDist" class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hidden">
-                        <h3 class="text-xs font-bold text-slate-500 uppercase mb-2 text-center">Distance vs Time</h3>
-                        <canvas id="graphDist" width="350" height="200" class="w-full h-40"></canvas>
-                    </div>
-
-                    <!-- Graph 2: Speed-Time -->
-                    <div id="wrapperGraphSpeed" class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hidden">
-                        <h3 class="text-xs font-bold text-slate-500 uppercase mb-2 text-center">Speed vs Time</h3>
-                        <canvas id="graphSpeed" width="350" height="200" class="w-full h-40"></canvas>
-                    </div>
-
-                    <!-- Graph 3: Displacement-Time -->
-                    <div id="wrapperGraphDisp" class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hidden">
-                        <h3 class="text-xs font-bold text-slate-500 uppercase mb-2 text-center">Displacement vs Time</h3>
-                        <canvas id="graphDisp" width="350" height="200" class="w-full h-40"></canvas>
-                    </div>
-
-                    <!-- Graph 4: Velocity-Time -->
-                    <div id="wrapperGraphVel" class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hidden">
-                        <h3 class="text-xs font-bold text-slate-500 uppercase mb-2 text-center">Velocity vs Time</h3>
-                        <canvas id="graphVel" width="350" height="200" class="w-full h-40"></canvas>
-                    </div>
-                </div>
-
-            </div>
+            <h1 class="text-xl font-bold tracking-tight text-gray-900">Kinematics Explorer</h1>
         </div>
+        <div class="flex items-center gap-4">
+            <button onclick="toggleDirection()" id="dirBtn" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-100 hover:bg-gray-200 rounded-md transition-colors border border-gray-300">
+                <i class="fas fa-arrows-alt-v"></i>
+                <span>Positive: UP</span>
+            </button>
+            <div class="h-6 w-px bg-gray-300"></div>
+            <button onclick="resetSimulation()" class="text-gray-600 hover:text-blue-600 transition-colors" title="Reset">
+                <i class="fas fa-undo"></i>
+            </button>
+            <button onclick="togglePlay()" id="playBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium transition-colors shadow-sm flex items-center gap-2">
+                <i class="fas fa-play"></i> Start
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Sidebar Controls -->
+        <aside class="w-80 bg-white border-r border-gray-200 flex flex-col overflow-y-auto z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+            <div class="p-5 space-y-6">
+                
+                <!-- Presets -->
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Scenarios</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="setPreset('constV')" class="p-2 text-sm border rounded hover:bg-blue-50 hover:border-blue-200 text-left transition">Const. Velocity</button>
+                        <button onclick="setPreset('constA')" class="p-2 text-sm border rounded hover:bg-blue-50 hover:border-blue-200 text-left transition">Const. Accel</button>
+                        <button onclick="setPreset('drop')" class="p-2 text-sm border rounded hover:bg-blue-50 hover:border-blue-200 text-left transition">Free Fall</button>
+                        <button onclick="setPreset('throw')" class="p-2 text-sm border rounded hover:bg-blue-50 hover:border-blue-200 text-left transition">Throw Up</button>
+                        <button onclick="setPreset('bounceElastic')" class="p-2 text-sm border rounded hover:bg-blue-50 hover:border-blue-200 text-left transition">Elastic Bounce</button>
+                        <button onclick="setPreset('bounceInelastic')" class="p-2 text-sm border rounded hover:bg-blue-50 hover:border-blue-200 text-left transition">Inelastic Bounce</button>
+                    </div>
+                </div>
+
+                <!-- Parameters -->
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Initial Conditions</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <label>Initial Position (y₀)</label>
+                                <span class="font-mono text-blue-600" id="val_y0">0 m</span>
+                            </div>
+                            <div class="relative h-6">
+                                <div class="slider-track-bg"></div>
+                                <input type="range" min="0" max="100" value="0" id="input_y0" class="slider-thumb" oninput="updateParams()">
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <label>Initial Velocity (v₀)</label>
+                                <span class="font-mono text-blue-600" id="val_v0">0 m/s</span>
+                            </div>
+                            <div class="relative h-6">
+                                <div class="slider-track-bg"></div>
+                                <input type="range" min="-50" max="50" value="0" id="input_v0" class="slider-thumb" oninput="updateParams()">
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <label>Acceleration (a)</label>
+                                <span class="font-mono text-blue-600" id="val_a">0 m/s²</span>
+                            </div>
+                            <div class="relative h-6">
+                                <div class="slider-track-bg"></div>
+                                <input type="range" min="-20" max="20" step="0.5" value="0" id="input_a" class="slider-thumb" oninput="updateParams()">
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <label>Bounciness (e)</label>
+                                <span class="font-mono text-blue-600" id="val_e">0.8</span>
+                            </div>
+                            <div class="relative h-6">
+                                <div class="slider-track-bg"></div>
+                                <input type="range" min="0" max="1" step="0.1" value="0.8" id="input_e" class="slider-thumb" oninput="updateParams()">
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">1.0 = No Energy Loss</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-gray-100">
+                    <div class="bg-blue-50 p-3 rounded text-xs text-blue-800 leading-relaxed">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <strong>Tip:</strong> Toggle "Positive Direction" to see how vector graphs (Left Column) flip, while scalar graphs (Right Column) remain additive.
+                    </div>
+                    <div class="mt-4 text-[11px] text-gray-400 text-center font-medium">
+                        Made by James Kua, Temasek Junior College
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="flex-1 flex flex-col bg-gray-50 overflow-hidden">
+            
+            <div class="flex flex-1 overflow-hidden">
+                <!-- Animation Canvas (Left center) -->
+                <div class="w-1/3 h-full p-4 flex flex-col border-r border-gray-200 bg-white relative">
+                    <h3 class="text-sm font-semibold text-gray-500 mb-2 flex items-center gap-2">
+                        <i class="fas fa-film"></i> Animation
+                    </h3>
+                    <div class="flex-1 relative bg-gray-50 border border-gray-200 rounded-lg overflow-hidden" id="animContainer">
+                        <!-- Ground -->
+                        <div class="absolute bottom-0 w-full h-4 bg-gray-300 border-t border-gray-400 z-0"></div>
+                        <!-- Canvas -->
+                        <canvas id="animCanvas" class="w-full h-full z-10 block"></canvas>
+                        
+                        <!-- Axis Labels -->
+                        <div class="absolute left-2 top-2 text-xs text-gray-400 font-mono">100m</div>
+                        <div class="absolute left-2 bottom-6 text-xs text-gray-400 font-mono">0m</div>
+                    </div>
+                </div>
+
+                <!-- Graphs Grid (Right) -->
+                <div class="w-2/3 h-full overflow-y-auto p-6 bg-gray-50">
+                    <div class="grid grid-cols-2 gap-x-6 gap-y-6 max-w-5xl mx-auto">
+                        
+                        <!-- Headers -->
+                        <div class="text-center pb-2 border-b-2 border-blue-500">
+                            <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Vector Quantities (Direction Matters)</h2>
+                        </div>
+                        <div class="text-center pb-2 border-b-2 border-green-500">
+                            <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Scalar Quantities (Magnitude Only)</h2>
+                        </div>
+
+                        <!-- Row 1: Displacement vs Distance -->
+                        <div class="graph-card">
+                            <div class="px-3 py-2 border-b border-gray-100 bg-gray-50 text-xs font-bold text-blue-600 uppercase tracking-wide">Displacement - Time</div>
+                            <div class="graph-canvas-container">
+                                <canvas id="dispGraph" class="w-full h-full"></canvas>
+                            </div>
+                            <div class="graph-footer">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-500">Gradient (Velocity):</span>
+                                    <span class="font-bold text-blue-700" id="calc-disp-grad">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="graph-card">
+                            <div class="px-3 py-2 border-b border-gray-100 bg-gray-50 text-xs font-bold text-green-600 uppercase tracking-wide">Distance - Time</div>
+                            <div class="graph-canvas-container">
+                                <canvas id="distGraph" class="w-full h-full"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Velocity vs Speed -->
+                        <div class="graph-card">
+                            <div class="px-3 py-2 border-b border-gray-100 bg-gray-50 text-xs font-bold text-blue-600 uppercase tracking-wide">Velocity - Time</div>
+                            <div class="graph-canvas-container">
+                                <canvas id="velGraph" class="w-full h-full"></canvas>
+                            </div>
+                            <div class="graph-footer space-y-1">
+                                <div class="flex justify-between items-center border-b border-gray-100 pb-1">
+                                    <span class="text-gray-500">Gradient (Accel):</span>
+                                    <span class="font-bold text-blue-700" id="calc-vel-grad">--</span>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-500">Area (Change in Disp):</span>
+                                        <span class="font-bold text-blue-700" id="calc-vel-area">--</span>
+                                    </div>
+                                    <span class="calc-formula" id="calc-vel-formula"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="graph-card">
+                            <div class="px-3 py-2 border-b border-gray-100 bg-gray-50 text-xs font-bold text-green-600 uppercase tracking-wide">Speed - Time</div>
+                            <div class="graph-canvas-container">
+                                <canvas id="spdGraph" class="w-full h-full"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Row 3: Acceleration -->
+                        <div class="graph-card">
+                            <div class="px-3 py-2 border-b border-gray-100 bg-gray-50 text-xs font-bold text-blue-600 uppercase tracking-wide">Acceleration - Time</div>
+                            <div class="graph-canvas-container">
+                                <canvas id="accGraph" class="w-full h-full"></canvas>
+                            </div>
+                            <div class="graph-footer">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-500">Area (Change in Vel):</span>
+                                    <span class="font-bold text-blue-700" id="calc-acc-area">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-center text-center p-4 text-gray-400 text-sm italic border border-dashed border-gray-300 rounded h-full">
+                            Scalars don't have a specific "Acceleration" equivalent graph typically taught at this level.
+                        </div>
+
+                    </div>
+                    <div class="h-10"></div> <!-- Spacer -->
+                </div>
+            </div>
+
+            <!-- Timeline Scrubber -->
+            <div class="h-20 bg-white border-t border-gray-200 px-6 flex items-center gap-4 z-20 shrink-0 select-none">
+                <button onclick="togglePlay()" id="scrubPlayBtn" class="text-gray-500 hover:text-blue-600 transition-colors w-8">
+                    <i class="fas fa-play text-lg"></i>
+                </button>
+                
+                <!-- Track Container -->
+                <div class="flex-1 relative group h-8 flex items-center">
+                    
+                    <!-- Markers Container (Behind Input) -->
+                    <div id="timelineMarkers" class="absolute top-0 left-0 w-full h-full pointer-events-none">
+                        <!-- Markers injected via JS -->
+                    </div>
+
+                    <!-- Visual Track Background -->
+                    <div class="absolute top-1/2 left-0 w-full h-2 bg-gray-200 rounded-lg transform -translate-y-1/2 z-0"></div>
+
+                    <!-- Range Input -->
+                    <input type="range" min="0" max="100" value="0" step="0.1" id="timeScrubber" class="slider-thumb time-scrubber w-full h-full cursor-pointer z-10" oninput="scrub(this.value)">
+                    
+                    <!-- Time Labels -->
+                    <div class="absolute top-6 w-full flex justify-between text-xs text-gray-400 px-1 pointer-events-none">
+                        <span>0.0s</span>
+                        <span>5.0s</span>
+                        <span>10.0s</span>
+                    </div>
+                </div>
+
+                <div class="font-mono text-lg font-bold text-blue-600 w-20 text-right" id="timeDisplay">
+                    0.00s
+                </div>
+            </div>
+
+        </main>
     </div>
 
-<script>
-/**
- * KINEMATICS ENGINE & UI LOGIC
- */
+    <script>
+        // --- State Management ---
+        const CONSTANTS = {
+            dt: 0.016, // Physics time step
+            simDuration: 10, // Max simulation time in seconds
+            maxY: 100 // Height of simulation world in meters
+        };
 
-// --- State Management ---
-const MAX_SEGMENTS = 6;
-// UI State: Stores the input values. 
-// mode: 'td' (Time/Dist), 'tv' (Time/Speed), 'dv' (Dist/Speed)
-let segmentsUI = [
-    { mode: 'td', t: 10, d: 50, v: 5, dir: 1 } 
-];
-
-// Physics State: Computed from UI State
-let segmentsPhysics = [];
-
-let isPlaying = false;
-let currentTime = 0;
-let totalDuration = 0;
-let animationFrameId;
-let scaleX = 1; // Pixels per meter
-
-// DOM Elements
-const simCanvas = document.getElementById('simCanvas');
-const simCtx = simCanvas.getContext('2d');
-const slider = document.getElementById('timeSlider');
-const segmentsBody = document.getElementById('segmentsBody');
-const btnAdd = document.getElementById('btnAdd');
-
-// Graph Contexts
-const ctxDist = document.getElementById('graphDist').getContext('2d');
-const ctxSpeed = document.getElementById('graphSpeed').getContext('2d');
-const ctxDisp = document.getElementById('graphDisp').getContext('2d');
-const ctxVel = document.getElementById('graphVel').getContext('2d');
-
-// --- Initialization ---
-
-function init() {
-    recalcPhysics();
-    renderTable();
-    drawAll();
-    
-    window.addEventListener('resize', () => {
-        resizeCanvases();
-        drawAll();
-    });
-    resizeCanvases();
-}
-
-function resizeCanvases() {
-    const resize = (canvas) => {
-        const rect = canvas.parentElement.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
-    };
-    resize(simCanvas);
-    resize(document.getElementById('graphDist'));
-    resize(document.getElementById('graphSpeed'));
-    resize(document.getElementById('graphDisp'));
-    resize(document.getElementById('graphVel'));
-}
-
-function toggleGraph(type) {
-    const el = document.getElementById('wrapperGraph' + type);
-    if(el) {
-        if (el.classList.contains('hidden')) {
-            el.classList.remove('hidden');
-        } else {
-            el.classList.add('hidden');
-        }
-    }
-}
-
-// --- Data Logic ---
-
-function recalcPhysics() {
-    // Convert UI state to Physics state (dt, dx)
-    segmentsPhysics = segmentsUI.map(s => {
-        let dt = 0;
-        let dx = 0;
-        // Ensure values are numbers
-        const t = parseFloat(s.t) || 0;
-        const d = parseFloat(s.d) || 0;
-        const v = parseFloat(s.v) || 0;
-
-        if (s.mode === 'td') {
-            dt = t;
-            dx = d * s.dir;
-        } else if (s.mode === 'tv') {
-            dt = t;
-            dx = (v * t) * s.dir;
-        } else if (s.mode === 'dv') {
-            dt = v > 0 ? d / v : 0;
-            dx = d * s.dir;
-        }
-        return { dt, dx };
-    });
-
-    // 1. Calculate Total Duration
-    totalDuration = segmentsPhysics.reduce((sum, s) => sum + s.dt, 0);
-    
-    // 2. Adjust slider max
-    slider.max = totalDuration > 0 ? totalDuration : 10;
-    
-    // 3. Determine Scale
-    let currentPos = 0;
-    let maxPos = 0;
-    let minPos = 0;
-    
-    segmentsPhysics.forEach(s => {
-        currentPos += s.dx;
-        maxPos = Math.max(maxPos, currentPos);
-        minPos = Math.min(minPos, currentPos);
-    });
-    
-    const range = Math.max(100, (maxPos - minPos) * 1.5);
-    scaleX = simCanvas.width / range;
-    
-    updateTimeMarkers();
-    // Calculations updated in drawAll to ensure sync
-}
-
-function updateTimeMarkers() {
-    const dl = document.getElementById('snapPoints');
-    const labelContainer = document.getElementById('timelineLabels');
-    
-    if(!dl || !labelContainer) return;
-    
-    dl.innerHTML = '';
-    labelContainer.innerHTML = '';
-    
-    // Add Start Point (A)
-    const optA = document.createElement('option');
-    optA.value = 0;
-    dl.appendChild(optA);
-    
-    // Visually place 'A'
-    const labelA = document.createElement('div');
-    labelA.className = 'slider-marker';
-    labelA.style.left = '0%';
-    labelA.textContent = 'A';
-    labelContainer.appendChild(labelA);
-    
-    const tickA = document.createElement('div');
-    tickA.className = 'slider-tick';
-    tickA.style.left = '0%';
-    labelContainer.appendChild(tickA);
-    
-    let t = 0;
-    const labels = ['B','C','D','E','F','G']; 
-    
-    if (totalDuration <= 0) return;
-
-    segmentsPhysics.forEach((seg, i) => {
-        t += seg.dt;
-        // Always add option for slider snapping
-        const opt = document.createElement('option');
-        opt.value = t;
-        dl.appendChild(opt);
-        
-        // Calculate Position %
-        const percent = (t / totalDuration) * 100;
-        
-        // Add Marker Label
-        if (i < labels.length) {
-            const label = document.createElement('div');
-            label.className = 'slider-marker';
-            label.style.left = `${percent}%`;
-            label.textContent = labels[i];
-            labelContainer.appendChild(label);
+        const state = {
+            running: false,
+            currentTime: 0,
             
-            const tick = document.createElement('div');
-            tick.className = 'slider-tick';
-            tick.style.left = `${percent}%`;
-            labelContainer.appendChild(tick);
+            // Simulation Parameters
+            params: {
+                y0: 0,
+                v0: 0,
+                a: 0,
+                restitution: 0.8,
+                positiveUp: true
+            },
+
+            // Pre-calculated Trajectory Data
+            trajectory: { t: [], y: [], v: [], a: [], d: [], s: [] },
+            events: [], // Stores { time, type, vIn, vOut }
+            
+            // Canvas Contexts
+            animCtx: null,
+            graphs: {}
+        };
+
+        // --- Initialization ---
+        window.onload = function() {
+            // Setup Canvases
+            setupCanvas('animCanvas');
+            state.animCtx = document.getElementById('animCanvas').getContext('2d');
+            
+            const graphIds = ['dispGraph', 'velGraph', 'accGraph', 'distGraph', 'spdGraph'];
+            graphIds.forEach(id => {
+                setupCanvas(id);
+                state.graphs[id] = document.getElementById(id).getContext('2d');
+            });
+
+            // Initial UI update
+            updateParams(); // This triggers runSimulation() and drawFrame()
+            setPreset('drop'); // Default preset
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                setupCanvas('animCanvas');
+                graphIds.forEach(id => setupCanvas(id));
+                drawFrame();
+            });
+        };
+
+        function setupCanvas(id) {
+            const canvas = document.getElementById(id);
+            const parent = canvas.parentElement;
+            canvas.width = parent.clientWidth * window.devicePixelRatio;
+            canvas.height = parent.clientHeight * window.devicePixelRatio;
+            // Scale context for retina displays
+            const ctx = canvas.getContext('2d');
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            // Store logical size for drawing logic
+            canvas.logicalWidth = parent.clientWidth;
+            canvas.logicalHeight = parent.clientHeight;
         }
-    });
-}
 
-function updateCalculationDisplaySafe(timeLimit) {
-    try {
-        let distStrParts = [];
-        let dispStrParts = [];
-        let currentDistAccum = 0;
-        let currentDispAccum = 0;
-        
-        const tLimit = (typeof timeLimit !== 'undefined') ? timeLimit : totalDuration;
-        
-        let tTracker = 0;
+        // --- Controls & Logic ---
 
-        for (let seg of segmentsPhysics) {
-            if (seg.dt <= 0.0001) continue; // Skip zero time segments
+        function updateParams() {
+            state.params.y0 = parseFloat(document.getElementById('input_y0').value);
+            state.params.v0 = parseFloat(document.getElementById('input_v0').value);
+            state.params.a = parseFloat(document.getElementById('input_a').value);
+            state.params.restitution = parseFloat(document.getElementById('input_e').value);
+
+            // Update UI Labels
+            document.getElementById('val_y0').textContent = `${state.params.y0} m`;
+            document.getElementById('val_v0').textContent = `${state.params.v0} m/s`;
+            document.getElementById('val_a').textContent = `${state.params.a} m/s²`;
+            document.getElementById('val_e').textContent = state.params.restitution;
+
+            // Re-calculate the entire future trajectory immediately
+            runSimulation();
             
-            let timeInSeg = 0;
+            // Reset to start if not running, or just redraw
+            if (!state.running) {
+                state.currentTime = 0;
+                updateScrubberUI();
+                drawFrame();
+            }
+        }
+
+        function resetSimulation() {
+            state.running = false;
+            updatePlayButton();
+            state.currentTime = 0;
+            updateScrubberUI();
+            drawFrame();
+        }
+
+        function togglePlay() {
+            state.running = !state.running;
+            updatePlayButton();
+            if (state.running) {
+                if (state.currentTime >= CONSTANTS.simDuration) {
+                    state.currentTime = 0;
+                }
+                requestAnimationFrame(animationLoop);
+            }
+        }
+
+        function updatePlayButton() {
+            const btn = document.getElementById('playBtn');
+            const scrubBtn = document.getElementById('scrubPlayBtn');
             
-            if (tLimit >= tTracker + seg.dt) {
-                // Full segment completed
-                timeInSeg = seg.dt;
-            } else if (tLimit > tTracker) {
-                // Partial segment
-                timeInSeg = tLimit - tTracker;
+            if (state.running) {
+                btn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+                btn.classList.replace('bg-blue-600', 'bg-amber-500');
+                btn.classList.replace('hover:bg-blue-700', 'hover:bg-amber-600');
+                scrubBtn.innerHTML = '<i class="fas fa-pause"></i>';
             } else {
-                // Segment not reached yet
-                timeInSeg = 0;
+                btn.innerHTML = '<i class="fas fa-play"></i> Start';
+                btn.classList.replace('bg-amber-500', 'bg-blue-600');
+                btn.classList.replace('hover:bg-amber-600', 'hover:bg-blue-700');
+                scrubBtn.innerHTML = '<i class="fas fa-play"></i>';
             }
-            
-            if (timeInSeg > 0.001) {
-                const v = seg.dx / seg.dt;
-                const dx = v * timeInSeg;
-                const dist = Math.abs(dx);
-                
-                currentDistAccum += dist;
-                currentDispAccum += dx;
-                
-                const fmt = (n) => Math.abs(n % 1) < 0.05 ? n.toFixed(0) : n.toFixed(1);
-                
-                distStrParts.push(fmt(dist));
-                
-                const dispVal = fmt(dx);
-                const dispStr = dx >= 0 ? dispVal : `(${dispVal})`;
-                dispStrParts.push(dispStr);
-            }
-            
-            tTracker += seg.dt;
-            if (tLimit <= tTracker) break;
-        }
-        
-        document.getElementById('calcDistSteps').textContent = distStrParts.length > 0 ? distStrParts.join(' + ') : "0";
-        document.getElementById('calcDistResult').textContent = currentDistAccum.toFixed(1);
-        
-        document.getElementById('calcDispSteps').textContent = dispStrParts.length > 0 ? dispStrParts.join(' + ') : "0";
-        document.getElementById('calcDispResult').textContent = currentDispAccum.toFixed(1);
-        
-        const timeDenom = Math.max(tLimit, 0.001);
-        
-        // Average Speed
-        const avgSpeed = currentDistAccum / timeDenom;
-        const showAvgSpeed = tLimit > 0.01 ? avgSpeed.toFixed(2) : "0.00";
-        document.getElementById('calcAvgNum').textContent = currentDistAccum.toFixed(1) + " m";
-        document.getElementById('calcAvgDen').textContent = tLimit.toFixed(1) + " s";
-        document.getElementById('calcAvgResult').textContent = showAvgSpeed;
-
-        // Average Velocity
-        const avgVel = currentDispAccum / timeDenom;
-        const showAvgVel = tLimit > 0.01 ? avgVel.toFixed(2) : "0.00";
-        document.getElementById('calcAvgVelNum').textContent = currentDispAccum.toFixed(1) + " m";
-        document.getElementById('calcAvgVelDen').textContent = tLimit.toFixed(1) + " s";
-        document.getElementById('calcAvgVelResult').textContent = showAvgVel;
-
-    } catch (e) {
-        console.warn("Calc display error:", e);
-    }
-}
-
-// --- UI Logic ---
-
-function renderTable() {
-    segmentsBody.innerHTML = '';
-    const labels = ['B','C','D','E','F','G'];
-    
-    segmentsUI.forEach((seg, idx) => {
-        const row = document.createElement('tr');
-        row.className = "border-b hover:bg-slate-50 transition align-top";
-        
-        // Compute displayed values for read-only fields
-        let computedT = seg.t;
-        let computedD = seg.d;
-        let computedV = seg.v;
-
-        // Perform Calculation based on mode for display
-        const t = parseFloat(seg.t) || 0;
-        const d = parseFloat(seg.d) || 0;
-        const v = parseFloat(seg.v) || 0;
-
-        if (seg.mode === 'td') {
-            computedV = t > 0 ? (d / t) : 0;
-        } else if (seg.mode === 'tv') {
-            computedD = v * t;
-        } else if (seg.mode === 'dv') {
-            computedT = v > 0 ? (d / v) : 0;
         }
 
-        const showT = parseFloat(computedT).toFixed(1);
-        const showD = parseFloat(computedD).toFixed(1);
-        const showV = parseFloat(computedV).toFixed(1);
+        function toggleDirection() {
+            state.params.positiveUp = !state.params.positiveUp;
+            const btn = document.getElementById('dirBtn');
+            if (state.params.positiveUp) {
+                btn.innerHTML = '<i class="fas fa-long-arrow-alt-up"></i> Positive: UP';
+                btn.classList.remove('bg-red-50', 'text-red-700', 'border-red-200');
+                btn.classList.add('bg-gray-100');
+            } else {
+                btn.innerHTML = '<i class="fas fa-long-arrow-alt-down"></i> Positive: DOWN';
+                btn.classList.remove('bg-gray-100');
+                btn.classList.add('bg-red-50', 'text-red-700', 'border-red-200');
+            }
+            drawFrame();
+        }
 
-        const prevLabel = idx === 0 ? "A" : labels[idx-1];
-        const currLabel = labels[idx];
+        function setPreset(type) {
+            state.running = false;
+            updatePlayButton();
+            state.currentTime = 0;
 
-        const disT = seg.mode === 'dv' ? 'disabled class="w-full bg-slate-200 text-slate-500 border border-slate-300 rounded px-1 py-1 text-xs"' : 'class="w-full bg-slate-50 border border-slate-300 rounded px-1 py-1 text-xs focus:ring-1 focus:ring-blue-500 outline-none"';
-        const disD = seg.mode === 'tv' ? 'disabled class="w-full bg-slate-200 text-slate-500 border border-slate-300 rounded px-1 py-1 text-xs"' : 'class="w-full bg-slate-50 border border-slate-300 rounded px-1 py-1 text-xs focus:ring-1 focus:ring-blue-500 outline-none"';
-        const disV = seg.mode === 'td' ? 'disabled class="w-full bg-slate-200 text-slate-500 border border-slate-300 rounded px-1 py-1 text-xs"' : 'class="w-full bg-slate-50 border border-slate-300 rounded px-1 py-1 text-xs focus:ring-1 focus:ring-blue-500 outline-none"';
+            let y0 = 0, v0 = 0, a = 0, e = 0.8;
 
-        const dirBtnClass = seg.dir === 1 
-            ? "bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-200" 
-            : "bg-orange-100 text-orange-700 hover:bg-orange-200 border-orange-200";
-        const dirIcon = seg.dir === 1 ? "→" : "←";
+            switch(type) {
+                case 'constV':
+                    y0 = 10; v0 = 10; a = 0;
+                    break;
+                case 'constA':
+                    y0 = 0; v0 = 0; a = 5;
+                    break;
+                case 'drop':
+                    y0 = 90; v0 = 0; a = -9.8; e = 0;
+                    break;
+                case 'throw':
+                    y0 = 0; v0 = 40; a = -10; e = 0; 
+                    break;
+                case 'bounceElastic':
+                    y0 = 80; v0 = 0; a = -9.8; e = 1.0;
+                    break;
+                case 'bounceInelastic':
+                    y0 = 80; v0 = 0; a = -9.8; e = 0.7;
+                    break;
+            }
 
-        row.innerHTML = `
-            <td class="px-1 py-2">
-                <div class="font-bold text-slate-700 text-xs mb-1">${prevLabel} → ${currLabel}</div>
-                <select onchange="updateMode(${idx}, this.value)" class="mode-select text-xs cursor-pointer focus:ring-1 focus:ring-blue-500 outline-none">
-                    <option value="td" ${seg.mode==='td'?'selected':''}>Time & Dist</option>
-                    <option value="tv" ${seg.mode==='tv'?'selected':''}>Time & Speed</option>
-                    <option value="dv" ${seg.mode==='dv'?'selected':''}>Dist & Speed</option>
-                </select>
-            </td>
-            <td class="px-1 py-2 text-center align-middle">
-                <button onclick="toggleDir(${idx})" class="w-8 h-8 rounded border ${dirBtnClass} font-bold text-lg transition flex items-center justify-center">
-                    ${dirIcon}
-                </button>
-            </td>
-            <td class="px-1 py-2 align-middle">
-                <input type="number" value="${seg.mode==='dv' ? showT : seg.t}" min="0" step="1" 
-                    onchange="updateVal(${idx}, 't', this.value)" ${disT}>
-            </td>
-            <td class="px-1 py-2 align-middle">
-                <input type="number" value="${seg.mode==='tv' ? showD : seg.d}" min="0" step="1" 
-                    onchange="updateVal(${idx}, 'd', this.value)" ${disD}>
-            </td>
-            <td class="px-1 py-2 align-middle">
-                <input type="number" value="${seg.mode==='td' ? showV : seg.v}" min="0" step="0.1" 
-                    onchange="updateVal(${idx}, 'v', this.value)" ${disV}>
-            </td>
-            <td class="px-1 py-2 text-center align-middle">
-                ${segmentsUI.length > 1 ? `<button onclick="removeSegment(${idx})" class="text-slate-400 hover:text-red-500 transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>` : ''}
-            </td>
-        `;
-        segmentsBody.appendChild(row);
-    });
-    
-    document.getElementById('segmentCountBadge').textContent = `${segmentsUI.length}/${MAX_SEGMENTS}`;
-    btnAdd.disabled = segmentsUI.length >= MAX_SEGMENTS;
-    if(segmentsUI.length >= MAX_SEGMENTS) {
-        btnAdd.classList.add('opacity-50', 'cursor-not-allowed');
-    } else {
-        btnAdd.classList.remove('opacity-50', 'cursor-not-allowed');
-    }
-}
+            document.getElementById('input_y0').value = y0;
+            document.getElementById('input_v0').value = v0;
+            document.getElementById('input_a').value = a;
+            document.getElementById('input_e').value = e;
+            
+            updateParams();
+        }
 
-function updateVal(idx, field, val) {
-    let num = parseFloat(val);
-    if (isNaN(num) || num < 0) num = 0;
-    segmentsUI[idx][field] = num;
-    recalcPhysics();
-    renderTable(); 
-    drawAll();
-}
+        function scrub(percent) {
+            state.running = false;
+            updatePlayButton();
+            state.currentTime = (percent / 100) * CONSTANTS.simDuration;
+            updateScrubberUI();
+            drawFrame();
+        }
+        
+        function jumpToTime(t) {
+            state.running = false;
+            updatePlayButton();
+            state.currentTime = parseFloat(t);
+            updateScrubberUI();
+            drawFrame();
+        }
 
-function toggleDir(idx) {
-    segmentsUI[idx].dir *= -1;
-    recalcPhysics();
-    renderTable();
-    drawAll();
-}
+        function updateScrubberUI() {
+            const percent = (state.currentTime / CONSTANTS.simDuration) * 100;
+            document.getElementById('timeScrubber').value = percent;
+            document.getElementById('timeDisplay').textContent = state.currentTime.toFixed(2) + 's';
+        }
 
-function updateMode(idx, newMode) {
-    const seg = segmentsUI[idx];
-    const t = seg.t;
-    const d = seg.d;
-    const v = seg.v;
-    
-    let curT = t, curD = d, curV = v;
-    
-    if (seg.mode === 'td') { curV = t > 0 ? d/t : 0; }
-    else if (seg.mode === 'tv') { curD = v * t; }
-    else if (seg.mode === 'dv') { curT = v > 0 ? d/v : 0; }
-    
-    seg.t = parseFloat(curT.toFixed(2));
-    seg.d = parseFloat(curD.toFixed(2));
-    seg.v = parseFloat(curV.toFixed(2));
-    seg.mode = newMode;
-    
-    recalcPhysics();
-    renderTable();
-    drawAll();
-}
+        // --- Physics Engine (Pre-calculation) ---
 
-function addSegment() {
-    if (segmentsUI.length >= MAX_SEGMENTS) return;
-    segmentsUI.push({ mode: 'td', t: 10, d: 50, v: 5, dir: 1 });
-    recalcPhysics();
-    renderTable();
-    drawAll();
-}
+        function runSimulation() {
+            state.trajectory = { t: [], y: [], v: [], a: [], d: [], s: [] };
+            state.events = [];
+            
+            let t = 0;
+            let y = state.params.y0;
+            let v = state.params.v0;
+            let a = state.params.a;
+            let dist = 0;
+            const dt = CONSTANTS.dt;
 
-function removeSegment(idx) {
-    if (segmentsUI.length <= 1) return;
-    segmentsUI.splice(idx, 1);
-    recalcPhysics();
-    renderTable();
-    drawAll();
-}
+            // Generate full data for CONSTANTS.simDuration
+            while (t <= CONSTANTS.simDuration) {
+                // 1. Save current state
+                state.trajectory.t.push(t);
+                state.trajectory.y.push(y);
+                state.trajectory.v.push(v);
+                state.trajectory.a.push(a);
+                state.trajectory.d.push(dist);
+                state.trajectory.s.push(Math.abs(v));
 
-function getPhysicsState(t) {
-    let tAccum = 0;
-    let xAccum = 0; 
-    let distAccum = 0;
-    
-    if (t < 0) return { x: 0, dist: 0, disp: 0, v: 0, speed: 0 };
-    
-    // Check start (t=0)
-    if (t === 0 && segmentsPhysics.length > 0 && segmentsPhysics[0].dt > 0) {
-        const firstV = segmentsPhysics[0].dx / segmentsPhysics[0].dt;
-        return { x: 0, dist: 0, disp: 0, v: firstV, speed: Math.abs(firstV) };
-    }
+                const prevY = y;
+                const prevV = v;
 
-    for (let seg of segmentsPhysics) {
-        if (seg.dt === 0) continue; 
+                // 2. Predict Peak
+                let nextV = v + a * dt;
 
-        if (t <= tAccum + seg.dt) {
-            const dtInSeg = t - tAccum;
-            const v = seg.dx / seg.dt;
+                // Check if velocity crosses from Positive to Negative (Peak)
+                if (prevV > 0 && nextV < 0) {
+                    const dtPeak = -prevV / a;
+                    const tPeak = t + dtPeak;
+                    const yPeak = prevY + prevV * dtPeak + 0.5 * a * dtPeak * dtPeak;
+                    const distPeak = dist + Math.abs(yPeak - prevY); // Approx dist add
+
+                    // Insert "Peak" Data Point
+                    state.trajectory.t.push(tPeak);
+                    state.trajectory.y.push(yPeak);
+                    state.trajectory.v.push(0); 
+                    state.trajectory.a.push(a);
+                    state.trajectory.d.push(distPeak);
+                    state.trajectory.s.push(0);
+
+                    state.events.push({ time: tPeak, type: 'peak', vIn: 0, vOut: 0 });
+                }
+
+                // 3. Evolve State
+                y += v * dt + 0.5 * a * dt * dt;
+                v += a * dt;
+                
+                dist += Math.abs(y - prevY);
+
+                // 4. Handle Ground Collision
+                if (y < 0) {
+                    y = 0;
+                    
+                    const vBeforeBounce = v;
+                    let vAfterBounce = v;
+
+                    // Bounce Physics
+                    if (state.params.restitution > 0 && Math.abs(v) > 1.0) {
+                        vAfterBounce = -v * state.params.restitution;
+                    } else {
+                        if (a < 0) { vAfterBounce = 0; a = 0; y = 0; }
+                    }
+                    
+                    v = vAfterBounce;
+
+                    // Register Bounce Event with both velocities
+                    if (Math.abs(vBeforeBounce) > 0.5) { 
+                        state.events.push({ 
+                            time: t, 
+                            type: 'bounce', 
+                            vIn: vBeforeBounce, 
+                            vOut: vAfterBounce 
+                        });
+                    }
+                }
+
+                t += dt;
+            }
+            
+            renderMarkers();
+        }
+
+        function renderMarkers() {
+            const container = document.getElementById('timelineMarkers');
+            container.innerHTML = '';
+            
+            state.events.forEach(evt => {
+                const percent = (evt.time / CONSTANTS.simDuration) * 100;
+                if (percent > 100) return;
+
+                const marker = document.createElement('div');
+                marker.className = `event-marker marker-${evt.type}`;
+                marker.style.left = `${percent}%`;
+                marker.style.pointerEvents = 'auto'; // Re-enable clicks
+                
+                // Tooltip text
+                marker.setAttribute('data-label', `${evt.type === 'bounce' ? 'Bounce' : 'Peak'} @ ${evt.time.toFixed(2)}s`);
+                
+                // Interaction
+                marker.onclick = (e) => {
+                    e.stopPropagation(); // Prevent bubbling if needed
+                    jumpToTime(evt.time);
+                };
+                
+                container.appendChild(marker);
+            });
+        }
+
+        function animationLoop() {
+            if (!state.running) return;
+
+            state.currentTime += CONSTANTS.dt;
+            if (state.currentTime >= CONSTANTS.simDuration) {
+                state.currentTime = CONSTANTS.simDuration;
+                state.running = false;
+                updatePlayButton();
+            }
+
+            updateScrubberUI();
+            drawFrame();
+            
+            if (state.running) {
+                requestAnimationFrame(animationLoop);
+            }
+        }
+
+        // --- Drawing System ---
+
+        function getCurrentState() {
+            const tTarget = state.currentTime;
+            const times = state.trajectory.t;
+            
+            let low = 0, high = times.length - 1;
+            let index = 0;
+
+            while (low <= high) {
+                let mid = Math.floor((low + high) / 2);
+                if (times[mid] < tTarget) {
+                    low = mid + 1;
+                } else {
+                    high = mid - 1;
+                }
+            }
+            
+            if (low >= times.length) index = times.length - 1;
+            else if (low <= 0) index = 0;
+            else {
+                const diff1 = Math.abs(times[low] - tTarget);
+                const diff2 = Math.abs(times[low-1] - tTarget);
+                index = diff1 < diff2 ? low : low - 1;
+            }
+
             return {
-                x: xAccum + (v * dtInSeg),
-                disp: xAccum + (v * dtInSeg),
-                dist: distAccum + (Math.abs(v) * dtInSeg),
-                v: v,
-                speed: Math.abs(v)
+                y: state.trajectory.y[index],
+                v: state.trajectory.v[index],
+                a: state.trajectory.a[index],
+                index: index
             };
         }
-        
-        tAccum += seg.dt;
-        xAccum += seg.dx;
-        distAccum += Math.abs(seg.dx);
-    }
-    
-    return {
-        x: xAccum,
-        disp: xAccum,
-        dist: distAccum,
-        v: 0,
-        speed: 0
-    };
-}
 
-function loadPreset1() {
-    segmentsUI = [
-        { mode: 'td', t: 60, d: 180, v: 3, dir: 1 },
-        { mode: 'td', t: 60, d: 140, v: 2.33, dir: -1 },
-        { mode: 'td', t: 60, d: 100, v: 1.67, dir: 1 }
-    ];
-    recalcPhysics();
-    renderTable();
-    currentTime = 0;
-    slider.value = 0;
-    drawAll();
-}
-
-function loadPreset2() {
-    // Q2: 
-    // A-B: 20000m
-    // B-C: 15000m
-    // Total Time: 20 mins (1200s). Split 600s/600s for variety in speed.
-    
-    segmentsUI = [
-        { mode: 'td', t: 600, d: 20000, v: 33.33, dir: 1 }, // ~120 km/h
-        { mode: 'td', t: 600, d: 15000, v: 25.00, dir: -1 }  // ~90 km/h
-    ];
-    
-    recalcPhysics();
-    renderTable();
-    
-    // Reset time
-    currentTime = 0;
-    slider.value = 0;
-    drawAll();
-}
-
-function resetSim() {
-    segmentsUI = [
-        { mode: 'td', t: 10, d: 50, v: 5, dir: 1 }
-    ];
-    isPlaying = false;
-    document.getElementById('playBtn').innerHTML = playIcon();
-    currentTime = 0;
-    slider.value = 0;
-    recalcPhysics();
-    renderTable();
-    drawAll();
-}
-
-function togglePlay() {
-    isPlaying = !isPlaying;
-    const btn = document.getElementById('playBtn');
-    if (isPlaying) {
-        btn.innerHTML = pauseIcon();
-        btn.classList.remove('bg-green-600', 'hover:bg-green-700');
-        btn.classList.add('bg-amber-500', 'hover:bg-amber-600');
-        lastFrameTime = performance.now();
-        requestAnimationFrame(loop);
-    } else {
-        btn.innerHTML = playIcon();
-        btn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
-        btn.classList.add('bg-green-600', 'hover:bg-green-700');
-    }
-}
-
-let lastFrameTime = 0;
-function loop(timestamp) {
-    if (!isPlaying) return;
-    
-    const dt = (timestamp - lastFrameTime) / 1000;
-    lastFrameTime = timestamp;
-    
-    if (currentTime < totalDuration) {
-        currentTime += dt;
-        if (currentTime > totalDuration) currentTime = totalDuration;
-        slider.value = currentTime;
-        drawAll();
-        requestAnimationFrame(loop);
-    } else {
-        togglePlay();
-    }
-}
-
-function scrubTime(val) {
-    // 1. Update the time state
-    currentTime = parseFloat(val);
-    
-    // 2. If currently playing, dragging the slider should pause it naturally
-    //    so the user fights less with the loop updating the slider position.
-    if (isPlaying) {
-        togglePlay();
-    }
-    
-    // 3. Force a redraw
-    drawAll();
-}
-
-function drawAll() {
-    const state = getPhysicsState(currentTime);
-    updateStats(state);
-    
-    drawScene(simCtx, state);
-    
-    drawGraph(ctxDist, 'dist', state);
-    drawGraph(ctxSpeed, 'speed', state);
-    drawGraph(ctxDisp, 'disp', state);
-    drawGraph(ctxVel, 'vel', state);
-    
-    // Call this last so if it has DOM error it doesn't block canvas
-    updateCalculationDisplaySafe(currentTime);
-}
-
-function updateStats(state) {
-    document.getElementById('statTime').textContent = currentTime.toFixed(1) + " s";
-    document.getElementById('statVel').textContent = state.speed.toFixed(2) + " m/s";
-}
-
-function drawScene(ctx, state) {
-    const w = ctx.canvas.width;
-    const h = ctx.canvas.height;
-    ctx.clearRect(0, 0, w, h);
-    
-    const centerY = h * 0.7;
-    const centerX = w / 2;
-    
-    let maxPos = 0;
-    let minPos = 0;
-    let tempPos = 0;
-    segmentsPhysics.forEach(s => { tempPos += s.dx; maxPos = Math.max(maxPos, tempPos); minPos = Math.min(minPos, tempPos); });
-    const midPointMeters = (maxPos + minPos) / 2;
-    
-    const mToPx = (m) => centerX + (m - midPointMeters) * scaleX;
-    
-    ctx.beginPath();
-    ctx.strokeStyle = "#cbd5e1";
-    ctx.lineWidth = 2;
-    ctx.moveTo(0, centerY);
-    ctx.lineTo(w, centerY);
-    ctx.stroke();
-    
-    ctx.fillStyle = "#64748b";
-    ctx.font = "12px monospace";
-    ctx.textAlign = "center";
-    
-    const rangeM = w / scaleX;
-    let step = 10;
-    if (rangeM > 500) step = 100;
-    else if (rangeM > 200) step = 50;
-    else if (rangeM > 100) step = 25;
-    
-    const startM = Math.floor((midPointMeters - (centerX/scaleX)) / step) * step;
-    const endM = Math.ceil((midPointMeters + (centerX/scaleX)) / step) * step;
-    
-    for (let m = startM; m <= endM; m += step) {
-        const x = mToPx(m);
-        ctx.beginPath();
-        ctx.moveTo(x, centerY - 5);
-        ctx.lineTo(x, centerY + 5);
-        ctx.stroke();
-        ctx.fillText(m, x, centerY + 20);
-    }
-    
-    let runX = 0;
-    const labels = ['A','B','C','D','E','F','G'];
-    
-    drawMarker(ctx, mToPx(0), labels[0], "0m", false);
-    
-    segmentsPhysics.forEach((s, i) => {
-        if(s.dt === 0 && s.dx === 0) return;
-        runX += s.dx;
-        const distFromA = Math.abs(runX).toFixed(0) + "m";
-        drawMarker(ctx, mToPx(runX), labels[i+1], distFromA, false);
-    });
-
-    const stickX = mToPx(state.x);
-    drawStickman(ctx, stickX, centerY, state.v);
-}
-
-function drawMarker(ctx, x, label, distText, isCurrent) {
-    ctx.fillStyle = isCurrent ? "#ef4444" : "#94a3b8";
-    
-    ctx.beginPath();
-    ctx.arc(x, 100, 4, 0, Math.PI*2); 
-    ctx.fill();
-    
-    ctx.font = "bold 12px sans-serif";
-    ctx.fillText(label, x, 120);
-    
-    ctx.fillStyle = "#475569";
-    ctx.font = "10px sans-serif";
-    ctx.fillText(distText, x, 85);
-    
-    ctx.beginPath();
-    ctx.strokeStyle = "#e2e8f0";
-    ctx.setLineDash([2, 4]);
-    ctx.moveTo(x, 100);
-    ctx.lineTo(x, 250); 
-    ctx.stroke();
-    ctx.setLineDash([]);
-}
-
-function drawStickman(ctx, x, groundY, velocity) {
-    const scale = 0.8;
-    const time = Date.now() / 150;
-    const isMoving = Math.abs(velocity) > 0.01;
-    
-    ctx.save();
-    ctx.translate(x, groundY);
-    ctx.scale(scale, scale);
-    
-    ctx.strokeStyle = "#3b82f6";
-    ctx.lineWidth = 4;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    
-    const legOffset = isMoving ? Math.sin(time) * 10 : 0;
-    
-    ctx.beginPath();
-    ctx.moveTo(0, 0); 
-    ctx.lineTo(0, -30); 
-    ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.arc(0, -38, 8, 0, Math.PI * 2); 
-    ctx.fillStyle = "#fff";
-    ctx.fill();
-    ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(-10 + legOffset, 25);
-    ctx.moveTo(0, 0);
-    ctx.lineTo(10 - legOffset, 25);
-    ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.moveTo(0, -25);
-    ctx.lineTo(-10 - legOffset, -5);
-    ctx.moveTo(0, -25);
-    ctx.lineTo(10 + legOffset, -5);
-    ctx.stroke();
-    
-    if (Math.abs(velocity) > 0.1) {
-        ctx.strokeStyle = "#ef4444";
-        ctx.lineWidth = 2;
-        const dir = Math.sign(velocity);
-        const arrowLen = Math.min(40, Math.abs(velocity) * 10) * dir;
-        
-        ctx.beginPath();
-        ctx.moveTo(0, -55);
-        ctx.lineTo(arrowLen, -55);
-        ctx.lineTo(arrowLen - (5*dir), -58);
-        ctx.moveTo(arrowLen, -55);
-        ctx.lineTo(arrowLen - (5*dir), -52);
-        ctx.stroke();
-    }
-
-    ctx.restore();
-}
-
-function drawGraph(ctx, type, currentState) {
-    const w = ctx.canvas.width;
-    const h = ctx.canvas.height;
-    
-    ctx.clearRect(0, 0, w, h);
-    
-    const padL = 40, padR = 20, padT = 20, padB = 30;
-    
-    let maxY = -Infinity, minY = Infinity;
-    
-    const resolution = 100; 
-    const points = [];
-    const duration = totalDuration > 0 ? totalDuration : 10;
-    
-    for (let i = 0; i <= resolution; i++) {
-        const t = (i / resolution) * duration;
-        const s = getPhysicsState(t);
-        let val = 0;
-        
-        if (type === 'dist') val = s.dist;
-        else if (type === 'speed') val = s.speed;
-        else if (type === 'disp') val = s.disp;
-        else if (type === 'vel') val = s.v;
-        
-        points.push({t, val});
-        if (val > maxY) maxY = val;
-        if (val < minY) minY = val;
-    }
-    
-    if (type !== 'disp') minY = Math.min(0, minY);
-    else {
-        if (minY > 0) minY = 0;
-        if (maxY < 0) maxY = 0;
-    }
-    
-    let rangeY = maxY - minY;
-    if (rangeY === 0) rangeY = 10;
-    maxY += rangeY * 0.1;
-    minY -= rangeY * 0.1;
-    rangeY = maxY - minY;
-    
-    const scaleY = (h - padT - padB) / rangeY;
-    const scaleT = (w - padL - padR) / duration;
-    
-    const toX = (t) => padL + t * scaleT;
-    const toY = (v) => padT + (maxY - v) * scaleY;
-    
-    // Draw Static Axes
-    ctx.strokeStyle = "#94a3b8";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(padL, padT);
-    ctx.lineTo(padL, h - padB);
-    ctx.moveTo(padL, h - padB);
-    ctx.lineTo(w - padR, h - padB);
-    ctx.stroke();
-    
-    // Draw Zero Line
-    const zeroY = toY(0);
-    if (zeroY >= padT && zeroY <= h - padB) {
-        ctx.beginPath();
-        if (type === 'disp' || type === 'vel') {
-            ctx.strokeStyle = "#475569"; 
-            ctx.lineWidth = 2;
-        } else {
-            ctx.strokeStyle = "#e2e8f0";
-            ctx.lineWidth = 1;
+        function drawFrame() {
+            const current = getCurrentState();
+            drawAnimation(current.y, current.v);
+            drawGraphs(current.index);
+            updateCalculations(current.index);
         }
-        ctx.moveTo(padL, zeroY);
-        ctx.lineTo(w - padR, zeroY);
-        ctx.stroke();
-    }
-    
-    // Draw Max/Min Labels (Static)
-    ctx.fillStyle = "#64748b";
-    ctx.font = "10px sans-serif";
-    ctx.textAlign = "right";
-    ctx.fillText(maxY.toFixed(1), padL - 5, padT + 5);
-    ctx.fillText(minY.toFixed(1), padL - 5, h - padB);
-    
-    ctx.textAlign = "center";
-    ctx.fillText("0", padL, h - padB + 12);
-    ctx.fillText(duration.toFixed(0) + "s", w - padR, h - padB + 12);
 
-    // Draw Curve
-    ctx.beginPath();
-    ctx.strokeStyle = "#2563eb"; 
-    ctx.lineWidth = 2;
-    
-    points.forEach((p, i) => {
-        const x = toX(p.t);
-        const y = toY(p.val);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-    
-    // Draw Current Time Indicators (Interactive)
-    const currX = toX(currentTime);
-    if (currX >= padL && currX <= w - padR) {
-        let currVal = 0;
-        const currState = getPhysicsState(currentTime);
-        if (type === 'dist') currVal = currState.dist;
-        else if (type === 'speed') currVal = currState.speed;
-        else if (type === 'disp') currVal = currState.disp;
-        else if (type === 'vel') currVal = currState.v;
-        
-        const currY = toY(currVal);
+        function updateCalculations(idx) {
+            const traj = state.trajectory;
+            const sign = state.params.positiveUp ? 1 : -1;
+            
+            // 1. Disp Gradient
+            const currentVel = traj.v[idx] * sign;
+            document.getElementById('calc-disp-grad').textContent = `${currentVel.toFixed(2)} m/s`;
 
-        // 1. Vertical Line (Time)
-        ctx.beginPath();
-        ctx.strokeStyle = "#ef4444"; 
-        ctx.lineWidth = 1;
-        ctx.setLineDash([4, 4]);
-        ctx.moveTo(currX, padT);
-        ctx.lineTo(currX, h - padB);
-        ctx.stroke();
+            // 2. Vel Gradient
+            const currentAcc = traj.a[idx] * sign;
+            document.getElementById('calc-vel-grad').textContent = `${currentAcc.toFixed(2)} m/s²`;
 
-        // 2. Horizontal Line (Value)
-        ctx.beginPath();
-        ctx.moveTo(padL, currY);
-        ctx.lineTo(currX, currY);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        
-        // 3. Intersection Dot
-        ctx.fillStyle = "#ef4444";
-        ctx.beginPath();
-        ctx.arc(currX, currY, 3, 0, Math.PI*2);
-        ctx.fill();
+            // 3. Vel Area (Total)
+            const initialPos = traj.y[0] * sign;
+            const currentPos = traj.y[idx] * sign;
+            const deltaS = currentPos - initialPos;
+            document.getElementById('calc-vel-area').textContent = `${deltaS.toFixed(2)} m`;
 
-        // 4. Axis Labels (Badges)
-        ctx.font = "bold 10px sans-serif";
-        
-        // Y-Axis Badge (Value)
-        const valText = currVal.toFixed(1);
-        const valW = ctx.measureText(valText).width + 6;
-        const valH = 14;
-        
-        ctx.fillStyle = "#ef4444";
-        // Draw badge in the left margin area
-        ctx.fillRect(padL - valW - 2, currY - valH/2, valW, valH);
-        
-        ctx.fillStyle = "white";
-        ctx.textAlign = "right";
-        ctx.textBaseline = "middle";
-        ctx.fillText(valText, padL - 5, currY);
+            // 4. Area Breakdown Formula
+            updateAreaCalculationDisplay(idx, sign);
 
-        // X-Axis Badge (Time)
-        const timeText = currentTime.toFixed(1) + "s";
-        const timeW = ctx.measureText(timeText).width + 8;
-        
-        ctx.fillStyle = "#ef4444";
-        // Draw badge below the X axis
-        ctx.fillRect(currX - timeW/2, h - padB + 2, timeW, valH);
-        
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.fillText(timeText, currX, h - padB + 9);
-        
-        // Reset baseline
-        ctx.textBaseline = "alphabetic";
-    }
-}
+            // 5. Acc Area
+            const initialVel = traj.v[0] * sign;
+            const deltaV = currentVel - initialVel;
+            document.getElementById('calc-acc-area').textContent = `${deltaV.toFixed(2)} m/s`;
+        }
 
-function playIcon() {
-    return `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg> Play`;
-}
-function pauseIcon() {
-    return `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg> Pause`;
-}
+        function updateAreaCalculationDisplay(idx, sign) {
+            const currentTime = state.trajectory.t[idx];
+            
+            // 1. Identify Boundaries (Start, Events, Current)
+            // Start with t=0
+            let boundaries = [ { time: 0, v: state.trajectory.v[0] * sign } ];
+            
+            // Add intermediate events
+            state.events.forEach(e => {
+                if (e.time > 0 && e.time < currentTime) {
+                    boundaries.push({
+                        time: e.time,
+                        type: e.type,
+                        vIn: e.vIn * sign,
+                        vOut: e.vOut * sign
+                    });
+                }
+            });
 
-window.onload = init;
+            // Add current time
+            boundaries.push({ time: currentTime, v: state.trajectory.v[idx] * sign });
 
-</script>
+            // Sort just in case, though order is largely preserved
+            boundaries.sort((a, b) => a.time - b.time);
+
+            let htmlParts = [];
+            let totalCheck = 0;
+            let hasPrintedFirst = false;
+
+            for (let i = 0; i < boundaries.length - 1; i++) {
+                const b1 = boundaries[i];
+                const b2 = boundaries[i + 1];
+
+                const dt = b2.time - b1.time;
+                if (dt < 0.001) continue; // Skip insignificant steps
+
+                // Determine Velocities for this segment
+                const v1 = (b1.type === 'bounce') ? b1.vOut : (b1.v !== undefined ? b1.v : b1.vOut || 0);
+                const v2 = (b2.type === 'bounce') ? b2.vIn : (b2.v !== undefined ? b2.v : b2.vIn || 0);
+
+                // Calculate Area
+                const area = 0.5 * (v1 + v2) * dt;
+                
+                // Identify Shape
+                const isRectangle = Math.abs(v1 - v2) < 0.01;
+                const isTriangle = !isRectangle && (Math.abs(v1) < 0.01 || Math.abs(v2) < 0.01);
+                
+                // Format String
+                let partStr = "";
+                
+                if (isRectangle) {
+                    // Rectangle: breadth (velocity) x length (time)
+                    partStr = `(${Math.abs(v1).toFixed(1)} × ${dt.toFixed(1)})`;
+                } else if (isTriangle) {
+                    // Triangle: 0.5 * height * base
+                    const h = (Math.abs(v1) > Math.abs(v2)) ? Math.abs(v1) : Math.abs(v2);
+                    partStr = `(0.5 × ${h.toFixed(1)} × ${dt.toFixed(1)})`;
+                } else {
+                    // Trapezoid: 0.5 * (h1 + h2) * base
+                    partStr = `(0.5 × (${Math.abs(v1).toFixed(1)} + ${Math.abs(v2).toFixed(1)}) × ${dt.toFixed(1)})`;
+                }
+
+                // Add Line with Operator
+                let lineStr = "";
+                if (!hasPrintedFirst) {
+                    if (area < 0) lineStr = "- ";
+                    hasPrintedFirst = true;
+                } else {
+                    lineStr = (area >= 0) ? "+ " : "- ";
+                }
+                
+                htmlParts.push(lineStr + partStr);
+                totalCheck += area;
+            }
+            
+            // Construct Final HTML
+            if (htmlParts.length === 0) {
+                 document.getElementById('calc-vel-formula').innerHTML = "";
+            } else {
+                 const formulaHTML = htmlParts.join('<br>') + 
+                     `<div style="margin-top:4px; padding-top:4px; border-top:1px solid #e5e7eb; font-weight:600; color:#374151;">= ${totalCheck.toFixed(1)} m</div>`;
+                 document.getElementById('calc-vel-formula').innerHTML = formulaHTML;
+            }
+        }
+
+        function drawAnimation(y, v) {
+            const canvas = document.getElementById('animCanvas');
+            const ctx = state.animCtx;
+            const w = canvas.logicalWidth;
+            const h = canvas.logicalHeight;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Draw Ruler Lines
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            for(let i=0; i<=100; i+=10) {
+                const yPos = h - (i / CONSTANTS.maxY) * (h - 20) - 20; 
+                ctx.beginPath();
+                ctx.moveTo(0, yPos);
+                ctx.lineTo(w, yPos);
+                ctx.stroke();
+            }
+
+            // Draw Ball
+            const radius = 12;
+            let visualY = h - (y / CONSTANTS.maxY) * (h - 20) - 20 - radius; 
+
+            // Shadow
+            ctx.beginPath();
+            ctx.ellipse(w/2, h - 15, radius * (1 - Math.min(y/100, 1)), radius * 0.3 * (1 - Math.min(y/100, 1)), 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.1)';
+            ctx.fill();
+
+            // Ball Body
+            ctx.beginPath();
+            ctx.arc(w/2, visualY + radius, radius, 0, Math.PI * 2);
+            const gradient = ctx.createRadialGradient(w/2 - 4, visualY + radius - 4, 2, w/2, visualY + radius, radius);
+            gradient.addColorStop(0, '#60a5fa');
+            gradient.addColorStop(1, '#2563eb');
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.strokeStyle = '#1e40af';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Velocity Vector Arrow
+            if (Math.abs(v) > 0.1) {
+                const vScale = 2; 
+                const vy = -v * vScale; 
+                ctx.beginPath();
+                ctx.moveTo(w/2 + radius + 5, visualY + radius);
+                ctx.lineTo(w/2 + radius + 5, visualY + radius + vy);
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        function drawGraphs(currentIndex) {
+            const traj = state.trajectory;
+            const sign = state.params.positiveUp ? 1 : -1;
+
+            renderGraph('dispGraph', traj.t, traj.y.map(v => v * sign), '#2563eb', true, currentIndex);
+            renderGraph('velGraph', traj.t, traj.v.map(v => v * sign), '#2563eb', true, currentIndex);
+            renderGraph('accGraph', traj.t, traj.a.map(v => v * sign), '#2563eb', true, currentIndex);
+            renderGraph('distGraph', traj.t, traj.d, '#16a34a', false, currentIndex);
+            renderGraph('spdGraph', traj.t, traj.s, '#16a34a', false, currentIndex);
+        }
+
+        function renderGraph(canvasId, tData, yData, color, isVector, currentIndex) {
+            const ctx = state.graphs[canvasId];
+            const canvas = document.getElementById(canvasId);
+            const w = canvas.logicalWidth;
+            const h = canvas.logicalHeight;
+
+            ctx.clearRect(0, 0, w, h);
+
+            if (tData.length === 0) return;
+
+            let maxY, minY;
+
+            // Find data range
+            let dataMax = -Infinity;
+            let dataMin = Infinity;
+            
+            for(let v of yData) {
+                if (v > dataMax) dataMax = v;
+                if (v < dataMin) dataMin = v;
+            }
+
+            if (isVector) {
+                let absLimit = Math.max(Math.abs(dataMax), Math.abs(dataMin));
+                if (absLimit === 0) absLimit = 10;
+                const padding = absLimit * 0.15;
+                maxY = absLimit + padding;
+                minY = -(absLimit + padding);
+            } else {
+                let range = dataMax - dataMin;
+                if (range === 0) range = 10;
+                maxY = dataMax + (range * 0.1);
+                minY = dataMin - (range * 0.1);
+                if (minY > 0) minY = -(range * 0.05);
+                if (dataMin >= 0 && minY < -1) minY = -1;
+            }
+
+            const rangeY = maxY - minY;
+            const maxT = CONSTANTS.simDuration; 
+
+            const getX = (t) => (t / maxT) * w;
+            const getY = (val) => h - ((val - minY) / rangeY) * h;
+
+            // 1. Draw Zero Line (Horizontal Y=0)
+            if (minY <= 0 && maxY >= 0) {
+                const zeroY = getY(0);
+                ctx.beginPath();
+                ctx.moveTo(0, zeroY);
+                ctx.lineTo(w, zeroY);
+                ctx.strokeStyle = '#9ca3af'; 
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // 2. Draw Full "Ghost" Trajectory
+            ctx.beginPath();
+            ctx.moveTo(getX(tData[0]), getY(yData[0]));
+            for (let i = 1; i < tData.length; i++) {
+                ctx.lineTo(getX(tData[i]), getY(yData[i]));
+            }
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 3. Draw Active Trajectory
+            if (currentIndex > 0) {
+                ctx.beginPath();
+                ctx.moveTo(getX(tData[0]), getY(yData[0]));
+                for (let i = 1; i <= currentIndex; i++) {
+                    ctx.lineTo(getX(tData[i]), getY(yData[i]));
+                }
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                const lastX = getX(tData[currentIndex]);
+                const lastY = getY(yData[currentIndex]);
+                ctx.beginPath();
+                ctx.arc(lastX, lastY, 4, 0, Math.PI*2);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = '#374151';
+                ctx.font = '10px Inter';
+                let labelY = lastY - 10;
+                if (labelY < 10) labelY = lastY + 20;
+                ctx.fillText(yData[currentIndex].toFixed(1), lastX - 10, labelY);
+            }
+        }
+    </script>
 </body>
 </html>
