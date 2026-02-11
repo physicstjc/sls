@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIBE - Brown Bag Series Workshop 1 | Vibe Coding with Gemini Canvas</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', 'Segoe UI', -apple-system, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+            background-color: #fafafa;
+            color: rgba(0, 0, 0, 0.87);
+        }
+        
+        h1 {
+            font-size: 34px;
+            font-weight: 400;
+            color: rgba(0, 0, 0, 0.87);
+            margin: 0 0 24px 0;
+            letter-spacing: 0.25px;
+        }
+        
+        h2 {
+            font-size: 24px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.87);
+            margin: 48px 0 16px 0;
+            letter-spacing: 0;
+        }
+        
+        h3 {
+            font-size: 20px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.87);
+            margin: 16px 0;
+            letter-spacing: 0.15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        th {
+            background-color: #1976d2;
+            color: #ffffff;
+            padding: 16px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 14px;
+            letter-spacing: 0.1px;
+            text-transform: uppercase;
+        }
+        
+        td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(0,0,0,0.12);
+            font-size: 14px;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tr:hover {
+            background-color: rgba(0,0,0,0.04);
+        }
+        
+        .guide-section {
+            background-color: #ffffff;
+            padding: 24px;
+            margin: 24px 0;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+        }
+        
+        .card {
+            background-color: #ffffff;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+            margin: 24px 0;
+            overflow: hidden;
+        }
+        
+        .card-content {
+            padding: 24px;
+        }
+        
+        .card img {
+            width: 100%;
+            display: block;
+        }
+        
+        .step {
+            margin: 24px 0;
+            padding-left: 0;
+        }
+        
+        .step-number {
+            color: #1976d2;
+            font-weight: 500;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .step-content {
+            margin-top: 8px;
+            margin-left: 24px;
+            color: rgba(0, 0, 0, 0.6);
+        }
+        
+        a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .highlight {
+            background-color: #e3f2fd;
+            padding: 4px 8px;
+            border-radius: 2px;
+            font-weight: 500;
+        }
+        
+        details {
+            cursor: pointer;
+        }
+        
+        details summary {
+            user-select: none;
+            transition: background-color 0.2s;
+        }
+        
+        details summary:hover {
+            background-color: #e8eaed;
+        }
+        
+        details[open] summary {
+            margin-bottom: 10px;
+        }
+        
+        .prompt-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .prompt-text {
+            font-family: 'Roboto Mono', 'Courier New', monospace;
+            background-color: #fafafa;
+            padding: 16px;
+            border-left: 4px solid #1976d2;
+            line-height: 1.6;
+            border: 1px solid rgba(0,0,0,0.12);
+            border-radius: 4px;
+            min-height: 100px;
+            width: 100%;
+            box-sizing: border-box;
+            resize: vertical;
+            font-size: 14px;
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+        
+        .prompt-text:focus {
+            outline: none;
+            border-color: #1976d2;
+            border-width: 2px;
+            padding: 15px;
+        }
+        
+        .copy-btn {
+            background-color: #1976d2;
+            color: #ffffff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+        }
+        
+        .copy-btn:hover {
+            background-color: #1565c0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.16), 0 2px 4px rgba(0,0,0,0.12);
+            transform: translateY(-1px);
+        }
+        
+        .copy-btn:active {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+            transform: translateY(0);
+        }
+        
+        .copy-btn.copied {
+            background-color: #43a047;
+        }
+        
+        .copy-icon {
+            width: 16px;
+            height: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>VIBE - Brown Bag Series Workshop 1</h1>
+    
+    <div class="card" style="background-color: #1976d2; color: #ffffff;">
+        <div class="card-content">
+            <h2 style="color: #ffffff; margin-top: 0; font-size: 28px;">Welcome to Vibe Coding with Gemini Canvas</h2>
+            <p style="font-size: 16px; line-height: 1.8; margin-bottom: 0; color: rgba(255,255,255,0.9);">
+                Learn how to create interactive educational web apps without traditional coding! 
+                Using AI-powered tools like Gemini Canvas, teachers can build engaging simulations, 
+                games, and visualizations tailored to their curriculum needs. This workshop guides 
+                you through the process from prompt to published app.
+            </p>
+        </div>
+    </div>
+    
+    <div class="card">
+        <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SSB0QKBD9lXQJ66CW4xIgq45AWY-9x9KEwhf-bzQWYa5xoyzOOJEGYf4Y4gzppldrnOcI0PN0ymJ2iAv_KWx17XDLFiPjni1nLnOrN9RpJBtJeO6z3fWWjiKI8UgFHnchhLUXsLkzkOa3Vo6idTIP9Gj9urM5b60SjFaJi6SagLqjPBRrjq67cHGdxGglBYNQ7IiJG3OigjoDbMs8YZNTNktK-sl4oGw2ZF=w1280" alt="Workshop Banner">
+    </div>
+    
+    <h2>Sample Apps</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 15%;">Subject/Area</th>
+                <th style="width: 25%;">App Name</th>
+                <th style="width: 60%;">Suggested Prompts</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Biology</td>
+                <td>DNA Helical Structure</td>
+                <td>Create an interactive 3D visualization of a DNA double helix structure. Include sliders to rotate the model around X, Y, and Z axes. Display labels for: nucleotides (A, T, G, C), base pairs, sugar-phosphate backbone, and hydrogen bonds. Show complementary base pairing (A-T, G-C) with different colors. Add zoom controls and the ability to show/hide different components. Use HTML5, CSS, and JavaScript with SVG or Canvas. Make it responsive and touch-friendly.</td>
+            </tr>
+            <tr>
+                <td>Chemistry</td>
+                <td>Carbon 3D Structures</td>
+                <td>Build an interactive app showing different carbon allotropes (diamond, graphite, fullerene C60, graphene). Create 3D molecular structures that users can rotate with mouse/touch controls. Include: dropdown to switch between structures, information panels explaining properties (hardness, conductivity, uses), visualization of bonding patterns, and comparison view. Use relative units for responsive design. Include labeled axes and clear atomic representations.</td>
+            </tr>
+            <tr>
+                <td>Geography</td>
+                <td>Monsoons</td>
+                <td>Create an animated educational app explaining monsoon formation in Asia. Include: toggle buttons for summer/winter monsoons, animated arrows showing wind direction, color-coded pressure systems (high/low), rainfall distribution visualization, interactive map of affected regions. Add explanatory text panels describing the formation process. Use smooth animations and clear visual indicators. Ensure mobile responsiveness.</td>
+            </tr>
+            <tr>
+                <td>Geography</td>
+                <td>Land Use in Singapore</td>
+                <td>Design an interactive map of Singapore with color-coded land use categories: residential (yellow), commercial (red), industrial (purple), green spaces (green), water bodies (blue), transport infrastructure (grey). Make regions clickable to display: percentage of total land area, specific location name, recent changes. Include a legend and summary statistics. Use SVG for the map with touch-friendly click areas.</td>
+            </tr>
+            <tr>
+                <td>Math</td>
+                <td>Angles Quiz</td>
+                <td>Create a quiz game about angles. Generate random angle diagrams and ask students to: identify angle types (acute, right, obtuse, straight, reflex), calculate missing angles in shapes, find complementary/supplementary angles. Include: score tracker, immediate visual feedback (green for correct, red for wrong), hints button, difficulty levels (easy/medium/hard), progress bar. Show correct answer with explanation after each question. Track attempts and display final score with encouraging message.</td>
+            </tr>
+            <tr>
+                <td>History</td>
+                <td>Interactive Timeline</td>
+                <td>Build an interactive horizontal timeline for [specific historical period/topic]. Display events as clickable nodes on a scrollable timeline. When clicked, show: event name, date, description (100-150 words), relevant image, and historical significance. Include: zoom controls, filter by category/region, search function, color coding by event type. Add navigation arrows and smooth scrolling. Make timeline responsive - vertical on mobile, horizontal on desktop.</td>
+            </tr>
+            <tr>
+                <td>Chinese</td>
+                <td>Hanyu Pinyin Game</td>
+                <td>Create a Hanyu Pinyin practice game. Display a Chinese character and 4 pinyin options (multiple choice). Include: audio button to hear correct pronunciation, score counter, timer (optional), progressive difficulty levels, visual feedback animations (stars/checkmarks for correct answers). Cover common HSK1-2 vocabulary. After each answer, show the correct pinyin with tone marks highlighted. Track accuracy percentage. Use large touch-friendly buttons with clear Chinese fonts.</td>
+            </tr>
+            <tr>
+                <td>Economics</td>
+                <td>COE Price Data</td>
+                <td>Create a web app to visualize Singapore COE (Certificate of Entitlement) bidding data. Allow users to input recent COE results in a text area or upload CSV file. Display: line chart showing price trends over time, comparison between categories (A, B, C, E, motorcycles), current vs previous premium, percentage change. Include dropdown to select time period (3 months/6 months/1 year), color-coded legend, data table view. Make charts responsive using relative sizing. Add tooltips showing exact values on hover.</td>
+            </tr>
+            <tr>
+                <td>Project Work</td>
+                <td>3D Prototypes</td>
+                <td>Create an interactive 3D model viewer for project prototypes. Allow viewing simple 3D shapes or imported models. Include: rotation controls (drag to rotate), zoom slider, view presets (front, top, side, isometric), pan controls, toggle wireframe/solid view, measurement indicators, annotation pins (clickable to show notes). Background should be neutral grey. Ensure smooth rotation with touch and mouse. Add reset view button. Build using Three.js or plain Canvas/SVG.</td>
+            </tr>
+            <tr>
+                <td>Project Work</td>
+                <td>Clickable Mobile Prototypes</td>
+                <td>Build an interactive mobile app prototype mockup tool. Create 3-5 connected screens (e.g., home, menu, detail, form, confirmation). Display in a mobile frame (9:16 ratio). Make specific areas clickable to navigate between screens. Include: navigation indicators, back button functionality, smooth screen transitions, hotspot hints (optional), common UI elements (header, buttons, input fields, lists). Add instruction text. Prevent accidental navigation outside prototype. Use mobile-responsive CSS with portrait orientation focus.</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="card" style="background-color: #e3f2fd; border-left: 4px solid #1976d2;">
+        <div class="card-content">
+            <h3 style="color: #1976d2; margin-top: 0;">Prompt Engineering Tips</h3>
+            <ul style="line-height: 1.8; color: rgba(0,0,0,0.87);">
+                <li><strong>Be specific about interactivity:</strong> Mention sliders, buttons, dropdowns, and what they should control</li>
+                <li><strong>Request responsive design:</strong> Ask for relative units (%, em, vh, vw) instead of fixed pixels</li>
+                <li><strong>Specify visual feedback:</strong> Describe colors, animations, and user feedback clearly</li>
+                <li><strong>Include pedagogical goals:</strong> Explain what students should learn or explore</li>
+                <li><strong>Request accessibility features:</strong> Large touch targets, clear labels, keyboard navigation</li>
+                <li><strong>Iterate in steps:</strong> Start with core functionality, then add features in follow-up prompts</li>
+            </ul>
+        </div>
+    </div>
+    
+    <h2>Step-by-Step Guide</h2>
+    
+    <div class="guide-section">
+        <div class="step">
+            <div class="step-number">1. Open Gemini</div>
+            <div class="step-content">
+                Go to <a href="https://gemini.google.com" target="_blank">https://gemini.google.com</a>. You can be signed in to iCON or your private Gmail.
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">2. Select Canvas Mode</div>
+            <div class="step-content">
+                Select <span class="highlight">"Tools"</span> and then <span class="highlight">"Canvas"</span>.
+            </div>
+        </div>
+        
+        <div class="card" style="margin: 24px 0;">
+            <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SR7NKmbWqz8O_vvqCJh5cU-wG-twgD2K_6yKfUxVf9V5kwbbSPiWDIGMcq7qFzg9fGZ04SKrz5KKS5jrtm9Dl_cOtXVsLU1OOGVXTZAh4YElMttAv5eW13qWa4t5LYmDECY6MbL6mkjGREfBPWl5YCQtwP3p85A7EkvltMt5_u50qHdUXPzfj2aEGoqFAsx5gAZKBl33LA3CyZoi1hVswbXFlRNeG5Jc-Wk=w1280" alt="Gemini Canvas Tools Menu">
+        </div>
+        
+        <div class="step">
+            <div class="step-number">3. Enter Your Prompt</div>
+            <div class="step-content">
+                Enter your prompt to describe what you want to build.
+                <br><br>
+                <em>Tip: You can also insert an image of a sketch of the concept that you want.</em>
+            </div>
+        </div>
+        
+        <div class="card" style="margin: 24px 0;">
+            <img src="https://lh3.googleusercontent.com/sitesv/APaQ0STGwCUmh7tJ0ZDmLH7JLgjuEJCk9oghLURBgnl13ACa1qGAo6eXwWQAVzlFIFa9WRquvKOgZrAtpSlktueovOKxKd9O_GuolmwJ6rDvTRTE4CTPB3rWQYcQ0L2Q0BC-MI7hsIPGEvjlOEhQ-Unas1XorYG5Pij9Pd66AgduEtLBlbjKCWebQx1hhrVEYdccw_1BvJn1I3XfGX4jtzDLkpIB_EQa5BgnKNNrWYM=w1280" alt="Entering prompt in Gemini Canvas">
+        </div>
+        
+        <div class="card" style="margin: 24px 0;">
+            <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SQBi8Bb9PmOqhbpNPV3oiispf-kdoRG9R-ysBWrTej7CeECDinrsvzlWsfFMXPEN0tlQjdWg3QKLEURNqayxYB8m_ntHv-EDaiUcV4qtPA1T1TDeC0AiLfD4OMo0qQRykkD8xBCrSF8vN3Q57y8RM6yDJ9cVN50FYhY-95ddL2HbGQa2Oz28TdMaWgDq9v5eINDYQs7jDjh0OqlBiTsuRihSi2KAV99-bMB1Hs=w1280" alt="Image upload option">
+        </div>
+        
+        <div class="step">
+            <div class="step-number">4. Test and Iterate</div>
+            <div class="step-content">
+                Test the app from the preview. If something is broken, describe what you notice is missing or wrong into the next prompt. You can also suggest improvements in the form of additional features or user interface changes.
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">5. Share Your App</div>
+            <div class="step-content">
+                If you are satisfied with the app, click on <span class="highlight">"Share"</span> and <span class="highlight">"Copy Contents"</span>.
+            </div>
+        </div>
+        
+        <div class="card" style="margin: 24px 0;">
+            <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SQHfcOGa7vKuFjOp5EOInbVM5NpYZ8QeVRBolRjwBCWyv6orqIyd985NXuuTlWuWqh2G9SFc5UNcR05i1nhz5KbbOhP8E4AfauHVAnSos8gwgAJdTcz3B2edAxINy-o1GBClelUOIBOqVgcBBLozIB3LeiPzrDo8pkUc7tY7KdAXHLuYpxUMdTv8_EH6N-D_VS3ASOpKxWc0MRjTYe82h0xIcpm5QakvO0_Xc8=w1280" alt="Share and Copy Contents">
+        </div>
+        
+        <div class="step">
+            <div class="step-number">6. Open Google Sites</div>
+            <div class="step-content">
+                Go to Google Sites and create a new Site or open an existing Site.
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">7. Navigate to Pages</div>
+            <div class="step-content">
+                Click on <span class="highlight">"Pages"</span>.
+            </div>
+        </div>
+        
+        <div class="card" style="margin: 24px 0;">
+            <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SR6BShtNVGHjpy-rl5TK3IXuypyxhol-KcGY8yhxWwy0oJ5aXRecdKlUKJ0fgnVSRSBvKSafOfoihUpwmSauVLeU3JfzrmRgT5FziEtfIQufq81y7DOOzS9fe9zbEdlUvZRcOi4lJCOkmz1TxpUpvp33rl3UTZzRsI-obCWSwDi6czITBUE5PnXeuhOMTDNLd-1srugIn0R8PQtRjG3yvA6Y5blwo0UCQCFAGY=w1280" alt="Google Sites Pages menu">
+        </div>
+        
+        <div class="card" style="margin: 24px 0;">
+            <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SSDaGWmQGMd1GxzS87QwOcFtUFgFsME1fz7m24g9-2PvGmHaRSy-VbFUxDsjhV6akRII4Qnhjgx8QJ4e_6fXP5mHmu16dg2gMazoFiaQyaA9NNdynneW3WUaLa_KedqNJ136XiLsLcg2xWD9S6PpX9qGE_QPqYVFQ-EQSvgXD8J09X4jP7eHICY4vSfew7lYk8ViZH0OD215bwGHT0oQCHYke2CLXFT8DqFqOU=w1280" alt="Add new page and full page embed">
+        </div>
+        
+        <div class="step">
+            <div class="step-number">8. Embed Your App</div>
+            <div class="step-content">
+                Add a new page and click on <span class="highlight">"Full page embed"</span>.
+            </div>
+        </div>
+    </div>
+    
+    <h2 style="margin-top: 50px;">Sample Prompt Templates</h2>
+    
+    <div class="guide-section">
+        <h3 style="color: #1976d2; margin-bottom: 16px;">Interactive Simulation</h3>
+        
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+            <p style="margin-top: 0;"><strong>Template:</strong></p>
+            <div class="prompt-container">
+                <textarea class="prompt-text" id="simulation-prompt" rows="20">Create an interactive web-based simulation to help students explore [concept/topic].
+
+Requirements:
+- Include at least one adjustable input (slider / dropdown / button) for [independent variable]
+- Show real-time visual feedback (animation, graph, or changing diagram)
+- Display numerical values with correct units
+- Add brief on-screen explanations describing what changes and why
+- Keep the layout simple and classroom-friendly
+
+Pedagogical goals:
+- Support conceptual understanding, not just calculation
+- Allow students to predict → test → explain
+
+Technical Constraints:
+- Acceptable languages: HTML5, CSS, and JavaScript.
+- Vector graphics should be used, using SVG or other suitable formats. The media object should be scaled proportionally in response to changing browser size - for HTML tags, ensure that the dimensions are defined using relative sizes (%, em) instead of absolute sizing (px). 
+- Scales proportionately and works within its own browser window regardless of size.
+- Automatically adapt to mobile, tablet, and desktop screens
+- Use relative units (%, vw, vh, rem) instead of fixed pixel layouts where possible
+- Ensure all interactive elements are touch-friendly (large buttons, no hover-only actions)
+- Prevent horizontal scrolling on small screens
+- Maintain usability in portrait and landscape orientations</textarea>
+                <button class="copy-btn" onclick="copyPrompt(this, 'simulation-prompt')" title="Copy to clipboard">
+                    <svg class="copy-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                    <span class="copy-text">Copy to Clipboard</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="guide-section">
+        <h3 style="color: #1976d2; margin-bottom: 16px;">Learning Game</h3>
+        
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+            <p style="margin-top: 0;"><strong>Template:</strong></p>
+            <div class="prompt-container">
+                <textarea class="prompt-text" id="game-prompt" rows="20">Build a game-based learning activity based on [describe existing game or your own game design] to answer questions about [topic/skill].
+
+Game mechanics:
+- Correct answers increase score / progress
+- Track and display current score and attempts
+
+Learning design:
+- Questions should vary in difficulty
+- Provide immediate feedback after each attempt
+- Encourage retrying and learning from mistakes
+
+Technical constraints:
+- Acceptable languages: HTML5, CSS, and JavaScript.
+- Vector graphics should be used, using SVG or other suitable formats. The media object should be scaled proportionally in response to changing browser size - for HTML tags, ensure that the dimensions are defined using relative sizes (%, em) instead of absolute sizing (px). 
+- Scales proportionately and works within its own browser window regardless of size.
+- Automatically adapt to mobile, tablet, and desktop screens
+- Use relative units (%, vw, vh, rem) instead of fixed pixel layouts where possible
+- Ensure all interactive elements are touch-friendly (large buttons, no hover-only actions)
+- Prevent horizontal scrolling on small screens
+- Maintain usability in portrait and landscape orientations</textarea>
+                <button class="copy-btn" onclick="copyPrompt(this, 'game-prompt')" title="Copy to clipboard">
+                    <svg class="copy-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                    <span class="copy-text">Copy to Clipboard</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="guide-section">
+        <h3 style="color: #1976d2; margin-bottom: 16px;">Data Visualisation</h3>
+        
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+            <p style="margin-top: 0;"><strong>Template:</strong></p>
+            <div class="prompt-container">
+                <textarea class="prompt-text" id="data-viz-prompt" rows="15">Create a web app that allows users to input data into a textbox or upload a CSV file and explore the data visually.
+
+Core features:
+- File upload (drag-and-drop preferred)
+- Automatically detect column headers
+- Allow users to choose x-axis and y-axis variables
+- Display a clear, labelled graph (line / bar / scatter as appropriate)
+- Update the visualisation instantly when selections change
+
+Learning focus:
+- Help students identify trends, patterns, and anomalies
+- Include short prompts like "What do you notice?" or "Describe the relationship"
+
+Constraints:
+- Use plain JavaScript
+- No server-side code
+- Output as a single HTML file that runs locally</textarea>
+                <button class="copy-btn" onclick="copyPrompt(this, 'data-viz-prompt')" title="Copy to clipboard">
+                    <svg class="copy-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                    <span class="copy-text">Copy to Clipboard</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="guide-section" style="background-color: #fff8e1; border-left: 4px solid #ff8f00;">
+        <h3 style="color: #e65100; margin-top: 0;">For ChatGPT Users (SLS Packaging)</h3>
+        <p>Add this prompt when using ChatGPT to package for Singapore Learning Space (SLS):</p>
+        <div class="prompt-container">
+            <textarea class="prompt-text" id="sls-prompt" rows="3" style="border-left: 3px solid #f0ad4e; color: #856404;">Package this for SLS using the guidelines stated in this website, creating the zip file for me with the index.html file in the root directory: https://www.learning.moe.edu.sg/teacher-user-guide/author/html5-content-development/</textarea>
+            <button class="copy-btn" onclick="copyPrompt(this, 'sls-prompt')" title="Copy to clipboard" style="background-color: #f0ad4e;">
+                <svg class="copy-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                </svg>
+                <span class="copy-text">Copy to Clipboard</span>
+            </button>
+        </div>
+        <p style="margin-bottom: 0; margin-top: 15px;"><em>Note: This prompt does not work for Gemini.</em></p>
+    </div>
+    
+    <footer style="margin-top: 64px; padding: 32px 0; border-top: 1px solid rgba(0,0,0,0.12); text-align: center; color: rgba(0,0,0,0.6);">
+        <p style="margin: 12px 0; font-size: 16px; font-weight: 500;">
+            PlayAI@TJC: Vibe Coding and More!
+        </p>
+        <p style="margin: 12px 0; font-size: 14px;">
+            <a href="https://gemini.google.com" target="_blank" style="color: #1976d2;">Gemini by Google</a> | 
+            <a href="https://sites.google.com/" target="_blank" style="color: #1976d2;">Google Sites</a>
+        </p>
+        <p style="margin: 12px 0; font-size: 12px; color: rgba(0,0,0,0.54);">
+            Workshop materials for educators exploring AI-assisted app development
+        </p>
+    </footer>
+    
+    <script>
+        function copyPrompt(button, textareaId) {
+            const textarea = document.getElementById(textareaId);
+            const text = textarea.value;
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(text).then(() => {
+                // Change button appearance
+                const copyText = button.querySelector('.copy-text');
+                const originalText = copyText.textContent;
+                
+                copyText.textContent = 'Copied!';
+                button.classList.add('copied');
+                
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    copyText.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard. Please select and copy manually.');
+            });
+        }
+    </script>
+</body>
+</html>
