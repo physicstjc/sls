@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kinematics: Single Particle Motion</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="xapiwrapper.min.js"></script>
+    <script src="xapi-utils.js" defer></script>
     <style>
         body {
             background-color: #f1f5f9;
@@ -74,6 +77,28 @@
             margin-bottom: 8px;
             font-size: 11px;
         }
+        #auth-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        #auth-modal {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        #userEmail {
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -85,6 +110,11 @@
             <p class="text-[10px] text-gray-500 uppercase tracking-tight" id="subtitle">Describe the motion!</p>
         </div>
         <div class="flex items-center gap-4">
+            <button id="loginBtn" class="text-xs font-bold text-emerald-600 hover:text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full transition-colors">
+                Login with Google
+            </button>
+            <span id="userEmail" class="text-xs text-slate-600 hidden"></span>
+            <button id="logoutBtn" class="text-xs text-red-600 hover:text-red-800 hidden">Logout</button>
             <button id="toggleQuiz" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 border border-indigo-200 px-3 py-1 rounded-full transition-colors">
                 Switch to Quiz Mode
             </button>
@@ -140,6 +170,24 @@
     </div>
 </div>
 
+<!-- Auth Overlay -->
+<div id="auth-overlay">
+    <div id="auth-modal">
+        <h2 class="text-xl font-bold text-slate-800 mb-4 text-center">Sign in with Google</h2>
+        <p class="text-sm text-slate-600 mb-6 text-center">Sign in to save your quiz results to Google Sheets</p>
+        <button id="googleAuthBtn" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2" style="display: flex; justify-content: center; align-items: center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Sign in with Google
+        </button>
+        <button onclick="closeAuthOverlay()" class="mt-4 w-full text-xs text-slate-500 hover:text-slate-700">Cancel</button>
+    </div>
+</div>
+
 <script>
     const animCanvas = document.getElementById('animationCanvas');
     const graphCanvas = document.getElementById('graphCanvas');
@@ -149,6 +197,18 @@
     const toggleQuizBtn = document.getElementById('toggleQuiz');
     const quizOverlay = document.getElementById('quiz-overlay');
     const trackContainer = document.getElementById('track-container');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userEmailSpan = document.getElementById('userEmail');
+    const authOverlay = document.getElementById('auth-overlay');
+    const googleAuthBtn = document.getElementById('googleAuthBtn');
+    
+    // Google Auth & Sheets Configuration
+    const CLIENT_ID = '54665777024-3ei0s9e028rrp2n3oubg7us08ej3t9pn.apps.googleusercontent.com';
+    const SPREADSHEET_ID = '1DnDsCK6yhAaQJcjVvEZeD_8KixJzjWVWu3qxMMXtb2s';
+    const API_KEY = 'AIzaSyCylpstEW3lQL8tJ9T1VCaXA7PqGCsWwG0';
+    let accessToken = null;
+    let userEmail = null;
     
     const ctxA = animCanvas.getContext('2d');
     const ctxG = graphCanvas.getContext('2d');
@@ -221,6 +281,173 @@
     let currentQuizIndex = 0;
     let score = 0;
     let userAnswers = [];
+
+    // --- Google Auth Functions ---
+    function showAuthOverlay() {
+        authOverlay.style.display = 'flex';
+    }
+
+    function closeAuthOverlay() {
+        authOverlay.style.display = 'none';
+    }
+
+    // Initialize OAuth 2.0 client
+    function initGoogleAuth() {
+        google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: 'openid email profile https://www.googleapis.com/auth/spreadsheets',
+            callback: handleAuthResponse,
+        }).__proto__.requestAccessToken = function() { 
+            this.requestAccessToken({prompt: ''}); 
+        };
+    }
+
+    let tokenClient = null;
+    
+    function initGoogleAuth() {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: 'openid email profile https://www.googleapis.com/auth/spreadsheets',
+            callback: handleAuthResponse,
+        });
+    }
+
+    function handleAuthResponse(response) {
+        if (response.access_token) {
+            accessToken = response.access_token;
+            // Get user email from token
+            const payload = parseJwt(response.access_token);
+            if (payload.email) {
+                userEmail = payload.email;
+            } else {
+                // If access token doesn't have email, fetch from userinfo
+                fetchUserInfo(accessToken);
+            }
+            
+            // Update UI
+            loginBtn.style.display = 'none';
+            userEmailSpan.textContent = userEmail || 'Signed in';
+            userEmailSpan.style.display = 'inline-block';
+            logoutBtn.style.display = 'inline-block';
+            closeAuthOverlay();
+            console.log('Access token obtained');
+        }
+    }
+
+    async function fetchUserInfo(token) {
+        try {
+            const response = await fetch('https://www.googleapis.com/oauth2/v1/userinfo?alt=json', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            if (data.email) {
+                userEmail = data.email;
+                userEmailSpan.textContent = userEmail;
+            }
+        } catch (error) {
+            console.error('Error fetching user info:', error);
+        }
+    }
+
+    function parseJwt(token) {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        } catch (error) {
+            return {};
+        }
+    }
+
+    function handleLogout() {
+        accessToken = null;
+        userEmail = null;
+        if (tokenClient) {
+            google.accounts.oauth2.revoke(accessToken, () => {
+                console.log('Token revoked');
+            });
+        }
+        loginBtn.style.display = 'inline-block';
+        userEmailSpan.style.display = 'none';
+        logoutBtn.style.display = 'none';
+        console.log('Signed out');
+    }
+
+    // Event listeners for auth
+    async function saveToGoogleSheets(email, answers, score) {
+        if (!accessToken) {
+            console.error('Not authenticated');
+            return;
+        }
+
+        try {
+            const timestamp = new Date().toISOString();
+            
+            // Create array with timestamp, email, score, and individual answers for each question
+            const values = [[
+                timestamp,
+                email,
+                score,
+                `${score}/7`,
+                `${quizData[0].options[answers[0]]} ${answers[0] === quizData[0].correct ? '✓' : '✗'}`,
+                `${quizData[1].options[answers[1]]} ${answers[1] === quizData[1].correct ? '✓' : '✗'}`,
+                `${quizData[2].options[answers[2]]} ${answers[2] === quizData[2].correct ? '✓' : '✗'}`,
+                `${quizData[3].options[answers[3]]} ${answers[3] === quizData[3].correct ? '✓' : '✗'}`,
+                `${quizData[4].options[answers[4]]} ${answers[4] === quizData[4].correct ? '✓' : '✗'}`,
+                `${quizData[5].options[answers[5]]} ${answers[5] === quizData[5].correct ? '✓' : '✗'}`,
+                `${quizData[6].options[answers[6]]} ${answers[6] === quizData[6].correct ? '✓' : '✗'}`
+            ]];
+
+            const response = await fetch(
+                `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A:K:append?valueInputOption=USER_ENTERED`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify({
+                        values: values
+                    })
+                }
+            );
+
+            if (response.ok) {
+                console.log('Results saved to Google Sheets');
+                alert('Your quiz results have been saved!');
+            } else {
+                const errorText = await response.text();
+                console.error('Failed to save to Google Sheets:', response.status, errorText);
+                alert('Failed to save results. Check console for details.');
+            }
+        } catch (error) {
+            console.error('Error saving to Google Sheets:', error);
+            alert('Error saving results: ' + error.message);
+        }
+    }
+
+    // Event listeners for auth
+    loginBtn.addEventListener('click', showAuthOverlay);
+    googleAuthBtn.addEventListener('click', () => {
+        if (tokenClient) {
+            tokenClient.requestAccessToken();
+        } else {
+            console.error('Token client not initialized');
+        }
+    });
+    logoutBtn.addEventListener('click', handleLogout);
+
+    // Initialize Google Auth when script loads
+    window.addEventListener('load', () => {
+        if (window.google && google.accounts) {
+            initGoogleAuth();
+        } else {
+            console.warn('Google accounts library not loaded');
+        }
+    });
 
     function resize() {
         animCanvas.width = animCanvas.clientWidth;
@@ -427,6 +654,17 @@
     function showResults() {
         document.getElementById('quiz-progress').innerText = "Quiz Results";
         document.getElementById('quiz-score').innerText = `Final Score: ${score} / 7`;
+        
+        // Save to Google Sheets if authenticated
+        if (userEmail && accessToken) {
+            saveToGoogleSheets(userEmail, userAnswers, score);
+        }
+
+        // Send to SLS via xAPI
+        if (typeof sendState === 'function') {
+            console.log("Sending score to SLS via xAPI:", score);
+            sendState({ score: score });
+        }
         
         const content = document.getElementById('quiz-content');
         content.innerHTML = `
