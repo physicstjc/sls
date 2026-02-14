@@ -3,353 +3,380 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monsoon & Coriolis Simulator</title>
+    <title>Monsoon Simulator: African Climate Data</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            font-family: system-ui, -apple-system, sans-serif;
-            overflow: hidden;
-            touch-action: none;
+        body { background-color: #020617; color: #f8fafc; font-family: system-ui, sans-serif; overflow: hidden; margin: 0; }
+        
+        /* Ensure the map container is explicitly sized and positioned */
+        #map { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            z-index: 1; 
+            background: #0f172a; 
         }
-        #map {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            background: #0a0f1e;
+        
+        /* Canvas is transparent and sits on top of the map */
+        canvas { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            z-index: 10; 
+            pointer-events: none; 
+            background: transparent;
         }
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 2;
-            pointer-events: none; /* Let clicks pass through to map if needed, or handle here */
+        
+        /* UI on top of everything */
+        .ui-overlay { 
+            position: relative; 
+            z-index: 100; 
+            pointer-events: none; 
+            height: 100vh; 
+            width: 100vw; 
+            display: flex; 
+            flex-direction: column; 
         }
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .interactive { pointer-events: auto; }
+
+        .glass-panel { 
+            background: rgba(15, 23, 42, 0.85); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
         }
-        /* Custom Leaflet Dark Mode Adjustment */
-        .leaflet-tile-pane {
-            filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3);
-        }
-        .leaflet-control-attribution {
-            display: none !important;
-        }
+        
+        /* Subtle darkening of tiles for contrast without making them pitch black */
+        .leaflet-tile-pane { filter: brightness(0.7) saturate(0.8); }
     </style>
 </head>
-<body class="flex flex-col h-screen">
+<body class="bg-slate-950">
 
-    <!-- Header -->
-    <header class="p-4 glass-panel z-30 flex justify-between items-center shadow-lg">
-        <div>
-            <h1 class="text-xl font-bold text-blue-400">Monsoon Simulator</h1>
-            <p class="text-xs text-slate-400">Geography Interactive: Real-World Regional Wind Systems</p>
-        </div>
-        <div class="text-right hidden md:block">
-            <span class="text-sm font-mono text-emerald-400" id="current-wind-status">Map Synchronized</span>
-        </div>
-    </header>
+    <div id="map"></div>
+    <canvas id="simulation-canvas"></canvas>
 
-    <main class="flex-1 relative overflow-hidden">
-        <!-- Map Container -->
-        <div id="map"></div>
-
-        <!-- Particle Canvas -->
-        <canvas id="simulation-canvas"></canvas>
-
-        <!-- Overlay UI Controls -->
-        <div class="absolute top-4 left-4 z-30 w-72 flex flex-col gap-4 pointer-events-auto">
-            
-            <!-- Season Selector -->
-            <div class="glass-panel p-4 rounded-xl shadow-xl">
-                <label class="block text-sm font-medium mb-3 text-slate-300">Current Season</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <button id="btn-sw" onclick="setSeason('SW')" class="py-2 px-3 rounded-lg text-sm font-bold bg-blue-600 hover:bg-blue-500 transition-colors">
-                        SW Monsoon
-                    </button>
-                    <button id="btn-ne" onclick="setSeason('NE')" class="py-2 px-3 rounded-lg text-sm font-bold bg-slate-700 hover:bg-slate-600 transition-colors">
-                        NE Monsoon
-                    </button>
-                </div>
-                <p id="season-desc" class="mt-3 text-xs text-slate-400 leading-relaxed italic">
-                    The land is warmer than the ocean, creating a regional low pressure over Asia.
-                </p>
+    <div class="ui-overlay">
+        <header class="p-4 glass-panel flex justify-between items-center interactive">
+            <div>
+                <h1 class="text-xl font-bold text-cyan-400">African Climate Explorer</h1>
+                <p class="text-[10px] uppercase tracking-widest text-slate-400">Atmospheric Dynamics & Heatmaps</p>
             </div>
+            <div id="status-tag" class="flex items-center gap-2 text-[10px] text-cyan-400 bg-cyan-950/30 px-3 py-1 rounded-full border border-cyan-800/50">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> MAP RESTORED
+            </div>
+        </header>
 
-            <!-- Physics Controls -->
-            <div class="glass-panel p-4 rounded-xl shadow-xl">
-                <div class="mb-4">
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="text-sm font-medium text-slate-300">Coriolis Force</label>
-                        <span id="coriolis-val" class="text-xs font-mono text-blue-400">1.0x</span>
+        <main class="flex-1 relative">
+            <div class="absolute top-6 left-6 w-80 flex flex-col gap-4">
+                <div class="glass-panel p-5 rounded-2xl interactive">
+                    <label class="block text-xs font-bold uppercase tracking-widest mb-3 text-slate-400">Atmospheric Phase</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="btn-JJA" onclick="setSeason('JJA')" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-cyan-600 ring-2 ring-cyan-400/50">
+                            Jun-Aug (Wet)
+                        </button>
+                        <button id="btn-DJF" onclick="setSeason('DJF')" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-300">
+                            Dec-Feb (Dry)
+                        </button>
                     </div>
-                    <input type="range" id="range-coriolis" min="0" max="2" step="0.1" value="1" 
-                           class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500">
                 </div>
 
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-slate-300">Show Pressure Cells</span>
-                    <button id="toggle-pressure" class="w-10 h-5 bg-blue-600 rounded-full relative transition-colors">
-                        <div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full transition-all" id="toggle-dot"></div>
-                    </button>
+                <div class="glass-panel p-5 rounded-2xl interactive">
+                    <label class="block text-xs font-bold uppercase tracking-widest mb-3 text-slate-400">Visualization Layer</label>
+                    <select id="data-var" class="w-full bg-slate-900 text-sm border border-slate-700 rounded-xl p-3 outline-none mb-3" onchange="updateHeatmap()">
+                        <option value="pr">Precipitation (Rainfall)</option>
+                        <option value="tas">Temperature (Mean)</option>
+                    </select>
+                    <select id="map-style" class="w-full bg-slate-900 text-sm border border-slate-700 rounded-xl p-3 outline-none" onchange="updateHeatmap()">
+                        <option value="choropleth">Regional Blocks</option>
+                        <option value="heatmap">Smooth Heatmap</option>
+                    </select>
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl border-l-4 border-l-cyan-500">
+                    <h4 class="text-xs font-bold text-cyan-400 mb-1">Rendering Fix</h4>
+                    <p id="api-info" class="text-[11px] text-slate-400 leading-relaxed">
+                        The map layer has been decoupled from the simulation canvas to prevent black-out issues. Flow remains at stabilized realistic speeds.
+                    </p>
                 </div>
             </div>
 
-            <!-- Learning Card -->
-            <div id="learning-card" class="glass-panel p-4 rounded-xl shadow-xl border-l-4 border-emerald-500">
-                <h3 class="text-sm font-bold text-emerald-400 mb-1 uppercase tracking-wider">Geographic Insight</h3>
-                <p id="learning-text" class="text-xs text-slate-300">
-                    Coriolis force deflects moving air to the right in the Northern Hemisphere, turning SE trades into SW monsoon winds.
-                </p>
+            <div id="legend" class="absolute bottom-10 right-10 glass-panel p-4 rounded-2xl min-w-[160px] interactive">
+                <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3" id="legend-title">Rainfall</div>
+                <div id="legend-content" class="space-y-2"></div>
             </div>
-        </div>
+        </main>
+    </div>
 
-        <!-- Legend -->
-        <div class="absolute bottom-6 right-4 z-30 flex flex-col gap-2 text-[10px] uppercase font-bold tracking-widest text-slate-300 glass-panel p-3 rounded-lg">
-            <div class="flex items-center gap-2"><div class="w-3 h-3 bg-red-500 rounded-full"></div> Low Pressure (Asian Landmass)</div>
-            <div class="flex items-center gap-2"><div class="w-3 h-3 bg-blue-500 rounded-full"></div> High Pressure (Oceanic/Siberian)</div>
-            <div class="mt-1 border-t border-slate-700 pt-1 text-slate-500">Dashed line = Equator</div>
-        </div>
-    </main>
-
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script>
         const canvas = document.getElementById('simulation-canvas');
         const ctx = canvas.getContext('2d');
-        const rangeCoriolis = document.getElementById('range-coriolis');
-        const coriolisVal = document.getElementById('coriolis-val');
-        const togglePressure = document.getElementById('toggle-pressure');
-        const toggleDot = document.getElementById('toggle-dot');
-        const seasonDesc = document.getElementById('season-desc');
-        const learningText = document.getElementById('learning-text');
-
-        let map, width, height;
+        
+        let map, width, height, geoJsonLayer, heatLayer;
         let particles = [];
-        const particleCount = 250;
-        let currentSeason = 'SW';
-        let coriolisStrength = 1.0;
-        let showPressure = true;
+        let currentSeason = 'JJA'; 
+        let africaGeo = null;
 
-        // Realistic Lat/Lon coordinates for pressure centers
-        const SEASONS = {
-            'SW': {
-                name: 'Southwest Monsoon',
-                desc: 'Heating of the Asian landmass (Low) pulls moisture from the South Indian Ocean (High).',
-                fact: 'Watch the winds cross the Equator and deflect right towards the Indian subcontinent.',
-                btnActive: 'btn-sw',
-                btnInactive: 'btn-ne',
-                highCoord: [ -20, 70 ], // Mascarene High (Approx)
-                lowCoord: [ 28, 77 ]    // NW India / Tibetan Low
+        const PRESSURE_CENTERS = {
+            'JJA': { high: [-25, -10], low: [18, 15], color: '#22d3ee' },
+            'DJF': { high: [25, 12], low: [-15, 20], color: '#fbbf24' }
+        };
+
+        const COUNTRY_COORDS = {
+            'NGA': [9.0820, 8.6753], 'MLI': [17.5707, -3.9962], 'ETH': [9.1450, 40.4897],
+            'COD': [-4.0383, 21.7587], 'DZA': [28.0339, 1.6596], 'ZAF': [-30.5595, 22.9375],
+            'SEN': [14.4974, -14.4524], 'MRT': [21.0079, -10.9408], 'SDN': [12.8628, 30.2176],
+            'TCD': [15.4542, 18.7322], 'GHA': [7.9465, -1.0232], 'KEN': [-0.0236, 37.9062],
+            'TZA': [-6.3690, 34.8888], 'AGO': [-11.2027, 17.8739], 'MAR': [31.7917, -7.0926],
+            'LBY': [26.3351, 17.2283], 'EGY': [26.8206, 30.8025], 'NAM': [-22.9576, 18.4904],
+            'NER': [17.6078, 8.0817], 'SOM': [5.1521, 46.1996], 'MDG': [-18.7669, 46.8691],
+            'BFA': [12.2383, -1.5616], 'CMR': [7.3697, 12.3547], 'CIV': [7.5400, -5.5471],
+            'MOZ': [-18.6657, 35.5296], 'ZMB': [-13.1339, 27.8493], 'UGA': [1.3733, 32.2903],
+            'NER': [17.6078, 8.0817], 'TGO': [8.6195, 0.8248], 'BEN': [9.3077, 2.3158],
+            'GIN': [9.9456, -9.6966], 'LBR': [6.4281, -9.4295], 'SLE': [8.4606, -11.7799],
+            'BWA': [-22.3285, 24.6849], 'NAM': [-22.9576, 18.4904], 'ZWE': [-19.0154, 29.1549]
+        };
+
+        const CLIMATE_DATA = {
+            'pr': {
+                'JJA': { 'NGA': 250, 'MLI': 45, 'ETH': 180, 'COD': 140, 'DZA': 2, 'ZAF': 15, 'SEN': 160, 'MRT': 12, 'SDN': 80, 'TCD': 70, 'GHA': 150, 'KEN': 40, 'TZA': 20, 'AGO': 5, 'MDG': 60, 'MAR': 10, 'CIV': 220, 'CMR': 300, 'GIN': 250, 'LBR': 240, 'SLE': 280, 'UGA': 120, 'BFA': 140, 'NER': 50 },
+                'DJF': { 'NGA': 10, 'MLI': 1, 'ETH': 25, 'COD': 190, 'DZA': 15, 'ZAF': 110, 'SEN': 2, 'MRT': 1, 'SDN': 2, 'TCD': 1, 'GHA': 15, 'KEN': 100, 'TZA': 150, 'AGO': 120, 'MDG': 250, 'MAR': 50, 'CIV': 20, 'CMR': 15, 'UGA': 150, 'ZMB': 180, 'MOZ': 200, 'ZWE': 160, 'BWA': 100, 'NAM': 80 }
             },
-            'NE': {
-                name: 'Northeast Monsoon',
-                desc: 'Cold air sinks over Asia (High) and flows toward the warm equatorial oceans (Low).',
-                fact: 'Winds flow from the Northeast. They are cool and dry as they originate over land.',
-                btnActive: 'btn-ne',
-                btnInactive: 'btn-sw',
-                highCoord: [ 45, 90 ],  // Siberian High
-                lowCoord: [ -10, 80 ]   // Equatorial Trough
+            'tas': {
+                'JJA': { 'NGA': 26, 'MLI': 34, 'ETH': 21, 'COD': 24, 'DZA': 37, 'ZAF': 12, 'SEN': 29, 'MRT': 33, 'SDN': 32, 'TCD': 31, 'GHA': 27, 'KEN': 22, 'TZA': 20, 'AGO': 19, 'MDG': 18, 'MAR': 25, 'EGY': 35, 'LBY': 33, 'NER': 33, 'BFA': 30, 'SDN': 34 },
+                'DJF': { 'NGA': 29, 'MLI': 24, 'ETH': 19, 'COD': 25, 'DZA': 12, 'ZAF': 25, 'SEN': 25, 'MRT': 21, 'SDN': 24, 'TCD': 23, 'GHA': 29, 'KEN': 25, 'TZA': 26, 'AGO': 24, 'MDG': 27, 'MAR': 14, 'EGY': 18, 'LBY': 16, 'ZAF': 26, 'NAM': 28, 'BWA': 30 }
             }
         };
 
+        async function init() {
+            initMap();
+            initSimulation();
+            animate();
+            
+            try {
+                // Fetching boundaries for Africa
+                const res = await fetch('https://raw.githubusercontent.com/datasets/geo-boundaries-world-110m/master/countries.geojson');
+                const data = await res.json();
+                
+                // Flexible property checking for different GeoJSON sources
+                africaGeo = { 
+                    type: "FeatureCollection",
+                    features: data.features.filter(f => {
+                        const props = f.properties;
+                        const continent = props.CONTINENT || props.continent || "";
+                        const iso = props.ISO_A3 || props.iso_a3 || props.ISO_A3_EH;
+                        return continent === 'Africa' || ['MAR','DZA','TUN','LBY','EGY','NGA','MLI','ETH','COD','ZAF','SEN','MRT','SDN','TCD','GHA','KEN','TZA','AGO'].includes(iso);
+                    })
+                };
+                console.log(`Loaded ${africaGeo.features.length} African features`);
+                updateHeatmap();
+            } catch (e) {
+                console.error("Map loading error:", e);
+            }
+        }
+
         function initMap() {
-            // Focus on South Asia / Indian Ocean
-            map = L.map('map', {
-                center: [15, 80],
-                zoom: 4,
+            // Re-initializing Leaflet on the simplified div
+            map = L.map('map', { 
+                center: [8, 18], 
+                zoom: 3, 
                 zoomControl: false,
-                dragging: false,
-                scrollWheelZoom: false,
-                doubleClickZoom: false,
-                boxZoom: false
+                attributionControl: false
             });
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            
+            // CartoDB Voyager is high-performance and stays visible
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png').addTo(map);
+            
+            map.on('move', () => { updateCanvasSize(); });
+            map.on('zoom', () => { updateCanvasSize(); });
         }
 
-        class Particle {
-            constructor() {
-                this.reset();
-            }
-
-            reset() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.vx = 0;
-                this.vy = 0;
-                this.life = Math.random() * 100 + 100;
-                this.maxLife = this.life;
-                this.history = [];
-            }
-
-            update() {
-                const season = SEASONS[currentSeason];
-                
-                // Convert Lat/Lon targets to screen pixels
-                const highPx = map.latLngToContainerPoint(season.highCoord);
-                const lowPx = map.latLngToContainerPoint(season.lowCoord);
-
-                // Pressure Gradient Force
-                let dx = lowPx.x - this.x;
-                let dy = lowPx.y - this.y;
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                
-                let forceX = (dx / dist) * 0.2;
-                let forceY = (dy / dist) * 0.2;
-
-                // Coriolis Logic
-                // Find equator position in screen space
-                const equatorPx = map.latLngToContainerPoint([0, 0]).y;
-                
-                // Strength varies by latitude distance from equator
-                const latDiff = (equatorPx - this.y) / height;
-                
-                const corX = this.vy * 0.1 * coriolisStrength * latDiff;
-                const corY = -this.vx * 0.1 * coriolisStrength * latDiff;
-
-                this.vx += forceX + corX;
-                this.vy += forceY + corY;
-
-                this.vx *= 0.97;
-                this.vy *= 0.97;
-
-                this.x += this.vx;
-                this.y += this.vy;
-
-                this.history.push({x: this.x, y: this.y});
-                if (this.history.length > 8) this.history.shift();
-
-                this.life--;
-                
-                if (this.life <= 0 || this.x < 0 || this.x > width || this.y < 0 || this.y > height) {
-                    this.reset();
-                }
-            }
-
-            draw() {
-                const opacity = (this.life / this.maxLife);
-                ctx.beginPath();
-                ctx.strokeStyle = currentSeason === 'SW' ? `rgba(100, 210, 255, ${opacity * 0.6})` : `rgba(220, 230, 255, ${opacity * 0.6})`;
-                ctx.lineWidth = 1.5;
-                if(this.history.length > 1) {
-                    ctx.moveTo(this.history[0].x, this.history[0].y);
-                    for(let p of this.history) ctx.lineTo(p.x, p.y);
-                }
-                ctx.stroke();
-
-                ctx.fillStyle = currentSeason === 'SW' ? `rgba(180, 240, 255, ${opacity})` : `rgba(255, 255, 255, ${opacity})`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 1.2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        function initSimulation() {
+        function updateCanvasSize() {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
-            particles = [];
-            for (let i = 0; i < particleCount; i++) {
-                particles.push(new Particle());
+        }
+
+        function getColor(val, variable) {
+            if (variable === 'pr') { 
+                return val > 200 ? '#083344' : val > 100 ? '#0e7490' : val > 50 ? '#06b6d4' : val > 10 ? '#a5f3fc' : '#451a03';
+            } else { 
+                return val > 30 ? '#991b1b' : val > 25 ? '#ef4444' : val > 20 ? '#f97316' : val > 15 ? '#fbbf24' : '#3b82f6';
             }
+        }
+
+        function updateHeatmap() {
+            const variable = document.getElementById('data-var').value;
+            const style = document.getElementById('map-style').value;
+            
+            if (geoJsonLayer) map.removeLayer(geoJsonLayer);
+            if (heatLayer) map.removeLayer(heatLayer);
+            if (!africaGeo) return;
+
+            if (style === 'choropleth') {
+                geoJsonLayer = L.geoJson(africaGeo, {
+                    style: (f) => {
+                        const props = f.properties;
+                        const iso = props.ISO_A3 || props.iso_a3 || props.ISO_A3_EH;
+                        const val = CLIMATE_DATA[variable][currentSeason][iso] || (variable === 'pr' ? 10 : 25);
+                        return { 
+                            fillColor: getColor(val, variable), 
+                            weight: 1.5, 
+                            opacity: 1, 
+                            color: 'rgba(255,255,255,0.4)', 
+                            fillOpacity: 0.65 
+                        };
+                    }
+                }).addTo(map);
+            } else {
+                const points = [];
+                const data = CLIMATE_DATA[variable][currentSeason];
+                for (const iso in data) {
+                    if (COUNTRY_COORDS[iso]) {
+                        const val = data[iso];
+                        // Normalize intensity for heatmap
+                        const intensity = variable === 'pr' ? Math.min(val / 200, 1.0) : Math.max(0, (val - 10) / 30);
+                        points.push([...COUNTRY_COORDS[iso], intensity]);
+                    }
+                }
+                
+                const gradient = variable === 'pr' ? 
+                    { 0.2: '#a5f3fc', 0.4: '#06b6d4', 0.7: '#0e7490', 1.0: '#083344' } :
+                    { 0.2: '#3b82f6', 0.5: '#fbbf24', 0.8: '#ef4444', 1.0: '#991b1b' };
+
+                heatLayer = L.heatLayer(points, {
+                    radius: 70,
+                    blur: 40,
+                    maxZoom: 4,
+                    gradient: gradient
+                }).addTo(map);
+            }
+
+            updateLegend(variable);
+        }
+
+        function updateLegend(variable) {
+            const content = document.getElementById('legend-content');
+            const title = document.getElementById('legend-title');
+            content.innerHTML = '';
+            
+            const steps = variable === 'pr' ? 
+                [{v: 201, l: '250mm+'}, {v: 101, l: '100mm+'}, {v: 51, l: '50mm+'}, {v: 5, l: 'Arid'}] : 
+                [{v: 31, l: '30°C+'}, {v: 26, l: '25°C+'}, {v: 21, l: '20°C+'}, {v: 10, l: 'Cool'}];
+
+            title.innerText = variable === 'pr' ? 'Rainfall' : 'Temperature';
+            steps.forEach(s => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-3 text-[11px] font-bold text-slate-300';
+                div.innerHTML = `<div class="w-4 h-4 rounded-sm" style="background:${getColor(s.v, variable)}"></div><span>${s.l}</span>`;
+                content.appendChild(div);
+            });
         }
 
         function setSeason(s) {
             currentSeason = s;
-            const config = SEASONS[s];
-            
-            document.getElementById(config.btnActive).classList.replace('bg-slate-700', 'bg-blue-600');
-            document.getElementById(config.btnInactive).classList.replace('bg-blue-600', 'bg-slate-700');
-            
-            seasonDesc.innerText = config.desc;
-            learningText.innerText = config.fact;
+            document.getElementById('btn-JJA').className = s === 'JJA' ? 'py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-cyan-600 ring-2 ring-cyan-400/50' : 'py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-400';
+            document.getElementById('btn-DJF').className = s === 'DJF' ? 'py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-cyan-600 ring-2 ring-cyan-400/50' : 'py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-400';
+            updateHeatmap();
         }
 
-        function drawOverlays() {
-            const equatorPx = map.latLngToContainerPoint([0, 0]).y;
-            
-            // Equator Line
-            ctx.beginPath();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-            ctx.setLineDash([15, 15]);
-            ctx.moveTo(0, equatorPx);
-            ctx.lineTo(width, equatorPx);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.font = '10px sans-serif';
-            ctx.fillText('EQUATOR', 20, equatorPx - 8);
+        const AFRICA_BOUNDS = { n: 42, s: -42, w: -25, e: 65 };
 
-            if (showPressure) {
-                const season = SEASONS[currentSeason];
-                const highPx = map.latLngToContainerPoint(season.highCoord);
-                const lowPx = map.latLngToContainerPoint(season.lowCoord);
-
-                // Low Label
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = 'rgba(239, 68, 68, 0.8)';
-                ctx.fillStyle = '#f87171';
-                ctx.font = 'bold 32px sans-serif';
-                ctx.fillText('L', lowPx.x - 10, lowPx.y + 10);
-
-                // High Label
-                ctx.shadowColor = 'rgba(59, 130, 246, 0.8)';
-                ctx.fillStyle = '#60a5fa';
-                ctx.fillText('H', highPx.x - 10, highPx.y + 10);
+        class Particle {
+            constructor() { this.reset(); this.history = []; }
+            reset() {
+                const lat = AFRICA_BOUNDS.s + Math.random() * (AFRICA_BOUNDS.n - AFRICA_BOUNDS.s);
+                const lng = AFRICA_BOUNDS.w + Math.random() * (AFRICA_BOUNDS.e - AFRICA_BOUNDS.w);
+                const p = map.latLngToContainerPoint([lat, lng]);
                 
-                ctx.shadowBlur = 0;
+                this.x = p.x; 
+                this.y = p.y;
+                this.vx = (Math.random() - 0.5) * 0.2; 
+                this.vy = (Math.random() - 0.5) * 0.2;
+                this.life = Math.random() * 100 + 100;
+                this.history = [];
+            }
+            update() {
+                this.history.push({x: this.x, y: this.y});
+                if (this.history.length > 12) this.history.shift();
+
+                const centers = PRESSURE_CENTERS[currentSeason];
+                const highPx = map.latLngToContainerPoint(centers.high);
+                const lowPx = map.latLngToContainerPoint(centers.low);
+                const eqY = map.latLngToContainerPoint([0,0]).y;
+
+                const nw = map.latLngToContainerPoint([AFRICA_BOUNDS.n, AFRICA_BOUNDS.w]);
+                const se = map.latLngToContainerPoint([AFRICA_BOUNDS.s, AFRICA_BOUNDS.e]);
+
+                let dx = lowPx.x - this.x, dy = lowPx.y - this.y;
+                let dHighX = this.x - highPx.x, dHighY = this.y - highPx.y;
+                
+                let forceX = (dx / 1500) + (dHighX / 2000);
+                let forceY = (dy / 1500) + (dHighY / 2000);
+
+                // Correct Coriolis: Deflect Right in NH, Left in SH
+                const latFactor = Math.sin((eqY - this.y) / (height / 2) * (Math.PI / 2));
+                const corX = -this.vy * 0.15 * latFactor;
+                const corY = this.vx * 0.15 * latFactor;
+
+                this.vx = (this.vx + forceX + corX) * 0.98;
+                this.vy = (this.vy + forceY + corY) * 0.98;
+                
+                this.x += this.vx; this.y += this.vy;
+                this.life--;
+
+                const isOutOfBounds = this.x < nw.x || this.x > se.x || this.y < nw.y || this.y > se.y;
+                if (this.life < 0 || isOutOfBounds) this.reset();
+            }
+            draw() {
+                if (this.history.length < 2) return;
+                const color = PRESSURE_CENTERS[currentSeason].color;
+                
+                ctx.beginPath();
+                ctx.moveTo(this.history[0].x, this.history[0].y);
+                for(let point of this.history) {
+                    ctx.lineTo(point.x, point.y);
+                }
+                ctx.strokeStyle = color + '66'; // Subtle transparency
+                ctx.lineWidth = 2.2;
+                ctx.stroke();
             }
         }
 
+        function initSimulation() {
+            updateCanvasSize();
+            particles = Array.from({length: 150}, () => new Particle());
+        }
+
         function animate() {
-            // Partial clear for trails
+            // Clear canvas fully to keep map visible below
             ctx.clearRect(0, 0, width, height);
             
-            drawOverlays();
+            const centers = PRESSURE_CENTERS[currentSeason];
+            const highPx = map.latLngToContainerPoint(centers.high);
+            const lowPx = map.latLngToContainerPoint(centers.low);
+            
+            ctx.font = 'bold 20px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Marker shadows
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.beginPath(); ctx.arc(highPx.x, highPx.y, 16, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(lowPx.x, lowPx.y, 16, 0, Math.PI*2); ctx.fill();
 
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
+            ctx.fillStyle = '#38bdf8'; ctx.fillText('H', highPx.x, highPx.y);
+            ctx.fillStyle = '#f87171'; ctx.fillText('L', lowPx.x, lowPx.y);
 
+            particles.forEach(p => { p.update(); p.draw(); });
             requestAnimationFrame(animate);
         }
 
-        // Listeners
-        rangeCoriolis.addEventListener('input', (e) => {
-            coriolisStrength = parseFloat(e.target.value);
-            coriolisVal.innerText = coriolisStrength.toFixed(1) + 'x';
-        });
-
-        togglePressure.addEventListener('click', () => {
-            showPressure = !showPressure;
-            toggleDot.style.right = showPressure ? '4px' : 'auto';
-            toggleDot.style.left = showPressure ? 'auto' : '4px';
-            togglePressure.classList.toggle('bg-blue-600');
-            togglePressure.classList.toggle('bg-slate-600');
-        });
-
-        window.addEventListener('resize', () => {
-            initSimulation();
-        });
-
-        // Initialize everything
-        window.onload = () => {
-            initMap();
-            initSimulation();
-            animate();
-            setSeason('SW');
-        };
+        window.onresize = initSimulation;
+        window.onload = init;
     </script>
 </body>
 </html>
