@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高级华文：AI 汉字识别</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; padding: 0; overflow-x: hidden; }
+        .tian-zi-ge {
+            background-color: #fff;
+            border: 2px solid #bd7e7e;
+            position: relative;
+        }
+        .grid-lines::before, .grid-lines::after {
+            content: '';
+            position: absolute;
+            background-color: #fecaca;
+            pointer-events: none;
+        }
+        .grid-lines::before {
+            top: 50%; left: 0; width: 100%; height: 1px;
+            background: repeating-linear-gradient(to right, #fecaca, #fecaca 4px, transparent 4px, transparent 8px);
+        }
+        .grid-lines::after {
+            left: 50%; top: 0; width: 1px; height: 100%;
+            background: repeating-linear-gradient(to bottom, #fecaca, #fecaca 4px, transparent 4px, transparent 8px);
+        }
+        #writing-canvas {
+            touch-action: none;
+            cursor: crosshair;
+            position: relative;
+            z-index: 20;
+            background: transparent;
+        }
+        #ghost-char {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 220px; font-family: "楷体", "KaiTi", serif;
+            color: rgba(239, 68, 68, 0.1);
+            pointer-events: none; z-index: 10; user-select: none;
+            transition: opacity 0.3s;
+        }
+        .watermark-visible { opacity: 1 !important; }
+        .watermark-hidden { opacity: 0 !important; }
+        .loader {
+            border: 3px solid #f3f3f3; border-top: 3px solid #ef4444;
+            border-radius: 50%; width: 20px; height: 20px;
+            animation: spin 1s linear infinite; display: inline-block;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans">
+
+    <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden my-4">
+        <div class="bg-red-600 p-6 text-white text-center">
+            <h1 class="text-2xl font-bold">高级华文：AI 汉字识别</h1>
+            <p class="text-red-100 text-sm mt-1">AI-Powered Character Recognition</p>
+        </div>
+
+        <div class="w-full bg-red-100 h-2">
+            <div id="progress-bar" class="bg-red-500 h-2 transition-all duration-500" style="width: 0%"></div>
+        </div>
+
+        <div class="p-6 space-y-6">
+            <div id="quiz-section">
+                <div class="mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="text-gray-500 text-sm uppercase font-semibold" id="q-counter">Question 1 of 5</p>
+                        <button onclick="toggleHint()" class="text-xs bg-red-50 text-red-600 px-3 py-1 rounded-full border border-red-200">
+                            提示 (Hint)
+                        </button>
+                    </div>
+                    <div id="sentence-container" class="text-lg sm:text-xl leading-relaxed text-gray-800 border-l-4 border-red-500 pl-4 py-2 bg-red-50"></div>
+                </div>
+
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="relative tian-zi-ge grid-lines rounded shadow-inner" style="width: 280px; height: 280px;">
+                        <div id="ghost-char" class="watermark-hidden"></div>
+                        <canvas id="writing-canvas" width="280" height="280"></canvas>
+                    </div>
+                    
+                    <div class="flex gap-4 w-full max-w-[280px]">
+                        <button onclick="clearCanvas()" class="flex-1 py-3 bg-gray-100 text-gray-700 font-semibold rounded-lg">清除</button>
+                        <button id="btn-submit" onclick="checkAnswerWithAI()" class="flex-1 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md flex items-center justify-center gap-2">
+                            <span id="btn-text">检查</span>
+                            <span id="btn-loader" class="loader hidden"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="feedback-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+                <div class="bg-white rounded-xl p-6 max-w-sm w-full text-center space-y-4">
+                    <div id="feedback-icon" class="mx-auto w-12 h-12 rounded-full flex items-center justify-center text-2xl"></div>
+                    <h3 id="feedback-title" class="text-xl font-bold"></h3>
+                    <div class="flex justify-center gap-4">
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-400">你写的</p>
+                            <div class="text-4xl font-serif text-slate-800 p-2 border rounded min-w-[60px]" id="ai-recognized"></div>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-400">正确答案</p>
+                            <div class="text-4xl font-serif text-red-600 p-2 border border-red-100 bg-red-50 rounded min-w-[60px]" id="correct-char"></div>
+                        </div>
+                    </div>
+                    <button onclick="nextQuestion()" class="w-full py-3 bg-slate-800 text-white rounded-lg font-bold">继续</button>
+                </div>
+            </div>
+
+            <div id="summary-section" class="hidden text-center space-y-6 py-8">
+                <div class="text-6xl">✨</div>
+                <h2 class="text-2xl font-bold">完成练习！</h2>
+                <button onclick="location.reload()" class="px-8 py-3 bg-red-600 text-white rounded-full font-bold">再练一次</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Backend endpoint for API calls (set via environment variable in production)
+        const API_ENDPOINT = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+            ? 'http://localhost:3000/api/recognize-character'
+            : '/api/recognize-character';
+
+        const quizData = [
+            { sentence: "由于他平日待人真诚，因此在遇到困难时，大家都愿意伸出（yuán）手相助。", pinyin: "yuán", answer: "援", context: "援助 (yuán zhù)" },
+            { sentence: "这种损人利己的行为，简直是（zì）掘坟墓，终将自食其果。", pinyin: "zì", answer: "自", context: "自掘坟墓 (zì jué fén mù)" },
+            { sentence: "在辩论会上，他（kǎn）侃而谈，敏捷的思维令对手佩服不已。", pinyin: "kǎn", answer: "侃", context: "侃侃而谈 (kǎn kǎn ér tán)" },
+            { sentence: "面对这些（jí）手的问题，我们必须冷静分析，寻找对策。", pinyin: "jí", answer: "棘", context: "棘手 (jí shǒu)" },
+            { sentence: "为了缓解学业压力，学校举办了许多有（yì）身心的课外活动。", pinyin: "yì", answer: "益", context: "有益 (yǒu yì)" }
+        ];
+
+        let currentQuestion = 0;
+        let strokeCount = 0;
+        let isDrawing = false;
+        const canvas = document.getElementById('writing-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function initCanvas() {
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 10;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            const start = (e) => { isDrawing = true; strokeCount++; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
+            const move = (e) => { if (isDrawing) { const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); } };
+            const stop = () => { isDrawing = false; };
+
+            canvas.addEventListener('mousedown', start);
+            window.addEventListener('mousemove', move);
+            window.addEventListener('mouseup', stop);
+
+            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); start(e.touches[0]); }, {passive: false});
+            canvas.addEventListener('touchmove', (e) => { e.preventDefault(); move(e.touches[0]); }, {passive: false});
+            canvas.addEventListener('touchend', stop);
+        }
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return { x: (e.clientX - rect.left) * (canvas.width / rect.width), y: (e.clientY - rect.top) * (canvas.height / rect.height) };
+        }
+
+        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); strokeCount = 0; }
+        function toggleHint() { document.getElementById('ghost-char').classList.toggle('watermark-hidden'); }
+
+        async function checkAnswerWithAI() {
+            if (strokeCount === 0) return;
+
+            const btnText = document.getElementById('btn-text');
+            const btnLoader = document.getElementById('btn-loader');
+            btnText.innerText = "..."; btnLoader.classList.remove('hidden');
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.fillStyle = 'white'; tempCtx.fillRect(0,0,280,280);
+            tempCtx.drawImage(canvas, 0, 0);
+            const base64Image = tempCanvas.toDataURL('image/png').split(',')[1];
+
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ imageData: base64Image })
+                });
+
+                if (!response.ok) {
+                    throw new Error('API request failed');
+                }
+
+                const data = await response.json();
+                showFeedback(data.character || "？");
+            } catch (e) {
+                console.error(e);
+                showFeedback("Error");
+            } finally {
+                btnText.innerText = "检查"; btnLoader.classList.add('hidden');
+            }
+        }
+
+        function showFeedback(char) {
+            const isCorrect = char === quizData[currentQuestion].answer;
+            const modalIcon = document.getElementById('feedback-icon');
+            
+            modalIcon.innerText = isCorrect ? "✅" : (char === "Error" ? "⚠️" : "❌");
+            modalIcon.className = `mx-auto w-12 h-12 rounded-full flex items-center justify-center text-2xl ${isCorrect ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`;
+            
+            document.getElementById('feedback-title').innerText = isCorrect ? "正确！" : (char === "Error" ? "连接错误" : "识别不匹配");
+            document.getElementById('ai-recognized').innerText = char === "Error" ? "?" : char;
+            document.getElementById('correct-char').innerText = quizData[currentQuestion].answer;
+            document.getElementById('feedback-modal').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            document.getElementById('feedback-modal').classList.add('hidden');
+            currentQuestion++; loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQuestion >= quizData.length) {
+                document.getElementById('quiz-section').classList.add('hidden');
+                document.getElementById('summary-section').classList.remove('hidden');
+                return;
+            }
+            const data = quizData[currentQuestion];
+            document.getElementById('q-counter').innerText = `Question ${currentQuestion + 1} of ${quizData.length}`;
+            document.getElementById('sentence-container').innerHTML = data.sentence.replace(`（${data.pinyin}）`, `<span class="text-red-600 font-bold">（${data.pinyin}）</span>`);
+            document.getElementById('progress-bar').style.width = `${(currentQuestion / quizData.length) * 100}%`;
+            document.getElementById('ghost-char').innerText = data.answer;
+            clearCanvas();
+        }
+
+        window.onload = () => { initCanvas(); loadQuestion(); };
+    </script>
+</body>
+</html>
