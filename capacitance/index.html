@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combined Capacitance Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        .capacitor-line { stroke: #475569; stroke-width: 2; fill: none; }
+        .capacitor-plate { stroke: #1e293b; stroke-width: 3; }
+        .text-label { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; fill: #1e293b; font-weight: 600; }
+        .formula-box { font-family: 'Times New Roman', Times, serif; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+        <!-- Header -->
+        <div class="bg-indigo-600 p-6 text-white">
+            <h1 class="text-2xl font-bold">Capacitors in Combination</h1>
+            <p class="text-indigo-100 opacity-90">Explore series and parallel arrangements</p>
+        </div>
+
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Left: Controls & Diagram -->
+            <div class="space-y-6">
+                <div class="space-y-4">
+                    <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider">Circuit Type</dt>
+                    <div class="flex p-1 bg-slate-100 rounded-lg w-full">
+                        <button id="typeSeries" class="flex-1 py-2 px-4 rounded-md text-sm font-bold transition-all bg-white shadow-sm text-indigo-600">Series</button>
+                        <button id="typeParallel" class="flex-1 py-2 px-4 rounded-md text-sm font-bold transition-all text-slate-500 hover:text-slate-700">Parallel</button>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider">Number of Capacitors</label>
+                    <div class="flex p-1 bg-slate-100 rounded-lg w-full">
+                        <button id="count2" class="flex-1 py-2 px-4 rounded-md text-sm font-bold transition-all bg-white shadow-sm text-indigo-600">2 Capacitors</button>
+                        <button id="count3" class="flex-1 py-2 px-4 rounded-md text-sm font-bold transition-all text-slate-500 hover:text-slate-700">3 Capacitors</button>
+                    </div>
+                </div>
+
+                <div class="space-y-6 pt-4 border-t border-slate-100">
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <label class="text-sm font-semibold text-slate-600">$C_1$ (μF)</label>
+                            <span id="valC1" class="text-sm font-bold text-indigo-600">10.0</span>
+                        </div>
+                        <input type="range" id="inputC1" min="1" max="100" step="0.5" value="10" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <label class="text-sm font-semibold text-slate-600">$C_2$ (μF)</label>
+                            <span id="valC2" class="text-sm font-bold text-indigo-600">20.0</span>
+                        </div>
+                        <input type="range" id="inputC2" min="1" max="100" step="0.5" value="20" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                    </div>
+                    <div id="containerC3" class="space-y-2 hidden">
+                        <div class="flex justify-between">
+                            <label class="text-sm font-semibold text-slate-600">$C_3$ (μF)</label>
+                            <span id="valC3" class="text-sm font-bold text-indigo-600">30.0</span>
+                        </div>
+                        <input type="range" id="inputC3" min="1" max="100" step="0.5" value="30" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Display -->
+            <div class="flex flex-col space-y-6">
+                <!-- SVG Diagram -->
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 flex items-center justify-center min-h-[220px]">
+                    <svg id="circuitSvg" width="300" height="200" viewBox="0 0 300 200">
+                        <!-- Content generated by JS -->
+                    </svg>
+                </div>
+
+                <!-- Result Box -->
+                <div class="bg-indigo-50 rounded-xl p-6 border border-indigo-100">
+                    <h2 class="text-sm font-bold text-indigo-900 uppercase tracking-widest mb-4">Total Capacitance ($C_T$)</h2>
+                    <div id="formulaDisplay" class="text-slate-800 mb-4 overflow-x-auto py-2">
+                        <!-- MathJax Formula -->
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="totalValue" class="text-4xl font-black text-indigo-700 tracking-tight">6.67</span>
+                        <span class="text-lg font-bold text-indigo-400">μF</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Explanation Section -->
+        <div class="bg-slate-50 p-6 border-t border-slate-200">
+            <h3 class="text-lg font-bold text-slate-800 mb-2">Key Principles</h3>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="text-sm text-slate-600 leading-relaxed">
+                    <p class="font-bold text-slate-800 mb-1">Series Combination:</p>
+                    <p>When capacitors are connected in series, the charge $Q$ on each capacitor is the same, but the total potential difference $V$ is shared ($V = V_1 + V_2 + \dots$).</p>
+                    <p class="mt-2 text-slate-500 italic">The reciprocal of the total capacitance $C_T$ is given by:</p>
+                    <div class="bg-white p-2 mt-1 rounded border border-slate-100 text-center">
+                        $$\frac{1}{C_T} = \frac{1}{C_1} + \frac{1}{C_2} + \dots$$
+                    </div>
+                </div>
+                <div class="text-sm text-slate-600 leading-relaxed">
+                    <p class="font-bold text-slate-800 mb-1">Parallel Combination:</p>
+                    <p>In parallel, the potential difference $V$ across each capacitor is the same. The total charge $Q$ is the sum of the charges on each capacitor ($Q = Q_1 + Q_2 + \dots$).</p>
+                    <p class="mt-2 text-slate-500 italic">The total capacitance $C_T$ is given by:</p>
+                    <div class="bg-white p-2 mt-1 rounded border border-slate-100 text-center">
+                        $$C_T = C_1 + C_2 + \dots$$
+                    </div>
+                </div>
+            </div>
+
+            <!-- Proof Section -->
+            <div class="mt-8 pt-6 border-t border-slate-200">
+                <button id="toggleProof" class="text-indigo-600 font-bold text-sm flex items-center gap-1 hover:text-indigo-800 transition-colors">
+                    <span id="proofIcon">⊕</span> Show Derivation of Equations
+                </button>
+                <div id="proofContent" class="hidden mt-4 grid md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div class="bg-slate-100 p-4 rounded-lg text-xs leading-relaxed text-slate-700">
+                        <p class="font-bold text-slate-800 mb-2 underline">Series Proof:</p>
+                        <ol class="list-decimal ml-4 space-y-2">
+                            <li>Total $V = V_1 + V_2 + V_3$</li>
+                            <li>From $Q = CV$, we have $V = \frac{Q}{C}$. Since capacitors are in series, charge $Q$ is identical on all plates.</li>
+                            <li>$\frac{Q}{C_T} = \frac{Q}{C_1} + \frac{Q}{C_2} + \frac{Q}{C_3}$</li>
+                            <li>Dividing by $Q$ gives: <br>
+                                <span class="bg-white px-2 py-1 rounded inline-block mt-1 font-bold">$\frac{1}{C_T} = \frac{1}{C_1} + \frac{1}{C_2} + \frac{1}{C_3}$</span>
+                            </li>
+                        </ol>
+                    </div>
+                    <div class="bg-slate-100 p-4 rounded-lg text-xs leading-relaxed text-slate-700">
+                        <p class="font-bold text-slate-800 mb-2 underline">Parallel Proof:</p>
+                        <ol class="list-decimal ml-4 space-y-2">
+                            <li>Total $Q = Q_1 + Q_2 + Q_3$</li>
+                            <li>From $Q = CV$, and noting that $V$ is identical across each parallel branch:</li>
+                            <li>$C_T V = C_1 V + C_2 V + C_3 V$</li>
+                            <li>Dividing by $V$ gives: <br>
+                                <span class="bg-white px-2 py-1 rounded inline-block mt-1 font-bold">$C_T = C_1 + C_2 + C_3$</span>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let config = {
+            type: 'series',
+            count: 2,
+            c1: 10,
+            c2: 20,
+            c3: 30
+        };
+
+        const inputs = {
+            c1: document.getElementById('inputC1'),
+            c2: document.getElementById('inputC2'),
+            c3: document.getElementById('inputC3')
+        };
+
+        const ui = {
+            valC1: document.getElementById('valC1'),
+            valC2: document.getElementById('valC2'),
+            valC3: document.getElementById('valC3'),
+            containerC3: document.getElementById('containerC3'),
+            svg: document.getElementById('circuitSvg'),
+            formula: document.getElementById('formulaDisplay'),
+            total: document.getElementById('totalValue'),
+            btnSeries: document.getElementById('typeSeries'),
+            btnParallel: document.getElementById('typeParallel'),
+            btnCount2: document.getElementById('count2'),
+            btnCount3: document.getElementById('count3')
+        };
+
+        function update() {
+            config.c1 = parseFloat(inputs.c1.value);
+            config.c2 = parseFloat(inputs.c2.value);
+            config.c3 = parseFloat(inputs.c3.value);
+
+            ui.valC1.innerText = config.c1.toFixed(1);
+            ui.valC2.innerText = config.c2.toFixed(1);
+            ui.valC3.innerText = config.c3.toFixed(1);
+
+            let ct = 0;
+            let formulaHtml = "";
+
+            if (config.type === 'series') {
+                if (config.count === 2) {
+                    ct = (config.c1 * config.c2) / (config.c1 + config.c2);
+                    formulaHtml = `$$\\frac{1}{C_T} = \\frac{1}{${config.c1}} + \\frac{1}{${config.c2}}$$`;
+                } else {
+                    ct = 1 / (1/config.c1 + 1/config.c2 + 1/config.c3);
+                    formulaHtml = `$$\\frac{1}{C_T} = \\frac{1}{${config.c1}} + \\frac{1}{${config.c2}} + \\frac{1}{${config.c3}}$$`;
+                }
+            } else {
+                if (config.count === 2) {
+                    ct = config.c1 + config.c2;
+                    formulaHtml = `$$C_T = ${config.c1} + ${config.c2}$$`;
+                } else {
+                    ct = config.c1 + config.c2 + config.c3;
+                    formulaHtml = `$$C_T = ${config.c1} + ${config.c2} + ${config.c3}$$`;
+                }
+            }
+
+            ui.total.innerText = ct.toFixed(2);
+            ui.formula.innerHTML = formulaHtml;
+            MathJax.typeset();
+            drawDiagram();
+        }
+
+        function drawDiagram() {
+            ui.svg.innerHTML = '';
+            const w = 300, h = 200;
+            const midY = 100;
+            
+            // Draw Main Lines
+            const lines = [];
+            const caps = [];
+            const labels = [];
+
+            if (config.type === 'series') {
+                const spacing = config.count === 2 ? 100 : 80;
+                const startX = (w - (config.count - 1) * spacing) / 2;
+                
+                // Entrance line
+                lines.push(`<line x1="10" y1="${midY}" x2="${startX - 5}" y2="${midY}" class="capacitor-line" />`);
+                // Exit line
+                lines.push(`<line x1="${startX + (config.count-1)*spacing + 5}" y1="${midY}" x2="290" y2="${midY}" class="capacitor-line" />`);
+
+                for(let i=0; i<config.count; i++) {
+                    const x = startX + i*spacing;
+                    // Capacitor Plates
+                    caps.push(`<line x1="${x-5}" y1="${midY-25}" x2="${x-5}" y2="${midY+25}" class="capacitor-plate" />`);
+                    caps.push(`<line x1="${x+5}" y1="${midY-25}" x2="${x+5}" y2="${midY+25}" class="capacitor-plate" />`);
+                    // Labels
+                    const sub = ["₁", "₂", "₃"][i];
+                    labels.push(`<text x="${x}" y="${midY+45}" text-anchor="middle" class="text-label">C${sub}</text>`);
+                    // Connection line to next
+                    if(i < config.count - 1) {
+                        lines.push(`<line x1="${x+5}" y1="${midY}" x2="${x+spacing-5}" y2="${midY}" class="capacitor-line" />`);
+                    }
+                }
+            } else {
+                const startX = 100, endX = 200;
+                const spacingY = 50;
+                const totalH = (config.count - 1) * spacingY;
+                const topY = midY - totalH/2;
+
+                // Main feeder lines
+                lines.push(`<line x1="10" y1="${midY}" x2="${startX}" y2="${midY}" class="capacitor-line" />`);
+                lines.push(`<line x1="${endX}" y1="${midY}" x2="290" y2="${midY}" class="capacitor-line" />`);
+                
+                // Vertical bus bars
+                lines.push(`<line x1="${startX}" y1="${topY}" x2="${startX}" y2="${topY + totalH}" class="capacitor-line" />`);
+                lines.push(`<line x1="${endX}" y1="${topY}" x2="${endX}" y2="${topY + totalH}" class="capacitor-line" />`);
+
+                for(let i=0; i<config.count; i++) {
+                    const y = topY + i*spacingY;
+                    const midX = (startX + endX) / 2;
+                    // Horizontal lines to plates
+                    lines.push(`<line x1="${startX}" y1="${y}" x2="${midX-5}" y2="${y}" class="capacitor-line" />`);
+                    lines.push(`<line x1="${midX+5}" y1="${y}" x2="${endX}" y2="${y}" class="capacitor-line" />`);
+                    // Capacitor Plates
+                    caps.push(`<line x1="${midX-5}" y1="${y-15}" x2="${midX-5}" y2="${y+15}" class="capacitor-plate" />`);
+                    caps.push(`<line x1="${midX+5}" y1="${y-15}" x2="${midX+5}" y2="${y+15}" class="capacitor-plate" />`);
+                    // Labels
+                    const sub = ["₁", "₂", "₃"][i];
+                    labels.push(`<text x="${midX}" y="${y-20}" text-anchor="middle" class="text-label">C${sub}</text>`);
+                }
+            }
+
+            ui.svg.innerHTML = [...lines, ...caps, ...labels].join('');
+        }
+
+        ui.btnSeries.onclick = () => {
+            config.type = 'series';
+            ui.btnSeries.className = "flex-1 py-2 px-4 rounded-md text-sm font-bold transition-all bg-white shadow-sm text-indigo-600";
+            ui.btnParallel.className = "flex-1 py-2 px-4 rounded-md text-sm font-bold transition-all text-slate-500 hover:text-slate-700";
+            update();
+        };
+
+        ui.btnParallel.onclick = () => {
+            config.type = 'parallel';
+            ui.btnParallel.className = "flex-1 py-2 px-4 rounded-md text-sm font-bold transition-all bg-white shadow-sm text-indigo-600";
+            ui.btnSeries.className = "flex-1 py-2 px-4 rounded-md text-sm font-bold transition-all text-slate-500 hover:text-slate-700";
+            update();
+        };
+
+        ui.btnCount2.onclick = () => {
+            config.count = 2;
+            ui.containerC3.classList.add('hidden');
+            ui.btnCount2.className = "flex-1 py-2 px-4 rounded-md text-sm font-bold transition-all bg-white shadow-sm text-indigo-600";
+            ui.btnCount3.className = "flex-1 py-2 px-4 rounded-md text-sm font-bold transition-all text-slate-500 hover:text-slate-700";
+            update();
+        };
+
+        ui.btnCount3.onclick = () => {
+            config.count = 3;
+            ui.containerC3.classList.remove('hidden');
+            ui.btnCount3.className = "flex-1 py-2 px-4 rounded-md text-sm font-bold transition-all bg-white shadow-sm text-indigo-600";
+            ui.btnCount2.className = "flex-1 py-2 px-4 rounded-md text-sm font-bold transition-all text-slate-500 hover:text-slate-700";
+            update();
+        };
+
+        const toggleProof = document.getElementById('toggleProof');
+        const proofContent = document.getElementById('proofContent');
+        const proofIcon = document.getElementById('proofIcon');
+
+        toggleProof.onclick = () => {
+            const isHidden = proofContent.classList.toggle('hidden');
+            proofIcon.innerText = isHidden ? '⊕' : '⊖';
+            toggleProof.innerHTML = `${isHidden ? '<span id="proofIcon">⊕</span> Show Derivation of Equations' : '<span id="proofIcon">⊖</span> Hide Derivation of Equations'}`;
+        };
+
+        [inputs.c1, inputs.c2, inputs.c3].forEach(el => el.oninput = update);
+
+        window.onload = update;
+    </script>
+</body>
+</html>
