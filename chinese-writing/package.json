@@ -1,0 +1,14 @@
+{
+  "name": "chinese-writing",
+  "version": "1.0.0",
+  "description": "AI-powered Chinese character recognition app",
+  "scripts": {
+    "build:css": "tailwindcss -i ./styles/input.css -o ./styles/output.css",
+    "build:css:watch": "tailwindcss -i ./styles/input.css -o ./styles/output.css --watch",
+    "build": "npm run build:css"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.1",
+    "postcss": "^8.4.31"
+  }
+}
