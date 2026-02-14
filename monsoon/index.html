@@ -64,9 +64,6 @@
                 <h1 class="text-xl font-bold text-cyan-400">African Climate Explorer</h1>
                 <p class="text-[10px] uppercase tracking-widest text-slate-400">Atmospheric Dynamics & Heatmaps</p>
             </div>
-            <div id="status-tag" class="flex items-center gap-2 text-[10px] text-cyan-400 bg-cyan-950/30 px-3 py-1 rounded-full border border-cyan-800/50">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> MAP RESTORED
-            </div>
         </header>
 
         <main class="flex-1 relative">
@@ -75,10 +72,10 @@
                     <label class="block text-xs font-bold uppercase tracking-widest mb-3 text-slate-400">Atmospheric Phase</label>
                     <div class="grid grid-cols-2 gap-3">
                         <button id="btn-JJA" onclick="setSeason('JJA')" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-cyan-600 ring-2 ring-cyan-400/50">
-                            Jun-Aug (Wet)
+                            Jun-Aug
                         </button>
                         <button id="btn-DJF" onclick="setSeason('DJF')" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-300">
-                            Dec-Feb (Dry)
+                            Dec-Feb
                         </button>
                     </div>
                 </div>
@@ -95,11 +92,28 @@
                     </select>
                 </div>
 
-                <div class="glass-panel p-5 rounded-2xl border-l-4 border-l-cyan-500">
-                    <h4 class="text-xs font-bold text-cyan-400 mb-1">Rendering Fix</h4>
-                    <p id="api-info" class="text-[11px] text-slate-400 leading-relaxed">
-                        The map layer has been decoupled from the simulation canvas to prevent black-out issues. Flow remains at stabilized realistic speeds.
+                <div class="glass-panel p-5 rounded-2xl border-l-4 border-l-emerald-500">
+                    <h4 class="text-xs font-bold text-emerald-400 mb-2 uppercase tracking-wide">Climate Dynamics</h4>
+                    <p id="description-text" class="text-[11px] text-slate-300 leading-relaxed italic">
+                        Loading atmospheric data...
                     </p>
+                </div>
+
+                <div id="country-info" class="glass-panel p-5 rounded-2xl border-l-4 border-l-cyan-500 hidden interactive">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 id="country-name" class="text-sm font-bold text-cyan-400 uppercase tracking-wide">Country</h4>
+                        <button onclick="closeCountryInfo()" class="text-slate-500 hover:text-white px-1">✕</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-[10px] text-slate-400 uppercase">Monthly Rain</p>
+                            <p id="country-pr" class="text-lg font-bold text-white">--</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-400 uppercase">Avg Temp</p>
+                            <p id="country-tas" class="text-lg font-bold text-white">--</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -120,6 +134,7 @@
         let particles = [];
         let currentSeason = 'JJA'; 
         let africaGeo = null;
+        let selectedCountryProps = null;
 
         const PRESSURE_CENTERS = {
             'JJA': { high: [-25, -10], low: [18, 15], color: '#22d3ee' },
@@ -152,6 +167,11 @@
             }
         };
 
+        const CLIMATE_DESCRIPTIONS = {
+            'JJA': 'Northern Summer: The Saharan Heat Low draws moist air from the South Atlantic High (St. Helena) across the equator. Coriolis deflection turns these into South-Westerly winds, bringing the heavy Monsoon rains to West and Central Africa.',
+            'DJF': 'Northern Winter: High pressure builds over the Saharan desert while a low forms over Southern Africa. Dry continental winds (Harmattan) blow southwards, while the moisture is pulled into the Southern Hemisphere, shifting the rain belt south.'
+        };
+
         async function init() {
             initMap();
             initSimulation();
@@ -173,6 +193,7 @@
                     })
                 };
                 console.log(`Loaded ${africaGeo.features.length} African features`);
+                document.getElementById('description-text').innerText = CLIMATE_DESCRIPTIONS[currentSeason];
                 updateHeatmap();
             } catch (e) {
                 console.error("Map loading error:", e);
@@ -216,12 +237,14 @@
             if (heatLayer) map.removeLayer(heatLayer);
             if (!africaGeo) return;
 
-            if (style === 'choropleth') {
-                geoJsonLayer = L.geoJson(africaGeo, {
-                    style: (f) => {
-                        const props = f.properties;
-                        const iso = props.ISO_A3 || props.iso_a3 || props.ISO_A3_EH;
-                        const val = CLIMATE_DATA[variable][currentSeason][iso] || (variable === 'pr' ? 10 : 25);
+            // Always add the GeoJSON layer for interactivity (clicks)
+            geoJsonLayer = L.geoJson(africaGeo, {
+                style: (f) => {
+                    const props = f.properties;
+                    const iso = props.ISO_A3 || props.iso_a3 || props.ISO_A3_EH;
+                    const val = CLIMATE_DATA[variable][currentSeason][iso] || (variable === 'pr' ? 10 : 25);
+                    
+                    if (style === 'choropleth') {
                         return { 
                             fillColor: getColor(val, variable), 
                             weight: 1.5, 
@@ -229,9 +252,26 @@
                             color: 'rgba(255,255,255,0.4)', 
                             fillOpacity: 0.65 
                         };
+                    } else {
+                        // Invisible but clickable for heatmap mode
+                        return { 
+                            fillColor: 'transparent', 
+                            weight: 1, 
+                            opacity: 0.2, 
+                            color: 'rgba(255,255,255,0.1)', 
+                            fillOpacity: 0.01 
+                        };
                     }
-                }).addTo(map);
-            } else {
+                },
+                onEachFeature: (feature, layer) => {
+                    layer.on('click', (e) => {
+                        L.DomEvent.stopPropagation(e);
+                        showCountryInfo(feature.properties);
+                    });
+                }
+            }).addTo(map);
+
+            if (style === 'heatmap') {
                 const points = [];
                 const data = CLIMATE_DATA[variable][currentSeason];
                 for (const iso in data) {
@@ -280,7 +320,33 @@
             currentSeason = s;
             document.getElementById('btn-JJA').className = s === 'JJA' ? 'py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-cyan-600 ring-2 ring-cyan-400/50' : 'py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-400';
             document.getElementById('btn-DJF').className = s === 'DJF' ? 'py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-cyan-600 ring-2 ring-cyan-400/50' : 'py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-400';
+            document.getElementById('description-text').innerText = CLIMATE_DESCRIPTIONS[s];
+            
+            // Refresh country info for the new season if a country is selected
+            if (selectedCountryProps) {
+                showCountryInfo(selectedCountryProps);
+            }
+            
             updateHeatmap();
+        }
+
+        function showCountryInfo(props) {
+            selectedCountryProps = props;
+            const iso = props.ISO_A3 || props.iso_a3 || props.ISO_A3_EH;
+            const name = props.NAME || props.name || props.ADMIN || "Unknown";
+            
+            const pr = CLIMATE_DATA['pr'][currentSeason][iso];
+            const tas = CLIMATE_DATA['tas'][currentSeason][iso];
+
+            document.getElementById('country-name').innerText = name;
+            document.getElementById('country-pr').innerText = pr ? `${pr}mm` : 'N/A';
+            document.getElementById('country-tas').innerText = tas ? `${tas}°C` : 'N/A';
+            document.getElementById('country-info').classList.remove('hidden');
+        }
+
+        function closeCountryInfo() {
+            selectedCountryProps = null;
+            document.getElementById('country-info').classList.add('hidden');
         }
 
         const AFRICA_BOUNDS = { n: 42, s: -42, w: -25, e: 65 };
