@@ -119,10 +119,10 @@
     </div>
 
     <script>
-        // Backend endpoint for API calls (set via environment variable in production)
+        // Backend endpoint for API calls
         const API_ENDPOINT = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
             ? 'http://localhost:3000/api/recognize-character'
-            : '/api/recogniz            const API_ENDPOINT = 'https://sls-1rt6mt6hg-wboson2007-6168s-projects.vercel.app/api/recognize-character';e-character';
+            : 'https://backend-kappa-steel-68.vercel.app/api/recognize-character';
 
         const quizData = [
             { sentence: "由于他平日待人真诚，因此在遇到困难时，大家都愿意伸出（yuán）手相助。", pinyin: "yuán", answer: "援", context: "援助 (yuán zhù)" },
