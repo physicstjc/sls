@@ -7,20 +7,20 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; background: #050508; color: white; }
-        #ui-container { position: absolute; top: 20px; left: 20px; background: rgba(10, 10, 15, 0.95); padding: 15px; border-radius: 12px; border: 1px solid #00d4ff; max-width: 280px; backdrop-filter: blur(15px); box-shadow: 0 0 30px rgba(0, 212, 255, 0.2); z-index: 10; }
-        h1 { margin: 0 0 10px 0; font-size: 1rem; color: #00d4ff; text-transform: uppercase; letter-spacing: 1.5px; }
-        .controls { display: flex; flex-direction: column; gap: 6px; }
-        button { padding: 8px; border: 1px solid #333; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.3s; background: #111; color: #888; text-transform: uppercase; font-size: 0.7rem; }
+        #ui-container { position: absolute; top: 15px; left: 15px; background: rgba(10, 10, 15, 0.95); padding: 12px; border-radius: 10px; border: 1px solid #00d4ff; max-width: 240px; backdrop-filter: blur(15px); box-shadow: 0 0 20px rgba(0, 212, 255, 0.15); z-index: 10; }
+        h1 { margin: 0 0 8px 0; font-size: 0.85rem; color: #00d4ff; text-transform: uppercase; letter-spacing: 1.2px; }
+        .controls { display: flex; flex-direction: column; gap: 4px; }
+        button { padding: 6px; border: 1px solid #333; border-radius: 5px; cursor: pointer; font-weight: bold; transition: all 0.2s; background: #111; color: #888; text-transform: uppercase; font-size: 0.65rem; }
         button:hover { border-color: #00d4ff; color: white; }
-        button.active { background: #00d4ff; color: #000; border-color: #00d4ff; box-shadow: 0 0 15px rgba(0, 212, 255, 0.4); }
-        #btn-rotate { margin-top: 4px; background: #222; color: #00d4ff; border-color: #00d4ff; }
+        button.active { background: #00d4ff; color: #000; border-color: #00d4ff; box-shadow: 0 0 10px rgba(0, 212, 255, 0.3); }
+        #btn-rotate { margin-top: 2px; background: #222; color: #00d4ff; border-color: #00d4ff; }
         #btn-rotate.off { color: #555; border-color: #333; }
-        .info-box { margin-top: 10px; font-size: 0.8rem; line-height: 1.4; color: #bbb; border-top: 1px solid #222; padding-top: 10px; max-height: 70px; overflow-y: auto; }
+        .info-box { margin-top: 8px; font-size: 0.72rem; line-height: 1.3; color: #bbb; border-top: 1px solid #222; padding-top: 8px; max-height: 50px; overflow-y: auto; }
         .highlight { color: #00d4ff; font-weight: bold; }
-        #legend { position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 8px; font-size: 0.75rem; border: 1px solid #333; }
-        .legend-item { display: flex; align-items: center; margin-bottom: 3px; }
-        .dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
-        .instructions { font-size: 0.65rem; color: #555; margin-top: 10px; text-align: center; font-style: italic; }
+        #legend { position: absolute; bottom: 15px; right: 15px; background: rgba(0,0,0,0.8); padding: 8px; border-radius: 8px; font-size: 0.7rem; border: 1px solid #333; }
+        .legend-item { display: flex; align-items: center; margin-bottom: 2px; }
+        .dot { height: 7px; width: 7px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .instructions { font-size: 0.6rem; color: #444; margin-top: 8px; text-align: center; font-style: italic; }
     </style>
 </head>
 <body>
@@ -35,7 +35,7 @@
     </div>
     <div id="info" class="info-box">
         <strong>Structure:</strong> <span class="highlight">Giant Covalent</span><br>
-        4-bond tetrahedral framework. Extremely hard.
+        Tetrahedral 4-bond network.
     </div>
     <div class="instructions">DRAG TO ROTATE • CLICK ATOMS</div>
 </div>
@@ -52,11 +52,14 @@
     let scene, camera, renderer, raycaster, mouse;
     const group = new THREE.Group();
     let highlightedBonds = [];
+    let extraAtoms = [];
     let selectedAtom = null;
-    let autoRotate = true;
+    let autoRotate = true; 
     let isDragging = false;
     let prevMouse = { x: 0, y: 0 };
     let currentMode = 'diamond';
+    
+    let virtualLattice = []; 
 
     function init() {
         scene = new THREE.Scene();
@@ -103,17 +106,18 @@
         };
     }
 
-    function createAtom(pos, color = 0x888888, radius = 0.24) {
+    function createAtom(pos, color = 0x888888, radius = 0.24, isExtra = false, type = 'C') {
         const geo = new THREE.SphereGeometry(radius, 24, 24);
         const mat = new THREE.MeshPhongMaterial({ color: color, shininess: 100 }); 
         const sphere = new THREE.Mesh(geo, mat);
         sphere.position.copy(pos);
-        sphere.userData = { isAtom: true, bonds: [] }; 
+        sphere.userData = { isAtom: true, bonds: [], isExtra: isExtra, atomType: type }; 
         group.add(sphere);
+        if (isExtra) extraAtoms.push(sphere);
         return sphere;
     }
 
-    function createBond(atom1, atom2, color = 0x00d4ff, opacity = 1, radius = 0.04) {
+    function createBond(atom1, atom2, color = 0x00d4ff, opacity = 1, radius = 0.04, isExtra = false) {
         const v1 = atom1.position;
         const v2 = atom2.position;
         const dist = v1.distanceTo(v2);
@@ -122,10 +126,11 @@
         const cyl = new THREE.Mesh(geo, mat);
         cyl.position.copy(v1).add(v2).multiplyScalar(0.5);
         cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), v2.clone().sub(v1).normalize());
-        cyl.userData = { originalColor: new THREE.Color(color) };
+        cyl.userData = { originalColor: new THREE.Color(color), isExtra: isExtra };
         group.add(cyl);
         atom1.userData.bonds.push(cyl);
         atom2.userData.bonds.push(cyl);
+        highlightedBonds.push(cyl);
         return cyl;
     }
 
@@ -135,20 +140,53 @@
             selectedAtom = null;
         }
         highlightedBonds.forEach(bond => {
-            bond.material.color.copy(bond.userData.originalColor);
-            bond.material.emissive.setHex(0x000000);
+            if (bond.userData.isExtra) {
+                group.remove(bond);
+            } else {
+                bond.material.color.copy(bond.userData.originalColor);
+                bond.material.emissive.setHex(0x000000);
+            }
         });
         highlightedBonds = [];
+        extraAtoms.forEach(atom => group.remove(atom));
+        extraAtoms = [];
     }
 
     function highlightAtom(atom) {
         resetHighlights();
         selectedAtom = atom;
         atom.material.emissive.setHex(0xaa0000); 
+        
         atom.userData.bonds.forEach(bond => {
             bond.material.color.setHex(0xffff00); 
             bond.material.emissive.setHex(0x555500);
             highlightedBonds.push(bond);
+        });
+
+        let threshold = 1.8; 
+        if (currentMode === 'graphite') threshold = 1.6;
+        if (currentMode === 'sio2') threshold = 1.7; 
+        
+        virtualLattice.forEach(latPoint => {
+            const dist = atom.position.distanceTo(latPoint.pos);
+            if (dist > 0.1 && dist < threshold) {
+                if (currentMode === 'sio2') {
+                    if (atom.userData.atomType === latPoint.type) return; 
+                }
+                const exists = atom.userData.bonds.some(b => {
+                    const mid = atom.position.clone().add(latPoint.pos).multiplyScalar(0.5);
+                    return b.position.distanceTo(mid) < 0.1;
+                });
+
+                if (!exists) {
+                    let neighborColor = latPoint.type === 'O' ? 0xff3333 : (latPoint.type === 'Si' ? 0xaaaaaa : 0x888888);
+                    let neighborSize = latPoint.type === 'O' ? 0.18 : (latPoint.type === 'Si' ? 0.28 : 0.24);
+                    
+                    const tempAtom = createAtom(latPoint.pos, neighborColor, neighborSize, true, latPoint.type);
+                    const tempBond = createBond(atom, tempAtom, 0xffff00, 1, 0.04, true);
+                    tempBond.material.emissive.setHex(0x555500);
+                }
+            }
         });
     }
 
@@ -160,7 +198,7 @@
         const intersects = raycaster.intersectObjects(group.children);
         let hitAtom = null;
         for (let i = 0; i < intersects.length; i++) {
-            if (intersects[i].object.userData.isAtom) {
+            if (intersects[i].object.userData.isAtom && !intersects[i].object.userData.isExtra) {
                 hitAtom = intersects[i].object;
                 break;
             }
@@ -183,23 +221,28 @@
     function buildDiamond() {
         resetHighlights();
         group.clear();
+        virtualLattice = [];
         const a = 4.0; 
         const renderRadius = 8.0; 
-        const uniquePoints = [];
+        
         for(let x = -2; x <= 1; x++) {
             for(let y = -2; y <= 1; y++) {
                 for(let z = -2; z <= 1; z++) {
                     const base = new THREE.Vector3(x*a, y*a, z*a);
                     const fcc = [[0,0,0], [0.5,0.5,0], [0.5,0,0.5], [0,0.5,0.5], [0.25,0.25,0.25], [0.75,0.75,0.25], [0.75,0.25,0.75], [0.25,0.75,0.75]];
-                    fcc.forEach(p => uniquePoints.push(new THREE.Vector3(p[0]*a, p[1]*a, p[2]*a).add(base)));
+                    fcc.forEach(p => {
+                        const pos = new THREE.Vector3(p[0]*a, p[1]*a, p[2]*a).add(base);
+                        if (!virtualLattice.some(v => v.pos.distanceTo(pos) < 0.1)) {
+                            virtualLattice.push({pos, type: 'C'});
+                        }
+                    });
                 }
             }
         }
-        const deduped = [];
-        uniquePoints.forEach(p => { if (!deduped.some(u => u.distanceTo(p) < 0.1)) deduped.push(p); });
+        
         const visible = [];
-        deduped.forEach(p => {
-            if (p.length() < renderRadius) visible.push({ pos: p, mesh: createAtom(p) });
+        virtualLattice.forEach(lp => {
+            if (lp.pos.length() < renderRadius) visible.push({ pos: lp.pos, mesh: createAtom(lp.pos, 0x888888, 0.24, false, 'C') });
         });
         const bondThreshold = (Math.sqrt(3)/4) * a + 0.1;
         for(let i = 0; i < visible.length; i++) {
@@ -208,22 +251,21 @@
                     createBond(visible[i].mesh, visible[j].mesh);
             }
         }
+        highlightedBonds = []; 
     }
 
     function buildGraphite() {
         resetHighlights();
         group.clear();
+        virtualLattice = [];
         const bondLen = 1.4, layerGap = 4.0;
-        const atomMeshes = [];
         const generateLayer = (z, sx, sy) => {
             for (let i = -4; i <= 4; i++) {
                 for (let j = -4; j <= 4; j++) {
                     const gx = (i + j) * 1.5 * bondLen + sx;
                     const gy = (i - j) * (Math.sqrt(3)/2) * bondLen + sy;
-                    const p1 = new THREE.Vector3(gx, gy, z);
-                    const p2 = new THREE.Vector3(gx + bondLen, gy, z);
-                    if (p1.lengthSq() < 60) atomMeshes.push(createAtom(p1));
-                    if (p2.lengthSq() < 60) atomMeshes.push(createAtom(p2));
+                    virtualLattice.push({pos: new THREE.Vector3(gx, gy, z), type: 'C'});
+                    virtualLattice.push({pos: new THREE.Vector3(gx + bondLen, gy, z), type: 'C'});
                 }
             }
         };
@@ -231,49 +273,93 @@
         generateLayer(0, 0.5 * bondLen, (Math.sqrt(3)/2) * bondLen);
         generateLayer(layerGap, 0, 0);
 
-        for (let i = 0; i < atomMeshes.length; i++) {
-            for (let j = i + 1; j < atomMeshes.length; j++) {
-                const p1 = atomMeshes[i].position, p2 = atomMeshes[j].position, d = p1.distanceTo(p2);
-                if (Math.abs(p1.z - p2.z) < 0.1 && d < bondLen * 1.15) createBond(atomMeshes[i], atomMeshes[j], 0x00ffff, 1, 0.06);
+        const visibleMeshes = [];
+        virtualLattice.forEach(lp => {
+            if (lp.pos.lengthSq() < 60) visibleMeshes.push(createAtom(lp.pos, 0x888888, 0.24, false, 'C'));
+        });
+
+        for (let i = 0; i < visibleMeshes.length; i++) {
+            for (let j = i + 1; j < visibleMeshes.length; j++) {
+                const p1 = visibleMeshes[i].position, p2 = visibleMeshes[j].position, d = p1.distanceTo(p2);
+                if (Math.abs(p1.z - p2.z) < 0.1 && d < bondLen * 1.15) createBond(visibleMeshes[i], visibleMeshes[j], 0x00ffff, 1, 0.06);
                 if (Math.abs(Math.abs(p1.z - p2.z) - layerGap) < 0.1 && p1.clone().setZ(0).distanceTo(p2.clone().setZ(0)) < 0.1)
-                    createBond(atomMeshes[i], atomMeshes[j], 0xff4444, 0.3, 0.02);
+                    createBond(visibleMeshes[i], visibleMeshes[j], 0xff4444, 0.3, 0.02);
             }
         }
+        highlightedBonds = [];
     }
 
     function buildSiO2() {
         resetHighlights();
         group.clear();
+        virtualLattice = [];
         const a = 5.0; 
         const renderRadius = 9.0;
+        
+        // 1. Define Silicon positions
         const siliconPoints = [];
         for(let x = -2; x <= 1; x++) {
             for(let y = -2; y <= 1; y++) {
                 for(let z = -2; z <= 1; z++) {
                     const base = new THREE.Vector3(x*a, y*a, z*a);
                     const fcc = [[0,0,0], [0.5,0.5,0], [0.5,0,0.5], [0,0.5,0.5], [0.25,0.25,0.25], [0.75,0.75,0.25], [0.75,0.25,0.75], [0.25,0.75,0.75]];
-                    fcc.forEach(p => siliconPoints.push(new THREE.Vector3(p[0]*a, p[1]*a, p[2]*a).add(base)));
+                    fcc.forEach(p => {
+                        const pos = new THREE.Vector3(p[0]*a, p[1]*a, p[2]*a).add(base);
+                        if (!siliconPoints.some(u => u.distanceTo(pos) < 0.1)) siliconPoints.push(pos);
+                    });
                 }
             }
         }
-        const dedupedSi = [];
-        siliconPoints.forEach(p => { if (!dedupedSi.some(u => u.distanceTo(p) < 0.1)) dedupedSi.push(p); });
-        const visibleSi = [];
-        dedupedSi.forEach(p => {
-            if (p.length() < renderRadius) visibleSi.push({ pos: p, mesh: createAtom(p, 0xaaaaaa, 0.28) });
+
+        // 2. Map Silicon points to virtual lattice and add bridging oxygens
+        siliconPoints.forEach(pos => virtualLattice.push({pos, type: 'Si'}));
+        const oxygenThreshold = (Math.sqrt(3)/4) * a + 0.1;
+        for(let i = 0; i < siliconPoints.length; i++) {
+            for(let j = i+1; j < siliconPoints.length; j++) {
+                if (siliconPoints[i].distanceTo(siliconPoints[j].pos || siliconPoints[j]) < oxygenThreshold) {
+                    virtualLattice.push({
+                        pos: siliconPoints[i].clone().add(siliconPoints[j]).multiplyScalar(0.5),
+                        type: 'O'
+                    });
+                }
+            }
+        }
+
+        // 3. Create meshes for all atoms within render radius
+        const atomMap = new Map();
+        virtualLattice.forEach((lp, index) => {
+            if (lp.pos.length() < renderRadius) {
+                const mesh = createAtom(lp.pos, lp.type === 'Si' ? 0xaaaaaa : 0xff3333, lp.type === 'Si' ? 0.28 : 0.18, false, lp.type);
+                atomMap.set(index, mesh);
+            }
         });
-        const bondThreshold = (Math.sqrt(3)/4) * a + 0.1;
-        for(let i = 0; i < visibleSi.length; i++) {
-            for(let j = i+1; j < visibleSi.length; j++) {
-                const dist = visibleSi[i].pos.distanceTo(visibleSi[j].pos);
-                if(dist < bondThreshold) {
-                    const midPoint = visibleSi[i].pos.clone().add(visibleSi[j].pos).multiplyScalar(0.5);
-                    const oxygen = createAtom(midPoint, 0xff3333, 0.18);
-                    createBond(visibleSi[i].mesh, oxygen, 0xcccccc, 1, 0.03);
-                    createBond(visibleSi[j].mesh, oxygen, 0xcccccc, 1, 0.03);
+
+        // 4. Create bonds for all atoms within radius, even if the neighbor is on the boundary
+        virtualLattice.forEach((lp1, i) => {
+            virtualLattice.forEach((lp2, j) => {
+                if (i >= j) return;
+                // Only Si-O bonds
+                if ((lp1.type === 'Si' && lp2.type === 'O') || (lp1.type === 'O' && lp2.type === 'Si')) {
+                    if (lp1.pos.distanceTo(lp2.pos) < 1.7) {
+                        const mesh1 = atomMap.get(i);
+                        const mesh2 = atomMap.get(j);
+                        
+                        // If at least one atom is visible, we try to bond
+                        if (mesh1 && mesh2) {
+                            createBond(mesh1, mesh2, 0xcccccc, 1, 0.03);
+                        } else if (mesh1 || mesh2) {
+                            // Boundary condition: one atom is outside radius.
+                            // We create a "stub" atom (extra) for the one outside so the bond renders for the visible one
+                            const visibleMesh = mesh1 || mesh2;
+                            const hiddenPoint = mesh1 ? lp2 : lp1;
+                            const stub = createAtom(hiddenPoint.pos, hiddenPoint.type === 'Si' ? 0xaaaaaa : 0xff3333, hiddenPoint.type === 'Si' ? 0.28 : 0.18, true, hiddenPoint.type);
+                            createBond(visibleMesh, stub, 0xcccccc, 1, 0.03);
+                        }
+                    }
                 }
-            }
-        }
+            });
+        });
+        highlightedBonds = [];
     }
 
     function switchMode(mode) {
@@ -284,15 +370,15 @@
         const legend = document.getElementById('legend-content');
 
         if (mode === 'diamond') {
-            info.innerHTML = `<strong>Structure:</strong> <span class="highlight">Giant Covalent</span><br>Tetrahedral 4-bond network. Strong and hard.`;
+            info.innerHTML = `<strong>Structure:</strong> <span class="highlight">Giant Covalent</span><br>Tetrahedral 4-bond network.`;
             legend.innerHTML = `<div class="legend-item"><span class="dot" style="background: #888888; border: 1px solid #aaa;"></span> Carbon (C)</div><div class="legend-item"><span class="dot" style="background: #00d4ff;"></span> Covalent Bond</div>`;
             buildDiamond();
         } else if (mode === 'graphite') {
-            info.innerHTML = `<strong>Structure:</strong> <span class="highlight">Layered Honeycomb</span><br>3-bond layers with delocalised electrons and weak forces.`;
+            info.innerHTML = `<strong>Structure:</strong> <span class="highlight">Layered Honeycomb</span><br>3-bond layers; weak forces.`;
             legend.innerHTML = `<div class="legend-item"><span class="dot" style="background: #888888; border: 1px solid #aaa;"></span> Carbon (C)</div><div class="legend-item"><span class="dot" style="background: #00ffff;"></span> Covalent Bond</div><div class="legend-item"><span class="dot" style="background: #ff4444; opacity: 0.5;"></span> Van der Waals</div>`;
             buildGraphite();
         } else {
-            info.innerHTML = `<strong>Structure:</strong> <span class="highlight">Silica (Giant)</span><br>Si atoms (silver) bridged by O atoms (red). Tetrahedral.`;
+            info.innerHTML = `<strong>Structure:</strong> <span class="highlight">Silica (Giant)</span><br>Si (silver) bridged by O (red).`;
             legend.innerHTML = `<div class="legend-item"><span class="dot" style="background: #aaaaaa; border: 1px solid #fff;"></span> Silicon (Si)</div><div class="legend-item"><span class="dot" style="background: #ff3333; border: 1px solid #faa;"></span> Oxygen (O)</div><div class="legend-item"><span class="dot" style="background: #cccccc;"></span> Si-O Bond</div>`;
             buildSiO2();
         }
@@ -314,7 +400,7 @@
 
     function animate() {
         requestAnimationFrame(animate);
-        if (autoRotate && !isDragging) group.rotation.y += 0.003;
+        if (autoRotate && !isDragging) group.rotation.y += 0.00075;
         renderer.render(scene, camera);
     }
 
