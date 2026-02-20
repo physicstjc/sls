@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Star Jump Tracker (Anti-False Positive)</title>
+    <title>AI Star Jump Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -36,6 +36,14 @@
             box-shadow: 0 0 20px #34d399;
             border-color: #34d399;
         }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .reset-anim {
+            animation: shake 0.2s ease-in-out;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-4 md:p-8">
@@ -49,9 +57,16 @@
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center relative overflow-hidden">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center relative overflow-hidden group">
                 <span class="text-slate-400 text-sm uppercase font-bold tracking-wider relative z-10">Total Jumps</span>
                 <div id="counter" class="text-6xl font-black text-emerald-400 mt-1 transition-transform duration-75 relative z-10">0</div>
+                
+                <!-- Reset Button -->
+                <button onclick="resetCounter()" class="absolute top-2 right-2 p-2 text-slate-500 hover:text-red-400 transition-colors z-20" title="Reset Count">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                </button>
             </div>
             <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center flex flex-col justify-center items-center">
                 <span class="text-slate-400 text-sm uppercase font-bold tracking-wider mb-2">Filtered State</span>
@@ -90,9 +105,9 @@
         let lastJumpTime = 0;
 
         // Filter Config
-        const DETECTION_WINDOW = 3; // Number of consecutive frames required
-        const CONFIDENCE_THRESHOLD = 0.85; // Higher for stability
-        const COOLDOWN_MS = 200; // Prevent rapid-fire double counts
+        const DETECTION_WINDOW = 3; 
+        const CONFIDENCE_THRESHOLD = 0.85; 
+        const COOLDOWN_MS = 200; 
         
         let consecutiveUp = 0;
         let consecutiveDown = 0;
@@ -167,14 +182,12 @@
             const statusDisplay = document.getElementById("status-display");
             const counterDisplay = document.getElementById("counter");
 
-            // Reset buffers if confidence is low
             if (confidence < CONFIDENCE_THRESHOLD) {
                 consecutiveUp = 0;
                 consecutiveDown = 0;
                 return;
             }
 
-            // Logic filtering
             if (poseName === "Up") {
                 consecutiveUp++;
                 consecutiveDown = 0;
@@ -186,16 +199,14 @@
                 consecutiveDown = 0;
             }
 
-            // State Transitions with debounce/smoothing
             if (consecutiveUp >= DETECTION_WINDOW && !hasReachedUp) {
                 hasReachedUp = true;
                 statusDisplay.innerText = "STABLE UP";
                 statusDisplay.className = "status-badge px-4 py-2 rounded-full border-2 text-lg font-bold pulse-up border-yellow-400 text-yellow-400";
-                consecutiveUp = 0; // Reset after trigger
+                consecutiveUp = 0; 
             } 
             
             if (consecutiveDown >= DETECTION_WINDOW && hasReachedUp) {
-                // Check cooldown to prevent false double triggers from noise
                 if (now - lastJumpTime > COOLDOWN_MS) {
                     count++;
                     lastJumpTime = now;
@@ -207,8 +218,17 @@
                     counterDisplay.style.transform = "scale(1.3)";
                     setTimeout(() => counterDisplay.style.transform = "scale(1)", 100);
                 }
-                consecutiveDown = 0; // Reset after trigger
+                consecutiveDown = 0; 
             }
+        }
+
+        function resetCounter() {
+            count = 0;
+            hasReachedUp = false;
+            const counterDisplay = document.getElementById("counter");
+            counterDisplay.innerText = "0";
+            counterDisplay.classList.add("reset-anim");
+            setTimeout(() => counterDisplay.classList.remove("reset-anim"), 200);
         }
 
         function drawPose(pose) {
