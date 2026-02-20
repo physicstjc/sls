@@ -44,15 +44,13 @@
         </div>
 
         <!-- Error Log -->
-        <div id="error-log" class="mt-4 text-xs text-red-600 hidden bg-red-50 p-2 rounded border border-red-100 text-left overflow-auto max-h-24"></div>
+        <div id="error-log" class="mt-4 text-xs text-red-600 hidden bg-red-50 p-3 rounded border border-red-100 text-left overflow-auto max-h-32"></div>
         
-        <!-- Debug labels (hidden by default, useful for verifying class names) -->
         <div id="label-container" class="mt-6 text-left text-[10px] text-gray-300 font-mono hidden"></div>
     </div>
 
     <script type="text/javascript">
-        // Updated with your specific model link
-        const URL = "https://teachablemachine.withgoogle.com/models/iKjAmq-2j/"; 
+        const MODEL_URL = "https://teachablemachine.withgoogle.com/models/iKjAmq-2j/"; 
         
         let model, webcam, ctx, labelContainer, maxPredictions;
         let count = 0;
@@ -65,7 +63,7 @@
             status.innerText = msg;
             status.className = "mb-4 min-h-[1.25rem] text-sm font-medium text-red-500 font-bold";
             if (details) {
-                log.innerText = details;
+                log.innerText = `Error Details: ${details}`;
                 log.classList.remove("hidden");
             }
             document.getElementById("start-btn").disabled = false;
@@ -75,19 +73,35 @@
         async function init() {
             const startBtn = document.getElementById("start-btn");
             const statusMsg = document.getElementById("status-message");
+            const errorLog = document.getElementById("error-log");
+            
             startBtn.disabled = true;
             statusMsg.innerText = "Loading AI Model...";
+            errorLog.classList.add("hidden");
             
             try {
-                const modelURL = URL + "model.json";
-                const metadataURL = URL + "metadata.json";
+                // Ensure TF backend is initialized without repeating warnings
+                if (!tf.getBackend()) {
+                    await tf.setBackend('webgl');
+                }
 
-                model = await tmPose.load(modelURL, metadataURL);
+                const baseUrl = MODEL_URL.endsWith('/') ? MODEL_URL : MODEL_URL + '/';
+                const modelURL = baseUrl + "model.json";
+                const metadataURL = baseUrl + "metadata.json";
+
+                model = await tmPose.load(modelURL, metadataURL).catch(e => {
+                    throw new Error(`Failed to load model from ${modelURL}. Ensure the model is 'Published'.`);
+                });
+                
                 maxPredictions = model.getTotalClasses();
 
                 const size = 300;
                 webcam = new tmPose.Webcam(size, size, true); 
-                await webcam.setup(); 
+                
+                await webcam.setup().catch(e => {
+                    throw new Error("Webcam access denied. Please check permissions.");
+                });
+                
                 await webcam.play();
                 window.requestAnimationFrame(loop);
 
@@ -107,7 +121,7 @@
 
             } catch (err) {
                 console.error(err);
-                showError("Error starting app", err.message);
+                showError("Connection Error", err.message);
             }
         }
 
@@ -136,8 +150,6 @@
 
             const overlay = document.getElementById("state-overlay");
 
-            // LOGIC: Count Star Jump, ignore Squat
-            // Check for "Star Jump" (ensure the class name matches exactly what's in your TM project)
             if (currentClass.toLowerCase().includes("star jump") && highestProb > PROBABILITY_THRESHOLD) {
                 if (!isAtPeak) {
                     count++;
@@ -148,7 +160,6 @@
                 overlay.innerText = "JUMP DETECTED";
                 overlay.className = "absolute top-2 left-2 bg-green-600 text-white px-2 py-1 rounded text-[10px] font-bold";
             } else if (currentClass.toLowerCase().includes("neutral") || currentClass.toLowerCase().includes("squat") || highestProb < 0.5) {
-                // If it's neutral OR a squat, we reset the peak-lock so the next jump can be counted
                 isAtPeak = false;
                 overlay.innerText = currentClass;
                 overlay.className = "absolute top-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-[10px]";
