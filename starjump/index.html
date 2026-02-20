@@ -3,125 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Star Jump Counter</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>AI Star Jump Tracker (Anti-False Positive)</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+        }
+        .canvas-container {
+            position: relative;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            background: #1e293b;
+        }
+        #canvas {
+            width: 100%;
+            height: auto;
+            transform: scaleX(-1);
+        }
+        .status-badge {
+            transition: all 0.1s ease;
+        }
+        .pulse-up {
+            box-shadow: 0 0 20px #fbbf24;
+            border-color: #fbbf24;
+        }
+        .pulse-down {
+            box-shadow: 0 0 20px #34d399;
+            border-color: #34d399;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4 font-sans">
+<body class="min-h-screen flex flex-col items-center p-4 md:p-8">
 
-    <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
-        <h1 class="text-2xl font-bold text-gray-800 mb-2">Star Jump Counter</h1>
-        <p class="text-gray-500 mb-6 text-sm">Ignoring Squats Automatically</p>
-
-        <!-- Counter Display -->
-        <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
-            <span class="block text-gray-600 uppercase tracking-widest text-xs font-semibold">Repetitions</span>
-            <span id="jump-count" class="text-6xl font-black text-blue-600 transition-transform duration-200 inline-block">0</span>
+    <div class="max-w-2xl w-full space-y-6">
+        <div class="text-center space-y-2">
+            <h1 class="text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 uppercase">
+                Stable Jump Tracker
+            </h1>
+            <p class="text-slate-400">Filtered for accuracy. Requires sustained poses to count.</p>
         </div>
 
-        <!-- Feedback Messages -->
-        <div id="status-message" class="mb-4 min-h-[1.25rem] text-sm font-medium text-orange-500 italic">
-            Waiting for camera...
-        </div>
-
-        <!-- Camera Canvas -->
-        <div class="relative inline-block rounded-lg overflow-hidden border-4 border-gray-200 bg-black mb-6 w-full max-w-[300px] shadow-inner">
-            <canvas id="canvas" class="w-full h-auto"></canvas>
-            <div id="state-overlay" class="absolute top-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wider">
-                Ready
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center relative overflow-hidden">
+                <span class="text-slate-400 text-sm uppercase font-bold tracking-wider relative z-10">Total Jumps</span>
+                <div id="counter" class="text-6xl font-black text-emerald-400 mt-1 transition-transform duration-75 relative z-10">0</div>
+            </div>
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center flex flex-col justify-center items-center">
+                <span class="text-slate-400 text-sm uppercase font-bold tracking-wider mb-2">Filtered State</span>
+                <div id="status-display" class="status-badge px-4 py-2 rounded-full border-2 border-slate-600 text-lg font-bold">
+                    Standby
+                </div>
             </div>
         </div>
 
-        <!-- Controls -->
-        <div class="flex flex-col gap-3">
-            <button type="button" onclick="init()" id="start-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all transform active:scale-95 shadow-md">
-                Start Counter
-            </button>
-            <button type="button" onclick="resetCounter()" class="text-gray-400 hover:text-gray-600 text-sm font-medium underline">
-                Reset Count
-            </button>
+        <div class="canvas-container bg-black aspect-square flex items-center justify-center">
+            <canvas id="canvas"></canvas>
+            <div id="loading-overlay" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center z-10">
+                <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4"></div>
+                <p id="loading-text">Initializing filters...</p>
+                <button id="start-btn" onclick="init()" class="mt-4 px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-blue-500/25">
+                    Start Tracker
+                </button>
+            </div>
         </div>
 
-        <!-- Error Log -->
-        <div id="error-log" class="mt-4 text-xs text-red-600 hidden bg-red-50 p-3 rounded border border-red-100 text-left overflow-auto max-h-32"></div>
-        
-        <div id="label-container" class="mt-6 text-left text-[10px] text-gray-300 font-mono hidden"></div>
+        <div id="message-box" class="text-center h-8 text-blue-400 font-medium italic"></div>
+
+        <details class="bg-slate-800/50 rounded-lg p-2 border border-slate-700">
+            <summary class="text-xs text-slate-500 cursor-pointer uppercase tracking-widest px-2">Raw Logic Monitor</summary>
+            <div id="label-container" class="mt-2 text-sm space-y-1 font-mono px-2 text-slate-400"></div>
+        </details>
     </div>
 
     <script type="text/javascript">
-        const MODEL_URL = "https://teachablemachine.withgoogle.com/models/iKjAmq-2j/"; 
-        
+        const URL = "https://teachablemachine.withgoogle.com/models/LzOG4PR7I/";
         let model, webcam, ctx, labelContainer, maxPredictions;
+        
+        // Stats
         let count = 0;
-        let isAtPeak = false; 
-        const PROBABILITY_THRESHOLD = 0.85;
+        let hasReachedUp = false;
+        let lastJumpTime = 0;
 
-        function showError(msg, details = "") {
-            const status = document.getElementById("status-message");
-            const log = document.getElementById("error-log");
-            status.innerText = msg;
-            status.className = "mb-4 min-h-[1.25rem] text-sm font-medium text-red-500 font-bold";
-            if (details) {
-                log.innerText = `Error Details: ${details}`;
-                log.classList.remove("hidden");
-            }
-            document.getElementById("start-btn").disabled = false;
-            document.getElementById("start-btn").innerText = "Retry Connection";
-        }
+        // Filter Config
+        const DETECTION_WINDOW = 3; // Number of consecutive frames required
+        const CONFIDENCE_THRESHOLD = 0.85; // Higher for stability
+        const COOLDOWN_MS = 200; // Prevent rapid-fire double counts
+        
+        let consecutiveUp = 0;
+        let consecutiveDown = 0;
 
         async function init() {
-            const startBtn = document.getElementById("start-btn");
-            const statusMsg = document.getElementById("status-message");
-            const errorLog = document.getElementById("error-log");
+            document.getElementById("start-btn").disabled = true;
+            document.getElementById("loading-text").innerText = "Loading AI Engine...";
             
-            startBtn.disabled = true;
-            statusMsg.innerText = "Loading AI Model...";
-            errorLog.classList.add("hidden");
+            await tf.setBackend('webgl');
             
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+
             try {
-                // Ensure TF backend is initialized without repeating warnings
-                if (!tf.getBackend()) {
-                    await tf.setBackend('webgl');
-                }
-
-                const baseUrl = MODEL_URL.endsWith('/') ? MODEL_URL : MODEL_URL + '/';
-                const modelURL = baseUrl + "model.json";
-                const metadataURL = baseUrl + "metadata.json";
-
-                model = await tmPose.load(modelURL, metadataURL).catch(e => {
-                    throw new Error(`Failed to load model from ${modelURL}. Ensure the model is 'Published'.`);
-                });
-                
+                model = await tmPose.load(modelURL, metadataURL);
                 maxPredictions = model.getTotalClasses();
 
-                const size = 300;
-                webcam = new tmPose.Webcam(size, size, true); 
-                
-                await webcam.setup().catch(e => {
-                    throw new Error("Webcam access denied. Please check permissions.");
-                });
-                
+                const size = 300; 
+                const flip = true; 
+                webcam = new tmPose.Webcam(size, size, flip); 
+                await webcam.setup(); 
                 await webcam.play();
-                window.requestAnimationFrame(loop);
-
+                
+                document.getElementById("loading-overlay").classList.add("hidden");
+                
                 const canvas = document.getElementById("canvas");
                 canvas.width = size; canvas.height = size;
                 ctx = canvas.getContext("2d");
                 
                 labelContainer = document.getElementById("label-container");
-                labelContainer.innerHTML = "";
                 for (let i = 0; i < maxPredictions; i++) {
                     labelContainer.appendChild(document.createElement("div"));
                 }
-                
-                statusMsg.innerText = "Active - Start Star Jumps!";
-                statusMsg.className = "mb-4 min-h-[1.25rem] text-sm font-medium text-green-600 font-bold";
-                startBtn.classList.add("hidden");
 
-            } catch (err) {
-                console.error(err);
-                showError("Connection Error", err.message);
+                window.requestAnimationFrame(loop);
+            } catch (e) {
+                console.error(e);
+                document.getElementById("loading-text").innerText = "Error: Check Camera Permissions.";
             }
         }
 
@@ -135,56 +144,71 @@
             const { pose, posenetOutput } = await model.estimatePose(webcam.canvas);
             const prediction = await model.predict(posenetOutput);
 
-            let currentClass = "";
-            let highestProb = 0;
+            let topClass = "";
+            let maxProb = 0;
 
             for (let i = 0; i < maxPredictions; i++) {
-                const p = prediction[i].probability;
-                const name = prediction[i].className;
-                if (p > highestProb) {
-                    highestProb = p;
-                    currentClass = name;
+                const prob = prediction[i].probability;
+                if (prob > maxProb) {
+                    maxProb = prob;
+                    topClass = prediction[i].className;
                 }
-                labelContainer.childNodes[i].innerHTML = `${name}: ${p.toFixed(2)}`;
+                if (Math.random() > 0.8) {
+                    labelContainer.childNodes[i].innerText = `${prediction[i].className}: ${(prob * 100).toFixed(0)}%`;
+                }
             }
 
-            const overlay = document.getElementById("state-overlay");
-
-            if (currentClass.toLowerCase().includes("star jump") && highestProb > PROBABILITY_THRESHOLD) {
-                if (!isAtPeak) {
-                    count++;
-                    updateDisplay();
-                    isAtPeak = true; 
-                    triggerAnimation();
-                }
-                overlay.innerText = "JUMP DETECTED";
-                overlay.className = "absolute top-2 left-2 bg-green-600 text-white px-2 py-1 rounded text-[10px] font-bold";
-            } else if (currentClass.toLowerCase().includes("neutral") || currentClass.toLowerCase().includes("squat") || highestProb < 0.5) {
-                isAtPeak = false;
-                overlay.innerText = currentClass;
-                overlay.className = "absolute top-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-[10px]";
-            }
-
+            processStableLogic(topClass, maxProb);
             drawPose(pose);
         }
 
-        function updateDisplay() {
-            document.getElementById("jump-count").innerText = count;
-        }
+        function processStableLogic(poseName, confidence) {
+            const now = Date.now();
+            const statusDisplay = document.getElementById("status-display");
+            const counterDisplay = document.getElementById("counter");
 
-        function resetCounter() {
-            count = 0;
-            updateDisplay();
-        }
+            // Reset buffers if confidence is low
+            if (confidence < CONFIDENCE_THRESHOLD) {
+                consecutiveUp = 0;
+                consecutiveDown = 0;
+                return;
+            }
 
-        function triggerAnimation() {
-            const display = document.getElementById("jump-count");
-            display.style.transform = "scale(1.3)";
-            display.classList.add("text-green-500");
-            setTimeout(() => {
-                display.style.transform = "scale(1)";
-                display.classList.remove("text-green-500");
-            }, 300);
+            // Logic filtering
+            if (poseName === "Up") {
+                consecutiveUp++;
+                consecutiveDown = 0;
+            } else if (poseName === "Down") {
+                consecutiveDown++;
+                consecutiveUp = 0;
+            } else {
+                consecutiveUp = 0;
+                consecutiveDown = 0;
+            }
+
+            // State Transitions with debounce/smoothing
+            if (consecutiveUp >= DETECTION_WINDOW && !hasReachedUp) {
+                hasReachedUp = true;
+                statusDisplay.innerText = "STABLE UP";
+                statusDisplay.className = "status-badge px-4 py-2 rounded-full border-2 text-lg font-bold pulse-up border-yellow-400 text-yellow-400";
+                consecutiveUp = 0; // Reset after trigger
+            } 
+            
+            if (consecutiveDown >= DETECTION_WINDOW && hasReachedUp) {
+                // Check cooldown to prevent false double triggers from noise
+                if (now - lastJumpTime > COOLDOWN_MS) {
+                    count++;
+                    lastJumpTime = now;
+                    hasReachedUp = false; 
+                    counterDisplay.innerText = count;
+                    statusDisplay.innerText = "STABLE DOWN";
+                    statusDisplay.className = "status-badge px-4 py-2 rounded-full border-2 text-lg font-bold pulse-down border-emerald-400 text-emerald-400";
+                    
+                    counterDisplay.style.transform = "scale(1.3)";
+                    setTimeout(() => counterDisplay.style.transform = "scale(1)", 100);
+                }
+                consecutiveDown = 0; // Reset after trigger
+            }
         }
 
         function drawPose(pose) {
