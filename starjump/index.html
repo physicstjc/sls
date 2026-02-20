@@ -26,7 +26,7 @@
             transform: scaleX(-1);
         }
         .status-badge {
-            transition: all 0.1s ease;
+            transition: all 0.05s ease;
         }
         .pulse-up {
             box-shadow: 0 0 20px #fbbf24;
@@ -51,9 +51,9 @@
     <div class="max-w-2xl w-full space-y-6">
         <div class="text-center space-y-2">
             <h1 class="text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 uppercase">
-                Stable Jump Tracker
+                Instant Jump Tracker
             </h1>
-            <p class="text-slate-400">Filtered for accuracy. Requires sustained poses to count.</p>
+            <p class="text-slate-400">High-speed detection. No sustained pose required.</p>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
@@ -61,7 +61,6 @@
                 <span class="text-slate-400 text-sm uppercase font-bold tracking-wider relative z-10">Total Jumps</span>
                 <div id="counter" class="text-6xl font-black text-emerald-400 mt-1 transition-transform duration-75 relative z-10">0</div>
                 
-                <!-- Reset Button -->
                 <button onclick="resetCounter()" class="absolute top-2 right-2 p-2 text-slate-500 hover:text-red-400 transition-colors z-20" title="Reset Count">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -69,7 +68,7 @@
                 </button>
             </div>
             <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center flex flex-col justify-center items-center">
-                <span class="text-slate-400 text-sm uppercase font-bold tracking-wider mb-2">Filtered State</span>
+                <span class="text-slate-400 text-sm uppercase font-bold tracking-wider mb-2">Pose State</span>
                 <div id="status-display" class="status-badge px-4 py-2 rounded-full border-2 border-slate-600 text-lg font-bold">
                     Standby
                 </div>
@@ -80,7 +79,7 @@
             <canvas id="canvas"></canvas>
             <div id="loading-overlay" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center z-10">
                 <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4"></div>
-                <p id="loading-text">Initializing filters...</p>
+                <p id="loading-text">Optimizing for speed...</p>
                 <button id="start-btn" onclick="init()" class="mt-4 px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-blue-500/25">
                     Start Tracker
                 </button>
@@ -90,7 +89,7 @@
         <div id="message-box" class="text-center h-8 text-blue-400 font-medium italic"></div>
 
         <details class="bg-slate-800/50 rounded-lg p-2 border border-slate-700">
-            <summary class="text-xs text-slate-500 cursor-pointer uppercase tracking-widest px-2">Raw Logic Monitor</summary>
+            <summary class="text-xs text-slate-500 cursor-pointer uppercase tracking-widest px-2">Real-time Data</summary>
             <div id="label-container" class="mt-2 text-sm space-y-1 font-mono px-2 text-slate-400"></div>
         </details>
     </div>
@@ -99,22 +98,18 @@
         const URL = "https://teachablemachine.withgoogle.com/models/LzOG4PR7I/";
         let model, webcam, ctx, labelContainer, maxPredictions;
         
-        // Stats
         let count = 0;
         let hasReachedUp = false;
         let lastJumpTime = 0;
+        let lastDetectedPose = "";
 
-        // Filter Config
-        const DETECTION_WINDOW = 3; 
-        const CONFIDENCE_THRESHOLD = 0.85; 
-        const COOLDOWN_MS = 200; 
+        // Performance Config
+        const CONFIDENCE_THRESHOLD = 0.70; // Lowered for faster snap detection
+        const COOLDOWN_MS = 150; // Minimum time between pose changes
         
-        let consecutiveUp = 0;
-        let consecutiveDown = 0;
-
         async function init() {
             document.getElementById("start-btn").disabled = true;
-            document.getElementById("loading-text").innerText = "Loading AI Engine...";
+            document.getElementById("loading-text").innerText = "Warming up GPU...";
             
             await tf.setBackend('webgl');
             
@@ -145,7 +140,7 @@
                 window.requestAnimationFrame(loop);
             } catch (e) {
                 console.error(e);
-                document.getElementById("loading-text").innerText = "Error: Check Camera Permissions.";
+                document.getElementById("loading-text").innerText = "Camera Error.";
             }
         }
 
@@ -173,58 +168,49 @@
                 }
             }
 
-            processStableLogic(topClass, maxProb);
+            processInstantLogic(topClass, maxProb);
             drawPose(pose);
         }
 
-        function processStableLogic(poseName, confidence) {
+        function processInstantLogic(poseName, confidence) {
             const now = Date.now();
             const statusDisplay = document.getElementById("status-display");
             const counterDisplay = document.getElementById("counter");
 
-            if (confidence < CONFIDENCE_THRESHOLD) {
-                consecutiveUp = 0;
-                consecutiveDown = 0;
-                return;
-            }
+            // Only act if confidence is high enough and it's a new pose
+            if (confidence < CONFIDENCE_THRESHOLD || poseName === lastDetectedPose) return;
+            
+            // Limit how often the state can flicker
+            if (now - lastJumpTime < 100) return;
 
-            if (poseName === "Up") {
-                consecutiveUp++;
-                consecutiveDown = 0;
-            } else if (poseName === "Down") {
-                consecutiveDown++;
-                consecutiveUp = 0;
-            } else {
-                consecutiveUp = 0;
-                consecutiveDown = 0;
-            }
+            lastDetectedPose = poseName;
 
-            if (consecutiveUp >= DETECTION_WINDOW && !hasReachedUp) {
+            if (poseName === "Up" && !hasReachedUp) {
                 hasReachedUp = true;
-                statusDisplay.innerText = "STABLE UP";
+                statusDisplay.innerText = "UP";
                 statusDisplay.className = "status-badge px-4 py-2 rounded-full border-2 text-lg font-bold pulse-up border-yellow-400 text-yellow-400";
-                consecutiveUp = 0; 
+                lastJumpTime = now;
             } 
             
-            if (consecutiveDown >= DETECTION_WINDOW && hasReachedUp) {
+            if (poseName === "Down" && hasReachedUp) {
                 if (now - lastJumpTime > COOLDOWN_MS) {
                     count++;
-                    lastJumpTime = now;
                     hasReachedUp = false; 
                     counterDisplay.innerText = count;
-                    statusDisplay.innerText = "STABLE DOWN";
+                    statusDisplay.innerText = "DOWN";
                     statusDisplay.className = "status-badge px-4 py-2 rounded-full border-2 text-lg font-bold pulse-down border-emerald-400 text-emerald-400";
                     
                     counterDisplay.style.transform = "scale(1.3)";
-                    setTimeout(() => counterDisplay.style.transform = "scale(1)", 100);
+                    setTimeout(() => counterDisplay.style.transform = "scale(1)", 80);
+                    lastJumpTime = now;
                 }
-                consecutiveDown = 0; 
             }
         }
 
         function resetCounter() {
             count = 0;
             hasReachedUp = false;
+            lastDetectedPose = "";
             const counterDisplay = document.getElementById("counter");
             counterDisplay.innerText = "0";
             counterDisplay.classList.add("reset-anim");
