@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive 3D DNA Structure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            max-width: 200px;
+            width: 200px;
+        }
+
+        h1 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 6px;
+        }
+
+        .control-group {
+            margin: 10px 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 600;
+            color: #555;
+            font-size: 10px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            border: none;
+        }
+
+        .value-display {
+            text-align: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: #667eea;
+            margin-top: 3px;
+        }
+
+        button {
+            width: 100%;
+            padding: 8px;
+            margin: 4px 0;
+            border: none;
+            border-radius: 6px;
+            font-size: 9px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        #legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            max-width: calc(100vw - 40px);
+        }
+
+        .legend-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 12px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 4px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            font-size: 11px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 8px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        #info {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 15px;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            font-size: 11px;
+            color: #555;
+            max-width: calc(100vw - 40px);
+        }
+
+        .info-text {
+            margin: 3px 0;
+        }
+
+        .info-text strong {
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            #controls {
+                top: 10px; 
+                left: 10px;
+                width: 180px;
+                max-width: 180px;
+                padding: 8px;
+            }
+            h1 { font-size: 12px; margin-bottom: 6px; }
+            .control-group { margin: 8px 0; }
+            label { font-size: 9px; margin-bottom: 3px; }
+            .value-display { font-size: 10px; }
+            button { font-size: 8px; padding: 6px; margin: 3px 0; }
+            #legend { top: 10px; right: 10px; bottom: auto; padding: 10px; }
+            .legend-title { font-size: 11px; margin-bottom: 6px; }
+            .legend-item { font-size: 10px; margin: 4px 0; }
+            .legend-color { width: 15px; height: 15px; margin-right: 6px; }
+            #info { bottom: 10px; right: 10px; font-size: 10px; padding: 10px 12px; }
+        }
+
+        @media (max-width: 480px) {
+            #controls {
+                top: 5px;
+                left: 5px;
+                width: 160px;
+                max-width: 160px;
+                padding: 7px;
+            }
+            h1 { font-size: 11px; margin-bottom: 5px; padding-bottom: 4px; }
+            .control-group { margin: 6px 0; }
+            label { font-size: 8px; margin-bottom: 2px; }
+            input[type="range"] { height: 5px; }
+            .value-display { font-size: 9px; margin-top: 2px; }
+            button { font-size: 7px; padding: 6px; margin: 2px 0; }
+            #legend { top: 5px; right: 5px; bottom: auto; padding: 8px; }
+            .legend-title { font-size: 10px; margin-bottom: 5px; }
+            .legend-item { font-size: 9px; margin: 3px 0; }
+            .legend-color { width: 12px; height: 12px; margin-right: 5px; }
+            #info { bottom: 5px; right: 5px; font-size: 9px; padding: 8px 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    
+    <div id="controls">
+        <h1>DNA Structure Control</h1>
+        
+        <div class="control-group">
+            <label for="unravelSlider">Unravel DNA Structure</label>
+            <input type="range" id="unravelSlider" min="0" max="100" value="0" step="1">
+            <div class="value-display">
+                <span id="unravelValue">Helical (0%)</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label for="rotationSlider">Rotation Speed</label>
+            <input type="range" id="rotationSlider" min="0" max="100" value="30" step="1">
+            <div class="value-display">
+                <span id="rotationValue">30%</span>
+            </div>
+        </div>
+
+        <button class="btn-primary" id="resetBtn">Reset View</button>
+        <button class="btn-secondary" id="animateBtn">Auto Unravel/Ravel</button>
+    </div>
+
+    <div id="info">
+        <div class="info-text"><strong>Structure:</strong> DNA Double Helix</div>
+        <div class="info-text"><strong>Base Pairs:</strong> <span id="basePairCount">20</span></div>
+        <div class="info-text"><strong>Controls:</strong> Drag to rotate, scroll to zoom</div>
+    </div>
+
+    <div id="legend">
+        <div class="legend-title">Base Pair Legend</div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff6b6b;"></div>
+            <span>Adenine (A)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #4169e1;"></div>
+            <span>Thymine (T)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ffd93d;"></div>
+            <span>Cytosine (C)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #00c853;"></div>
+            <span>Guanine (G)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #a8dadc;"></div>
+            <span>Backbone (Sugar-Phosphate)</span>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a2e);
+        
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 30);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight1.position.set(10, 10, 10);
+        scene.add(directionalLight1);
+
+        const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
+        directionalLight2.position.set(-10, -10, 5);
+        scene.add(directionalLight2);
+
+        // DNA parameters
+        const numBasePairs = 20;
+        const helixRadius = 5;
+        const backboneRadius = 0.3;
+        const baseRadius = 0.25;
+        const verticalSpacing = 1.5;
+        const helixTurns = 2;
+
+        // Colors
+        const colors = {
+            adenine: 0xff6b6b,
+            thymine: 0x4169e1,
+            cytosine: 0xffd93d,
+            guanine: 0x00c853,
+            backbone: 0xa8dadc
+        };
+
+        // Base pair options for random selection
+        const basePairs = [];
+        const pairOptions = [
+            ['A', 'T'],  // A on left, T on right
+            ['T', 'A'],  // T on left, A on right
+            ['C', 'G'],  // C on left, G on right
+            ['G', 'C']   // G on left, C on right
+        ];
+        
+        // Generate random base pair sequence with 50% A-T and 50% C-G
+        function generateBasePairs() {
+            basePairs.length = 0;
+            for (let i = 0; i < numBasePairs; i++) {
+                let pair;
+                if (Math.random() < 0.5) {
+                    // A-T pair (50% chance)
+                    pair = pairOptions[Math.random() < 0.5 ? 0 : 1]; // Random orientation
+                } else {
+                    // C-G pair (50% chance)
+                    pair = pairOptions[Math.random() < 0.5 ? 2 : 3]; // Random orientation
+                }
+                const isRotated = Math.random() < 0.5; // 50% chance to rotate
+                basePairs.push({ base1: pair[0], base2: pair[1], rotated: isRotated });
+            }
+        }
+        
+        // Generate initial sequence
+        generateBasePairs();
+
+        // DNA structure group
+        const dnaGroup = new THREE.Group();
+        scene.add(dnaGroup);
+
+        // Store DNA components for animation
+        const dnaComponents = {
+            backbone1: [],
+            backbone2: [],
+            basePairs: [],
+            connections: []
+        };
+
+        // Create DNA structure
+        function createDNA() {
+            // Clear existing DNA
+            while (dnaGroup.children.length > 0) {
+                dnaGroup.remove(dnaGroup.children[0]);
+            }
+            dnaComponents.backbone1 = [];
+            dnaComponents.backbone2 = [];
+            dnaComponents.basePairs = [];
+            dnaComponents.connections = [];
+
+            const backbone1Points = [];
+            const backbone2Points = [];
+
+            // Base color map
+            const baseColorMap = { A: colors.adenine, T: colors.thymine, C: colors.cytosine, G: colors.guanine };
+            
+            for (let i = 0; i < numBasePairs; i++) {
+                const t = i / (numBasePairs - 1);
+                const angle = t * Math.PI * 2 * helixTurns;
+                const y = (i - numBasePairs / 2) * verticalSpacing;
+
+                // Backbone 1 (right strand)
+                const x1 = Math.cos(angle) * helixRadius;
+                const z1 = Math.sin(angle) * helixRadius;
+                
+                const backbone1Sphere = new THREE.Mesh(
+                    new THREE.SphereGeometry(backboneRadius, 32, 32),
+                    new THREE.MeshPhongMaterial({ color: colors.backbone, shininess: 80 })
+                );
+                backbone1Sphere.position.set(x1, y, z1);
+                dnaComponents.backbone1.push({ mesh: backbone1Sphere, originalPos: { x: x1, y, z: z1 }, index: i });
+                backbone1Points.push(new THREE.Vector3(x1, y, z1));
+
+                // Backbone 2 (left strand)
+                const x2 = Math.cos(angle + Math.PI) * helixRadius;
+                const z2 = Math.sin(angle + Math.PI) * helixRadius;
+                
+                const backbone2Sphere = new THREE.Mesh(
+                    new THREE.SphereGeometry(backboneRadius, 32, 32),
+                    new THREE.MeshPhongMaterial({ color: colors.backbone, shininess: 80 })
+                );
+                backbone2Sphere.position.set(x2, y, z2);
+                dnaComponents.backbone2.push({ mesh: backbone2Sphere, originalPos: { x: x2, y, z: z2 }, index: i });
+                backbone2Points.push(new THREE.Vector3(x2, y, z2));
+
+                // Base pairs - create two-colored connection
+                const [base1Type, base2Type] = [basePairs[i].base1, basePairs[i].base2];
+                const base1Color = baseColorMap[base1Type];
+                const base2Color = baseColorMap[base2Type];
+
+                // Create bond with two colors meeting at midpoint
+                if (basePairs[i].rotated) {
+                    createConnection(backbone2Sphere.position, backbone1Sphere.position, base1Color, base2Color, 0.15);
+                } else {
+                    createConnection(backbone1Sphere.position, backbone2Sphere.position, base1Color, base2Color, 0.15);
+                }
+            }
+
+            // Create curved backbones as flat ribbons
+            createCurvedBackbone(backbone1Points, colors.backbone, 0.8);
+            createCurvedBackbone(backbone2Points, colors.backbone, 0.8);
+        }
+
+        function createConnection(pos1, pos2, color1, color2, radius) {
+            const direction = new THREE.Vector3().subVectors(pos2, pos1);
+            const length = direction.length();
+            const midpoint = new THREE.Vector3().addVectors(pos1, pos2).multiplyScalar(0.5);
+
+            // First half: from pos1 to midpoint with color1
+            const cylinder1 = new THREE.Mesh(
+                new THREE.CylinderGeometry(radius, radius, length / 2, 16),
+                new THREE.MeshPhongMaterial({ color: color1, shininess: 60 })
+            );
+            const mid1 = new THREE.Vector3().addVectors(pos1, midpoint).multiplyScalar(0.5);
+            cylinder1.position.copy(mid1);
+            cylinder1.lookAt(midpoint);
+            cylinder1.rotateX(Math.PI / 2);
+            dnaGroup.add(cylinder1);
+            dnaComponents.connections.push(cylinder1);
+
+            // Second half: from midpoint to pos2 with color2
+            const cylinder2 = new THREE.Mesh(
+                new THREE.CylinderGeometry(radius, radius, length / 2, 16),
+                new THREE.MeshPhongMaterial({ color: color2, shininess: 60 })
+            );
+            const mid2 = new THREE.Vector3().addVectors(midpoint, pos2).multiplyScalar(0.5);
+            cylinder2.position.copy(mid2);
+            cylinder2.lookAt(pos2);
+            cylinder2.rotateX(Math.PI / 2);
+            dnaGroup.add(cylinder2);
+            dnaComponents.connections.push(cylinder2);
+        }
+
+        function createCurvedBackbone(points, color, width) {
+            if (points.length < 2) return;
+            
+            const curve = new THREE.CatmullRomCurve3(points);
+            const segments = points.length * 4;
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            const colors = [];
+            const indices = [];
+            
+            // Create a darker version of the color for one side
+            const colorObj = new THREE.Color(color);
+            const darkerColorObj = colorObj.clone().multiplyScalar(0.6); // 60% brightness
+            
+            // Generate flat ribbon along the curve, oriented toward the helix center
+            for (let i = 0; i <= segments; i++) {
+                const t = i / segments;
+                const point = curve.getPoint(t);
+                const tangent = curve.getTangent(t).normalize();
+                
+                // Compute radial direction pointing inward toward helix center (0, y, 0)
+                const radial = new THREE.Vector3(-point.x, 0, -point.z).normalize();
+                
+                // The ribbon width direction is perpendicular to both tangent and radial
+                const width_dir = new THREE.Vector3().crossVectors(tangent, radial).normalize();
+                
+                // Two vertices per segment - left and right edges of ribbon
+                const p1 = point.clone().addScaledVector(width_dir, width / 2);
+                const p2 = point.clone().addScaledVector(width_dir, -width / 2);
+                
+                vertices.push(p1.x, p1.y, p1.z);
+                vertices.push(p2.x, p2.y, p2.z);
+                
+                // Add colors - p1 is normal color, p2 is darker
+                colors.push(colorObj.r, colorObj.g, colorObj.b);
+                colors.push(darkerColorObj.r, darkerColorObj.g, darkerColorObj.b);
+            }
+            
+            // Create triangles for the ribbon
+            for (let i = 0; i < segments; i++) {
+                const a = i * 2;
+                const b = a + 1;
+                const c = a + 2;
+                const d = b + 2;
+                
+                indices.push(a, c, b);
+                indices.push(b, c, d);
+            }
+            
+            geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
+            geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
+            geometry.computeVertexNormals();
+            
+            const material = new THREE.MeshPhongMaterial({ color: 0xffffff, vertexColors: true, shininess: 80, side: THREE.DoubleSide });
+            const mesh = new THREE.Mesh(geometry, material);
+            
+            dnaGroup.add(mesh);
+            dnaComponents.connections.push(mesh);
+        }
+
+        // Update DNA based on unravel amount (0 = helical, 1 = flat)
+        function updateDNAStructure(unravelAmount) {
+            // Clear connections
+            dnaComponents.connections.forEach(conn => dnaGroup.remove(conn));
+            dnaComponents.connections = [];
+
+            const backbone1Points = [];
+            const backbone2Points = [];
+
+            for (let i = 0; i < numBasePairs; i++) {
+                const t = i / (numBasePairs - 1);
+                const y = (i - numBasePairs / 2) * verticalSpacing;
+
+                // Original helical positions
+                const helicalAngle = t * Math.PI * 2 * helixTurns;
+                const helicalX1 = Math.cos(helicalAngle) * helixRadius;
+                const helicalZ1 = Math.sin(helicalAngle) * helixRadius;
+                const helicalX2 = Math.cos(helicalAngle + Math.PI) * helixRadius;
+                const helicalZ2 = Math.sin(helicalAngle + Math.PI) * helixRadius;
+
+                // Flat/unraveled positions
+                const flatX1 = helixRadius;
+                const flatZ1 = 0;
+                const flatX2 = -helixRadius;
+                const flatZ2 = 0;
+
+                // Interpolate between helical and flat
+                const backbone1X = helicalX1 * (1 - unravelAmount) + flatX1 * unravelAmount;
+                const backbone1Z = helicalZ1 * (1 - unravelAmount) + flatZ1 * unravelAmount;
+                const backbone2X = helicalX2 * (1 - unravelAmount) + flatX2 * unravelAmount;
+                const backbone2Z = helicalZ2 * (1 - unravelAmount) + flatZ2 * unravelAmount;
+
+                // Update backbone positions
+                dnaComponents.backbone1[i].mesh.position.set(backbone1X, y, backbone1Z);
+                dnaComponents.backbone2[i].mesh.position.set(backbone2X, y, backbone2Z);
+                
+                backbone1Points.push(new THREE.Vector3(backbone1X, y, backbone1Z));
+                backbone2Points.push(new THREE.Vector3(backbone2X, y, backbone2Z));
+
+                // Get base pair info
+                const isRotated = basePairs[i].rotated;
+                const base1Type = basePairs[i].base1;
+                const base2Type = basePairs[i].base2;
+                const baseColorMap = { A: colors.adenine, T: colors.thymine, C: colors.cytosine, G: colors.guanine };
+                const base1Color = baseColorMap[base1Type];
+                const base2Color = baseColorMap[base2Type];
+
+                // Create bond with two colors meeting at midpoint
+                if (isRotated) {
+                    createConnection(dnaComponents.backbone2[i].mesh.position, dnaComponents.backbone1[i].mesh.position, base1Color, base2Color, 0.15);
+                } else {
+                    createConnection(dnaComponents.backbone1[i].mesh.position, dnaComponents.backbone2[i].mesh.position, base1Color, base2Color, 0.15);
+                }
+            }
+
+            // Create curved backbones as flat ribbons
+            createCurvedBackbone(backbone1Points, colors.backbone, 0.8);
+            createCurvedBackbone(backbone2Points, colors.backbone, 0.8);
+        }
+
+        // Mouse controls
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        let rotationVelocity = { x: 0, y: 0 };
+        let autoRotate = true;
+        let rotationSpeed = 0.003;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchStartDist = 0;
+
+        renderer.domElement.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            autoRotate = false;
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+        });
+
+        renderer.domElement.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+
+                rotationVelocity.y = deltaX * 0.005;
+                rotationVelocity.x = deltaY * 0.005;
+
+                dnaGroup.rotation.y += rotationVelocity.y;
+                dnaGroup.rotation.x += rotationVelocity.x;
+
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            }
+        });
+
+        renderer.domElement.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // Touch events
+        renderer.domElement.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                autoRotate = false;
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                previousMousePosition = { x: touchStartX, y: touchStartY };
+            } else if (e.touches.length === 2) {
+                isDragging = false;
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const dx = touch2.clientX - touch1.clientX;
+                const dy = touch2.clientY - touch1.clientY;
+                touchStartDist = Math.sqrt(dx * dx + dy * dy);
+            }
+        }, false);
+
+        renderer.domElement.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (e.touches.length === 1 && isDragging) {
+                const deltaX = e.touches[0].clientX - previousMousePosition.x;
+                const deltaY = e.touches[0].clientY - previousMousePosition.y;
+
+                rotationVelocity.y = deltaX * 0.005;
+                rotationVelocity.x = deltaY * 0.005;
+
+                dnaGroup.rotation.y += rotationVelocity.y;
+                dnaGroup.rotation.x += rotationVelocity.x;
+
+                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            } else if (e.touches.length === 2) {
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const dx = touch2.clientX - touch1.clientX;
+                const dy = touch2.clientY - touch1.clientY;
+                const currentDist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (touchStartDist > 0) {
+                    const delta = currentDist - touchStartDist;
+                    camera.position.z -= delta * 0.02;
+                    camera.position.z = Math.max(15, Math.min(50, camera.position.z));
+                }
+                touchStartDist = currentDist;
+            }
+        }, false);
+
+        renderer.domElement.addEventListener('touchend', () => {
+            isDragging = false;
+            touchStartDist = 0;
+        }, false);
+
+        // Zoom with mouse wheel
+        renderer.domElement.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            camera.position.z += e.deltaY * 0.02;
+            camera.position.z = Math.max(15, Math.min(50, camera.position.z));
+        });
+
+        // Controls
+        const unravelSlider = document.getElementById('unravelSlider');
+        const unravelValue = document.getElementById('unravelValue');
+        const rotationSlider = document.getElementById('rotationSlider');
+        const rotationValue = document.getElementById('rotationValue');
+        const resetBtn = document.getElementById('resetBtn');
+        const animateBtn = document.getElementById('animateBtn');
+
+        let isAnimating = false;
+        let animationDirection = 1;
+
+        unravelSlider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            updateDNAStructure(value / 100);
+            
+            if (value === 0) {
+                unravelValue.textContent = 'Helical (0%)';
+            } else if (value === 100) {
+                unravelValue.textContent = 'Flat (100%)';
+            } else {
+                unravelValue.textContent = `Unraveling (${value}%)`;
+            }
+            
+            isAnimating = false;
+        });
+
+        rotationSlider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            rotationSpeed = value * 0.0001;
+            rotationValue.textContent = `${value}%`;
+        });
+
+        resetBtn.addEventListener('click', () => {
+            camera.position.set(0, 0, 30);
+            dnaGroup.rotation.set(0, 0, 0);
+            autoRotate = true;
+            unravelSlider.value = 0;
+            generateBasePairs();
+            createDNA();
+            unravelValue.textContent = 'Helical (0%)';
+        });
+
+        animateBtn.addEventListener('click', () => {
+            isAnimating = !isAnimating;
+            animateBtn.textContent = isAnimating ? 'Stop Animation' : 'Auto Unravel/Ravel';
+        });
+
+        // Animation
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (autoRotate && !isDragging) {
+                dnaGroup.rotation.y += rotationSpeed;
+            }
+
+            if (isAnimating) {
+                let currentValue = parseInt(unravelSlider.value);
+                currentValue += animationDirection;
+
+                if (currentValue >= 100) {
+                    currentValue = 100;
+                    animationDirection = -1;
+                } else if (currentValue <= 0) {
+                    currentValue = 0;
+                    animationDirection = 1;
+                }
+
+                unravelSlider.value = currentValue;
+                updateDNAStructure(currentValue / 100);
+                
+                if (currentValue === 0) {
+                    unravelValue.textContent = 'Helical (0%)';
+                } else if (currentValue === 100) {
+                    unravelValue.textContent = 'Flat (100%)';
+                } else {
+                    unravelValue.textContent = `Unraveling (${currentValue}%)`;
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }, false);
+
+        // Initialize
+        createDNA();
+        animate();
+    </script>
+</body>
+</html>
