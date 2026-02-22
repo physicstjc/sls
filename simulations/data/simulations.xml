@@ -4554,4 +4554,70 @@
   <topics><topic>nuclear-physics</topic></topics>
   <author>James Kua</author>
  </simulation>
- </simulations>
+
+ <simulation>
+  <id>js-040</id>
+  <title>3D Molecular Lattice Simulation</title>
+  <description>Simulates 3D molecular lattices and chemical structures.</description>
+  <image>../chem-structures/chem-structures.png</image>
+  <url>../chem-structures/</url>
+  <platform>JavaScript</platform>
+  <topics><topic>general</topic></topics>
+  <author>Tan Seng Kwang</author>
+ </simulation>
+
+ <simulation>
+  <id>js-041</id>
+  <title>Monsoon Simulator: African Climate Data</title>
+  <description>Visualizes monsoon patterns and African climate data.</description>
+  <image>../monsoon/monsoon.png</image>
+  <url>../monsoon/</url>
+  <platform>JavaScript</platform>
+  <topics><topic>general</topic></topics>
+  <author>Tan Seng Kwang</author>
+ </simulation>
+
+ <simulation>
+  <id>js-042</id>
+  <title>SG Urban Analytics - 1950-2020 Historical</title>
+  <description>Analyzes historical land use and urban development in Singapore.</description>
+  <image>../singapore-land-use/singapore-land-use.png</image>
+  <url>../singapore-land-use/</url>
+  <platform>JavaScript</platform>
+  <topics><topic>general</topic></topics>
+  <author>Tan Seng Kwang</author>
+ </simulation>
+
+ <simulation>
+  <id>js-043</id>
+  <title>AI Star Jump Tracker</title>
+  <description>Uses AI to track and count star jump exercises.</description>
+  <image>../starjump/starjump.png</image>
+  <url>../starjump/</url>
+  <platform>JavaScript</platform>
+  <topics><topic>general</topic></topics>
+  <author>Tan Seng Kwang</author>
+ </simulation>
+
+ <simulation>
+  <id>js-044</id>
+  <title>Interactive 3D DNA Structure</title>
+  <description>Interactive visualization of the 3D double helix structure of DNA.</description>
+  <image>../dna/dna.png</image>
+  <url>../dna/</url>
+  <platform>JavaScript</platform>
+  <topics><topic>general</topic></topics>
+  <author>Tan Seng Kwang</author>
+ </simulation>
+
+ <simulation>
+  <id>js-045</id>
+  <title>Capacitors in Combination</title>
+  <description>Interactive simulation to explore series and parallel capacitor arrangements.</description>
+  <image>../capacitance/capacitance.png</image>
+  <url>../capacitance/</url>
+  <platform>JavaScript</platform>
+  <topics><topic>electricity</topic></topics>
+  <author>Tan Seng Kwang</author>
+ </simulation>
+</simulations>
