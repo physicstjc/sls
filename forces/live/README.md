@@ -37,6 +37,7 @@ This is a realtime live quiz platform using Supabase + vanilla JS.
 
 ---
 
+
 ## Step 2: Local Testing
 
 ### 2a. Start Local Server
@@ -51,7 +52,8 @@ Visit:
 ### 2b. Run Quiz
 1. **Host page**: 
    - Click "Create Session"
-   - Paste `SUPABASE_URL` + `SUPABASE_ANON_KEY` when prompted
+   - No popup is needed in Vercel deployment (config is read from `/api/config`)
+   - For local testing, if you do not have env vars configured, set `sessionStorage.sb_url` and `sessionStorage.sb_key` in browser DevTools
    - Copy session code
 2. **Student page (new tab)**:
    - Paste session code

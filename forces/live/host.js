@@ -8,17 +8,39 @@ let questions = [];
 let sessionId = null;
 let sessionCode = null;
 let teacherId = null;
+let currentQuestionIndex = 0;
+
+async function loadSupabaseRuntimeConfig() {
+  const storedUrl = sessionStorage.getItem('sb_url');
+  const storedKey = sessionStorage.getItem('sb_key');
+  if (storedUrl && storedKey) {
+    window.__SUPABASE_URL = storedUrl;
+    window.__SUPABASE_KEY = storedKey;
+    return true;
+  }
+
+  try {
+    const res = await fetch('/api/config', { cache: 'no-store' });
+    if (!res.ok) return false;
+    const cfg = await res.json();
+    if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) return false;
+
+    window.__SUPABASE_URL = cfg.supabaseUrl;
+    window.__SUPABASE_KEY = cfg.supabaseAnonKey;
+    sessionStorage.setItem('sb_url', cfg.supabaseUrl);
+    sessionStorage.setItem('sb_key', cfg.supabaseAnonKey);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
 
 async function init() {
-  // Setup env for client-side Supabase
-  window.__SUPABASE_URL = prompt('Enter SUPABASE_URL:') || sessionStorage.getItem('sb_url');
-  window.__SUPABASE_KEY = prompt('Enter SUPABASE_ANON_KEY:') || sessionStorage.getItem('sb_key');
-  if (!window.__SUPABASE_URL || !window.__SUPABASE_KEY) {
-    alert('Supabase credentials required. Set env or provide here.');
+  const hasConfig = await loadSupabaseRuntimeConfig();
+  if (!hasConfig) {
+    document.getElementById('setup-message').textContent = 'Supabase config missing. Set SUPABASE_URL and SUPABASE_ANON_KEY in Vercel project environment variables.';
     return;
   }
-  sessionStorage.setItem('sb_url', window.__SUPABASE_URL);
-  sessionStorage.setItem('sb_key', window.__SUPABASE_KEY);
 
   try {
     await supabaseHelper.initSupabase();
@@ -61,6 +83,7 @@ async function createSession() {
 
 async function displayQuestion(index) {
   if (index < 0 || index >= questions.length) return;
+  currentQuestionIndex = index;
 
   const q = questions[index];
   document.getElementById('q-title').textContent = q.title;
@@ -119,13 +142,11 @@ async function refreshParticipants() {
 }
 
 function nextQuestion() {
-  const currentIndex = questions.findIndex((q) => q.id === questions[0].id); // simplified
-  displayQuestion(currentIndex + 1);
+  displayQuestion(Math.min(questions.length - 1, currentQuestionIndex + 1));
 }
 
 function prevQuestion() {
-  const currentIndex = questions.findIndex((q) => q.id === questions[0].id);
-  displayQuestion(Math.max(0, currentIndex - 1));
+  displayQuestion(Math.max(0, currentQuestionIndex - 1));
 }
 
 async function endSession() {
@@ -141,9 +162,7 @@ function subscribeToLive() {
 
   supabaseHelper.subscribeToResponses(sessionId, (payload) => {
     console.log('New response:', payload);
-    // Refresh chart on new response
-    const currentIndex = 0; // TODO: track actual index
-    refreshResponseChart(currentIndex);
+    refreshResponseChart(currentQuestionIndex);
     refreshParticipants();
   });
 }
