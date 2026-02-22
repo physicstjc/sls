@@ -85,12 +85,15 @@
         animate();
         
         window.addEventListener('resize', onWindowResize);
-        window.addEventListener('mousedown', (e) => { 
+        // Improve touch/pen/mouse support: use pointer events and disable default touch actions on canvas
+        renderer.domElement.style.touchAction = 'none';
+        renderer.domElement.addEventListener('pointerdown', (e) => {
+            if (e.isPrimary === false) return;
             isDragging = true;
             prevMouse = { x: e.clientX, y: e.clientY };
         });
-        window.addEventListener('mouseup', () => isDragging = false);
-        window.addEventListener('mousemove', onMouseMove);
+        renderer.domElement.addEventListener('pointerup', () => isDragging = false);
+        renderer.domElement.addEventListener('pointermove', onMouseMove);
         window.addEventListener('click', onMouseClick);
         window.addEventListener('wheel', onWheel, { passive: false });
         
