@@ -85,6 +85,7 @@
               <label for="airResistance">Air Resistance</label>
             </div>
             <button id="playBtn">Play</button>
+            <button id="refBtn" class="reset">Set s=0 at Release</button>
             <button id="resetBtn" class="reset">Reset</button>
           </div>
         </div>
@@ -159,7 +160,10 @@
         this.energyLossValueEl = document.getElementById('energyLossValue');
         this.airEl = document.getElementById('airResistance');
         this.playBtn = document.getElementById('playBtn');
+        this.refBtn = document.getElementById('refBtn');
         this.resetBtn = document.getElementById('resetBtn');
+
+        this.useReleaseReference = false;
 
         // State
         this.reset();
@@ -171,11 +175,13 @@
       reset(){
         this.isPlaying = false;
         this.accImpulseTimer = 0;
+        this.useReleaseReference = false;
         this.time = 0;
         this.timeEl.value = 0;
         this.timeValueEl.textContent = this.time.toFixed(2);
 
         this.h0 = parseFloat(this.heightEl.value);                 // m
+        this.releaseHeight = this.h0;
         this.energyLoss = parseFloat(this.energyLossEl.value)/100; // fraction (0..1)
         this.hasAir = !!this.airEl.checked;
 
@@ -190,10 +196,13 @@
         this.ballX = this.canvas.width/2;
 
         this.timeData = [];
+        this.heightData = [];
         this.positionData = [];
         this.velocityData = [];
         this.accelerationData = [];
 
+        this.logCurrentState();
+        this.updateReferenceButtonLabel();
         this.clearGraphs();
       }
 
@@ -230,6 +239,13 @@
           if(this.isPlaying) this.animate();
         });
 
+        this.refBtn.addEventListener('click', ()=>{
+          this.useReleaseReference = !this.useReleaseReference;
+          this.updateReferenceButtonLabel();
+          this.draw();
+          this.updateGraphs();
+        });
+
         this.resetBtn.addEventListener('click', ()=>{
           this.reset();
           this.playBtn.textContent = 'Play';
@@ -257,10 +273,29 @@
 
         // Log
         this.timeData.push(this.time);
-        this.positionData.push(this.y);
+        this.heightData.push(this.y);
         this.velocityData.push(this.v);
         const aDisplay = (this.accImpulseTimer > 0) ? (+20) : this.a;
         this.accelerationData.push(aDisplay);
+      }
+
+      logCurrentState(){
+        this.timeData.push(this.time);
+        this.heightData.push(this.y);
+        this.velocityData.push(this.v);
+        this.accelerationData.push(this.a);
+      }
+
+      getReferenceHeightMeters(){
+        return this.useReleaseReference ? this.releaseHeight : 0;
+      }
+
+      updateReferenceButtonLabel(){
+        this.refBtn.textContent = this.useReleaseReference ? 's=0 at Release ✓' : 'Set s=0 at Release';
+      }
+
+      getDisplacementMeters(){
+        return this.y - this.getReferenceHeightMeters();
       }
 
       simulateToTime(targetT){
@@ -305,6 +340,21 @@
         ctx.lineTo(this.canvas.width, this.groundY);
         ctx.stroke();
 
+        const refY = this.groundY - (this.getReferenceHeightMeters() * this.pxPerMeter) - this.ballRadius;
+        ctx.save();
+        ctx.strokeStyle = '#9ca3af';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5,4]);
+        ctx.beginPath();
+        ctx.moveTo(0, refY);
+        ctx.lineTo(this.canvas.width, refY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '11px Arial';
+        ctx.fillText('s=0', 6, refY - 5);
+        ctx.restore();
+
         // Ball
         const ballCenterY = this.groundY - (this.y * this.pxPerMeter) - this.ballRadius;
         ctx.fillStyle = '#ff6b35';
@@ -338,8 +388,8 @@ drawVectors(ballCenterY){
     this.drawArrowHead(x, y0, x, y0 + dy, color);
   };
 
-  // Reference for displacement: lowest COM (when ball is resting)
-  const refY = this.groundY - this.ballRadius;
+  // Reference for displacement (ground or release height)
+  const refY = this.groundY - (this.getReferenceHeightMeters() * this.pxPerMeter) - this.ballRadius;
 
   // Position vector (green): from lowest COM → current COM
   drawV(xS, refY, ballCenterY - refY, '#22c55e');
@@ -382,9 +432,12 @@ drawVectors(ballCenterY){
       }
 
       updateGraphs(){
+        this.positionData = this.heightData.map(h => this.getReferenceHeightMeters() - h);
+        const velocityDisplayData = this.velocityData.map(v => -v);
+        const accelerationDisplayData = this.accelerationData.map(a => -a);
         this.drawGraph(this.posCtx, this.positionData, this.timeData, '#22c55e');
-        this.drawGraph(this.velCtx, this.velocityData, this.timeData, '#ec4899');
-        this.drawGraph(this.accCtx, this.accelerationData, this.timeData, '#3b82f6');
+        this.drawGraph(this.velCtx, velocityDisplayData, this.timeData, '#ec4899');
+        this.drawGraph(this.accCtx, accelerationDisplayData, this.timeData, '#3b82f6');
       }
 
 drawGraph(ctx, data, tdata, color){
@@ -409,7 +462,11 @@ drawGraph(ctx, data, tdata, color){
   let dMax = Math.max(...data);
   if(dMax - dMin < 1e-6){ dMax = dMin + 1e-6; }
 
-  const yZero = ctx.canvas.height - ((0 - dMin)/(dMax - dMin)) * ctx.canvas.height;
+  const plotPadY = 6;
+  const plotHeight = ctx.canvas.height - 2*plotPadY;
+  const toCanvasY = value => plotPadY + (1 - (value - dMin)/(dMax - dMin)) * plotHeight;
+
+  const yZero = toCanvasY(0);
 
   // Axes in black
   ctx.strokeStyle = '#000';
@@ -431,7 +488,7 @@ drawGraph(ctx, data, tdata, color){
   ctx.beginPath();
   for(let i=0;i<data.length;i++){
     const x = (tdata[i]/tMax)*ctx.canvas.width;
-    const y = ctx.canvas.height - ((data[i]-dMin)/(dMax-dMin))*ctx.canvas.height;
+    const y = toCanvasY(data[i]);
     if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
   }
   ctx.stroke();
