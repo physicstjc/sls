@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Live Quiz - Student</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="student-container">
+    <div id="join-panel" class="panel">
+      <h2>Join Quiz</h2>
+      <div class="form-group">
+        <label>Session Code</label>
+        <input type="text" id="session-code" placeholder="e.g., ABC123" maxlength="6">
+      </div>
+      <div class="form-group">
+        <label>Your Name</label>
+        <input type="text" id="student-name" placeholder="e.g., Alice">
+      </div>
+      <button id="join-btn">Join</button>
+      <div id="join-message"></div>
+    </div>
+
+    <div id="quiz-panel" class="panel" style="display: none;">
+      <div class="student-header">
+        <h2 id="q-title">—</h2>
+        <p id="q-text">—</p>
+      </div>
+
+      <div id="options" class="student-options">
+        <!-- Answer buttons injected -->
+      </div>
+
+      <div id="feedback" class="feedback muted"></div>
+      <div class="student-footer">
+        <button id="submit-btn" disabled>Submit Answer</button>
+      </div>
+    </div>
+
+    <div id="waiting-panel" class="panel" style="display: none;">
+      <h2>Waiting for Next Question...</h2>
+      <p>Teacher will start shortly.</p>
+    </div>
+  </div>
+
+  <script type="module" src="./student.js"></script>
+</body>
+</html>

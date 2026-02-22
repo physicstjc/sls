@@ -1,0 +1,32 @@
+body { margin: 0; font-family: Inter, system-ui, -apple-system, Roboto, 'Segoe UI', Arial; background: #0f1724; color: #e6eef8; }
+.container { display: grid; grid-template-columns: 320px 1fr 300px; gap: 16px; height: 100vh; padding: 20px; box-sizing: border-box; }
+.panel { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 14px; box-shadow: 0 6px 18px rgba(2,6,23,0.6); }
+.left { display:flex; flex-direction:column; }
+.title { font-size: 1.05rem; color: #7dd3fc; margin-bottom: 8px; }
+.desc { font-size: 0.9rem; color: #cfe9ff; line-height:1.4; }
+.meta { margin-top: 12px; font-size: 0.85rem; color: #98a8bd; }
+.center { display:flex; align-items:center; justify-content:center; }
+svg { width:100%; height:100%; touch-action:none; }
+.object { fill:#111827; stroke:#94a3b8; stroke-width:2; }
+.arrow { stroke:#60a5fa; stroke-width:4; fill:none; marker-end:url(#arrowhead); }
+.handle { fill:#fef3c7; stroke:#b45309; stroke-width:1; cursor:grab; }
+.right { display:flex; flex-direction:column; }
+.controls { display:flex; gap:8px; margin-bottom:12px; }
+button { background:#071024; color:#cde9ff; border:1px solid rgba(255,255,255,0.04); padding:8px 10px; border-radius:8px; cursor:pointer; }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+.muted { color:#9fb0c8; font-size:0.9rem; }
+.force-list { margin-top:8px; display:flex; flex-direction:column; gap:8px; }
+.force-item { display:flex; justify-content:space-between; align-items:center; padding:8px; background: rgba(255,255,255,0.02); border-radius:8px; }
+.footer { margin-top:auto; display:flex; gap:8px; }
+.small { font-size:0.85rem; color:#b8d5ef; }
+.question { margin-top: 10px; margin-bottom: 10px; color: #eaf4ff; line-height: 1.45; }
+.options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.option-btn { text-align: left; background: #0b1730; }
+.option-btn.correct { border-color: #16a34a; background: #052e1a; color: #dcfce7; }
+.option-btn.wrong { border-color: #dc2626; background: #3b0a0a; color: #fee2e2; }
+.feedback { min-height: 42px; line-height: 1.4; }
+
+@media (max-width: 1100px) {
+	.container { grid-template-columns: 1fr; height: auto; min-height: 100vh; }
+	.center { min-height: 320px; }
+}

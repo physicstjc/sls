@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>Forces Practice</title>
+	<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+	<div class="container">
+		<div class="panel left">
+			<div class="title">Forces Practice</div>
+			<div id="q-title" class="small"></div>
+			<div class="desc" id="q-intro"></div>
+			<div class="meta"><strong>Cause:</strong> <div id="q-cause"></div></div>
+			<div class="meta"><strong>Affects:</strong> <div id="q-affects"></div></div>
+		</div>
+
+		<div class="panel center">
+			<svg id="fbd" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
+				<!-- drawn dynamically -->
+			</svg>
+		</div>
+
+		<div class="panel right">
+			<div class="controls">
+				<button id="next-btn" disabled>Next</button>
+			</div>
+			<div id="progress" class="small muted"></div>
+			<div id="question-text" class="question"></div>
+			<div id="options" class="options"></div>
+			<div id="feedback" class="feedback muted"></div>
+			<div class="footer">
+				<div id="score" class="muted">Score: 0/0</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Live Quiz - Host Dashboard</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="host-container">
+    <div class="header">
+      <h1>Live Quiz Host</h1>
+      <div id="session-info" class="session-info">
+        <div>Session Code: <strong id="code">—</strong></div>
+        <div>Students: <strong id="count">0</strong></div>
+        <div>Status: <strong id="status">offline</strong></div>
+      </div>
+    </div>
+
+    <div id="setup-panel" class="panel">
+      <h2>Setup Quiz Session</h2>
+      <div class="form-group">
+        <label>Teacher ID (any string)</label>
+        <input type="text" id="teacher-id" placeholder="e.g., teacher-001" value="teacher-001">
+      </div>
+      <button id="create-btn">Create Session</button>
+      <div id="setup-message"></div>
+    </div>
+
+    <div id="quiz-panel" class="panel" style="display: none;">
+      <div class="question-display">
+        <h2 id="q-title">—</h2>
+        <p id="q-text">—</p>
+      </div>
+
+      <div class="chart-container">
+        <div id="response-chart" class="chart">
+          <!-- bars will be injected -->
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="prev-q-btn">Previous Question</button>
+        <button id="next-q-btn">Next Question</button>
+        <button id="end-btn">End Session</button>
+      </div>
+
+      <div class="participants-list">
+        <h3>Participants (<span id="participant-count">0</span>)</h3>
+        <div id="participants"></div>
+      </div>
+    </div>
+
+    <div id="end-panel" class="panel" style="display: none;">
+      <h2>Quiz Ended</h2>
+      <p>Final score data available in Supabase.</p>
+      <button onclick="location.reload()">Start New Session</button>
+    </div>
+  </div>
+
+  <script type="module" src="./host.js"></script>
+</body>
+</html>

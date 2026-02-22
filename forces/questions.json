@@ -1,0 +1,87 @@
+[
+  {
+    "id": "friction",
+    "title": "Friction",
+    "intro": "Friction is a resistive force that opposes relative motion between surfaces in contact.",
+    "cause": "It comes from microscopic roughness and electromagnetic interactions at the contact surface.",
+    "affects": "It depends mainly on the normal force and the coefficient of friction between materials.",
+    "scenario": "box_on_floor",
+    "question": "A box is pushed to the right across a rough floor. Which direction is the frictional force on the box?",
+    "options": [
+      "To the right",
+      "To the left",
+      "Upward",
+      "Downward"
+    ],
+    "answerIndex": 1,
+    "explanation": "Friction opposes relative motion between surfaces, so it acts opposite the box's motion.",
+    "vectors": [
+      { "name": "Push", "x": 95, "y": 0 },
+      { "name": "f", "x": -75, "y": 0 },
+      { "name": "N", "x": 0, "y": -95 },
+      { "name": "W", "x": 0, "y": 95 }
+    ]
+  },
+  {
+    "id": "normal",
+    "title": "Normal Contact Force",
+    "intro": "The normal force is a contact force that acts perpendicular to a surface.",
+    "cause": "It is caused by compression at the contact interface between object and surface.",
+    "affects": "It is affected by weight and any additional components pressing into the surface.",
+    "scenario": "book_on_table",
+    "question": "A book is at rest on a horizontal table. Which statement is correct?",
+    "options": [
+      "Normal force is zero",
+      "Normal force is less than weight",
+      "Normal force equals weight",
+      "Normal force acts horizontally"
+    ],
+    "answerIndex": 2,
+    "explanation": "For vertical equilibrium on a horizontal table (no vertical acceleration), normal force balances weight.",
+    "vectors": [
+      { "name": "N", "x": 0, "y": -100 },
+      { "name": "W", "x": 0, "y": 100 }
+    ]
+  },
+  {
+    "id": "tension",
+    "title": "Tension",
+    "intro": "Tension is the pulling force transmitted along a taut rope or string.",
+    "cause": "It arises when the rope is stretched by forces at its ends.",
+    "affects": "It depends on load and system setup (single rope, pulleys, acceleration).",
+    "scenario": "hanging_mass",
+    "question": "A mass hangs at rest from a light rope. Which force acts upward on the mass?",
+    "options": [
+      "Weight",
+      "Tension",
+      "Normal force",
+      "Friction"
+    ],
+    "answerIndex": 1,
+    "explanation": "The rope pulls upward on the mass with tension; weight acts downward.",
+    "vectors": [
+      { "name": "T", "x": 0, "y": -110 },
+      { "name": "W", "x": 0, "y": 110 }
+    ]
+  },
+  {
+    "id": "weight",
+    "title": "Weight",
+    "intro": "Weight is the gravitational force on an object.",
+    "cause": "It is caused by gravity and equals mg near Earth's surface.",
+    "affects": "It depends on mass and local gravitational field strength.",
+    "scenario": "falling_ball",
+    "question": "A ball is in free fall (ignore air resistance). Which force acts on it?",
+    "options": [
+      "Only weight downward",
+      "Weight upward",
+      "Normal force upward",
+      "Friction to the left"
+    ],
+    "answerIndex": 0,
+    "explanation": "In ideal free fall without air resistance, gravity is the only force.",
+    "vectors": [
+      { "name": "W", "x": 0, "y": 120 }
+    ]
+  }
+]
