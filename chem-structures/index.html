@@ -57,6 +57,8 @@
     let autoRotate = true; 
     let isDragging = false;
     let prevMouse = { x: 0, y: 0 };
+    let pointers = new Map();
+    let prevPinchDist = null;
     let currentMode = 'diamond';
     
     let virtualLattice = []; 
@@ -87,13 +89,49 @@
         window.addEventListener('resize', onWindowResize);
         // Improve touch/pen/mouse support: use pointer events and disable default touch actions on canvas
         renderer.domElement.style.touchAction = 'none';
+
         renderer.domElement.addEventListener('pointerdown', (e) => {
-            if (e.isPrimary === false) return;
-            isDragging = true;
-            prevMouse = { x: e.clientX, y: e.clientY };
+            renderer.domElement.setPointerCapture(e.pointerId);
+            pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (pointers.size === 1) {
+                isDragging = true;
+                prevMouse = { x: e.clientX, y: e.clientY };
+            } else if (pointers.size === 2) {
+                const pts = Array.from(pointers.values());
+                prevPinchDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+            }
         });
-        renderer.domElement.addEventListener('pointerup', () => isDragging = false);
-        renderer.domElement.addEventListener('pointermove', onMouseMove);
+
+        renderer.domElement.addEventListener('pointermove', (e) => {
+            if (!pointers.has(e.pointerId)) return;
+            pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (pointers.size === 2) {
+                const pts = Array.from(pointers.values());
+                const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+                if (prevPinchDist && dist > 0) {
+                    const scale = prevPinchDist / dist;
+                    camera.position.multiplyScalar(scale);
+                    const len = camera.position.length();
+                    if (len < 8) camera.position.setLength(8);
+                    if (len > 60) camera.position.setLength(60);
+                    camera.lookAt(0, 0, 0);
+                }
+                prevPinchDist = dist;
+            } else if (pointers.size === 1 && isDragging) {
+                // single-finger rotate
+                group.rotation.y += (e.clientX - prevMouse.x) * 0.01;
+                group.rotation.x += (e.clientY - prevMouse.y) * 0.01;
+                prevMouse = { x: e.clientX, y: e.clientY };
+            }
+        });
+
+        renderer.domElement.addEventListener('pointerup', (e) => {
+            try { renderer.domElement.releasePointerCapture(e.pointerId); } catch (err) {}
+            pointers.delete(e.pointerId);
+            if (pointers.size < 2) prevPinchDist = null;
+            if (pointers.size === 0) isDragging = false;
+        });
+
         window.addEventListener('click', onMouseClick);
         window.addEventListener('wheel', onWheel, { passive: false });
         
