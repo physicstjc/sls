@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Batch MRI Classifier</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <h1>Batch MRI Classifier</h1>
+    <p class="subtitle">Scan multiple MRI images in one run and classify each case.</p>
+
+    <nav class="page-nav" aria-label="Page navigation">
+      <a href="index.html">Single Image Detector</a>
+      <a href="batch.html" aria-current="page">Batch Detector</a>
+    </nav>
+
+    <section class="card">
+      <label for="batchInput" class="label">MRI images</label>
+      <div id="dropZone" class="drop-zone" role="button" tabindex="0" aria-label="Drop MRI images here or click to browse">
+        <p class="drop-zone-title">Drop MRI images here</p>
+        <p class="drop-zone-subtitle">or click to browse</p>
+      </div>
+      <input id="batchInput" type="file" accept="image/*" multiple />
+      <button id="analyzeAllBtn" type="button" disabled>Analyze All Images</button>
+      <p id="batchStatus" class="status">Loading model...</p>
+    </section>
+
+    <section class="card">
+      <h2>Batch Results</h2>
+      <div id="batchResults" class="batch-results">
+        <p id="batchPlaceholder">No images selected yet.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+  <script src="batch.js" defer></script>
+</body>
+</html>

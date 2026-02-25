@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brain Tumour AI Detector</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <h1>Brain Tumour AI Detector</h1>
+    <p class="subtitle">Upload an MRI image to predict the tumour type.</p>
+
+    <nav class="page-nav" aria-label="Page navigation">
+      <a href="index.html" aria-current="page">Single Image Detector</a>
+      <a href="batch.html">Batch Detector</a>
+    </nav>
+
+    <section class="card">
+      <label for="imageInput" class="label">MRI image</label>
+      <input id="imageInput" type="file" accept="image/*" />
+
+      <div class="preview-wrap" id="previewWrap" aria-live="polite">
+        <img id="previewImage" alt="Uploaded MRI preview" hidden />
+        <p id="placeholderText">No image selected</p>
+      </div>
+
+      <button id="analyzeBtn" type="button" disabled>Analyze Image</button>
+      <p id="statusText" class="status">Loading model...</p>
+    </section>
+
+    <section class="card">
+      <h2>Prediction Result</h2>
+      <p id="topPrediction" class="top-result">No prediction yet</p>
+      <p id="caseWriteup" class="case-writeup">A short case write-up will appear after analysis.</p>
+      <div id="label-container" class="labels"></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
