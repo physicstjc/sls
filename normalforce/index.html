@@ -1,1 +1,83 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inclined Plane Forces Simulation</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Main container for the simulation -->
+    <div class="container">
+        <!-- Canvas for drawing the inclined plane and force vectors -->
+        <canvas id="simulationCanvas"></canvas>
+        
+        <!-- Control panel for user interaction -->
+        <div class="control-panel">
+            <!-- Angle slider with real-time display -->
+            <div class="control-group">
+                <label for="angleSlider" class="control-label">
+                    <span class="label-icon">θ</span>
+                    <span class="label-text">Angle: <span id="angleValue">30</span>°</span>
+                </label>
+                <input type="range" id="angleSlider" min="0" max="60" value="30" step="1" class="slider">
+            </div>
+            
+            <!-- Mass slider with real-time display -->
+            <div class="control-group">
+                <label for="massSlider" class="control-label">
+                    <span class="label-icon">m</span>
+                    <span class="label-text">Mass: <span id="massValue">5.0</span> kg</span>
+                </label>
+                <input type="range" id="massSlider" min="1" max="10" value="5" step="0.5" class="slider">
+            </div>
+            
+            <!-- Toggle switches for showing/hiding force components -->
+            <!-- MODIFIED: Changed default checked state for weight components (showParallel and showPerpendicular) -->
+            <div class="toggle-group">
+                <label class="toggle-label">
+                    <input type="checkbox" id="showWeight" checked>
+                    <span class="toggle-text">Weight (W)</span>
+                </label>
+                <label class="toggle-label">
+                    <input type="checkbox" id="showNormal" checked>
+                    <span class="toggle-text">Normal Force (N)</span>
+                </label>
+                <label class="toggle-label">
+                    <input type="checkbox" id="showParallel">
+                    <span class="toggle-text">W sin θ</span>
+                </label>
+                <label class="toggle-label">
+                    <input type="checkbox" id="showPerpendicular">
+                    <span class="toggle-text">W cos θ</span>
+                </label>
+            </div>
+            
+            <!-- Information display panel -->
+            <div class="info-panel">
+                <div class="info-item">
+                    <span class="info-label">Weight (W):</span>
+                    <span id="weightValue" class="info-value">49.0 N</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Normal Force (N):</span>
+                    <span id="normalValue" class="info-value">42.4 N</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">W sin θ:</span>
+                    <span id="parallelValue" class="info-value">24.5 N</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">W cos θ:</span>
+                    <span id="perpendicularValue" class="info-value">42.4 N</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tooltip for displaying information on hover -->
+        <div id="tooltip" class="tooltip"></div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
