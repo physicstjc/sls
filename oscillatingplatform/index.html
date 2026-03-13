@@ -1,1 +1,105 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oscillating Platform Simulation</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Main container for the simulation -->
+    <div class="container">
+        <!-- Left panel: Visual simulation area -->
+        <div class="left-panel">
+            <!-- Canvas for drawing the oscillating platform and box -->
+            <canvas id="simulationCanvas"></canvas>
+            
+            <!-- Control panel at the bottom -->
+            <div class="controls">
+                <!-- Play/Pause button -->
+                <button id="playPauseBtn" class="control-btn" title="Play/Pause simulation">
+                    <span id="playPauseIcon">▶</span>
+                </button>
+                
+                <!-- Reset button -->
+                <button id="resetBtn" class="control-btn" title="Reset simulation">↻</button>
+                
+                <!-- Frequency slider -->
+                <!-- MODIFIED: Changed min to 0.1 and max to 0.3 Hz -->
+                <div class="slider-container">
+                    <label for="frequencySlider" class="slider-label">Oscillation Rate</label>
+                    <input type="range" id="frequencySlider" min="0.1" max="0.3" step="0.01" value="0.2">
+                    <span id="frequencyValue" class="value-display">0.2 Hz</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right panel: Information and graphs -->
+        <div class="right-panel">
+            <!-- Tooltip info box that appears on hover -->
+            <div class="info-tooltip" id="infoTooltip">
+                <strong>Oscillating Platform Simulation</strong><br>
+                This simulation demonstrates how the normal contact force on a box changes as the platform oscillates in simple harmonic motion.
+            </div>
+            
+            <!-- Force display section -->
+            <div class="force-display">
+                <div class="force-item" title="Weight of the box (constant)">
+                    <div class="force-label">Weight (W)</div>
+                    <div class="force-value" id="weightValue">50.0 N</div>
+                    <div class="force-arrow weight-arrow">↓</div>
+                </div>
+                
+                <div class="force-item" title="Normal contact force from platform">
+                    <div class="force-label">Normal Force (N)</div>
+                    <div class="force-value" id="normalValue">50.0 N</div>
+                    <div class="force-arrow normal-arrow">↑</div>
+                </div>
+                
+                <div class="force-item" title="Net force on the box">
+                    <div class="force-label">Net Force</div>
+                    <div class="force-value" id="netForceValue">0.0 N</div>
+                    <div class="force-arrow net-arrow">—</div>
+                </div>
+            </div>
+            
+            <!-- Acceleration display -->
+            <div class="acceleration-display">
+                <div class="accel-item" title="Acceleration of the platform and box">
+                    <div class="accel-label">Acceleration</div>
+                    <div class="accel-value" id="accelValue">0.0 m/s²</div>
+                </div>
+                
+                <div class="accel-item" title="Direction of motion">
+                    <div class="accel-label">Motion</div>
+                    <div class="accel-value" id="motionValue">—</div>
+                </div>
+            </div>
+            
+            <!-- Graph showing normal force vs time -->
+            <div class="graph-container">
+                <div class="graph-title">Normal Force vs Time</div>
+                <canvas id="graphCanvas"></canvas>
+            </div>
+            
+            <!-- Key concepts section -->
+            <div class="concepts-section">
+                <div class="concept-item" title="When platform accelerates upward">
+                    <span class="concept-icon">↑</span>
+                    <span class="concept-text">Upward acceleration: N &gt; W</span>
+                </div>
+                <div class="concept-item" title="When platform is at equilibrium">
+                    <span class="concept-icon">=</span>
+                    <span class="concept-text">No acceleration: N = W</span>
+                </div>
+                <div class="concept-item" title="When platform accelerates downward">
+                    <span class="concept-icon">↓</span>
+                    <span class="concept-text">Downward acceleration: N &lt; W</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
