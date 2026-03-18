@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamics Simulation: Ball under Forces</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: #f4f7f6;
+            color: #333;
+            font-size: 0.85em;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 1400px;
+            height: 480px;
+            margin: auto;
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            position: relative;
+        }
+        .toolbar {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 15px;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        .simulation-area {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+        }
+        .vt-graph-area {
+            flex: 1; /* 1/3 width */
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+        }
+        .motion-fbd-area {
+            flex: 2; /* 2/3 width */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .canvas-container {
+            width: 100%;
+            text-align: center;
+            flex: 1;
+            min-height: 0;
+            position: relative;
+        }
+        .zoom-overlay, .controls-overlay {
+            position: absolute;
+            left: 5px;
+            top: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            z-index: 10;
+        }
+        .controls-overlay {
+            display: none; /* Logic moved to top toolbar */
+        }
+        .zoom-overlay button, .controls-overlay button {
+            width: 22px;
+            height: 22px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(108, 117, 125, 0.7);
+            color: white;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .controls-overlay button {
+            width: auto;
+            padding: 0 6px;
+            font-size: 0.8em;
+        }
+        .btn-start-overlay { background: rgba(0, 123, 255, 0.7) !important; }
+        .btn-reset-overlay { background: rgba(220, 53, 69, 0.7) !important; }
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 8px 15px;
+            background-color: #e9ecef;
+            border-bottom: 2px solid #ddd;
+        }
+        .toolbar-top {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+        .toolbar-bottom {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            border-top: 1px dashed #ccc;
+            padding-top: 4px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+        }
+        .force-list {
+            display: flex;
+            flex-direction: row;
+            gap: 12px;
+            margin-top: 0;
+            overflow-x: auto;
+            flex-grow: 1;
+            align-items: center;
+        }
+        .force-item {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+            gap: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #fff;
+            padding: 2px 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 0.9em;
+        }
+        button {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+            font-size: 0.9em;
+        }
+        .btn-add { background-color: #28a745; color: white; }
+        .btn-start { background-color: #007bff; color: white; }
+        .btn-reset { background-color: #dc3545; color: white; }
+        button:hover { opacity: 0.9; }
+        input[type="number"] { width: 38px; padding: 1px; font-size: 0.85em; }
+        select { padding: 2px; font-size: 0.85em; }
+        .label-title { font-weight: bold; margin-bottom: 2px; display: block; }
+    </style>
+
+    <script src="./lib/xapiwrapper.min.js"></script>
+    <script src="./lib/xAPI.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+    <!-- xAPI Timeline Tracking -->
+    <script>
+    // Define logAction and scheduleFlush globally so they are accessible by other scripts
+    var logAction, scheduleFlush;
+
+(function() {
+  // IMPORTANT:
+  // - Do not send statements directly with fetch/XHR (can trigger CORS failures)
+  // - Use the existing injected SLS glue: window.storeState(...) (vendor/xAPI.js)
+  const xapiState = { startTime: Date.now(), actions: [] };
+  const flushState = { timer: null, lastSentAt: 0, lastSig: '' };
+
+  function safeStore(payload) {
+    try {
+      if (typeof window.storeState === 'function') {
+        window.storeState(payload);
+      }
+    } catch (e) {
+      // never break content
+    }
+  }
+
+  function summarizeTarget(t) {
+    try {
+      return {
+        tag: (t && t.tagName) ? String(t.tagName).toLowerCase() : null,
+        id: t && t.id ? String(t.id).substring(0, 120) : null,
+        name: t && t.name ? String(t.name).substring(0, 120) : null,
+        value: t && t.value != null ? String(t.value).substring(0, 120) : null,
+        text: t && t.textContent ? String(t.textContent).trim().substring(0, 120) : null
+      };
+    } catch {
+      return {};
+    }
+  }
+
+  logAction = function(type, data, timestamp) {
+    xapiState.actions.push({ t: timestamp || Date.now(), type, data: data || null });
+    // keep payload small
+    if (xapiState.actions.length > 120) xapiState.actions.shift();
+  }
+
+  function captureDashboardSnapshot() {
+    // Best-effort: capture visible "dashboard"/"results" info without knowing the content structure.
+    try {
+      const selectors = [
+        '[id*="dashboard" i]', '[class*="dashboard" i]',
+        '[id*="result" i]', '[class*="result" i]',
+        '[id*="score" i]', '[class*="score" i]'
+      ];
+      const el = document.querySelector(selectors.join(','));
+      if (!el) return null;
+      const text = (el.textContent || '').trim().replace(/\s+/g, ' ');
+      if (!text) return null;
+      return { selector: el.id ? ('#' + el.id) : (el.className ? ('.' + String(el.className).split(/\s+/)[0]) : null), text: text.substring(0, 400) };
+    } catch {
+      return null;
+    }
+  }
+
+  function readDomNumberById(id) {
+    try {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      const text = (el.textContent || '').replace(/[^0-9.]/g, '');
+      const n = Number(text);
+      return Number.isFinite(n) ? n : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function extractScoreFromDom() {
+    try {
+      const directScore =
+        readDomNumberById('score') ??
+        readDomNumberById('points') ??
+        readDomNumberById('correctCount') ??
+        readDomNumberById('correct') ??
+        readDomNumberById('correctAnswers') ??
+        readDomNumberById('correctAnswersCount');
+
+      const directMax =
+        readDomNumberById('max') ??
+        readDomNumberById('total') ??
+        readDomNumberById('totalQuestions') ??
+        readDomNumberById('questionsToAdvance') ??
+        readDomNumberById('attemptCount') ??
+        readDomNumberById('attempts') ??
+        readDomNumberById('totalAttempts');
+
+      if (directScore != null) {
+        const max = directMax != null ? directMax : (directScore > 0 ? directScore : null);
+        return { score: directScore, max };
+      }
+
+      const selectors = [
+        '[id*="score" i]', '[class*="score" i]',
+        '[id*="result" i]', '[class*="result" i]',
+        '[id*="correct" i]', '[class*="correct" i]',
+        '[data-score]', '[data-points]', '[data-max]'
+      ];
+      const candidates = Array.from(document.querySelectorAll(selectors.join(',')));
+      for (const el of candidates) {
+        const dataScore = el.getAttribute('data-score') || el.getAttribute('data-points');
+        const dataMax = el.getAttribute('data-max');
+        if (dataScore != null) {
+          const score = Number(dataScore);
+          const max = dataMax != null ? Number(dataMax) : null;
+          if (!Number.isNaN(score)) return { score, max: Number.isNaN(max) ? null : max };
+        }
+        const text = (el.textContent || '').trim();
+        const scoreRegex = new RegExp('(\d+)\s*\/\s*(\d+)');
+        const m = text.match(scoreRegex);
+        if (m) return { score: Number(m[1]), max: Number(m[2]) };
+      }
+    } catch (e) {}
+    return { score: null, max: null };
+  }
+
+  function computeMetrics(actions) {
+    const elapsedSec = Math.max(0, Math.round((Date.now() - xapiState.startTime) / 1000));
+    const actionTypes = {};
+    const uniqueTargets = new Set();
+    let seqSingle = 0;
+    let seqMulti = 0;
+    let headOn = 0;
+    let extremes = 0;
+
+    let prev = null;
+    actions.forEach(a => {
+      actionTypes[a.type] = (actionTypes[a.type] || 0) + 1;
+      const t = a.data || {};
+      const key = [t.tag, t.id, t.name, t.text, t.value].filter(Boolean).join('|');
+      if (key) uniqueTargets.add(key);
+
+      if (prev && prev.type !== a.type) {
+        seqSingle++;
+        const prevKey = prev.data ? [prev.data.tag, prev.data.id, prev.data.name, prev.data.text, prev.data.value].filter(Boolean).join('|') : '';
+        if (prevKey && key && prevKey !== key) seqMulti++;
+      }
+
+      const textBlob = [t.text, t.id, t.name, t.value].filter(Boolean).join(' ').toLowerCase();
+      if (textBlob.includes('head-on') || textBlob.includes('headon')) headOn++;
+      if (textBlob.includes('mass') || textBlob.includes('speed') || textBlob.includes('velocity')) extremes++;
+      prev = a;
+    });
+
+    return { elapsedSec, actionTypes, uniqueTargets: uniqueTargets.size, seqSingle, seqMulti, headOn, extremes };
+  }
+
+  function buildFeedback(summary, score, max, actionLog) {
+    const lines = [];
+    lines.push('Feedback');
+    lines.push('Interactive Response Assistant');
+    lines.push(new Date().toLocaleString());
+    lines.push('Interactions: ' + summary.interactions);
+    lines.push('Elapsed Time: ' + summary.elapsedSec + 's');
+    if (score != null) {
+      lines.push('Score: ' + score + (max != null ? (' / ' + max) : ''));
+    }
+    lines.push('Unique Explorations: ' + summary.uniqueTargets);
+    const diversity = Object.keys(summary.actionTypes)
+      .map(k => k + ': ' + summary.actionTypes[k])
+      .join(', ');
+    lines.push('Diversity — ' + (diversity || 'n/a'));
+    lines.push('');
+    lines.push('Action Log:');
+    if (Array.isArray(actionLog) && actionLog.length) {
+      actionLog.forEach(a => {
+        const label = a && a.label ? a.label : (a && a.type ? a.type : 'event');
+        const time = (a && a.t != null) ? a.t : 0;
+        lines.push('t=' + time + 's ' + label);
+      });
+    }
+    return lines.join('<br>');
+  }
+
+  function buildPayload(reason) {
+    const actions = xapiState.actions.slice(-80);
+    const scoreInfo = extractScoreFromDom();
+    const metrics = computeMetrics(actions);
+    const summary = {
+      interactions: actions.length,
+      elapsedSec: metrics.elapsedSec,
+      actionTypes: metrics.actionTypes,
+      uniqueTargets: metrics.uniqueTargets,
+      seqSingle: metrics.seqSingle,
+      seqMulti: metrics.seqMulti,
+      headOn: metrics.headOn,
+      extremes: metrics.extremes
+    };
+
+    const actionLog = actions.slice(-15).map(a => {
+      const seconds = Math.max(0, Math.round((a.t - xapiState.startTime) / 100) / 10);
+      let label = '';
+      
+      if (a.data) {
+        // Prefer explicit text/label from data
+        label = [a.data.text || '', a.data.id || '', a.data.name || ''].filter(Boolean).join(' ').trim();
+        
+        // If it's a value change, include the value if present
+        if (a.data.value != null && !label.includes(String(a.data.value))) {
+          label += (label ? ': ' : '') + a.data.value;
+        }
+      }
+      
+      return { 
+        t: Number(seconds.toFixed(1)), 
+        type: a.type === 'learning-analytics' ? 'action' : a.type, 
+        label: label || a.type 
+      };
+    });
+    const feedback = buildFeedback(summary, scoreInfo.score, scoreInfo.max, actionLog);
+
+    return {
+      score: scoreInfo.score != null ? scoreInfo.score : 0,
+      max: scoreInfo.max != null ? scoreInfo.max : null,
+      feedback,
+      reason,
+      startedAt: xapiState.startTime,
+      summary,
+      actionLog,
+      actions,
+      dashboard: captureDashboardSnapshot(),
+      details: {
+        summary,
+        actionLog,
+        dashboard: captureDashboardSnapshot()
+      }
+    };
+  }
+
+  function signatureOfPayload(p) {
+    try {
+      const last = p && p.actions && p.actions.length ? p.actions[p.actions.length - 1] : null;
+      return String(p.reason) + '|' + (p.actions ? p.actions.length : 0) + '|' + (last ? last.t : 0);
+    } catch {
+      return String(Date.now());
+    }
+  }
+
+  function flush(reason) {
+    const p = buildPayload(reason);
+    const sig = signatureOfPayload(p);
+    if (sig === flushState.lastSig) return;
+    flushState.lastSig = sig;
+    flushState.lastSentAt = Date.now();
+    safeStore(p);
+  }
+
+  scheduleFlush = function(reason, delayMs) {
+    if (flushState.timer) clearTimeout(flushState.timer);
+    const d = typeof delayMs === 'number' ? delayMs : 1200;
+    flushState.timer = setTimeout(() => {
+      flushState.timer = null;
+      // small throttle to avoid flooding
+      if (Date.now() - flushState.lastSentAt < 700) return scheduleFlush(reason, 700);
+      flush(reason);
+    }, d);
+  }
+
+  function parseAnalyticsEntry(entry) {
+    try {
+      const timeEl = entry.querySelector ? entry.querySelector('.log-time') : null;
+      const actionEl = entry.querySelector ? entry.querySelector('.log-action') : null;
+      const valueEl = entry.querySelector ? entry.querySelector('.log-value') : null;
+
+      const timeText = timeEl ? timeEl.textContent : (entry.textContent || '');
+      const actionText = actionEl ? actionEl.textContent : null;
+      const valueText = valueEl ? valueEl.textContent : null;
+
+      const timeMatch = /t=([0-9.]+)s/i.exec(timeText);
+      const timeSec = timeMatch ? Number(timeMatch[1]) : null;
+
+      const label = [actionText, valueText].filter(Boolean).join(' ').trim();
+      return {
+        timeSec: Number.isFinite(timeSec) ? timeSec : null,
+        action: actionText ? actionText.trim() : null,
+        details: valueText ? valueText.trim() : null,
+        label: label || null
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function hookLearningAnalyticsLog() {
+    try {
+      if (window.__xapiLearningAnalyticsHooked) return;
+      window.__xapiLearningAnalyticsHooked = true;
+
+      const seen = new Set();
+
+      function recordEntry(entry) {
+        const parsed = parseAnalyticsEntry(entry);
+        if (!parsed) return;
+        const sig = [parsed.timeSec, parsed.action, parsed.details].join('|');
+        if (seen.has(sig)) return;
+        seen.add(sig);
+        if (seen.size > 300) {
+          const keep = Array.from(seen).slice(-200);
+          seen.clear();
+          keep.forEach(k => seen.add(k));
+        }
+
+        const ts = parsed.timeSec != null
+          ? (xapiState.startTime + Math.round(parsed.timeSec * 1000))
+          : Date.now();
+
+        logAction('learning-analytics', {
+          text: parsed.label || parsed.action || 'Analytics Event',
+          action: parsed.action || null,
+          details: parsed.details || null,
+          source: 'learning-analytics',
+          timeSec: parsed.timeSec
+        }, ts);
+
+        scheduleFlush('learning-analytics', 400);
+      }
+
+      function attachToContainer(container) {
+        if (!container || container.__xapiObserverAttached) return;
+        container.__xapiObserverAttached = true;
+
+        Array.from(container.querySelectorAll('.log-entry')).forEach(recordEntry);
+
+        const observer = new MutationObserver(mutations => {
+          mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(node => {
+              if (!(node instanceof Element)) return;
+              if (node.classList.contains('log-entry')) {
+                recordEntry(node);
+              } else {
+                node.querySelectorAll && node.querySelectorAll('.log-entry').forEach(recordEntry);
+              }
+            });
+          });
+        });
+
+        observer.observe(container, { childList: true, subtree: true });
+      }
+
+      function tryAttach() {
+        const container = document.getElementById('logContainer') || document.querySelector('.analytics-content #logContainer');
+        if (container) {
+          attachToContainer(container);
+          return true;
+        }
+        const entry = document.querySelector('.log-entry');
+        if (entry && entry.parentElement) {
+          attachToContainer(entry.parentElement);
+          return true;
+        }
+        return false;
+      }
+
+      if (tryAttach()) return;
+
+      let attempts = 0;
+      const timer = setInterval(() => {
+        attempts += 1;
+        if (tryAttach() || attempts > 20) {
+          clearInterval(timer);
+        }
+      }, 500);
+    } catch (e) {}
+  }
+
+  // No global keyboard/click listeners to avoid log spam.
+  // We primarily log state on "Start" and "Manual Save".
+
+  // Also flush when the tab is hidden / page unloads
+  document.addEventListener('visibilitychange', () => {
+    // In quiz contexts, we avoid sending "pause" events when switching tabs,
+    // because SLS learners commonly return to the parent tab.
+    try {
+      if (document.hidden && window.__xapiDisablePauseFlush === true) return;
+    } catch (e) {}
+    if (document.hidden) flush('pause');
+  });
+  window.addEventListener('beforeunload', () => {
+    try { flush('unload'); } catch (e) {}
+  });
+  function addSaveBtn() {
+    if (document.getElementById('xapi-save-button')) return;
+    
+    // Find the toolbar group to attach buttons to
+    const targetGroup = document.querySelector('.controls .control-group:last-child');
+    if (!targetGroup) return;
+
+    const b = document.createElement('button');
+    b.id = 'xapi-save-button';
+    b.textContent = 'Save';
+    b.title = 'Save state and take screenshot';
+    b.className = 'btn-save';
+    b.style.cssText = 'padding:4px 8px;background:#1976d2;color:white;border:none;border-radius:4px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;font-weight:bold;';
+    b.onclick = () => {
+      try { flush('manual-save'); } catch(e) {}
+      takeAppScreenshot();
+    };
+    targetGroup.appendChild(b);
+
+    // Add info toggle button for xAPI log
+    const info = document.createElement('button');
+    info.id = 'xapi-info-button';
+    info.innerHTML = 'ℹ️';
+    info.style.cssText = 'width:28px;height:28px;background:white;color:#64748b;border:1px solid #cbd5e1;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;';
+    info.onmouseover = () => { info.style.background = '#f8fafc'; info.style.color = '#334155'; };
+    info.onmouseout = () => { info.style.background = 'white'; info.style.color = '#64748b'; };
+    info.onclick = () => {
+      const panel = document.getElementById('xapi-debug-panel');
+      if (panel) {
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      }
+    };
+    targetGroup.appendChild(info);
+  }
+
+  function takeAppScreenshot() {
+    const container = document.querySelector('.container');
+    if (!container || typeof html2canvas === 'undefined') {
+      console.warn('html2canvas not loaded or container missing');
+      return;
+    }
+
+    // Hide the entire toolbar temporarily so it isn't in the screenshot
+    const toolbar = document.querySelector('.controls');
+    if (toolbar) toolbar.style.visibility = 'hidden';
+
+    html2canvas(container, {
+      scale: window.devicePixelRatio || 2, // High fidelity scaling
+      backgroundColor: '#f4f7f6',         // Match app background
+      logging: false,
+      useCORS: true,                      // In case external assets are used
+      onclone: (clonedDoc) => {
+        // Fix for cut-off text in inputs/selects:
+        // html2canvas sometimes struggles with padding/line-height in these elements.
+        const inputs = clonedDoc.querySelectorAll('input, select');
+        inputs.forEach(el => {
+          el.style.lineHeight = 'normal';
+          el.style.paddingTop = '1px';
+          el.style.paddingBottom = '1px';
+        });
+      }
+    }).then(canvas => {
+      // Restore the toolbar
+      if (toolbar) toolbar.style.visibility = 'visible';
+
+      try {
+        const dataURL = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `dynamics-snapshot-${new Date().getTime()}.png`;
+        link.href = dataURL;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        console.error('Download failed', err);
+      }
+    }).catch(err => {
+      if (toolbar) toolbar.style.visibility = 'visible';
+      console.error('High-fidelity capture failed', err);
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      addSaveBtn();
+      hookLearningAnalyticsLog();
+    });
+  } else {
+    addSaveBtn();
+    hookLearningAnalyticsLog();
+  }
+})();
+    </script>
+  
+    <!-- xAPI Quiz Tracking -->
+    <script>
+(function() {
+  // Unified tracking: quiz instrumentation is always present.
+  // We DO NOT force statement sending here. The vendor glue (lib/xAPI.js)
+  // will still send state reliably; statements are best-effort depending on CORS.
+
+  const qs = { questions: [], answers: {}, attempted: 0 };
+  const quizMeta = { total: 0, correct: 0, max: 0, lastScoreSent: null };
+  const history = [];
+  const flushState = { timer: null, lastSentAt: 0, lastSig: '' };
+  const answerDedup = { lastSig: '', lastAt: 0 };
+  const metricsState = { lastKey: '', timer: null };
+
+  // IMPORTANT:
+  // - Do not send statements directly with fetch/XHR (CORS failures in SLS hosting)
+  // - Use window.storeState(...) only; vendor/xAPI.js will send state + score statement.
+  function safeStore(payload) {
+    try {
+      if (typeof window.storeState === 'function') {
+        window.storeState(payload);
+      }
+    } catch (e) {
+      // no-op
+    }
+  }
+
+  function pushHistory(evt) {
+    history.push(Object.assign({ t: Date.now() }, evt));
+    if (history.length > 80) history.shift();
+  }
+
+  function toNumber(val) {
+    const n = Number(val);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function readDomNumber(id) {
+    try {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      const text = (el.textContent || '').replace(/[^0-9.]/g, '');
+      return toNumber(text);
+    } catch {
+      return null;
+    }
+  }
+
+  function getQuestionText() {
+    try {
+      const el = document.getElementById('question');
+      if (el && el.textContent) return el.textContent.trim().substring(0, 160);
+    } catch {}
+    return null;
+  }
+
+  function getGameState() {
+    try { return window.gameState || null; } catch { return null; }
+  }
+
+  function getMetricsFromGameState() {
+    const gs = getGameState();
+    if (!gs) return null;
+    const attempted = toNumber(gs.totalAttempts != null ? gs.totalAttempts : null);
+    const correct = toNumber(gs.correctCount != null ? gs.correctCount : null);
+    const points = toNumber(gs.score != null ? gs.score : null);
+    const max = toNumber(gs.questionsToAdvance != null ? gs.questionsToAdvance : null);
+    const hasAny = attempted != null || correct != null || points != null || max != null;
+    if (!hasAny) return null;
+    return { attempted, correct, points, max };
+  }
+
+  function getMetricsFromDom() {
+    const attempted = readDomNumber('totalAttempts');
+    const correct = readDomNumber('correctCount');
+    const points = readDomNumber('score');
+    const max = readDomNumber('totalQuestions');
+    const hasAny = attempted != null || correct != null || points != null || max != null;
+    if (!hasAny) return null;
+    return { attempted, correct, points, max };
+  }
+
+  function getMetrics() {
+    return getMetricsFromGameState() || getMetricsFromDom() || null;
+  }
+
+  function syncFromMetrics() {
+    const m = getMetrics();
+    if (!m) return;
+    if (m.attempted != null) qs.attempted = m.attempted;
+    if (m.correct != null) quizMeta.correct = m.correct;
+    if (m.max != null) quizMeta.max = m.max;
+  }
+
+  function startMetricsWatcher() {
+    if (metricsState.timer) return;
+    metricsState.timer = setInterval(() => {
+      const m = getMetrics();
+      if (!m) return;
+      const key = [m.attempted, m.correct, m.points, m.max].join('|');
+      if (key === metricsState.lastKey) return;
+      metricsState.lastKey = key;
+      syncFromMetrics();
+      scheduleFlush('auto-metrics');
+      maybeComputeAndSendScore();
+    }, 1200);
+  }
+
+  function recordAnswer(evt) {
+    try {
+      const sig = [evt.q, evt.value, evt.correct, evt.expected].join('|');
+      const now = Date.now();
+      if (sig === answerDedup.lastSig && now - answerDedup.lastAt < 800) return;
+      answerDedup.lastSig = sig;
+      answerDedup.lastAt = now;
+      pushHistory(evt);
+
+      const gs = getGameState();
+      const hasCounts = gs && (gs.totalAttempts != null || gs.correctCount != null);
+      if (!hasCounts) {
+        qs.attempted++;
+        if (evt.correct === true) quizMeta.correct++;
+      }
+    } catch (e) {}
+  }
+
+  // Build per-question breakdown for SLS and LRS analytics.
+  // Groups answer-like events by question id/text and derives:
+  // - question id/text
+  // - last user selection
+  // - inferred correct option (when available)
+  // - simple marks (1 for correct, 0 for not-certain/incorrect)
+  // This is emitted as quiz.items[] and also mirrored under
+  // hiddenMarks so vendor/xAPI.js can push it into result.extensions.
+  function buildQuizBreakdown() {
+    const byQ = new Map();
+
+    history.forEach(evt => {
+      if (!evt) return;
+      const type = (evt.type || '').toString();
+      if (!/answer/.test(type)) return; // focus on answer-like events
+
+      const keyRaw = evt.q != null ? String(evt.q) : '';
+      const key = keyRaw || (evt.name != null ? String(evt.name) : '');
+      if (!key) return;
+
+      let rec = byQ.get(key);
+      if (!rec) {
+        rec = {
+          id: key,
+          question: keyRaw || key,
+          correctOption: null,
+          lastEvent: null
+        };
+        byQ.set(key, rec);
+      }
+
+      rec.lastEvent = evt;
+      if (evt.expected != null && rec.correctOption == null) {
+        rec.correctOption = String(evt.expected).substring(0, 160);
+      }
+    });
+
+    const items = [];
+    let totalMarks = 0;
+    let maxMarks = 0;
+    let idx = 0;
+
+    byQ.forEach((rec, key) => {
+      const ev = rec.lastEvent || {};
+      const isCorrect = ev.correct === true;
+      const marks = isCorrect ? 1 : 0;
+      const max = 1;
+
+      items.push({
+        id: key || ('q' + (idx + 1)),
+        question: rec.question || null,
+        correctOption: rec.correctOption || (ev.expected != null ? String(ev.expected).substring(0, 160) : null),
+        userSelection: ev.value != null ? String(ev.value).substring(0, 160) : null,
+        marks,
+        maxMarks: max
+      });
+
+      totalMarks += marks;
+      maxMarks += max;
+      idx++;
+    });
+
+    return { items, totalMarks, maxMarks };
+  }
+
+  function signatureOfPayload(p) {
+    try {
+      const last = p && p.history && p.history.length ? p.history[p.history.length - 1] : null;
+      return String(p.reason) + '|' + p.score + '/' + p.max + '|' + (p.history ? p.history.length : 0) + '|' + (last ? last.t : 0);
+    } catch {
+      return String(Date.now());
+    }
+  }
+
+  function flush(reason) {
+    syncFromMetrics();
+    const max = quizMeta.max || quizMeta.total || qs.questions.length || 0;
+    const raw = (quizMeta.correct != null && quizMeta.correct > 0) ? quizMeta.correct : qs.attempted;
+    const m = getMetrics();
+    const breakdown = buildQuizBreakdown();
+    const hasBreakdown = breakdown && breakdown.maxMarks > 0;
+    const finalScore = hasBreakdown ? breakdown.totalMarks : raw;
+    const finalMax = hasBreakdown ? breakdown.maxMarks : max;
+
+    const payload = {
+      score: finalScore,
+      max: finalMax,
+      feedback: 'Quiz ' + reason + ': ' + raw + '/' + max + ' (correct ' + quizMeta.correct + '/' + max + ')',
+      reason,
+      quiz: { attempted: qs.attempted, correct: quizMeta.correct, total: max, points: m && m.points != null ? m.points : null },
+      history: history.slice(-80)
+    };
+
+    // Attach per-question breakdown when available so that vendor/xAPI.js
+    // can expose it via result.extensions.hiddenMarks and result.extensions.quizSummary.
+    if (hasBreakdown && breakdown.items.length) {
+      payload.quiz.items = breakdown.items;
+      payload.hiddenMarks = {
+        totalMarks: breakdown.totalMarks,
+        maxMarks: breakdown.maxMarks,
+        items: breakdown.items
+      };
+    }
+    const sig = signatureOfPayload(payload);
+    if (sig === flushState.lastSig) return;
+    flushState.lastSig = sig;
+    flushState.lastSentAt = Date.now();
+    safeStore(payload);
+  }
+
+  function scheduleFlush(reason, delayMs) {
+    if (flushState.timer) clearTimeout(flushState.timer);
+    const d = typeof delayMs === 'number' ? delayMs : 700;
+    flushState.timer = setTimeout(() => {
+      flushState.timer = null;
+      if (Date.now() - flushState.lastSentAt < 500) return scheduleFlush(reason, 500);
+      flush(reason);
+    }, d);
+  }
+
+  // Best-effort: attempt to infer correctness from common patterns.
+  // If we can't infer, we still send a score statement with raw=attempted.
+  function isCorrectFromInput(inputEl) {
+    try {
+      if (!inputEl) return null;
+      // Common patterns:
+      // - data-correct="true"
+      // - aria-correct / data-answer
+      // - value matches data-correct-value on group container
+      if (inputEl.dataset && (inputEl.dataset.correct === 'true' || inputEl.dataset.isCorrect === 'true')) return true;
+      const group = inputEl.closest('[data-correct],[data-answer],[data-correct-value]');
+      if (group) {
+        const correct = group.dataset.correct || group.dataset.answer || group.dataset.correctValue;
+        if (correct != null) return String(inputEl.value).trim() === String(correct).trim();
+      }
+      // Heuristic: label contains "(correct)"
+      const lbl = inputEl.closest('label');
+      if (lbl && /correct/i.test(lbl.textContent)) return true;
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  function sendScoreToSLS(scoreRaw, max, feedback) {
+    try {
+      if (typeof window.storeState === 'function') {
+        const breakdown = buildQuizBreakdown();
+        const hasBreakdown = breakdown && breakdown.maxMarks > 0;
+
+        const state = {
+          score: scoreRaw,
+          max: max,
+          feedback: feedback || '',
+          quiz: { attempted: qs.attempted, correct: quizMeta.correct, total: max },
+          history: history.slice(-80)
+        };
+
+        if (hasBreakdown && breakdown.items.length) {
+          state.quiz.items = breakdown.items;
+          state.hiddenMarks = {
+            totalMarks: breakdown.totalMarks,
+            maxMarks: breakdown.maxMarks,
+            items: breakdown.items
+          };
+        }
+
+        window.storeState(state);
+      }
+    } catch (e) {}
+  }
+
+  function maybeComputeAndSendScore() {
+    // If we know quizMeta.max, send a score on each change.
+    // Debounced by lastScoreSent.
+    syncFromMetrics();
+    const max = quizMeta.max || quizMeta.total || qs.questions.length || 0;
+    const raw = (quizMeta.correct != null && quizMeta.correct > 0) ? quizMeta.correct : qs.attempted;
+    const scoreKey = raw + '/' + max;
+    if (quizMeta.lastScoreSent === scoreKey) return;
+    quizMeta.lastScoreSent = scoreKey;
+
+    const feedback = 'Score: ' + raw + '/' + max;
+    sendScoreToSLS(raw, max, feedback);
+    // Score statement sending is handled by vendor/xAPI.js when storeState is called.
+    scheduleFlush('auto-score');
+  }
+
+  function initQuiz() {
+    const rgs = {};
+    document.querySelectorAll('input[type="radio"]').forEach(inp => {
+      if (!rgs[inp.name]) { rgs[inp.name] = true; qs.questions.push(inp.name); }
+    });
+    quizMeta.total = qs.questions.length;
+    quizMeta.max = quizMeta.total;
+    document.addEventListener('change', (e) => {
+      if (e.target.matches('input[type="radio"], input[type="checkbox"]')) {
+        const ix = qs.questions.indexOf(e.target.name);
+        if (ix >= 0) {
+          const ok = isCorrectFromInput(e.target);
+          recordAnswer({
+            type: 'answer',
+            q: e.target.name,
+            value: String(e.target.value).substring(0, 120),
+            correct: ok === true ? true : (ok === false ? false : null)
+          });
+          // Flush quickly so click history / correct-wrong shows up
+          scheduleFlush('answer');
+          maybeComputeAndSendScore();
+        }
+      }
+    });
+
+    // Button-based answers (common in Claude-generated interactives)
+    document.addEventListener('click', (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest('button,[role="button"],.answer-btn') : null;
+      if (!btn) return;
+      const inGrid = btn.closest && btn.closest('#answerGrid');
+      const looksLikeAnswer = inGrid || btn.classList.contains('answer-btn') || btn.dataset.answer != null;
+      if (!looksLikeAnswer) return;
+
+      const valueRaw = btn.dataset.answer != null ? btn.dataset.answer : (btn.textContent || '');
+      const value = String(valueRaw).trim().substring(0, 120);
+      const gs = getGameState();
+      const expected = gs && gs.correctAnswer != null ? String(gs.correctAnswer) : null;
+      const correct = expected != null ? (String(value) === String(expected)) : null;
+
+      recordAnswer({
+        type: 'answer_click',
+        q: getQuestionText(),
+        value,
+        correct,
+        expected
+      });
+
+      scheduleFlush('answer_click');
+      maybeComputeAndSendScore();
+    }, true);
+
+    startMetricsWatcher();
+
+    // Do not flush on visibility change for quiz mode.
+    // Switching back to the parent SLS tab should not mark the activity as paused.
+    window.addEventListener('beforeunload', () => { try { flush('unload'); } catch (e) {} });
+  }
+  function hookAnalytics() {
+    try {
+      if (typeof window.logAnalytics !== 'function') return;
+      if (window.__xapiAnalyticsHooked) return;
+      window.__xapiAnalyticsHooked = true;
+
+      const original = window.logAnalytics;
+      window.logAnalytics = function(action, challenge, studentAnswer, correctAnswer, result) {
+        try {
+          original.apply(this, arguments);
+        } catch (e) {}
+
+        const actionType = (action || '').toString().toLowerCase();
+        const isAnswer = actionType === 'answer_check' || actionType === 'answer' || actionType === 'check_answer';
+        const isStart = actionType === 'game_start' || actionType === 'start' || actionType === 'level_start';
+
+        recordAnswer({
+          type: actionType || 'event',
+          q: challenge ? String(challenge).substring(0, 140) : null,
+          value: studentAnswer != null ? String(studentAnswer).substring(0, 140) : null,
+          correct: result === 'correct' ? true : (result === 'incorrect' ? false : null),
+          expected: correctAnswer != null ? String(correctAnswer).substring(0, 140) : null,
+          result: result || null
+        });
+
+        if (isAnswer) {
+          scheduleFlush('answer_check');
+          maybeComputeAndSendScore();
+        } else if (isStart) {
+          scheduleFlush('game_start');
+        } else {
+          scheduleFlush(actionType || 'analytics');
+        }
+      };
+    } catch (e) {}
+  }
+
+  function hookCheckAnswer() {
+    try {
+      if (window.__xapiCheckAnswerHooked) return;
+      if (typeof window.checkAnswer !== 'function') return;
+      const original = window.checkAnswer;
+      window.checkAnswer = function(selectedAnswer, btn) {
+        try {
+          const gs = getGameState();
+          const expected = gs && gs.correctAnswer != null ? String(gs.correctAnswer) : null;
+          const value = selectedAnswer != null ? String(selectedAnswer).substring(0, 120) : null;
+          const correct = expected != null && value != null ? (String(value) === String(expected)) : null;
+          recordAnswer({
+            type: 'answer_check',
+            q: getQuestionText(),
+            value,
+            correct,
+            expected
+          });
+          scheduleFlush('answer_check');
+          maybeComputeAndSendScore();
+        } catch (e) {}
+        return original.apply(this, arguments);
+      };
+      window.__xapiCheckAnswerHooked = true;
+    } catch (e) {}
+  }
+
+  function startCheckAnswerWatcher() {
+    if (window.__xapiCheckAnswerWatch) return;
+    window.__xapiCheckAnswerWatch = true;
+    const timer = setInterval(() => {
+      hookCheckAnswer();
+      if (window.__xapiCheckAnswerHooked) clearInterval(timer);
+    }, 600);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      initQuiz();
+      hookAnalytics();
+      startCheckAnswerWatcher();
+    });
+  } else {
+    initQuiz();
+    hookAnalytics();
+    startCheckAnswerWatcher();
+  }
+})();
+    </script>
+  </head>
+<body>
+
+<div class="container">
+    <div class="controls">
+        <div class="toolbar-top">
+            <div class="control-group">
+                <span class="label-title">Initial State</span>
+                <select id="initialState" style="padding: 2px; font-size: 0.85em;">
+                    <option value="0">Stationary</option>
+                    <option value="20">Moving Right (20 m/s)</option>
+                    <option value="-20">Moving Left (20 m/s)</option>
+                </select>
+                <span id="massDisplay" style="font-size: 0.9em; color: #666; font-weight: bold;">Mass: 5.0kg</span>
+            </div>
+
+            <div class="control-group">
+                <button id="addForceBtn" class="btn-add" style="padding: 4px 8px; font-size: 12px;">+ Add Force</button>
+            </div>
+
+            <div class="control-group" style="margin-left: auto; gap: 8px;">
+                <button id="startBtnToolbar" class="btn-start" style="min-width: 65px; padding: 4px 8px; font-size: 12px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Start</button>
+                <button id="resetBtnToolbar" class="btn-reset" style="padding: 4px 8px; font-size: 12px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Reset</button>
+            </div>
+        </div>
+
+        <div class="toolbar-bottom" id="forcesToolbar" style="display: none;">
+            <span style="font-size: 11px; font-weight: bold; color: #555; white-space: nowrap;">Active Forces:</span>
+            <div id="forcesList" class="force-list"></div>
+        </div>
+    </div>
+
+    <div class="simulation-area">
+        <div class="vt-graph-area">
+            <canvas id="canvasVT"></canvas>
+        </div>
+        <div class="motion-fbd-area">
+            <div class="canvas-container">
+                <div class="controls-overlay">
+                    <button id="startBtn" class="btn-start-overlay">Start</button>
+                    <button id="resetBtn" class="btn-reset-overlay">Reset</button>
+                </div>
+                <canvas id="canvasFBD"></canvas>
+            </div>
+            <div class="canvas-container">
+                <div class="zoom-overlay">
+                    <button id="zoomInBtn">+</button>
+                    <button id="zoomOutBtn">-</button>
+                </div>
+                <canvas id="canvasMotion"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvasFBD = document.getElementById('canvasFBD');
+    const ctxFBD = canvasFBD.getContext('2d');
+    const canvasVT = document.getElementById('canvasVT');
+    const ctxVT = canvasVT.getContext('2d');
+    const canvasMotion = document.getElementById('canvasMotion');
+    const ctxMotion = canvasMotion.getContext('2d');
+
+    const forcesList = document.getElementById('forcesList');
+    const addForceBtn = document.getElementById('addForceBtn');
+    const startBtn = document.getElementById('startBtnToolbar');
+    const resetBtn = document.getElementById('resetBtnToolbar');
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
+    const initialStateSel = document.getElementById('initialState');
+    const massDisplay = document.getElementById('massDisplay');
+
+    let MASS = 5.0;
+    const DT = 0.02; // Update interval
+    
+    let isRunning = false;
+    let time = 0;
+    let velocity = 0; // m/s (Right is positive)
+    let displacement = 0; // m (Right is positive)
+    let historyVT = [];
+    let historyMotion = [];
+    let activeForces = []; // { type, magnitude }
+    let manualScale = 2; // Initial manual scale for motion strobe
+
+    const forceTypes = ['Rightward Tension', 'Leftward Tension', 'Friction', 'Air Resistance'];
+    const forceColors = {
+        'Rightward Tension': '#e67e22', // Orange
+        'Leftward Tension': '#9b59b6',  // Purple
+        'Friction': '#e74c3c',          // Red
+        'Air Resistance': '#27ae60'     // Green
+    };
+
+    function resizeCanvases() {
+        const dpr = window.devicePixelRatio || 1;
+        
+        [canvasFBD, canvasVT, canvasMotion].forEach(canvas => {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+        });
+        drawAll();
+    }
+
+    window.addEventListener('resize', resizeCanvases);
+
+    function init() {
+        isRunning = false;
+        startBtn.textContent = 'Start';
+        time = 0;
+        velocity = parseFloat(initialStateSel.value);
+        displacement = 0;
+        historyVT = [{ t: 0, v: velocity }];
+        historyMotion = [{ t: 0, s: 0 }];
+        
+        MASS = 5.0; // Fixed mass as per request
+        massDisplay.textContent = `Mass: ${MASS.toFixed(1)} kg`;
+        drawAll();
+    }
+    addForceBtn.onclick = () => {
+        if (activeForces.length >= 4) return;
+
+        const id = Date.now();
+        // Pick the first available force type that isn't already active
+        const usedTypes = activeForces.map(f => f.type);
+        const availableType = forceTypes.find(t => !usedTypes.includes(t));
+        
+        if (!availableType) return;
+
+        const force = { id, type: availableType, magnitude: 5 };
+        activeForces.push(force);
+
+        const row = document.createElement('div');
+        row.className = 'force-item';
+        row.dataset.id = id;
+
+        const sel = document.createElement('select');
+        
+        function updateOptions() {
+            const currentVal = sel.value;
+            sel.innerHTML = '';
+            const otherUsed = activeForces.filter(f => f.id !== id).map(f => f.type);
+            forceTypes.forEach(t => {
+                if (!otherUsed.includes(t) || t === currentVal) {
+                    const opt = document.createElement('option');
+                    opt.value = t;
+                    opt.textContent = t;
+                    if (t === currentVal) opt.selected = true;
+                    sel.appendChild(opt);
+                }
+            });
+        }
+
+        // Global update for all selects
+        function refreshAllSelects() {
+            const selects = forcesList.querySelectorAll('select');
+            selects.forEach(s => {
+                const rowId = parseInt(s.closest('.force-item').dataset.id);
+                const currentF = activeForces.find(f => f.id === rowId);
+                const usedByOthers = activeForces.filter(f => f.id !== rowId).map(f => f.type);
+                
+                const val = s.value;
+                s.innerHTML = '';
+                forceTypes.forEach(t => {
+                    if (!usedByOthers.includes(t) || t === val) {
+                        const opt = document.createElement('option');
+                        opt.value = t;
+                        opt.textContent = t;
+                        if (t === val) opt.selected = true;
+                        s.appendChild(opt);
+                    }
+                });
+            });
+        }
+
+        const inp = document.createElement('input');
+        inp.type = 'number';
+        inp.value = 5;
+        inp.min = 1;
+        inp.max = 10;
+        
+        const unitLabel = document.createTextNode(' N ');
+
+        const updateVisibility = () => {
+            if (sel.value === 'Air Resistance') {
+                inp.style.display = 'none';
+                unitLabel.textContent = ''; 
+                force.magnitude = 5; 
+            } else {
+                inp.style.display = 'inline-block';
+                unitLabel.textContent = ' N ';
+                force.magnitude = parseFloat(inp.value);
+            }
+            drawFBD();
+        };
+
+        sel.onchange = (e) => { 
+            force.type = e.target.value; 
+            updateVisibility();
+            refreshAllSelects();
+            
+            // Log as separate action breadcrumb ONLY if running
+            if (isRunning) {
+                if (typeof logAction === 'function') {
+                    logAction('change', { 
+                        text: `MID-SIM CHANGE | Force Type updated to ${e.target.value}`,
+                        type: 'setting-adjustment'
+                    });
+                }
+                if (typeof scheduleFlush === 'function') scheduleFlush('force-change', 1000);
+            }
+        };
+
+        inp.onchange = (e) => { 
+            force.magnitude = parseFloat(e.target.value); 
+            drawFBD(); 
+            
+            // Log as separate action breadcrumb ONLY if running
+            if (isRunning) {
+                if (typeof logAction === 'function') {
+                    logAction('change', { 
+                        text: `MID-SIM CHANGE | ${force.type} set to ${e.target.value}N`,
+                        type: 'setting-adjustment'
+                    });
+                }
+                if (typeof scheduleFlush === 'function') scheduleFlush('force-change', 1000);
+            }
+        };
+
+        const rem = document.createElement('button');
+        rem.textContent = '✕';
+        rem.style.padding = '2px 6px';
+        rem.onclick = () => {
+            activeForces = activeForces.filter(f => f.id !== id);
+            forcesList.removeChild(row);
+            
+            // Hide toolbar if no forces left
+            if (activeForces.length === 0) {
+                const toolbarBottom = document.getElementById('forcesToolbar');
+                if (toolbarBottom) toolbarBottom.style.display = 'none';
+            }
+            
+            drawFBD();
+            refreshAllSelects();
+        };
+
+        row.appendChild(sel);
+        row.appendChild(inp);
+        row.appendChild(unitLabel);
+        row.appendChild(rem);
+        forcesList.appendChild(row);
+
+        // Show toolbar if we have forces
+        const toolbarBottom = document.getElementById('forcesToolbar');
+        if (toolbarBottom) toolbarBottom.style.display = 'flex';
+
+        // Set initial value for this select before refreshing all
+        sel.value = availableType;
+        refreshAllSelects();
+        updateVisibility();
+        drawFBD();
+    };
+
+    function drawFBD() {
+        const dpr = window.devicePixelRatio || 1;
+        ctxFBD.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctxFBD.clearRect(0, 0, canvasFBD.width/dpr, canvasFBD.height/dpr);
+        const cw = canvasFBD.width / dpr, ch = canvasFBD.height / dpr;
+
+        // Internal Title
+        ctxFBD.fillStyle = '#666';
+        ctxFBD.font = 'bold 13px Arial';
+        ctxFBD.textAlign = 'right';
+        ctxFBD.fillText('FREE BODY DIAGRAM', cw - 10, 20);
+
+        const cx = cw / 2, cy = ch / 2;
+
+        // Ball/Object (made smaller: 40x40 -> 24x24)
+        ctxFBD.beginPath();
+        ctxFBD.rect(cx - 12, cy - 12, 24, 24);
+        ctxFBD.fillStyle = '#3498db';
+        ctxFBD.fill();
+        ctxFBD.strokeStyle = '#2980b9';
+        ctxFBD.stroke();
+
+        activeForces.forEach(f => {
+            let direction = 0; // 1: Right, -1: Left
+            if (f.type === 'Rightward Tension') direction = 1;
+            else if (f.type === 'Leftward Tension') direction = -1;
+            else if (f.type === 'Friction') {
+                if (velocity > 0.01) direction = -1;
+                else if (velocity < -0.01) direction = 1;
+                else {
+                    // Static friction: opposes net tension ONLY if net tension exceeds it
+                    let netT = activeForces.reduce((sum, tf) => {
+                        if (tf.type === 'Rightward Tension') return sum + tf.magnitude;
+                        if (tf.type === 'Leftward Tension') return sum - tf.magnitude;
+                        return sum;
+                    }, 0);
+                    if (Math.abs(netT) > 0.01) direction = -Math.sign(netT);
+                }
+            } else if (f.type === 'Air Resistance') {
+                if (velocity > 0.01) direction = -1;
+                else if (velocity < -0.01) direction = 1;
+                else direction = 0; // No air resistance if stationary
+            }
+
+            if (direction !== 0) {
+                let magnitude = f.magnitude;
+                if (f.type === 'Air Resistance') {
+                    magnitude = 0.05 * (velocity * velocity);
+                    if (magnitude < 0.01 && Math.abs(velocity) < 0.01) magnitude = 0;
+                }
+                
+                // Group forces by side to calculate vertical offsets
+                const sameSideForces = activeForces.filter(other => {
+                    let otherDir = 0;
+                    if (other.type === 'Rightward Tension') otherDir = 1;
+                    else if (other.type === 'Leftward Tension') otherDir = -1;
+                    else if (other.type === 'Friction') {
+                        if (velocity > 0.01) otherDir = -1;
+                        else if (velocity < -0.01) otherDir = 1;
+                        else {
+                            let netT = activeForces.reduce((sum, tf) => {
+                                if (tf.type === 'Rightward Tension') return sum + tf.magnitude;
+                                if (tf.type === 'Leftward Tension') return sum - tf.magnitude;
+                                return sum;
+                            }, 0);
+                            if (Math.abs(netT) > 0.01) otherDir = -Math.sign(netT);
+                        }
+                    } else if (other.type === 'Air Resistance') {
+                        if (velocity > 0.01) otherDir = -1;
+                        else if (velocity < -0.01) otherDir = 1;
+                    }
+                    return otherDir === direction;
+                });
+                
+                const forceIndex = sameSideForces.indexOf(f);
+                // Stagger vectors slightly up/down (5px intervals)
+                const vOffset = (forceIndex - (sameSideForces.length - 1) / 2) * 10;
+                
+                const len = Math.min(magnitude * 10, 130);
+                const startOff = 12; // Adjusted for smaller box
+                const endX = cx + (direction * (startOff + len));
+                const drawY = cy + vOffset;
+                
+                // Color for this specific force type
+                const color = forceColors[f.type] || '#e74c3c';
+
+                // Arrow
+                ctxFBD.beginPath();
+                ctxFBD.moveTo(cx + (direction * startOff), drawY);
+                ctxFBD.lineTo(endX, drawY);
+                ctxFBD.strokeStyle = color;
+                ctxFBD.lineWidth = 2.5; // Slightly thinner for staggered lines
+                ctxFBD.stroke();
+
+                // Arrow head
+                ctxFBD.beginPath();
+                ctxFBD.moveTo(endX - direction * 8, drawY - 4);
+                ctxFBD.lineTo(endX, drawY);
+                ctxFBD.lineTo(endX - direction * 8, drawY + 4);
+                ctxFBD.stroke();
+
+                ctxFBD.fillStyle = color;
+                ctxFBD.font = 'bold 11px Arial';
+                
+                const label = f.type === 'Air Resistance' ? `${f.type} (${magnitude.toFixed(1)}N)` : `${f.type} (${f.magnitude}N)`;
+                
+                // Position labels exactly at the tip of the arrow
+                // direction 1: Right (endX), -1: Left (endX)
+                let labelX = endX;
+                let labelY = drawY;
+
+                if (direction === 1) {
+                    ctxFBD.textAlign = 'left';
+                    labelX += 8; // Offset from tip to the right
+                } else {
+                    ctxFBD.textAlign = 'right';
+                    labelX -= 8; // Offset from tip to the left
+                }
+
+                // Boundary check: if label goes off canvas, flip it to be above the tip instead
+                if (labelX > cw - 60 || labelX < 60) {
+                    labelX = endX;
+                    labelY = drawY - 12; // Move above the tip
+                    ctxFBD.textAlign = 'center';
+                }
+
+                ctxFBD.fillText(label, labelX, labelY + 4);
+            }
+        });
+    }
+
+    function drawVT() {
+        const dpr = window.devicePixelRatio || 1;
+        ctxVT.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctxVT.clearRect(0, 0, canvasVT.width/dpr, canvasVT.height/dpr);
+        const cw = canvasVT.width / dpr, ch = canvasVT.height / dpr;
+
+        // Internal Title
+        ctxVT.fillStyle = '#666';
+        ctxVT.font = 'bold 13px Arial';
+        ctxVT.textAlign = 'right';
+        ctxVT.fillText('VELOCITY-TIME GRAPH', cw - 10, 20);
+
+        // Centralized vertically with more margin for labels
+        const ox = 55, oy = ch / 2;
+
+        // Calculate scales to fit the data
+        let maxV = 20; 
+        let maxT = 10; 
+
+        if (historyVT.length > 0) {
+            maxV = historyVT.reduce((a, b) => Math.max(a, Math.abs(b.v)), 20);
+            maxT = historyVT.reduce((a, b) => Math.max(a, b.t), 10);
+        }
+        
+        // Add 30% margin (increased from 15%) to keep lines away from canvas edges and labels
+        maxV *= 1.30;
+        maxT *= 1.15;
+
+        // Dynamic widths
+        const graphWidth = cw - 100;
+        // Reduce graphHeight factor to make the vertical axis "shorter" relative to the canvas
+        const graphHeight = ch - 80; 
+        const scaleV = (graphHeight / 2) / maxV; 
+        const scaleT = graphWidth / maxT; 
+
+        // Axes
+        ctxVT.beginPath();
+        ctxVT.moveTo(ox, 20); ctxVT.lineTo(ox, ch - 20); // V-axis
+        ctxVT.moveTo(ox, oy); ctxVT.lineTo(ox + graphWidth, oy); // T-axis
+        ctxVT.strokeStyle = '#333';
+        ctxVT.lineWidth = 1;
+        ctxVT.stroke();
+
+        ctxVT.font = 'bold 12px Arial';
+        ctxVT.fillStyle = '#333';
+        ctxVT.textAlign = 'right';
+        ctxVT.fillText('v (m/s)', ox - 10, 15); // Label position
+        ctxVT.textAlign = 'left';
+        ctxVT.fillText('t (s)', ox + graphWidth + 5, oy + 5); // T label with space
+
+        // Labels (using dynamic scale)
+        ctxVT.font = '11px Arial';
+        ctxVT.textAlign = 'right';
+        const stepV = Math.ceil(maxV / 5 / 1) * 1 || 5; 
+        for (let v = -stepV * 10; v <= stepV * 10; v += stepV) {
+            if (v === 0) continue;
+            const py = oy - v * scaleV;
+            if (py < 25 || py > ch - 25) continue; 
+            // Text offset: 12px to the left of the axis line
+            ctxVT.fillText(v, ox - 12, py + 4);
+            ctxVT.beginPath(); ctxVT.moveTo(ox-3, py); ctxVT.lineTo(ox+3, py); ctxVT.stroke();
+        }
+
+        // Plot
+        if (historyVT.length > 1) {
+            ctxVT.beginPath();
+            ctxVT.strokeStyle = '#2c3e50';
+            ctxVT.lineWidth = 2;
+            historyVT.forEach((p, i) => {
+                const px = ox + p.t * scaleT;
+                const py = oy - p.v * scaleV;
+                if (i === 0) ctxVT.moveTo(px, py); else ctxVT.lineTo(px, py);
+            });
+            ctxVT.stroke();
+        }
+    }
+
+    function drawMotion() {
+        const dpr = window.devicePixelRatio || 1;
+        ctxMotion.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctxMotion.clearRect(0, 0, canvasMotion.width/dpr, canvasMotion.height/dpr);
+        const cw = canvasMotion.width / dpr, ch = canvasMotion.height / dpr;
+
+        // Internal Title
+        ctxMotion.fillStyle = '#666';
+        ctxMotion.font = 'bold 13px Arial';
+        ctxMotion.textAlign = 'right';
+        ctxMotion.fillText('MOTION STROBE', cw - 10, 20);
+
+        const cy = ch / 2;
+        const initialX = cw / 2; // Middle of canvas
+        
+        let scale = manualScale;
+        
+        // Adaptive scaling only if not zooming manually and after animation
+        if (!isRunning && time > 0 && manualScale === 2) {
+            let maxAbsDisp = historyMotion.reduce((a, b) => Math.max(a, Math.abs(b.s)), 1);
+            scale = (cw * 0.4) / maxAbsDisp; // 40% of width
+            if (scale > 10) scale = 10;
+        }
+
+        // Reference line (middle vertical)
+        ctxMotion.beginPath();
+        ctxMotion.moveTo(initialX, 0);
+        ctxMotion.lineTo(initialX, ch);
+        ctxMotion.strokeStyle = '#eee';
+        ctxMotion.setLineDash([5, 5]);
+        ctxMotion.stroke();
+        ctxMotion.setLineDash([]);
+
+        // Historical positions
+        const STROBE_PERIOD = 1.0; // Strobe every 1.0 second (1 Hz)
+        let lastStrobeIdx = -1;
+        historyMotion.forEach((h, i) => {
+            const isLatest = (i === historyMotion.length - 1);
+            
+            // Strobe if this is the first point after a STROBE_PERIOD interval
+            let currentStrobeIdx = Math.floor(h.t / STROBE_PERIOD);
+            let shouldStrobe = currentStrobeIdx > lastStrobeIdx;
+
+            if (shouldStrobe || isLatest) {
+                const x = initialX + (h.s * scale);
+                ctxMotion.beginPath();
+                ctxMotion.rect(x - 6, cy - 6, 12, 12); 
+                
+                if (isLatest) {
+                    ctxMotion.fillStyle = 'rgba(52, 152, 219, 1)';
+                    ctxMotion.strokeStyle = '#2980b9';
+                    ctxMotion.stroke();
+                } else {
+                    ctxMotion.fillStyle = 'rgba(52, 152, 219, 0.2)';
+                }
+                
+                ctxMotion.fill();
+                
+                if (shouldStrobe) {
+                    lastStrobeIdx = currentStrobeIdx;
+                }
+            }
+        });
+        
+        ctxMotion.font = 'bold 12px Arial';
+        ctxMotion.fillStyle = '#444';
+        ctxMotion.textAlign = 'center';
+        ctxMotion.fillText(`${(10 * scale).toFixed(0)}px = 10m`, cw / 2, ch - 15);
+        ctxMotion.textAlign = 'left';
+        ctxMotion.fillText(`Strobe Frequency: ${(1/STROBE_PERIOD).toFixed(1)} Hz`, 10, ch - 15);
+        ctxMotion.textAlign = 'right';
+        ctxMotion.fillText(`Time: ${time.toFixed(2)} s`, cw - 10, ch - 15);
+    }
+
+    function drawAll() {
+        drawFBD();
+        drawVT();
+        drawMotion();
+    }
+
+    let lastClockTime = 0;
+    function step(timestamp) {
+        if (!isRunning) {
+            lastClockTime = 0;
+            return;
+        }
+
+        const now = performance.now();
+        if (!lastClockTime) lastClockTime = now;
+        let deltaTime = (now - lastClockTime) / 1000; // Actual elapsed time in seconds
+        
+        // Safety cap to prevent physics explosion if tab was inactive
+        if (deltaTime > 0.1) deltaTime = 0.016; 
+        
+        lastClockTime = now;
+
+        let fres = 0;
+        activeForces.forEach(f => {
+            if (f.type === 'Rightward Tension') {
+                fres += f.magnitude; // Right (+)
+            } else if (f.type === 'Leftward Tension') {
+                fres -= f.magnitude; // Left (-)
+            } else if (f.type === 'Friction') {
+                // Friction opposes velocity
+                if (velocity > 0.001) fres -= f.magnitude;
+                else if (velocity < -0.001) fres += f.magnitude;
+                // Static friction simulation: if stopped and net tension < friction, no movement
+                else {
+                    let netTension = activeForces.reduce((sum, tf) => {
+                        if (tf.type === 'Rightward Tension') return sum + tf.magnitude;
+                        if (tf.type === 'Leftward Tension') return sum - tf.magnitude;
+                        return sum;
+                    }, 0);
+                    if (Math.abs(netTension) <= f.magnitude) {
+                        fres = 0;
+                    } else {
+                        fres = netTension - Math.sign(netTension) * f.magnitude;
+                    }
+                }
+            } else if (f.type === 'Air Resistance') {
+                const drag = 0.05 * (velocity * velocity);
+                if (velocity > 0.001) fres -= drag;
+                else if (velocity < -0.001) fres += drag;
+            }
+        });
+
+        const netForce = fres;
+        const acc = netForce / MASS;
+        velocity += acc * deltaTime;
+        displacement += velocity * deltaTime;
+        time += deltaTime;
+
+        historyVT.push({ t: time, v: velocity });
+        historyMotion.push({ t: time, s: displacement });
+
+        drawAll();
+        if (isRunning) requestAnimationFrame(step);
+    }
+
+    startBtn.onclick = () => {
+        if (isRunning) {
+            isRunning = false;
+            startBtn.textContent = 'Resume';
+        } else {
+            // Log session start snapshot
+            const initialV = initialStateSel.options[initialStateSel.selectedIndex].text;
+            const forcesStr = activeForces.length > 0 
+                ? activeForces.map(f => `${f.type}: ${f.magnitude}N`).join(', ')
+                : 'None';
+            
+            if (typeof logAction === 'function') {
+                logAction('start', { 
+                    text: `SIM START | Init State: ${initialV} | Forces: ${forcesStr}`,
+                    mass: MASS,
+                    forces: activeForces
+                });
+            }
+            if (typeof scheduleFlush === 'function') scheduleFlush('sim-start', 10);
+
+            isRunning = true;
+            startBtn.textContent = 'Pause';
+            lastClockTime = performance.now(); // Reset time to prevent jumps
+            requestAnimationFrame(step); 
+        }
+    };
+
+    zoomInBtn.onclick = () => {
+        manualScale *= 1.25;
+        drawMotion();
+    };
+
+    zoomOutBtn.onclick = () => {
+        manualScale /= 1.25;
+        drawMotion();
+    };
+
+    resetBtn.onclick = () => init();
+
+    initialStateSel.onchange = () => {
+        init();
+        // Log as separate action breadcrumb ONLY if running
+        if (isRunning) {
+            if (typeof logAction === 'function') {
+                logAction('change', { 
+                    text: `MID-SIM CHANGE | Initial State changed to ${initialStateSel.options[initialStateSel.selectedIndex].text}`,
+                    type: 'setting-adjustment'
+                });
+            }
+            if (typeof scheduleFlush === 'function') scheduleFlush('state-change', 1000);
+        }
+    };
+
+    setTimeout(resizeCanvases, 10);
+    init();
+</script>
+
+</body>
+</html>
