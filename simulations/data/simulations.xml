@@ -4620,4 +4620,52 @@
   <topics><topic>electricity</topic></topics>
   <author>Tan Seng Kwang</author>
  </simulation>
+ <simulation>
+  <id>
+   js-011
+  </id>
+  <title>
+   Dynamics Interactive
+  </title>
+  <description>
+   Explore the relationship between force, mass, and motion with multiple force vectors, v-t graphs, and motion diagrams.
+  </description>
+  <image>
+   ../dynamics/dynamics.png
+  </image>
+  <url>
+   ../dynamics/
+  </url>
+  <platform>
+   JavaScript
+  </platform>
+  <topics>
+   <topic>dynamics</topic>
+  </topics>
+  <author>Tan Seng Kwang</author>
+ </simulation>
+ <simulation>
+  <id>
+   js-012
+  </id>
+  <title>
+   Displacement-Time Graph Simulator
+  </title>
+  <description>
+   Observe how motion translates into displacement-time graphs, analyze velocity calculations, and test your knowledge in Quiz Mode.
+  </description>
+  <image>
+   ../displacement-graph/displacement-graph.png
+  </image>
+  <url>
+   ../displacement-graph/
+  </url>
+  <platform>
+   JavaScript
+  </platform>
+  <topics>
+   <topic>kinematics</topic>
+  </topics>
+  <author>Tan Seng Kwang</author>
+ </simulation>
 </simulations>
