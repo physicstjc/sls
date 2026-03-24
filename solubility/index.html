@@ -120,9 +120,16 @@
                             <div id="sat-progress-bar" class="h-full bg-gradient-to-r from-emerald-400 via-yellow-400 to-red-500 transition-all duration-500" style="width: 0%"></div>
                         </div>
                     </div>
-                    <div class="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase">Solute Dissolved:</span>
-                        <span id="info-solute-amt" class="text-xs font-mono font-bold text-indigo-600">0.00g</span>
+                    <!-- Measurement Panel -->
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase">Solute Added:</span>
+                            <span id="info-solute-added" class="text-xs font-mono font-bold text-slate-700">0.00g</span>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-slate-200 pt-2">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase">Solute Dissolved:</span>
+                            <span id="info-solute-dissolved" class="text-xs font-mono font-bold text-indigo-600">0.00g</span>
+                        </div>
                     </div>
                 </div>
 
@@ -221,7 +228,6 @@
 
         function addSolute() {
             if (solventAmt === 0) {
-                // Using a custom UI hint instead of browser alert for better iPad UX
                 document.getElementById('info-desc').innerText = "ALERT: Please add solvent (water) before adding solute!";
                 document.getElementById('info-desc').className = "font-bold block mb-1 text-red-400 animate-bounce";
                 setTimeout(() => {
@@ -244,9 +250,7 @@
         }
 
         function addInsoluble() {
-            if (solventAmt === 0) {
-                return;
-            }
+            if (solventAmt === 0) return;
             insolubleTotal += 15;
             updateUI();
         }
@@ -308,19 +312,23 @@
             const bar = document.getElementById('sat-progress-bar');
             const label = document.getElementById('sat-label');
             const percentText = document.getElementById('sat-percent-text');
-            const soluteAmtText = document.getElementById('info-solute-amt');
+            const soluteAddedText = document.getElementById('info-solute-added');
+            const soluteDissolvedText = document.getElementById('info-solute-dissolved');
             const percent = Math.min(100, Math.round(saturationRatio * 100));
             
             bar.style.width = percent + '%';
             percentText.innerText = percent + '%';
-            soluteAmtText.innerText = dissolvedAmt.toFixed(2) + 'g';
+            
+            // Update measurements
+            soluteAddedText.innerText = soluteTotal.toFixed(2) + 'g';
+            soluteDissolvedText.innerText = dissolvedAmt.toFixed(2) + 'g';
 
             if (hasPrecipitate) {
                 label.innerText = "OVERSATURATED!";
                 label.className = "text-[10px] font-bold text-red-600 mb-1 uppercase tracking-tighter animate-pulse";
                 bar.className = "h-full bg-red-600 transition-all duration-500";
             } else {
-                label.innerText = "Saturation Progress";
+                label.innerText = "Saturation Level";
                 label.className = "text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-tighter";
                 bar.className = "h-full bg-gradient-to-r from-emerald-400 via-yellow-400 to-red-500 transition-all duration-500";
             }
@@ -351,14 +359,14 @@
                 if (hasInsoluble && !hasPrecipitate) {
                     descEl.innerText = "Heterogeneous mixture: Sand particles do not dissolve. The liquid phase contains dissolved salt.";
                 } else {
-                    descEl.innerText = "Saturation point exceeded. Solid precipitate has settled at the bottom (Heterogeneous).";
+                    descEl.innerText = `Saturation exceeded. Only ${dissolvedAmt.toFixed(1)}g of ${soluteTotal.toFixed(1)}g dissolved. Solid precipitate remains.`;
                 }
             } else {
                 typeEl.innerText = isSaturated ? "Saturated Solution" : "Unsaturated Solution";
                 homoEl.innerText = "Homogeneous";
                 homoEl.className = "font-bold text-emerald-400";
                 descEl.innerText = isSaturated 
-                    ? "Max solubility reached! The mixture remains perfectly homogeneous." 
+                    ? "Max solubility reached! Every gram of salt added has been successfully dissolved." 
                     : "The solute is fully dissolved into a clear green homogeneous solution.";
             }
 
