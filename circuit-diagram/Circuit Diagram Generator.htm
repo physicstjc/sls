@@ -222,6 +222,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
   <aside class="sidebar">
@@ -1169,107 +1170,123 @@
       return el;
     }
 
-    function exportPNG() {
-      // Temporarily hide the grid and selection visuals for a clean screenshot
+    async function exportPNG() {
       const wasGridVisible = state.showGrid;
       state.showGrid = false;
       const oldSelected = state.selected;
       state.selected = null;
       render();
 
-      // Increased delay to ensure KaTeX rendering is fully stable
-      setTimeout(() => {
-        const clone = svg.cloneNode(true);
-        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        
-        // Remove interactive hitboxes and any selection rectangles
-        clone.querySelectorAll('.latex-hitbox').forEach(el => el.remove());
-        clone.querySelectorAll('rect[stroke-dasharray]').forEach(el => el.remove());
+      // Wait for KaTeX to finish rendering labels (render() triggers it after 10ms)
+      await new Promise(r => setTimeout(r, 300));
 
-        // FIX: Remove duplicate KaTeX containers to prevent "double-rendered" text
-        clone.querySelectorAll('.math-container').forEach(container => {
-          const svgs = container.querySelectorAll('svg');
-          if (svgs.length > 1) {
-            // Keep only the most recent render
-            for (let i = 0; i < svgs.length - 1; i++) svgs[i].remove();
-          }
-        });
-
-        // Embed necessary CSS for foreignObject / KaTeX to render in the image
-        const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
-        style.textContent = `
-          .katex { font-family: Arial, Helvetica, sans-serif !important; font-style: normal !important; display: inline-block; }
-          .katex * { font-family: Arial, Helvetica, sans-serif !important; font-style: normal !important; }
-          .math-container { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            font-family: Arial, sans-serif; 
-            height: 100%; 
-            width: 100%; 
-          }
-        `;
-        clone.insertBefore(style, clone.firstChild);
-
+      try {
         const bounds = contentBounds();
-        // Increase padding to 20px so labels near the edges (like exponents) aren't cut off
-        const padding = 20; 
+        const padding = 40;
+        const SCALE = 2;
         const vb = [
-          bounds.x - padding, 
-          bounds.y - padding, 
-          bounds.w + padding * 2, 
+          bounds.x - padding,
+          bounds.y - padding,
+          bounds.w + padding * 2,
           bounds.h + padding * 2
         ];
-        
-        clone.setAttribute('viewBox', vb.join(' '));
-        clone.setAttribute('width', vb[2]);
-        clone.setAttribute('height', vb[3]);
 
-        const data = new XMLSerializer().serializeToString(clone);
-        const img = new Image();
-        const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(data);
-        
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = vb[2];
-          canvas.height = vb[3];
-          const ctx = canvas.getContext('2d');
-          
-          const bgType = ui.exportBg.value;
-          if (bgType === 'white') {
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-          } else {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-          }
-          
-          ctx.drawImage(img, 0, 0);
-          
-          canvas.toBlob((pngBlob) => {
-            if (pngBlob) {
-              const a = document.createElement('a');
-              a.href = URL.createObjectURL(pngBlob);
-              a.download = 'circuit-diagram.png';
-              a.click();
-              setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-            }
-            
-            // Restore UI state after export
-            state.showGrid = wasGridVisible;
-            state.selected = oldSelected;
-            render();
-          }, 'image/png');
-        };
+        // --- Pass 1: Serialize the circuit (without labels) to canvas ---
+        const svgClone = svg.cloneNode(true);
+        svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        // Remove foreignObjects (labels), hitboxes, selection highlights
+        svgClone.querySelectorAll('foreignObject, .latex-hitbox, rect[stroke-dasharray]').forEach(el => el.remove());
+        svgClone.setAttribute('viewBox', vb.join(' '));
+        svgClone.setAttribute('width', vb[2]);
+        svgClone.setAttribute('height', vb[3]);
 
-        img.onerror = (e) => {
-          console.error('Image load error:', e);
-          state.showGrid = wasGridVisible;
-          state.selected = oldSelected;
-          render();
-        };
+        const svgString = new XMLSerializer().serializeToString(svgClone);
+        const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
 
-        img.src = url;
-      }, 150); 
+        const canvas = document.createElement('canvas');
+        canvas.width = vb[2] * SCALE;
+        canvas.height = vb[3] * SCALE;
+        const ctx = canvas.getContext('2d');
+
+        if (ui.exportBg.value === 'white') {
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); resolve(); };
+          img.onerror = reject;
+          img.src = svgDataUrl;
+        });
+
+        // --- Pass 2: Capture each rendered KaTeX label and composite it ---
+        const foreignObjects = svg.querySelectorAll('foreignObject.latex-label');
+        for (const fo of foreignObjects) {
+          const foX = parseFloat(fo.getAttribute('x'));
+          const foY = parseFloat(fo.getAttribute('y'));
+          const foW = parseFloat(fo.getAttribute('width'));
+          const foH = parseFloat(fo.getAttribute('height'));
+
+          const mathDiv = fo.querySelector('.math-container');
+          if (!mathDiv) continue;
+
+          // Render the already-typeset KaTeX HTML in an isolated off-screen div
+          const tempDiv = document.createElement('div');
+          // Important: Copy styles to ensure font size and alignment match
+          const computed = window.getComputedStyle(mathDiv);
+          tempDiv.style.cssText = `
+            position: fixed; top: -9999px; left: -9999px;
+            width: ${foW}px; height: ${foH}px;
+            background: transparent;
+            display: flex; justify-content: center; align-items: center;
+            font-family: ${computed.fontFamily};
+            font-size: ${computed.fontSize};
+            line-height: normal;
+          `;
+          tempDiv.innerHTML = mathDiv.innerHTML;
+          // Clean up the double-render inside the temp div before capturing
+          tempDiv.querySelectorAll('.katex-mathml').forEach(m => m.remove());
+          
+          document.body.appendChild(tempDiv);
+
+          const labelCanvas = await html2canvas(tempDiv, {
+            backgroundColor: null,
+            scale: SCALE,
+            logging: false,
+            width: foW,
+            height: foH,
+            x: 0,
+            y: 0,
+            scrollX: 0,
+            scrollY: 0
+          });
+          document.body.removeChild(tempDiv);
+
+          // Map SVG coords → canvas pixel coords
+          const px = (foX - vb[0]) * SCALE;
+          const py = (foY - vb[1]) * SCALE;
+          const pw = foW * SCALE;
+          const ph = foH * SCALE;
+          ctx.drawImage(labelCanvas, 0, 0, labelCanvas.width, labelCanvas.height, px, py, pw, ph);
+        }
+
+        // --- Download ---
+        canvas.toBlob(blob => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'circuit-diagram.png';
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        }, 'image/png');
+
+      } catch (err) {
+        console.error('Export failed:', err);
+      } finally {
+        state.showGrid = wasGridVisible;
+        state.selected = oldSelected;
+        render();
+      }
     }
 
     function contentBounds() {
