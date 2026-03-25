@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<!-- saved from url=(0061)https://diagrams.string.sg/tools/circuit_diagram_creator.html -->
+<html lang="en" data-kantu="1"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="tool-id" content="circuit-symbol">
+  <title>Circuit Diagram Generator</title>
+  <script>
+    window.MathJax = {
+      tex: { 
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        macros: {
+          ohm: '{\\Omega}'
+        }
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'annotation', 'annotation-xml']
+      },
+      svg: { 
+        fontCache: 'none',
+        fontFamily: 'Arial, Helvetica, sans-serif'
+      }
+    };
+  </script>
+  <style>
+    /* Force KaTeX to use Arial and remove italics */
+    .katex {
+      font-family: Arial, Helvetica, sans-serif !important;
+      font-size: 1.1em !important;
+      font-style: normal !important;
+    }
+    .katex * {
+      font-family: Arial, Helvetica, sans-serif !important;
+      font-style: normal !important;
+    }
+    /* Specifically override KaTeX's font-family classes */
+    .katex .mathnormal, 
+    .katex .mathrm,
+    .katex .italic,
+    .katex .mord,
+    .katex .mop,
+    .katex .mrel,
+    .katex .mbin,
+    .katex .mopen,
+    .katex .mclose,
+    .katex .mpunct,
+    .katex .minner {
+      font-family: Arial, Helvetica, sans-serif !important;
+      font-style: normal !important;
+    }
+    :root {
+      --panel: #f3f4f6;
+      --line: #111827;
+      --muted: #6b7280;
+      --border: #d1d5db;
+      --accent: #2563eb;
+      --danger: #dc2626;
+      --bg: #ffffff;
+      --grid: #e5e7eb;
+      --sel: #3b82f6;
+    }
+    * { box-sizing: border-box; }
+    
+    /* Force Arial and remove italics globally within labels */
+    .latex-label mjx-container {
+      font-family: Arial, Helvetica, sans-serif !important;
+      font-style: normal !important;
+    }
+    .latex-label mjx-container *, 
+    .latex-label mjx-container text,
+    .latex-label mjx-container span,
+    .latex-label mjx-container dtext {
+      font-family: Arial, Helvetica, sans-serif !important;
+      font-style: normal !important;
+    }
+    /* Specifically target MathJax 3 CHTML/SVG output nodes */
+    .latex-label mjx-c, .latex-label mjx-utext, .latex-label mjx-n, .latex-label mjx-mi {
+      font-family: Arial, Helvetica, sans-serif !important;
+      font-style: normal !important;
+    }
+    /* Specifically target MathJax's italic variant and force Arial */
+    .latex-label [mathvariant="italic"], .latex-label [mathvariant="normal"] {
+      font-family: Arial, Helvetica, sans-serif !important;
+      font-style: normal !important;
+    }
+    mjx-stretchy-h, mjx-stretchy-v, mjx-marker, mjx-c, mjx-utext {
+      font-family: Arial, Helvetica, sans-serif !important;
+      font-style: normal !important;
+    }
+    
+    /* Ensure the foreignObject div also forces the font */
+    .math-container {
+      font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #fafafa;
+      color: #111827;
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+    }
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: var(--panel);
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sidebar h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+    .sidebar h2 {
+      margin: 4px 0 2px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--muted);
+    }
+    .tool-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+    }
+    button, input {
+      font: inherit;
+    }
+    .tool-btn, .action-btn {
+      border: 1px solid var(--border);
+      background: white;
+      padding: 6px 4px;
+      border-radius: 8px;
+      cursor: pointer;
+      min-height: 32px;
+      font-size: 12px;
+    }
+    .tool-btn.active, .action-btn.active {
+      outline: 2px solid var(--accent);
+      border-color: var(--accent);
+      background: #eff6ff;
+    }
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      margin-bottom: 0;
+    }
+    .action-row.single {
+      grid-template-columns: 1fr;
+    }
+    .field {
+      margin: 0;
+    }
+    .field label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .field input[type="number"], .field input[type="text"], .field select {
+      width: 100%;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: white;
+      font-size: 12px;
+    }
+    .status {
+      margin-top: 4px;
+      padding: 8px;
+      border-radius: 8px;
+      background: white;
+      border: 1px solid var(--border);
+      font-size: 11px;
+      line-height: 1.3;
+      color: #374151;
+    }
+    .workspace {
+      position: relative;
+      overflow: hidden;
+      background: #fff;
+    }
+    #app {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #fff;
+      cursor: crosshair;
+    }
+    .topbar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 8px;
+      z-index: 5;
+    }
+    .topbar button {
+      border: 1px solid var(--border);
+      background: white;
+      padding: 9px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .kbd {
+      display: inline-block;
+      min-width: 1.4em;
+      padding: 1px 5px;
+      border-radius: 6px;
+      background: #e5e7eb;
+      font-size: 11px;
+    }
+  </style>
+  <!-- KaTeX for faster, more customizable rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <h1>Circuit Diagram Generator</h1>
+
+    <h2>Tools</h2>
+    <div class="tool-grid" id="toolGrid">
+      <button class="tool-btn active" data-tool="select">Select / Move</button>
+      <button class="tool-btn" data-tool="wire">Wire</button>
+      <button class="tool-btn" data-tool="bulb">Bulb</button>
+      <button class="tool-btn" data-tool="battery">Battery</button>
+      <button class="tool-btn" data-tool="resistor">Resistor</button>
+      <button class="tool-btn" data-tool="variable-resistor">Variable Resistor</button>
+      <button class="tool-btn" data-tool="potentiometer">Potentiometer</button>
+      <button class="tool-btn" data-tool="ldr">LDR</button>
+      <button class="tool-btn" data-tool="thermistor">Thermistor</button>
+      <button class="tool-btn" data-tool="voltmeter">Voltmeter</button>
+      <button class="tool-btn" data-tool="ammeter">Ammeter</button>
+      <button class="tool-btn" data-tool="galvanometer">Galvanometer</button>
+      <button class="tool-btn" data-tool="motor">Motor</button>
+      <button class="tool-btn" data-tool="bell">Bell</button>
+      <button class="tool-btn" data-tool="switch-open">Switch Open</button>
+      <button class="tool-btn" data-tool="switch-closed">Switch Closed</button>
+      <button class="tool-btn" data-tool="delete">Delete</button>
+    </div>
+
+    <h2>Placement</h2>
+    <div class="action-row">
+      <button class="action-btn" id="rotateBtn">Rotate 90°</button>
+      <button class="action-btn" id="toggleGridBtn">Hide Grid</button>
+    </div>
+    <div class="field">
+      <label for="batteryCells">Battery cells in series</label>
+      <input id="batteryCells" type="number" min="1" max="8" value="2">
+    </div>
+
+    <h2>Labeling</h2>
+    <div class="field">
+      <label for="compLabel">Component Label (e.g. 10^{2}, R_{1}, 100 \Omega)</label>
+      <input id="compLabel" type="text" placeholder="e.g. R_{1}, 10^{2} \Omega">
+    </div>
+    <div class="field" style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
+      <input id="useLatex" type="checkbox" style="width: auto;">
+      <label for="useLatex" style="margin-bottom: 0;">Use LaTeX formatting</label>
+    </div>
+    <div class="field">
+      <label for="fontSize">Label Font Size (pt)</label>
+      <input id="fontSize" type="number" min="6" max="36" value="11">
+    </div>
+    <div class="field">
+      <label for="compThickness">Component Line Thickness</label>
+      <input id="compThickness" type="number" min="1" max="10" step="0.5" value="3">
+    </div>
+
+    <h2>Edit</h2>
+    <div class="action-row">
+      <button class="action-btn" id="undoBtn">Undo</button>
+      <button class="action-btn" id="redoBtn">Redo</button>
+    </div>
+    <div class="action-row single">
+      <button class="action-btn" id="clearBtn">Clear All</button>
+    </div>
+
+    <h2>Export</h2>
+    <div class="field">
+      <label for="exportBg">PNG Background</label>
+      <select id="exportBg">
+        <option value="white">White</option>
+        <option value="transparent">Transparent</option>
+      </select>
+    </div>
+    <div class="action-row single">
+      <button class="action-btn" id="exportBtn">Export PNG</button>
+    </div>
+
+    <div class="status" id="statusBox">Select component to drag. Use <strong>Wire</strong> for snapped segments. Crossings connect. <strong>\ohm</strong>, <strong>^</strong>, <strong>_</strong> for LaTeX symbols.</div>
+  </aside>
+
+  <main class="workspace">
+    <div class="topbar">
+      <button id="fitBtn">Centre View</button>
+    </div>
+    <svg id="app" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 474 1294"><defs></defs><g opacity="1"><line x1="0" y1="0" x2="0" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="28" y1="0" x2="28" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="56" y1="0" x2="56" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="84" y1="0" x2="84" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="112" y1="0" x2="112" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="140" y1="0" x2="140" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="168" y1="0" x2="168" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="196" y1="0" x2="196" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="224" y1="0" x2="224" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="252" y1="0" x2="252" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="280" y1="0" x2="280" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="308" y1="0" x2="308" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="336" y1="0" x2="336" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="364" y1="0" x2="364" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="392" y1="0" x2="392" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="420" y1="0" x2="420" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="448" y1="0" x2="448" y2="1294" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="0" x2="474" y2="0" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="28" x2="474" y2="28" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="56" x2="474" y2="56" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="84" x2="474" y2="84" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="112" x2="474" y2="112" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="140" x2="474" y2="140" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="168" x2="474" y2="168" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="196" x2="474" y2="196" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="224" x2="474" y2="224" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="252" x2="474" y2="252" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="280" x2="474" y2="280" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="308" x2="474" y2="308" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="336" x2="474" y2="336" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="364" x2="474" y2="364" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="392" x2="474" y2="392" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="420" x2="474" y2="420" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="448" x2="474" y2="448" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="476" x2="474" y2="476" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="504" x2="474" y2="504" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="532" x2="474" y2="532" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="560" x2="474" y2="560" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="588" x2="474" y2="588" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="616" x2="474" y2="616" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="644" x2="474" y2="644" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="672" x2="474" y2="672" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="700" x2="474" y2="700" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="728" x2="474" y2="728" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="756" x2="474" y2="756" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="784" x2="474" y2="784" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="812" x2="474" y2="812" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="840" x2="474" y2="840" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="868" x2="474" y2="868" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="896" x2="474" y2="896" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="924" x2="474" y2="924" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="952" x2="474" y2="952" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="980" x2="474" y2="980" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="1008" x2="474" y2="1008" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="1036" x2="474" y2="1036" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="1064" x2="474" y2="1064" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="1092" x2="474" y2="1092" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="1120" x2="474" y2="1120" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="1148" x2="474" y2="1148" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="1176" x2="474" y2="1176" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="1204" x2="474" y2="1204" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="1232" x2="474" y2="1232" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="1260" x2="474" y2="1260" stroke="#f0f0f0" stroke-width="1"></line><line x1="0" y1="1288" x2="474" y2="1288" stroke="#f0f0f0" stroke-width="1"></line></g><g></g></svg>
+  </main>
+
+  <script>
+    const svg = document.getElementById('app');
+    const GRID = 28;
+    const HIT = 10;
+    const WIRE_STROKE = 3;
+    const state = {
+      tool: 'select',
+      rotation: 0,
+      showGrid: true,
+      wires: [],
+      components: [],
+      junctionMap: new Map(),
+      selected: null,
+      dragging: null,
+      wirePreview: null,
+      history: [],
+      future: [],
+      nextId: 1,
+      viewport: { width: 1200, height: 800 }
+    };
+
+    const ui = {
+      toolBtns: [...document.querySelectorAll('.tool-btn')],
+      rotateBtn: document.getElementById('rotateBtn'),
+      toggleGridBtn: document.getElementById('toggleGridBtn'),
+      batteryCells: document.getElementById('batteryCells'),
+      statusBox: document.getElementById('statusBox'),
+      undoBtn: document.getElementById('undoBtn'),
+      redoBtn: document.getElementById('redoBtn'),
+      clearBtn: document.getElementById('clearBtn'),
+      exportBtn: document.getElementById('exportBtn'),
+      exportBg: document.getElementById('exportBg'),
+      fitBtn: document.getElementById('fitBtn'),
+      compLabel: document.getElementById('compLabel'),
+      fontSize: document.getElementById('fontSize'),
+      compThickness: document.getElementById('compThickness')
+    };
+
+    function deepClone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function saveHistory() {
+      state.history.push(deepClone({
+        wires: state.wires,
+        components: state.components,
+        nextId: state.nextId
+      }));
+      if (state.history.length > 100) state.history.shift();
+      state.future = [];
+    }
+
+    function restoreSnapshot(snapshot) {
+      state.wires = deepClone(snapshot.wires);
+      state.components = deepClone(snapshot.components);
+      state.nextId = snapshot.nextId;
+      state.selected = null;
+      rebuildJunctions();
+      render();
+    }
+
+    function undo() {
+      if (!state.history.length) return;
+      state.future.push(deepClone({ wires: state.wires, components: state.components, nextId: state.nextId }));
+      restoreSnapshot(state.history.pop());
+    }
+
+    function redo() {
+      if (!state.future.length) return;
+      state.history.push(deepClone({ wires: state.wires, components: state.components, nextId: state.nextId }));
+      restoreSnapshot(state.future.pop());
+    }
+
+    function snap(v) {
+      return Math.round(v / GRID) * GRID;
+    }
+
+    function keyPt(x, y) { return `${x},${y}`; }
+
+    function addJunction(x, y) {
+      const key = keyPt(x, y);
+      state.junctionMap.set(key, (state.junctionMap.get(key) || 0) + 1);
+    }
+
+    function segmentPoints(a, b) {
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const steps = gcd(Math.abs(dx), Math.abs(dy)) / GRID;
+      if (steps <= 0) return [a];
+      const stepx = dx / steps;
+      const stepy = dy / steps;
+      const pts = [];
+      for (let i = 0; i <= steps; i++) {
+        pts.push({ x: Math.round(a.x + stepx * i), y: Math.round(a.y + stepy * i) });
+      }
+      return pts;
+    }
+
+    function gcd(a, b) {
+      while (b) [a, b] = [b, a % b];
+      return a || 1;
+    }
+
+    function rebuildJunctions() {
+      state.junctionMap = new Map();
+      for (const wire of state.wires) {
+        for (const p of segmentPoints(wire.a, wire.b)) addJunction(p.x, p.y);
+      }
+      for (const comp of state.components) {
+        getComponentNodes(comp).forEach(p => addJunction(p.x, p.y));
+      }
+    }
+
+    function setTool(tool) {
+      state.tool = tool;
+      state.selected = null;
+      ui.compLabel.value = ""; // Reset current labels when switching tools
+      ui.toolBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.tool === tool));
+      render();
+    }
+
+    ui.toolBtns.forEach(btn => btn.addEventListener('click', () => setTool(btn.dataset.tool)));
+    ui.rotateBtn.addEventListener('click', () => {
+      state.rotation = (state.rotation + 90) % 360;
+      if (state.selected?.kind === 'component') {
+        saveHistory();
+        const comp = state.components.find(c => c.id === state.selected.id);
+        if (comp) {
+          comp.rotation = (comp.rotation + 90) % 360;
+          autoAlignComponent(comp);
+          rebuildJunctions();
+          render();
+        }
+      } else {
+        setStatus(`Placement rotation set to ${state.rotation}°.`);
+      }
+    });
+    ui.toggleGridBtn.addEventListener('click', () => {
+      state.showGrid = !state.showGrid;
+      ui.toggleGridBtn.textContent = state.showGrid ? 'Hide Grid' : 'Show Grid';
+      render();
+    });
+    ui.undoBtn.addEventListener('click', undo);
+    ui.redoBtn.addEventListener('click', redo);
+    ui.clearBtn.addEventListener('click', () => {
+      saveHistory();
+      state.wires = [];
+      state.components = [];
+      state.selected = null;
+      rebuildJunctions();
+      render();
+    });
+    ui.exportBtn.addEventListener('click', exportPNG);
+    ui.fitBtn.addEventListener('click', centerView);
+
+    function centerView() {
+      const bounds = contentBounds();
+      if (!bounds) return;
+
+      const contentCenterX = bounds.x + bounds.w / 2;
+      const contentCenterY = bounds.y + bounds.h / 2;
+
+      // Current SVG container dimensions
+      const svgWidth = svg.clientWidth || 1200;
+      const svgHeight = svg.clientHeight || 800;
+
+      // We want contentCenterX to be at svgWidth/2 in coordinate space
+      // So the new viewBox x should be (contentCenterX - svgWidth/2)
+      const newX = contentCenterX - svgWidth / 2;
+      const newY = contentCenterY - svgHeight / 2;
+      
+      const vb = [newX, newY, svgWidth, svgHeight];
+      svg.setAttribute('viewBox', vb.join(' '));
+      
+      // Update persistent viewport state to match
+      state.viewport.width = svgWidth;
+      state.viewport.height = svgHeight;
+      
+      render();
+    }
+
+    ui.compLabel.addEventListener('input', () => {
+      if (state.selected?.kind === 'component' || state.selected?.kind === 'label') {
+        const comp = state.components.find(c => c.id === state.selected.id);
+        if (comp) {
+          saveHistory();
+          // No auto-formatting; accept standard LaTeX like \Omega and _{max}
+          comp.label = ui.compLabel.value;
+          render();
+        }
+      }
+    });
+
+    document.getElementById('useLatex').addEventListener('change', (e) => {
+      if (state.selected?.kind === 'component' || state.selected?.kind === 'label') {
+        const comp = state.components.find(c => c.id === state.selected.id);
+        if (comp) {
+          saveHistory();
+          comp.useLatex = e.target.checked;
+          render();
+        }
+      }
+    });
+
+    ui.fontSize.addEventListener('input', () => {
+      if (state.selected?.kind === 'component' || state.selected?.kind === 'label') {
+        const comp = state.components.find(c => c.id === state.selected.id);
+        if (comp) {
+          saveHistory();
+          comp.fontSize = Number(ui.fontSize.value) || 11;
+          render();
+        }
+      }
+    });
+
+    ui.compThickness.addEventListener('input', () => {
+      if (state.selected?.kind === 'component') {
+        const comp = state.components.find(c => c.id === state.selected.id);
+        if (comp) {
+          saveHistory();
+          comp.thickness = Number(ui.compThickness.value) || 3;
+          render();
+        }
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      // Don't trigger global delete/rotate if typing in an input field
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (ctrl && e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+      if (ctrl && ((e.key.toLowerCase() === 'z' && e.shiftKey) || e.key.toLowerCase() === 'y')) { e.preventDefault(); redo(); }
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (state.selected) {
+          e.preventDefault();
+          deleteSelected();
+        }
+      }
+      if (e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        ui.rotateBtn.click();
+      }
+    });
+
+    function setStatus(html) {
+      ui.statusBox.innerHTML = html;
+    }
+
+    function pointerToSvg(evt) {
+      const pt = svg.createSVGPoint();
+      pt.x = evt.clientX;
+      pt.y = evt.clientY;
+      const transformed = pt.matrixTransform(svg.getScreenCTM().inverse());
+      return { x: transformed.x, y: transformed.y };
+    }
+
+    function nearestGridPoint(p) {
+      return { x: snap(p.x), y: snap(p.y) };
+    }
+
+    function componentSize(type, cells = 2) {
+      if (type === 'bulb') return { w: 58, h: 58 };
+      if (type === 'battery') return { w: 34 + cells * 18, h: 44 };
+      if (['resistor', 'variable-resistor', 'ldr', 'thermistor'].includes(type)) return { w: 80, h: 60 };
+      if (['voltmeter', 'ammeter', 'galvanometer', 'motor'].includes(type)) return { w: 58, h: 58 };
+      if (type === 'potentiometer') return { w: 80, h: 58 };
+      if (type === 'bell') return { w: 58, h: 58 };
+      return { w: 80, h: 30 };
+    }
+
+    function getComponentNodes(comp) {
+      const cells = comp.cells || 2;
+      const size = componentSize(comp.type, cells);
+      if (comp.rotation % 180 === 0) {
+        return [
+          { x: comp.x - size.w / 2, y: comp.y },
+          { x: comp.x + size.w / 2, y: comp.y }
+        ];
+      }
+      return [
+        { x: comp.x, y: comp.y - size.w / 2 },
+        { x: comp.x, y: comp.y + size.w / 2 }
+      ];
+    }
+
+    function distance(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function pointLineDistance(p, a, b) {
+      const l2 = (b.x-a.x)**2 + (b.y-a.y)**2;
+      if (l2 === 0) return distance(p, a);
+      let t = ((p.x-a.x)*(b.x-a.x) + (p.y-a.y)*(b.y-a.y)) / l2;
+      t = Math.max(0, Math.min(1, t));
+      return distance(p, { x: a.x + t*(b.x-a.x), y: a.y + t*(b.y-a.y) });
+    }
+
+    function findHit(p) {
+      // Check labels first (they are usually on top)
+      for (let i = state.components.length - 1; i >= 0; i--) {
+        const comp = state.components[i];
+        if (comp.label) {
+          const size = componentSize(comp.type, comp.cells || 2);
+          const defaultOffY = (comp.type === 'potentiometer' || comp.type === 'ldr' || comp.type === 'bell') ? -(size.h / 2 + 35) : -(size.h / 2 + 25);
+          const fs = (comp.fontSize || 11) * 1.33; // pt to px approx
+          const lx = comp.x + (comp.labelOffX || 0);
+          const ly = comp.y + (comp.labelOffY !== undefined ? comp.labelOffY : defaultOffY);
+          
+          // Simple text hit box (approximate) - Adjusting for potential LaTeX or multi-line
+          const tw = comp.label.includes('$') ? 100 : (comp.label.length * fs * 0.6);
+          const th = comp.label.includes('$') ? 40 : fs;
+          
+          if (comp.label.includes('$')) {
+            // Match the hit-box defined in drawComponents for LaTeX
+            if (p.x >= lx - 50 && p.x <= lx + 50 && p.y >= ly - 20 && p.y <= ly + 20) {
+              return { kind: 'label', id: comp.id };
+            }
+          } else {
+            if (p.x >= lx - tw/2 && p.x <= lx + tw/2 && p.y >= ly - th && p.y <= ly) {
+              return { kind: 'label', id: comp.id };
+            }
+          }
+        }
+      }
+      for (let i = state.components.length - 1; i >= 0; i--) {
+        const comp = state.components[i];
+        const box = getComponentBounds(comp);
+        if (p.x >= box.x && p.x <= box.x + box.w && p.y >= box.y && p.y <= box.y + box.h) {
+          return { kind: 'component', id: comp.id };
+        }
+      }
+      for (let i = state.wires.length - 1; i >= 0; i--) {
+        const wire = state.wires[i];
+        if (pointLineDistance(p, wire.a, wire.b) <= HIT) {
+          return { kind: 'wire', id: wire.id };
+        }
+      }
+      return null;
+    }
+
+    function getComponentBounds(comp) {
+      const size = componentSize(comp.type, comp.cells || 2);
+      const rotated = comp.rotation % 180 === 0
+        ? { w: size.w + 16, h: Math.max(size.h, 34) + 16 }
+        : { w: Math.max(size.h, 34) + 16, h: size.w + 16 };
+      return { x: comp.x - rotated.w / 2, y: comp.y - rotated.h / 2, w: rotated.w, h: rotated.h };
+    }
+
+    function addComponent(type, pos) {
+      saveHistory();
+      const p = nearestGridPoint(pos);
+      
+      // Use the value from the UI box only. Labels are now optional.
+      const userLabel = ui.compLabel.value.trim();
+      const actualType = type.startsWith('switch') ? 'switch' : type;
+      const cells = actualType === 'battery' ? Math.max(1, Math.min(8, Number(ui.batteryCells.value) || 2)) : undefined;
+      const size = componentSize(actualType, cells || 2);
+      
+      // Calculate a default label offset that doesn't obscure the component
+      // This is relative to the component center (0,0) inside its group normally, 
+      // but state.components stores labelOffX/Y as relative to the world coordinate x,y.
+      // Offset Y should be enough to clear the height of the component.
+      const defaultOffY = (actualType === 'potentiometer' || actualType === 'ldr' || actualType === 'bell') ? -(size.h / 2 + 35) : -(size.h / 2 + 25);
+
+      const comp = {
+        id: state.nextId++,
+        type: actualType,
+        x: p.x,
+        y: p.y,
+        rotation: state.rotation,
+        variant: type,
+        label: userLabel,
+        labelOffX: 0,
+        labelOffY: defaultOffY,
+        fontSize: Number(ui.fontSize.value) || 11,
+        thickness: Number(ui.compThickness.value) || 3,
+        useLatex: document.getElementById('useLatex').checked,
+        cells: cells
+      };
+      autoAlignComponent(comp);
+      state.components.push(comp);
+      rebuildJunctions();
+      state.selected = { kind: 'component', id: comp.id };
+      render();
+    }
+
+    function autoAlignComponent(comp) {
+      const near = nearbyWireDirections({ x: comp.x, y: comp.y });
+      if (!near.length) return;
+      if (comp.rotation % 90 !== 0) comp.rotation = 0;
+      const prefersVertical = comp.rotation % 180 === 90;
+      const verticalish = near.some(a => Math.abs(Math.cos(a)) < 0.35);
+      const horizontalish = near.some(a => Math.abs(Math.sin(a)) < 0.35);
+      if (prefersVertical && !verticalish && horizontalish) comp.rotation = 0;
+      if (!prefersVertical && !horizontalish && verticalish) comp.rotation = 90;
+    }
+
+    function nearbyWireDirections(p) {
+      const res = [];
+      for (const wire of state.wires) {
+        if (pointLineDistance(p, wire.a, wire.b) <= GRID * 0.65) {
+          res.push(Math.atan2(wire.b.y - wire.a.y, wire.b.x - wire.a.x));
+        }
+      }
+      return res;
+    }
+
+    function deleteSelected() {
+      if (!state.selected) return;
+      saveHistory();
+      if (state.selected.kind === 'component') {
+        state.components = state.components.filter(c => c.id !== state.selected.id);
+      } else if (state.selected.kind === 'label') {
+        const comp = state.components.find(c => c.id === state.selected.id);
+        if (comp) {
+          comp.label = "";
+          ui.compLabel.value = "";
+        }
+      } else {
+        state.wires = state.wires.filter(w => w.id !== state.selected.id);
+      }
+      state.selected = null;
+      rebuildJunctions();
+      render();
+    }
+
+    svg.addEventListener('pointerdown', (evt) => {
+      const p = pointerToSvg(evt);
+      const snapped = nearestGridPoint(p);
+
+      if (state.tool === 'wire') {
+        state.dragging = { mode: 'wire', start: snapped, current: snapped };
+        state.wirePreview = { a: snapped, b: snapped };
+        render();
+        return;
+      }
+
+      if (state.tool === 'delete') {
+        const hit = findHit(p);
+        if (hit) {
+          state.selected = hit;
+          deleteSelected();
+        }
+        return;
+      }
+
+      if (['bulb', 'battery', 'switch-open', 'switch-closed', 'resistor', 'variable-resistor', 'potentiometer', 'ldr', 'thermistor', 'voltmeter', 'ammeter', 'galvanometer', 'motor', 'bell'].includes(state.tool)) {
+        addComponent(state.tool, p);
+        return;
+      }
+
+      const hit = findHit(p);
+      state.selected = hit;
+      if (hit?.kind === 'label' || hit?.kind === 'component') {
+        const compId = hit.id;
+        const comp = state.components.find(c => c.id === compId);
+        if (comp) {
+          // Sync UI with clicked component
+          ui.compLabel.value = comp.label || "";
+          ui.fontSize.value = comp.fontSize || 11;
+          document.getElementById('useLatex').checked = comp.useLatex !== false;
+
+          if (state.tool === 'select') {
+             if (hit.kind === 'label') {
+                const size = componentSize(comp.type, comp.cells || 2);
+                const defaultOffY = (comp.type === 'potentiometer' || comp.type === 'ldr' || comp.type === 'bell') ? -(size.h / 2 + 35) : -(size.h / 2 + 25);
+                const currentOffX = comp.labelOffX || 0;
+                const currentOffY = comp.labelOffY !== undefined ? comp.labelOffY : defaultOffY;
+                
+                state.dragging = {
+                   mode: 'move-label', 
+                   id: comp.id,
+                   originX: p.x,
+                   originY: p.y,
+                   startOffX: currentOffX,
+                   startOffY: currentOffY
+                };
+             } else {
+                state.dragging = {
+                   mode: 'move-component',
+                   id: comp.id,
+                   offsetX: comp.x - snapped.x,
+                   offsetY: comp.y - snapped.y
+                };
+             }
+          }
+        }
+      } else {
+        // ...Existing hit handling (clear UI if needed)
+      }
+      render();
+    });
+
+    svg.addEventListener('pointermove', (evt) => {
+      const p = pointerToSvg(evt);
+      const snapped = nearestGridPoint(p);
+      if (!state.dragging) return;
+      if (state.dragging.mode === 'wire') {
+        state.dragging.current = snapped;
+        state.wirePreview = { a: state.dragging.start, b: snapped };
+        render();
+      }
+      if (state.dragging.mode === 'move-label') {
+        const comp = state.components.find(c => c.id === state.dragging.id);
+        if (!comp) return;
+        const dx = p.x - state.dragging.originX;
+        const dy = p.y - state.dragging.originY;
+        comp.labelOffX = state.dragging.startOffX + dx;
+        comp.labelOffY = state.dragging.startOffY + dy;
+        render();
+      }
+      if (state.dragging.mode === 'move-component') {
+        const comp = state.components.find(c => c.id === state.dragging.id);
+        if (!comp) return;
+        comp.x = snapped.x + state.dragging.offsetX;
+        comp.y = snapped.y + state.dragging.offsetY;
+        autoAlignComponent(comp);
+        rebuildJunctions();
+        render();
+      }
+    });
+
+    svg.addEventListener('pointerup', () => {
+      if (!state.dragging) return;
+      if (state.dragging.mode === 'wire') {
+        const { start, current } = state.dragging;
+        if (distance(start, current) > 0) {
+          saveHistory();
+          state.wires.push({ id: state.nextId++, a: start, b: current });
+          rebuildJunctions();
+          state.selected = { kind: 'wire', id: state.nextId - 1 };
+        }
+        state.wirePreview = null;
+      }
+      if (state.dragging.mode === 'move-component') {
+        saveHistory();
+        const snapshot = state.history.pop();
+        state.history.push(snapshot);
+      }
+      state.dragging = null;
+      render();
+    });
+
+    svg.addEventListener('pointerleave', () => {
+      if (state.dragging?.mode === 'wire') {
+        state.dragging = null;
+        state.wirePreview = null;
+        render();
+      }
+    });
+
+    function render() {
+      // Set viewport size based on the window if it's set to full size
+      if (!state.viewport.width || state.viewport.width < 500) {
+        state.viewport.width = svg.clientWidth || svg.parentElement.clientWidth || 1200;
+        state.viewport.height = svg.clientHeight || svg.parentElement.clientHeight || 800;
+        svg.setAttribute('viewBox', `0 0 ${state.viewport.width} ${state.viewport.height}`);
+      }
+
+      // Clear the basic SVG content
+      svg.innerHTML = '';
+      
+      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      svg.appendChild(defs);
+
+      if (state.showGrid) drawGrid();
+      drawWires();
+      drawWirePreview();
+      drawComponents();
+      drawJunctions();
+
+      // Trigger MathJax typesetting for any new LaTeX content
+      // Trigger KaTeX rendering for any new LaTeX content
+      if (window.renderMathInElement) {
+        setTimeout(() => {
+          renderMathInElement(svg, {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', inline: true },
+              { left: '\\(', right: '\\)', inline: true },
+              { left: '\\[', right: '\\]', display: true }
+            ],
+            throwOnError: false
+          });
+        }, 10);
+      }
+    }
+
+    function drawGrid() {
+      const g = make('g', { id: 'grid-layer', opacity: 1 });
+      const gridExtend = 4200; // Increased extension to cover centered views (multiple of 28 is best)
+      
+      // Draw grid from -gridExtend to +gridExtend in both directions
+      for (let x = -gridExtend; x <= gridExtend; x += GRID) {
+        g.appendChild(make('line', { x1: x, y1: -gridExtend, x2: x, y2: gridExtend, stroke: '#f0f0f0', 'stroke-width': 1 }));
+      }
+      for (let y = -gridExtend; y <= gridExtend; y += GRID) {
+        g.appendChild(make('line', { x1: -gridExtend, y1: y, x2: gridExtend, y2: y, stroke: '#f0f0f0', 'stroke-width': 1 }));
+      }
+      svg.appendChild(g);
+    }
+
+    function drawWires() {
+      const g = make('g', { class: 'wire-layer' });
+      for (const wire of state.wires) {
+        const isSelected = state.selected?.kind === 'wire' && state.selected.id === wire.id;
+        g.appendChild(make('line', {
+          x1: wire.a.x, y1: wire.a.y, x2: wire.b.x, y2: wire.b.y,
+          stroke: isSelected ? '#2563eb' : '#111827',
+          'stroke-width': isSelected ? WIRE_STROKE + 1 : WIRE_STROKE,
+          'stroke-linecap': 'round'
+        }));
+      }
+      svg.appendChild(g);
+    }
+
+    function drawWirePreview() {
+      if (!state.wirePreview) return;
+      svg.appendChild(make('line', {
+        x1: state.wirePreview.a.x, y1: state.wirePreview.a.y,
+        x2: state.wirePreview.b.x, y2: state.wirePreview.b.y,
+        stroke: '#60a5fa', 'stroke-width': WIRE_STROKE, 'stroke-dasharray': '6 5', 'stroke-linecap': 'round'
+      }));
+    }
+
+    function drawJunctions() {
+      return;
+    }
+
+    function drawComponents() {
+      for (const comp of state.components) {
+        const selected = state.selected?.kind === 'component' && state.selected.id === comp.id;
+        const wrap = make('g', { transform: `translate(${comp.x} ${comp.y}) rotate(${comp.rotation})` });
+        if (selected) {
+          const box = getComponentBounds(comp);
+          svg.appendChild(make('rect', {
+            x: box.x, y: box.y, width: box.w, height: box.h,
+            rx: 10, ry: 10, fill: 'none', stroke: '#3b82f6', 'stroke-width': 2, 'stroke-dasharray': '5 4'
+          }));
+        }
+
+        const th = comp.thickness || 3;
+        if (comp.type === 'bulb') drawBulb(wrap, th);
+        if (comp.type === 'battery') drawBattery(wrap, comp.cells || 2, th);
+        if (comp.type === 'switch') drawSwitch(wrap, comp.variant === 'switch-closed', th);
+        if (comp.type === 'resistor') drawResistor(wrap, th);
+        if (comp.type === 'variable-resistor') drawVariableResistor(wrap, th);
+        if (comp.type === 'potentiometer') drawPotentiometer(wrap, th);
+        if (comp.type === 'ldr') drawLDR(wrap, th);
+        if (comp.type === 'thermistor') drawThermistor(wrap, th);
+        if (comp.type === 'voltmeter') drawMeter(wrap, 'V', th);
+        if (comp.type === 'ammeter') drawMeter(wrap, 'A', th);
+        if (comp.type === 'galvanometer') drawMeter(wrap, 'G', th);
+        if (comp.type === 'motor') drawMotor(wrap, th);
+        if (comp.type === 'bell') drawBell(wrap, th);
+        svg.appendChild(wrap);
+
+        // Labels are drawn outside the rotation group to stay upright and be shiftable
+        if (comp.label) {
+          const selectedLabel = state.selected?.kind === 'label' && state.selected.id === comp.id;
+          const size = componentSize(comp.type, comp.cells || 2);
+          // Moving default position to be HIGHER ABOVE the item
+          const defaultOffY = (comp.type === 'potentiometer' || comp.type === 'ldr' || comp.type === 'bell') ? -(size.h / 2 + 35) : -(size.h / 2 + 25);
+          const fs = comp.fontSize || 11;
+          
+          const lx = comp.x + (comp.labelOffX || 0);
+          const ly = comp.y + (comp.labelOffY !== undefined ? comp.labelOffY : defaultOffY);
+
+          // Wrap the hidden label in a div that MathJax will definitely see
+          // Use data-label to store the raw value for the renderer
+          const fo = make('foreignObject', {
+             x: lx - 100, y: ly - 30, width: 200, height: 60,
+             class: 'latex-label',
+             style: `pointer-events: none; overflow: visible;`
+          });
+          const div = document.createElement('div');
+          div.className = 'math-container'; // MathJax will look for this
+          div.style = `display: flex; justify-content: center; align-items: center; 
+                       font-family: Arial; font-size: ${fs}pt; color: ${selectedLabel ? '#2563eb' : '#4b5563'};
+                       font-weight: ${selectedLabel ? 'bold' : 'normal'}; height: 100%; width: 100%;`;
+          
+          if (comp.useLatex !== false) {
+            div.innerHTML = `$${comp.label}$`;
+          } else {
+            div.textContent = comp.label;
+          }
+          fo.appendChild(div);
+          svg.appendChild(fo);
+          
+          // Add an invisible hit-box for the label since foreignObject is hard to hit
+          const hit = make('rect', {
+            x: lx - 50, y: ly - 20, width: 100, height: 40,
+            fill: 'transparent', cursor: 'move', class: 'latex-hitbox'
+          });
+          svg.appendChild(hit);
+        }
+      }
+    }
+
+    function drawResistor(g, th = 3) {
+      g.appendChild(make('line', { x1: -40, y1: 0, x2: -20, y2: 0, stroke: '#111827', 'stroke-width': th }));
+      g.appendChild(make('line', { x1: 20, y1: 0, x2: 40, y2: 0, stroke: '#111827', 'stroke-width': th }));
+      g.appendChild(make('rect', { x: -20, y: -10, width: 40, height: 20, fill: 'white', stroke: '#111827', 'stroke-width': th }));
+    }
+
+    function drawVariableResistor(g, th = 3) {
+      drawResistor(g, th);
+      // Steeper angle: from (-18, 20) to (18, -20)
+      g.appendChild(make('line', { x1: -18, y1: 20, x2: 18, y2: -20, stroke: '#111827', 'stroke-width': th * 0.83, 'stroke-linecap': 'round' }));
+      // Adjusted arrowhead for steeper angle
+      g.appendChild(make('path', { d: 'M 11 -20 L 21 -23 L 20 -13 Z', fill: '#111827' }));
+    }
+
+    function drawPotentiometer(g, th = 3) {
+      drawResistor(g, th);
+      g.appendChild(make('line', { x1: 0, y1: -29, x2: 0, y2: -10, stroke: '#111827', 'stroke-width': th }));
+      // Stylish arrowhead
+      g.appendChild(make('path', { d: 'M -5 -16 L 0 -10 L 5 -16 Z', fill: '#111827' }));
+    }
+
+    function drawLDR(g, th = 3) {
+      drawResistor(g, th);
+      // Slightly larger circle
+      g.appendChild(make('circle', { cx: 0, cy: 0, r: 28, fill: 'none', stroke: '#111827', 'stroke-width': th * 0.67 }));
+      // Two light arrows outside the circle, pointing towards it (moved higher)
+      const arrowX1 = -38, arrowY1 = -38;
+      const targetX1 = -24, targetY1 = -24;
+      
+      const arrowX2 = -48, arrowY2 = -28;
+      const targetX2 = -34, targetY2 = -14;
+      
+      // Arrow 1
+      g.appendChild(make('line', { x1: arrowX1, y1: arrowY1, x2: targetX1, y2: targetY1, stroke: '#111827', 'stroke-width': th * 0.67, 'stroke-linecap': 'round' }));
+      // Sharper and slightly longer arrowhead for Arrow 1
+      g.appendChild(make('path', { d: 'M -30 -22 L -24 -24 L -22 -30 Z', fill: '#111827' }));
+
+      // Arrow 2
+      g.appendChild(make('line', { x1: arrowX2, y1: arrowY2, x2: targetX2, y2: targetY2, stroke: '#111827', 'stroke-width': th * 0.67, 'stroke-linecap': 'round' }));
+      // Sharper and slightly longer arrowhead for Arrow 2
+      g.appendChild(make('path', { d: 'M -40 -12 L -34 -14 L -32 -20 Z', fill: '#111827' }));
+    }
+
+    function drawThermistor(g, th = 3) {
+      drawResistor(g, th);
+      g.appendChild(make('line', { x1: -22, y1: 15, x2: 22, y2: -15, stroke: '#111827', 'stroke-width': th * 0.83, 'stroke-linecap': 'round' }));
+      g.appendChild(make('line', { x1: -28, y1: 15, x2: -22, y2: 15, stroke: '#111827', 'stroke-width': th * 0.83, 'stroke-linecap': 'round' }));
+    }
+
+    function drawMeter(g, label, th = 3) {
+      g.appendChild(make('line', { x1: -29, y1: 0, x2: -20, y2: 0, stroke: '#111827', 'stroke-width': th }));
+      g.appendChild(make('line', { x1: 20, y1: 0, x2: 29, y2: 0, stroke: '#111827', 'stroke-width': th }));
+      g.appendChild(make('circle', { cx: 0, cy: 0, r: 20, fill: 'white', stroke: '#111827', 'stroke-width': th }));
+      // We use a group for text to apply rotation correction if needed, but since it's just a letter, we can keep it simple.
+      const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      txt.setAttribute('x', '0');
+      txt.setAttribute('y', '0');
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('dominant-baseline', 'central');
+      txt.setAttribute('font-size', '16px');
+      txt.setAttribute('font-weight', 'bold');
+      txt.setAttribute('fill', '#111827');
+      txt.textContent = label;
+      g.appendChild(txt);
+    }
+
+    function drawBell(g, th = 3) {
+      // Horizontal connections (lie on y=0, the grid line)
+      g.appendChild(make('line', { x1: -40, y1: 0, x2: -10, y2: 0, stroke: '#111827', 'stroke-width': th }));
+      g.appendChild(make('line', { x1: 10, y1: 0, x2: 40, y2: 0, stroke: '#111827', 'stroke-width': th }));
+      
+      // Vertical legs (connecting to the dome above y=0)
+      g.appendChild(make('line', { x1: -10, y1: 0, x2: -10, y2: -15, stroke: '#111827', 'stroke-width': th }));
+      g.appendChild(make('line', { x1: 10, y1: 0, x2: 10, y2: -15, stroke: '#111827', 'stroke-width': th }));
+
+      // Dome base (flat line)
+      g.appendChild(make('line', { x1: -20, y1: -15, x2: 20, y2: -15, stroke: '#111827', 'stroke-width': th }));
+      
+      // Dome (half-circle facing UP)
+      g.appendChild(make('path', { d: 'M -20 -15 A 20 20 0 0 1 20 -15 Z', fill: 'white', stroke: '#111827', 'stroke-width': th }));
+    }
+
+    function drawBulb(g, th = 3) {
+      g.appendChild(make('line', { x1: -29, y1: 0, x2: -20, y2: 0, stroke: '#111827', 'stroke-width': th }));
+      g.appendChild(make('line', { x1: 20, y1: 0, x2: 29, y2: 0, stroke: '#111827', 'stroke-width': th }));
+      g.appendChild(make('circle', { cx: 0, cy: 0, r: 20, fill: 'white', stroke: '#111827', 'stroke-width': th }));
+      const offset = 14.2;
+      g.appendChild(make('line', { x1: -offset, y1: -offset, x2: offset, y2: offset, stroke: '#111827', 'stroke-width': th * 0.83, 'stroke-linecap': 'round' }));
+      g.appendChild(make('line', { x1: -offset, y1: offset, x2: offset, y2: -offset, stroke: '#111827', 'stroke-width': th * 0.83, 'stroke-linecap': 'round' }));
+    }
+
+    function drawBattery(g, cells, th = 3) {
+      const start = -(cells * 18) / 2;
+
+      // White cut-out only inside the battery body so it does not bleed past terminals.
+      g.appendChild(make('line', {
+        x1: start - 2, y1: 0, x2: start + (cells - 1) * 18 + 10, y2: 0,
+        stroke: 'white', 'stroke-width': th * 2, 'stroke-linecap': 'butt'
+      }));
+
+      // Outer terminal wires connect directly to the battery terminals.
+      g.appendChild(make('line', { x1: start - 14, y1: 0, x2: start, y2: 0, stroke: '#111827', 'stroke-width': th }));
+
+      let x = start;
+      for (let i = 0; i < cells; i++) {
+        g.appendChild(make('line', { x1: x, y1: -15, x2: x, y2: 15, stroke: '#111827', 'stroke-width': th }));
+        g.appendChild(make('line', { x1: x + 8, y1: -9, x2: x + 8, y2: 9, stroke: '#111827', 'stroke-width': th }));
+        if (i < cells - 1) g.appendChild(make('line', { x1: x + 8, y1: 0, x2: x + 18, y2: 0, stroke: '#111827', 'stroke-width': th }));
+        x += 18;
+      }
+
+      g.appendChild(make('line', { x1: x - 10, y1: 0, x2: x + 8, y2: 0, stroke: '#111827', 'stroke-width': th }));
+    }
+
+    function drawSwitch(g, closed, th = 3) {
+      g.appendChild(make('line', { x1: -40, y1: 0, x2: -14, y2: 0, stroke: '#111827', 'stroke-width': th }));
+      g.appendChild(make('line', { x1: 14, y1: 0, x2: 40, y2: 0, stroke: '#111827', 'stroke-width': th }));
+
+      if (!closed) {
+        g.appendChild(make('line', {
+          x1: -10, y1: 0,
+          x2: 10, y2: 0,
+          stroke: 'white',
+          'stroke-width': th * 2,
+          'stroke-linecap': 'round'
+        }));
+      }
+
+      g.appendChild(make('circle', { cx: -14, cy: 0, r: 4, fill: 'white', stroke: '#111827', 'stroke-width': th * 0.83 }));
+      g.appendChild(make('circle', { cx: 14, cy: 0, r: 4, fill: 'white', stroke: '#111827', 'stroke-width': th * 0.83 }));
+      g.appendChild(make('line', {
+        x1: -12, y1: 0,
+        x2: 12,
+        y2: closed ? 0 : -12,
+        stroke: '#111827',
+        'stroke-width': th,
+        'stroke-linecap': 'round'
+      }));
+    }
+
+    function drawMotor(g, th = 3) {
+      g.appendChild(make('line', { x1: -29, y1: 0, x2: -20, y2: 0, stroke: '#111827', 'stroke-width': th }));
+      g.appendChild(make('line', { x1: 20, y1: 0, x2: 29, y2: 0, stroke: '#111827', 'stroke-width': th }));
+      g.appendChild(make('circle', { cx: 0, cy: 0, r: 20, fill: 'white', stroke: '#111827', 'stroke-width': th }));
+      const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      txt.setAttribute('x', '0');
+      txt.setAttribute('y', '0');
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('dominant-baseline', 'central');
+      txt.setAttribute('font-size', '16px');
+      txt.setAttribute('font-weight', 'bold');
+      txt.setAttribute('fill', '#111827');
+      txt.textContent = 'M';
+      g.appendChild(txt);
+    }
+
+    function make(tag, attrs = {}) {
+      const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+      return el;
+    }
+
+    async function exportPNG() {
+      const wasGridVisible = state.showGrid;
+      state.showGrid = false;
+      const oldSelected = state.selected;
+      state.selected = null;
+      render();
+
+      // Wait for KaTeX to finish rendering labels (render() triggers it after 10ms)
+      await new Promise(r => setTimeout(r, 300));
+
+      try {
+        const bounds = contentBounds();
+        const padding = 40;
+        const SCALE = 2;
+        const vb = [
+          bounds.x - padding,
+          bounds.y - padding,
+          bounds.w + padding * 2,
+          bounds.h + padding * 2
+        ];
+
+        // --- Pass 1: Serialize the circuit (without labels) to canvas ---
+        const svgClone = svg.cloneNode(true);
+        svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        // Remove foreignObjects (labels), hitboxes, selection highlights
+        svgClone.querySelectorAll('foreignObject, .latex-hitbox, rect[stroke-dasharray]').forEach(el => el.remove());
+        svgClone.setAttribute('viewBox', vb.join(' '));
+        svgClone.setAttribute('width', vb[2]);
+        svgClone.setAttribute('height', vb[3]);
+
+        const svgString = new XMLSerializer().serializeToString(svgClone);
+        const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = vb[2] * SCALE;
+        canvas.height = vb[3] * SCALE;
+        const ctx = canvas.getContext('2d');
+
+        if (ui.exportBg.value === 'white') {
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); resolve(); };
+          img.onerror = reject;
+          img.src = svgDataUrl;
+        });
+
+        // --- Pass 2: Capture each rendered KaTeX label and composite it ---
+        const foreignObjects = svg.querySelectorAll('foreignObject.latex-label');
+        for (const fo of foreignObjects) {
+          const foX = parseFloat(fo.getAttribute('x'));
+          const foY = parseFloat(fo.getAttribute('y'));
+          const foW = parseFloat(fo.getAttribute('width'));
+          const foH = parseFloat(fo.getAttribute('height'));
+
+          const mathDiv = fo.querySelector('.math-container');
+          if (!mathDiv) continue;
+
+          // Render the already-typeset KaTeX HTML in an isolated off-screen div
+          const tempDiv = document.createElement('div');
+          // Important: Copy styles to ensure font size and alignment match
+          const computed = window.getComputedStyle(mathDiv);
+          tempDiv.style.cssText = `
+            position: fixed; top: -9999px; left: -9999px;
+            width: ${foW}px; height: ${foH}px;
+            background: transparent;
+            display: flex; justify-content: center; align-items: center;
+            font-family: ${computed.fontFamily};
+            font-size: ${computed.fontSize};
+            line-height: normal;
+          `;
+          tempDiv.innerHTML = mathDiv.innerHTML;
+          // Clean up the double-render inside the temp div before capturing
+          tempDiv.querySelectorAll('.katex-mathml').forEach(m => m.remove());
+          
+          document.body.appendChild(tempDiv);
+
+          const labelCanvas = await html2canvas(tempDiv, {
+            backgroundColor: null,
+            scale: SCALE,
+            logging: false,
+            width: foW,
+            height: foH,
+            x: 0,
+            y: 0,
+            scrollX: 0,
+            scrollY: 0
+          });
+          document.body.removeChild(tempDiv);
+
+          // Map SVG coords → canvas pixel coords
+          const px = (foX - vb[0]) * SCALE;
+          const py = (foY - vb[1]) * SCALE;
+          const pw = foW * SCALE;
+          const ph = foH * SCALE;
+          ctx.drawImage(labelCanvas, 0, 0, labelCanvas.width, labelCanvas.height, px, py, pw, ph);
+        }
+
+        // --- Download ---
+        canvas.toBlob(blob => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'circuit-diagram.png';
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        }, 'image/png');
+
+      } catch (err) {
+        console.error('Export failed:', err);
+      } finally {
+        state.showGrid = wasGridVisible;
+        state.selected = oldSelected;
+        render();
+      }
+    }
+
+    function contentBounds() {
+      const points = [];
+      state.wires.forEach(w => points.push(w.a, w.b));
+      state.components.forEach(c => {
+        const b = getComponentBounds(c);
+        points.push({ x: b.x, y: b.y }, { x: b.x + b.w, y: b.y + b.h });
+      });
+      if (!points.length) return { x: 0, y: 0, w: 400, h: 300 };
+      const xs = points.map(p => p.x), ys = points.map(p => p.y);
+      const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+      return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+    }
+
+    setStatus(`Use <strong>Select / Move</strong> to drag components. Use <strong>Wire</strong> to draw straight snapped segments between grid points. Crossings count as connections.<br><br>Place batteries, bulbs, and open or closed switches from the toolbar. Batteries render the number of cells you enter.`);
+    render();
+  </script>
+  <script src="./Circuit Diagram Generator_files/tracker.js"></script>
+
+
+</body></html>
