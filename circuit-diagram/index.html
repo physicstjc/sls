@@ -408,10 +408,6 @@
       <label for="useLatex" style="margin-bottom: 0;">Use LaTeX formatting</label>
     </div>
     <div class="field">
-      <label for="fontSize">Label Font Size (pt)</label>
-      <input id="fontSize" type="number" min="6" max="36" value="11">
-    </div>
-    <div class="field">
       <label for="labelSize">Label Font Size</label>
       <input id="labelSize" type="number" min="6" max="40" value="12">
     </div>
@@ -730,19 +726,13 @@
 
     ui.labelSize.addEventListener('input', () => {
       saveHistory();
-      state.labelSize = Number(ui.labelSize.value) || 18;
+      state.labelSize = Number(ui.labelSize.value) || 12;
       render();
     });
 
     ui.compThickness.addEventListener('input', () => {
       saveHistory();
       state.compThickness = Number(ui.compThickness.value) || 3;
-      render();
-    });
-
-    ui.labelSize.addEventListener('input', () => {
-      saveHistory();
-      state.labelSize = Number(ui.labelSize.value) || 18;
       render();
     });
 
