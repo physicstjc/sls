@@ -403,6 +403,10 @@
       <input id="fontSize" type="number" min="6" max="36" value="11">
     </div>
     <div class="field">
+      <label for="labelSize">Label Font Size</label>
+      <input id="labelSize" type="number" min="6" max="40" value="12">
+    </div>
+    <div class="field">
       <label for="compThickness">Component Line Thickness</label>
       <input id="compThickness" type="number" min="1" max="10" step="0.5" value="3">
     </div>
@@ -461,6 +465,7 @@
       nextId: 1,
       viewport: { width: 1200, height: 800 },
       compThickness: 3,
+      labelSize: 12,
       prompting: false
     };
 
@@ -477,7 +482,7 @@
       exportBg: document.getElementById('exportBg'),
       fitBtn: document.getElementById('fitBtn'),
       compLabel: document.getElementById('compLabel'),
-      fontSize: document.getElementById('fontSize'),
+      labelSize: document.getElementById('labelSize'),
       compThickness: document.getElementById('compThickness'),
       // Modal elements
       modalOverlay: document.getElementById('modalOverlay'),
@@ -591,6 +596,9 @@
     }
 
     function setTool(tool) {
+      if (tool !== 'battery') {
+        delete state.lastBatteryCells;
+      }
       state.tool = tool;
       state.selected = []; // Reset multiple selection
       ui.compLabel.value = ""; // Reset current labels when switching tools
@@ -693,24 +701,21 @@
       }
     });
 
-    ui.fontSize.addEventListener('input', () => {
-      if (state.selected.length > 0) {
-        saveHistory();
-        state.selected.forEach(sel => {
-          if (sel.kind === 'component' || sel.kind === 'label') {
-            const comp = state.components.find(c => c.id === sel.id);
-            if (comp) {
-              comp.fontSize = Number(ui.fontSize.value) || 11;
-            }
-          }
-        });
-        render();
-      }
+    ui.labelSize.addEventListener('input', () => {
+      saveHistory();
+      state.labelSize = Number(ui.labelSize.value) || 18;
+      render();
     });
 
     ui.compThickness.addEventListener('input', () => {
       saveHistory();
       state.compThickness = Number(ui.compThickness.value) || 3;
+      render();
+    });
+
+    ui.labelSize.addEventListener('input', () => {
+      saveHistory();
+      state.labelSize = Number(ui.labelSize.value) || 18;
       render();
     });
 
@@ -813,8 +818,8 @@
         const comp = state.components[i];
         if (comp.label) {
           const size = componentSize(comp.type, comp.cells || 2);
-          const defaultOffY = (comp.type === 'potentiometer' || comp.type === 'ldr' || comp.type === 'bell') ? -(size.h / 2 + 25) : -(size.h / 2 + 15);
-          const fs = (comp.fontSize || 11) * 1.33; // pt to px approx
+          const defaultOffY = (comp.type === 'potentiometer' || comp.type === 'ldr' || comp.type === 'bell') ? -(size.h / 2 + 10) : -(size.h / 2 + 5);
+          const fs = (state.labelSize || 12) * 1.33; // pt to px approx
           const lx = comp.x + (comp.labelOffX || 0);
           const ly = comp.y + (comp.labelOffY !== undefined ? comp.labelOffY : defaultOffY);
           
@@ -859,7 +864,7 @@
     }
 
     async function addComponent(type, pos) {
-      if (type === 'battery' && !state.prompting) {
+      if (type === 'battery' && !state.prompting && state.lastBatteryCells === undefined) {
         state.prompting = true;
         const val = await showModal("Number of Cells (1-8):", "2");
         state.prompting = false;
@@ -868,7 +873,7 @@
         
         const num = parseInt(val);
         if (isNaN(num) || num < 1) return;
-        state._tempBatteryCells = Math.min(8, num);
+        state.lastBatteryCells = Math.min(8, num);
       }
 
       saveHistory();
@@ -880,8 +885,7 @@
       
       let cells = undefined;
       if (actualType === 'battery') {
-        cells = state._tempBatteryCells || 2;
-        delete state._tempBatteryCells; 
+        cells = state.lastBatteryCells || 2;
       }
       
       const size = componentSize(actualType, cells || 2);
@@ -890,7 +894,7 @@
       // This is relative to the component center (0,0) inside its group normally, 
       // but state.components stores labelOffX/Y as relative to the world coordinate x,y.
       // Offset Y should be enough to clear the height of the component.
-      const defaultOffY = (actualType === 'potentiometer' || actualType === 'ldr' || actualType === 'bell') ? -(size.h / 2 + 25) : -(size.h / 2 + 15);
+      const defaultOffY = (actualType === 'potentiometer' || actualType === 'ldr' || actualType === 'bell') ? -(size.h / 2 + 10) : -(size.h / 2 + 5);
 
       const comp = {
         id: state.nextId++,
@@ -902,7 +906,6 @@
         label: userLabel,
         labelOffX: 0,
         labelOffY: defaultOffY,
-        fontSize: Number(ui.fontSize.value) || 11,
         useLatex: document.getElementById('useLatex').checked,
         cells: cells
       };
@@ -1005,14 +1008,13 @@
         const comp = state.components.find(c => c.id === compId);
         if (comp) {
           ui.compLabel.value = comp.label || "";
-          ui.fontSize.value = comp.fontSize || 11;
           document.getElementById('useLatex').checked = comp.useLatex !== false;
         }
 
         if (state.tool === 'select') {
           if (hit.kind === 'label') {
             const size = componentSize(comp.type, comp.cells || 2);
-            const defaultOffY = (comp.type === 'potentiometer' || comp.type === 'ldr' || comp.type === 'bell') ? -(size.h / 2 + 25) : -(size.h / 2 + 15);
+            const defaultOffY = (comp.type === 'potentiometer' || comp.type === 'ldr' || comp.type === 'bell') ? -(size.h / 2 + 10) : -(size.h / 2 + 5);
             state.dragging = {
               mode: 'move-label', 
               id: comp.id,
@@ -1021,22 +1023,6 @@
               startOffY: comp.labelOffY !== undefined ? comp.labelOffY : defaultOffY
             };
           } else {
-            // Edit cell count for battery on simple selection if it's already selected or just clicked?
-            // To be safe and clean, let's only prompt if it's a battery and not holding shift.
-            if (comp && comp.type === 'battery' && !shift && !state.prompting) {
-               state.prompting = true;
-               showModal("Edit number of cells (1-8):", comp.cells || 2).then(newCells => {
-                  state.prompting = false;
-                  if (newCells !== null) {
-                     saveHistory();
-                     comp.cells = Math.max(1, Math.min(8, parseInt(newCells) || 2));
-                     rebuildJunctions();
-                     render();
-                  }
-               });
-               return;
-            }
-
             // Drag all selected components and wires
             state.dragging = {
               mode: 'move-group',
@@ -1170,9 +1156,15 @@
       drawComponents();
       drawJunctions();
 
-      // Trigger MathJax typesetting for any new LaTeX content
+      // Ensure Lucide icons are rendered
+      if (window.lucide) {
+         lucide.createIcons();
+      }
+
       // Trigger KaTeX rendering for any new LaTeX content
       if (window.renderMathInElement) {
+        // KaTeX works better on the actual DOM nodes.
+        // We use a small timeout to ensure the browser has parsed the new innerHTML
         setTimeout(() => {
           renderMathInElement(svg, {
             delimiters: [
@@ -1181,9 +1173,10 @@
               { left: '\\(', right: '\\)', inline: true },
               { left: '\\[', right: '\\]', display: true }
             ],
+            ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "option"],
             throwOnError: false
           });
-        }, 10);
+        }, 0);
       }
     }
 
@@ -1270,8 +1263,8 @@
           const isSelectedLabel = state.selected.some(s => s.kind === 'label' && s.id === comp.id);
           const size = componentSize(comp.type, comp.cells || 2);
           // Moving default position to be HIGHER ABOVE the item
-          const defaultOffY = (comp.type === 'potentiometer' || comp.type === 'ldr' || comp.type === 'bell') ? -(size.h / 2 + 25) : -(size.h / 2 + 15);
-          const fs = comp.fontSize || 11;
+          const defaultOffY = (comp.type === 'potentiometer' || comp.type === 'ldr' || comp.type === 'bell') ? -(size.h / 2 + 10) : -(size.h / 2 + 5);
+          const fs = state.labelSize || 12;
           
           const lx = comp.x + (comp.labelOffX || 0);
           const ly = comp.y + (comp.labelOffY !== undefined ? comp.labelOffY : defaultOffY);
@@ -1549,9 +1542,9 @@
 
     async function exportPNG() {
       const wasGridVisible = state.showGrid;
+      const oldSelected = [...state.selected];
       state.showGrid = false;
-      const oldSelected = state.selected;
-      state.selected = null;
+      state.selected = [];
       render();
 
       // Wait for KaTeX to finish rendering labels (render() triggers it after 10ms)
@@ -1568,6 +1561,10 @@
           bounds.h + padding * 2
         ];
 
+        // Ensure canvas dimensions are valid
+        const canvasW = Math.max(1, vb[2] * SCALE);
+        const canvasH = Math.max(1, vb[3] * SCALE);
+
         // --- Pass 1: Serialize the circuit (without labels) to canvas ---
         const svgClone = svg.cloneNode(true);
         svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
@@ -1581,8 +1578,8 @@
         const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
 
         const canvas = document.createElement('canvas');
-        canvas.width = vb[2] * SCALE;
-        canvas.height = vb[3] * SCALE;
+        canvas.width = canvasW;
+        canvas.height = canvasH;
         const ctx = canvas.getContext('2d');
 
         if (ui.exportBg.value === 'white') {
@@ -1593,7 +1590,7 @@
         await new Promise((resolve, reject) => {
           const img = new Image();
           img.onload = () => { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); resolve(); };
-          img.onerror = reject;
+          img.onerror = (e) => { console.error("SVG Image Load Error:", e); reject(e); };
           img.src = svgDataUrl;
         });
 
@@ -1608,58 +1605,44 @@
           const mathDiv = fo.querySelector('.math-container');
           if (!mathDiv) continue;
 
-          // Render the already-typeset KaTeX HTML in an isolated off-screen div
-          const tempDiv = document.createElement('div');
-          // Important: Copy styles to ensure font size and alignment match
-          const computed = window.getComputedStyle(mathDiv);
-          tempDiv.style.cssText = `
-            position: fixed; top: -9999px; left: -9999px;
-            width: ${foW}px; height: ${foH}px;
-            background: transparent;
-            display: flex; justify-content: center; align-items: center;
-            font-family: ${computed.fontFamily};
-            font-size: ${computed.fontSize};
-            line-height: normal;
-          `;
-          tempDiv.innerHTML = mathDiv.innerHTML;
-          // Clean up the double-render inside the temp div before capturing
-          tempDiv.querySelectorAll('.katex-mathml').forEach(m => m.remove());
-          
-          document.body.appendChild(tempDiv);
-
-          const labelCanvas = await html2canvas(tempDiv, {
-            backgroundColor: null,
-            scale: SCALE,
-            logging: false,
-            width: foW,
-            height: foH,
-            x: 0,
-            y: 0,
-            scrollX: 0,
-            scrollY: 0
-          });
-          document.body.removeChild(tempDiv);
-
           // Map SVG coords → canvas pixel coords
           const px = (foX - vb[0]) * SCALE;
           const py = (foY - vb[1]) * SCALE;
           const pw = foW * SCALE;
           const ph = foH * SCALE;
-          ctx.drawImage(labelCanvas, 0, 0, labelCanvas.width, labelCanvas.height, px, py, pw, ph);
+
+          // Render the already-typeset KaTeX HTML in an isolated off-screen div using html2canvas
+          try {
+            const labelCanvas = await html2canvas(mathDiv, {
+              backgroundColor: null,
+              scale: SCALE,
+              logging: false,
+              width: foW,
+              height: foH
+            });
+            ctx.drawImage(labelCanvas, 0, 0, labelCanvas.width, labelCanvas.height, px, py, pw, ph);
+          } catch (err) {
+            console.warn("Label Capture Failed:", err);
+          }
         }
 
         // --- Download ---
         canvas.toBlob(blob => {
           const a = document.createElement('a');
-          a.href = URL.createObjectURL(blob);
+          const url = URL.createObjectURL(blob);
+          a.href = url;
           a.download = 'circuit-diagram.png';
+          document.body.appendChild(a);
           a.click();
-          setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
         }, 'image/png');
 
       } catch (err) {
-        console.error('Export failed:', err);
+        console.error("Export Error:", err);
+        alert("Export failed: " + err.message);
       } finally {
+        // Restore state
         state.showGrid = wasGridVisible;
         state.selected = oldSelected;
         render();
