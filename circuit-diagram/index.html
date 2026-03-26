@@ -245,14 +245,23 @@
       display: flex;
       gap: 8px;
       z-index: 5;
+      align-items: center;
     }
     .topbar button {
       border: 1px solid var(--border);
       background: white;
-      padding: 9px 12px;
+      padding: 0 12px;
       border-radius: 10px;
       cursor: pointer;
       box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .topbar #zoomInBtn, .topbar #zoomOutBtn {
+      width: 40px;
+      padding: 0;
     }
     
     /* Modal Styles */
@@ -428,6 +437,10 @@
 
   <main class="workspace">
     <div class="topbar">
+      <button id="zoomOutBtn" class="action-btn" title="Zoom Out"><i data-lucide="minus"></i></button>
+      <span id="zoomDisplay" style="font-size: 11px; min-width: 40px; text-align: center;">100%</span>
+      <button id="zoomInBtn" class="action-btn" title="Zoom In"><i data-lucide="plus"></i></button>
+      <div class="divider"></div>
       <button id="fitBtn">Centre View</button>
     </div>
     
@@ -464,6 +477,7 @@
       future: [],
       nextId: 1,
       viewport: { width: 1200, height: 800 },
+      zoom: 1.0,
       compThickness: 3,
       labelSize: 12,
       prompting: false
@@ -481,6 +495,9 @@
       exportBtn: document.getElementById('exportBtn'),
       exportBg: document.getElementById('exportBg'),
       fitBtn: document.getElementById('fitBtn'),
+      zoomInBtn: document.getElementById('zoomInBtn'),
+      zoomOutBtn: document.getElementById('zoomOutBtn'),
+      zoomDisplay: document.getElementById('zoomDisplay'),
       compLabel: document.getElementById('compLabel'),
       labelSize: document.getElementById('labelSize'),
       compThickness: document.getElementById('compThickness'),
@@ -644,6 +661,16 @@
     });
     ui.exportBtn.addEventListener('click', exportPNG);
     ui.fitBtn.addEventListener('click', centerView);
+    ui.zoomInBtn.addEventListener('click', () => {
+      state.zoom = Math.min(2.0, state.zoom + 0.1);
+      ui.zoomDisplay.textContent = Math.round(state.zoom * 100) + '%';
+      render();
+    });
+    ui.zoomOutBtn.addEventListener('click', () => {
+      state.zoom = Math.max(0.5, state.zoom - 0.1);
+      ui.zoomDisplay.textContent = Math.round(state.zoom * 100) + '%';
+      render();
+    });
 
     function centerView() {
       const bounds = contentBounds();
@@ -1141,8 +1168,11 @@
       if (!state.viewport.width || state.viewport.width < 500) {
         state.viewport.width = svg.clientWidth || svg.parentElement.clientWidth || 1200;
         state.viewport.height = svg.clientHeight || svg.parentElement.clientHeight || 800;
-        svg.setAttribute('viewBox', `0 0 ${state.viewport.width} ${state.viewport.height}`);
       }
+      
+      const vw = state.viewport.width / state.zoom;
+      const vh = state.viewport.height / state.zoom;
+      svg.setAttribute('viewBox', `0 0 ${vw} ${vh}`);
 
       // Clear the basic SVG content
       svg.innerHTML = '';
