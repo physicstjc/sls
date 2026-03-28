@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Right Hand Grip Rule Tutor</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 900px;
+            width: 95%;
+        }
+        .panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .question-panel {
+            border-right: 1px solid #eee;
+            padding-right: 20px;
+        }
+        .visual-aid {
+            width: 100%;
+            height: 250px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 8px;
+            position: relative;
+        }
+        .nav-btn {
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 5px 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+            font-size: 18px;
+        }
+        .nav-btn:hover { background: #dee2e6; }
+        .nav-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Straight Wire Styles */
+        .wire { width: 26px; height: 210px; background: linear-gradient(to right, #5c2007, #b86020 28%, #eaa040 50%, #b86020 72%, #5c2007); border-radius: 13px; position: relative; z-index: 2; box-shadow: 4px 4px 10px rgba(0,0,0,0.35); }
+        .wire-horizontal { width: 220px; height: 26px; border-radius: 13px; z-index: 2; }
+        .current-arrow-ref {
+            position: absolute;
+            color: #1565c0;
+            font-size: 46px;
+            font-weight: 900;
+            top: 50%;
+            left: 50%;
+            z-index: 5;
+            pointer-events: none;
+            text-shadow: 0 0 8px rgba(255,255,255,0.9), 1px 1px 3px rgba(0,0,0,0.4);
+        }
+        .arrow-up .current-arrow-ref { transform: translate(-50%, -100%) rotate(0deg); }
+        .arrow-down .current-arrow-ref { transform: translate(-50%, 0%) rotate(180deg); }
+        .arrow-right .current-arrow-ref { transform: translate(0%, -50%) rotate(90deg); }
+        .arrow-left .current-arrow-ref { transform: translate(-100%, -50%) rotate(-90deg); }
+
+        /* Solenoid Styles */
+        .solenoid { height: 110px; width: 240px; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; }
+        .iron-bar {
+            position: absolute;
+            width: 220px;
+            height: 60px;
+            background: linear-gradient(to bottom, #777, #eee 30%, #fff 50%, #eee 70%, #777);
+            border-radius: 25px;
+            border: 1px solid #666;
+            z-index: 2; /* Layer 2: Iron Bar */
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.5), inset 0 -2px 4px rgba(0,0,0,0.3);
+        }
+        .iron-bar::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 25px;
+            height: 100%;
+            background: #999;
+            border-radius: 50%;
+            border: 1px solid #666;
+            display: none; /* Hide the left cross-section for perspective */
+        }
+        .iron-bar::after {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 25px;
+            height: 100%;
+            background: #ccc;
+            border-radius: 50%;
+            border: 1px solid #666;
+        }
+        .loop-container { width: 22px; height: 88px; position: relative; margin: 0 -5px; }
+        .loop-front { 
+            position: absolute; top: 0; left: 0; width: 50%; height: 100%; 
+            border: 5px solid #222; border-top: none; border-bottom: none; border-right: none; border-radius: 55px 0 0 55px; 
+            z-index: 10; /* Layer 10: Solid Lines */
+            box-sizing: border-box;
+        }
+        .loop-back { 
+            position: absolute; top: 0; left: 50%; width: 50%; height: 100%; 
+            border: 4px dashed #aaa; border-top: none; border-bottom: none; border-left: none; border-radius: 0 55px 55px 0; 
+            z-index: 1; /* Layer 1: Dotted/Back Lines */
+            box-sizing: border-box;
+            opacity: 0.6;
+        }
+        .pole-label { position: absolute; font-weight: 900; top: 50%; transform: translateY(-50%); z-index: 15; font-size: 30px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 3px solid; }
+        .solenoid-text { position: absolute; font-size: 14px; font-weight: bold; color: #555; pointer-events: none; }
+
+        /* Field Line / Solution Styles */
+        .solution-overlay {
+            position: absolute;
+            pointer-events: none;
+            display: none;
+            opacity: 1;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+        .correct .solution-overlay { display: block; }
+        .correct-state .solution-overlay { display: block; }
+        
+        .field-circle-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+        .field-loop { position: relative; width: 140px; height: 50px; }
+        .field-front { 
+            position: absolute; top: 50%; left: 0; width: 100%; height: 50%; 
+            border: 3px solid #333; border-top: none; border-left: none; border-right: none; border-radius: 0 0 70px 70px; z-index: 25; 
+            box-sizing: border-box;
+        }
+        .field-back { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 50%; 
+            border: 3px dashed #333; border-bottom: none; border-left: none; border-right: none; border-radius: 70px 70px 0 0; z-index: 1; 
+            box-sizing: border-box;
+            opacity: 0.4;
+        }
+        .field-arrow {
+            position: absolute;
+            color: #d32f2f;
+            font-size: 18px;
+            font-weight: 900;
+            z-index: 30;
+            line-height: 1;
+        }
+
+        /* Field arrow positions on the front (solid) arc */
+        .field-acw .field-arrow { bottom: 0; left: 50%; transform: translate(-50%, 50%) rotate(0deg); }
+        .field-cw .field-arrow { bottom: 0; left: 50%; transform: translate(-50%, 50%) rotate(180deg); }
+
+        .wire-horizontal-container .field-loop { width: 50px; height: 140px; }
+        .wire-horizontal-container .field-front { 
+            top: 0; left: 50%; width: 50%; height: 100%; 
+            border: 3px solid #333; border-top: none; border-bottom: none; border-left: none; border-radius: 0 70px 70px 0;
+            z-index: 25;
+        }
+        .wire-horizontal-container .field-back { 
+            top: 0; left: 0; width: 50%; height: 100%; 
+            border: 3px dashed #333; border-top: none; border-bottom: none; border-right: none; border-radius: 70px 0 0 70px;
+            z-index: 1;
+            opacity: 0.4;
+        }
+
+        .wire-horizontal-container .field-acw .field-arrow { left: auto; right: 0; top: 50%; transform: translate(50%, -50%) rotate(-90deg); }
+        .wire-horizontal-container .field-cw .field-arrow { left: auto; right: 0; top: 50%; transform: translate(50%, -50%) rotate(90deg); }
+
+        /* Solenoid context: arrows on the FRONT (solid) part */
+        .current-arrow {
+            color: #ffc107;
+            font-size: 24px;
+            position: absolute;
+            font-weight: bold;
+        }
+
+        #webcam-container {
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #000;
+            width: 200px;
+            height: 200px;
+        }
+        #label-container {
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            display: none;
+        }
+        button.main-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        button.main-btn:hover {
+            background-color: #0056b3;
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .correct { background-color: #d4edda; color: #155724; }
+        .incorrect { background-color: #f8d7da; color: #721c24; }
+        .instruction { color: #666; font-style: italic; margin-top: 10px; }
+        
+        /* Snapshot Styles */
+        #snapshot-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #snapshot-canvas {
+            border: 4px solid #28a745;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            display: none;
+            max-width: 150px;
+            margin-top: 10px;
+        }
+        .snapshot-label {
+            font-size: 12px;
+            color: #28a745;
+            font-weight: bold;
+            margin-top: 5px;
+            display: none;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Right Hand Grip Rule Tutor</h1>
+    <button type="button" class="main-btn" onclick="init()">Start Learning</button>
+
+    <div class="container">
+        <div class="panel question-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 5px;">
+                <h2 style="margin: 0;">Challenge</h2>
+                <div class="nav-container">
+                    <button class="nav-btn" onclick="prevQuestion()">&lt; Prev</button>
+                    <button class="nav-btn" onclick="nextQuestion()">Next &gt;</button>
+                </div>
+            </div>
+            <div id="visual-container" class="visual-aid">
+                <div id="visual-content" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%;"></div>
+            </div>
+            <div id="question-text">Loading...</div>
+            <div id="feedback-area" class="feedback" style="display:none;"></div>
+            <p class="instruction">Position your hand in front of the camera to match the rule.</p>
+        </div>
+        
+        <div class="panel">
+            <h2>Camera View</h2>
+            <div id="webcam-container"></div>
+            <div id="label-container"></div>
+            
+            <div id="snapshot-container">
+                <canvas id="snapshot-canvas"></canvas>
+                <div id="snapshot-label" class="snapshot-label">Success Snapshot!</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    
+    <script type="text/javascript">
+        const URL = "https://teachablemachine.withgoogle.com/models/hzvNcShyq/";
+        let model, webcam, labelContainer, maxPredictions;
+        let currentQuestionIndex = 0;
+        let currentQuestion = null;
+        let correctTimer = null;
+        let leftHandTimer = null;
+        let isCorrect = false;
+        let feedbackLockUntil = 0;
+        let lastFeedbackKey = "";
+
+        const questions = [
+            { text: "Current flows UP in a straight wire. Show the direction of the field.", target: "thumb-up", type: "wire", direction: "up" },
+            { text: "Current flows DOWN in a straight wire. Show the direction of the field.", target: "thumb-down", type: "wire", direction: "down" },
+            { text: "Current flows LEFT in a straight wire. Show the direction of the field.", target: "thumb-left", type: "wire", direction: "left", horizontal: true },
+            { text: "Current flows RIGHT in a straight wire. Show the direction of the field.", target: "thumb-right", type: "wire", direction: "right", horizontal: true },
+            { text: "The North pole is on the RIGHT. Show the current direction for this solenoid.", target: "thumb-right", type: "solenoid", pole: "right" },
+            { text: "The North pole is on the LEFT. Show the current direction for this solenoid.", target: "thumb-left", type: "solenoid", pole: "left" }
+        ];
+
+        window.onload = () => {
+            shuffleQuestions();
+            showQuestion(0);
+        };
+
+        function shuffleQuestions() {
+            for (let i = questions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questions[i], questions[j]] = [questions[j], questions[i]];
+            }
+        }
+
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+
+            const startBtn = document.querySelector('button.main-btn');
+            startBtn.disabled = true;
+            startBtn.innerText = "Camera Starting...";
+
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+
+            const flip = true;
+            webcam = new tmImage.Webcam(200, 200, flip);
+            await webcam.setup();
+            await webcam.play();
+            window.requestAnimationFrame(loop);
+
+            document.getElementById("webcam-container").appendChild(webcam.canvas);
+            labelContainer = document.getElementById("label-container");
+            labelContainer.innerHTML = "";
+            for (let i = 0; i < maxPredictions; i++) {
+                labelContainer.appendChild(document.createElement("div"));
+            }
+            startBtn.innerText = "Cam Active";
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex = (currentQuestionIndex + 1) % questions.length;
+            showQuestion(currentQuestionIndex);
+        }
+
+        function prevQuestion() {
+            currentQuestionIndex = (currentQuestionIndex - 1 + questions.length) % questions.length;
+            showQuestion(currentQuestionIndex);
+        }
+
+        function showQuestion(index) {
+            currentQuestion = questions[index];
+            document.getElementById("question-text").innerText = (index + 1) + ". " + currentQuestion.text;
+            const feedbackArea = document.getElementById("feedback-area");
+            feedbackArea.style.display = "none";
+            feedbackArea.innerHTML = "";
+            feedbackArea.className = "feedback";
+            isCorrect = false;
+            
+            // Hide snapshot when changing question
+            document.getElementById("snapshot-canvas").style.display = "none";
+            document.getElementById("snapshot-label").style.display = "none";
+
+            if (correctTimer) {
+                clearTimeout(correctTimer);
+                correctTimer = null;
+            }
+            if (leftHandTimer) {
+                clearTimeout(leftHandTimer);
+                leftHandTimer = null;
+            }
+            feedbackLockUntil = 0;
+            lastFeedbackKey = "";
+            document.getElementById("visual-container").classList.remove("correct-state");
+            updateVisual();
+        }
+
+        function updateVisual() {
+            if (!currentQuestion) return;
+            const container = document.getElementById("visual-content");
+            container.innerHTML = "";
+            
+            if (currentQuestion.type === "wire") {
+                const isH = currentQuestion.horizontal;
+                let fieldClass = "field-acw";
+                if (currentQuestion.direction === 'down' || currentQuestion.direction === 'right') fieldClass = "field-cw";
+
+                // --- BACK arcs overlay: no z-index → paints in layer 6, behind wire (z-index:2, layer 7) ---
+                const solutionBack = document.createElement("div");
+                solutionBack.className = "solution-overlay";
+                const backContainer = document.createElement("div");
+                backContainer.className = "field-circle-container" + (isH ? " wire-horizontal-container" : "");
+                if (isH) backContainer.style.flexDirection = "row";
+                for (let i = 0; i < 3; i++) {
+                    const loop = document.createElement("div");
+                    loop.className = "field-loop";
+                    if (isH) { loop.style.width = "50px"; loop.style.height = "140px"; }
+                    const back = document.createElement("div");
+                    back.className = "field-back";
+                    loop.appendChild(back);
+                    backContainer.appendChild(loop);
+                }
+                solutionBack.appendChild(backContainer);
+                container.appendChild(solutionBack); // append BEFORE wire
+
+                // --- Wire (z-index: 2) ---
+                const wire = document.createElement("div");
+                wire.className = "wire " + (isH ? "wire-horizontal " : "") + "arrow-" + currentQuestion.direction;
+                const curArrow = document.createElement("div");
+                curArrow.className = "current-arrow-ref";
+                curArrow.innerText = "↑";
+                wire.appendChild(curArrow);
+                const curLabel = document.createElement("div");
+                curLabel.style.position = "absolute";
+                curLabel.style.fontSize = "14px";
+                curLabel.style.fontWeight = "bold";
+                if (isH) {
+                    curLabel.style.top = "-30px";
+                    curLabel.style.left = "50%";
+                    curLabel.style.transform = "translateX(-50%)";
+                } else {
+                    curLabel.style.left = "-80px";
+                    curLabel.style.top = "30%";
+                }
+                curLabel.innerText = "Current";
+                wire.appendChild(curLabel);
+                container.appendChild(wire); // append AFTER back overlay
+
+                // --- FRONT arcs + arrows overlay: z-index:5 → paints in layer 7 at z=5, in front of wire (z=2) ---
+                const solutionFront = document.createElement("div");
+                solutionFront.className = "solution-overlay";
+                solutionFront.style.zIndex = "5";
+                const frontContainer = document.createElement("div");
+                frontContainer.className = "field-circle-container" + (isH ? " wire-horizontal-container" : "");
+                if (isH) frontContainer.style.flexDirection = "row";
+                for (let i = 0; i < 3; i++) {
+                    const loop = document.createElement("div");
+                    loop.className = "field-loop " + fieldClass;
+                    if (isH) { loop.style.width = "50px"; loop.style.height = "140px"; }
+                    const front = document.createElement("div");
+                    front.className = "field-front";
+                    const arrow = document.createElement("div");
+                    arrow.className = "field-arrow";
+                    arrow.innerText = "➤";
+                    front.appendChild(arrow);
+                    loop.appendChild(front);
+                    frontContainer.appendChild(loop);
+                }
+                const fieldLabel = document.createElement("div");
+                fieldLabel.style.position = "absolute";
+                fieldLabel.style.color = "#333";
+                fieldLabel.style.fontSize = "14px";
+                fieldLabel.style.fontWeight = "bold";
+                fieldLabel.innerText = "Magnetic Field (B)";
+                if (isH) {
+                    fieldLabel.style.top = "-30px";
+                    fieldLabel.style.left = "50%";
+                    fieldLabel.style.transform = "translateX(-50%)";
+                } else {
+                    fieldLabel.style.right = "-120px";
+                    fieldLabel.style.top = "50%";
+                    fieldLabel.style.transform = "translateY(-50%)";
+                }
+                frontContainer.appendChild(fieldLabel);
+                solutionFront.appendChild(frontContainer);
+                container.appendChild(solutionFront); // append AFTER wire
+
+                const label = document.createElement("div");
+                label.style.position = "absolute";
+                label.style.bottom = "10px";
+                label.style.right = "10px";
+                label.innerText = "I";
+                container.appendChild(label);
+            } else {
+                const solenoid = document.createElement("div");
+                solenoid.className = "solenoid";
+                
+                // Layer 2: Iron Bar Core
+                const ironBar = document.createElement("div");
+                ironBar.className = "iron-bar";
+                solenoid.appendChild(ironBar);
+
+                // Add "Current" and "Field" labels
+                const labelField = document.createElement("div");
+                labelField.className = "solenoid-text";
+                labelField.style.top = "-40px";
+                labelField.style.left = currentQuestion.pole === "left" ? "10px" : "auto";
+                labelField.style.right = currentQuestion.pole === "right" ? "10px" : "auto";
+                labelField.innerText = "Field (North)";
+                solenoid.appendChild(labelField);
+
+                const labelCurrent = document.createElement("div");
+                labelCurrent.className = "solenoid-text";
+                labelCurrent.style.bottom = "-40px";
+                labelCurrent.style.left = "50%";
+                labelCurrent.style.transform = "translateX(-50%)";
+                labelCurrent.innerText = "Current";
+                solenoid.appendChild(labelCurrent);
+
+                for(let i=0; i<8; i++) {
+                    const loopCont = document.createElement("div");
+                    loopCont.className = "loop-container";
+                    
+                    const front = document.createElement("div");
+                    front.className = "loop-front";
+                    const back = document.createElement("div");
+                    back.className = "loop-back";
+                    
+                    loopCont.appendChild(front);
+                    loopCont.appendChild(back);
+                    
+                    // Current arrows on solenoid loops (always on front)
+                    // Apply Right Hand Grip Rule: 
+                    // Thumb points to North. Fingers curl in direction of Current.
+                    // If North is Right, fingers curl UP at the back and DOWN in FRONT.
+                    // If North is Left, fingers curl DOWN at the back and UP in FRONT.
+                    const solArrow = document.createElement("div");
+                    solArrow.style.position = "absolute";
+                    solArrow.style.top = "50%";
+                    solArrow.style.left = "0";
+                    solArrow.style.transform = "translate(-50%, -50%)";
+                    solArrow.style.fontSize = "14px";
+                    solArrow.style.color = "#e67e22";
+                    solArrow.style.fontWeight = "bold";
+                    solArrow.style.zIndex = "10";
+                    solArrow.innerText = currentQuestion.pole === "right" ? "▼" : "▲";
+                    loopCont.appendChild(solArrow);
+
+                    solenoid.appendChild(loopCont);
+                }
+                
+                container.appendChild(solenoid);
+
+                const nPole = document.createElement("div");
+                nPole.className = "pole-label";
+                nPole.innerText = "N";
+                nPole.style[currentQuestion.pole] = "-50px";
+                nPole.style.color = "#c0392b";
+                nPole.style.borderColor = "#c0392b";
+                nPole.style.backgroundColor = "#fdecea";
+                solenoid.appendChild(nPole);
+
+                const sPole = document.createElement("div");
+                sPole.className = "pole-label";
+                sPole.innerText = "S";
+                sPole.style[currentQuestion.pole === "left" ? "right" : "left"] = "-50px";
+                sPole.style.color = "#1a6ea8";
+                sPole.style.borderColor = "#1a6ea8";
+                sPole.style.backgroundColor = "#e3f2fd";
+                solenoid.appendChild(sPole);
+            }
+        }
+
+        async function loop() {
+            if (webcam) webcam.update();
+            await predict();
+            window.requestAnimationFrame(loop);
+        }
+
+        function trySetFeedback(el, key, text, bgColor, color) {
+            if (key === lastFeedbackKey) return;
+            if (Date.now() < feedbackLockUntil) return;
+            lastFeedbackKey = key;
+            feedbackLockUntil = Date.now() + 2000;
+            el.innerText = text;
+            el.style.backgroundColor = bgColor;
+            el.style.color = color;
+        }
+
+        async function predict() {
+            if (!model || !webcam) return;
+            const prediction = await model.predict(webcam.canvas);
+            let highestProb = 0;
+            let bestClass = "";
+
+            for (let i = 0; i < maxPredictions; i++) {
+                const prob = prediction[i].probability;
+                const className = prediction[i].className;
+                
+                if (prob > highestProb) {
+                    highestProb = prob;
+                    bestClass = className;
+                }
+
+                if (labelContainer && labelContainer.childNodes[i]) {
+                    labelContainer.childNodes[i].innerHTML = className + ": " + prob.toFixed(2);
+                }
+            }
+
+            checkAnswer(bestClass, highestProb);
+        }
+
+        function checkAnswer(detectedClass, probability) {
+            if (!currentQuestion) return;
+            if (isCorrect) return; // Stop checking if already marked as correct
+
+            const feedback = document.getElementById("feedback-area");
+            feedback.style.display = "block";
+            const visualContainer = document.getElementById("visual-container");
+
+            const isLeftHand = detectedClass.toLowerCase() === "left-hand";
+            const targetMatched = detectedClass.toLowerCase().includes(currentQuestion.target.toLowerCase());
+            let currentThreshold = isLeftHand ? 0.70 : 0.60;
+            
+            // Adjust threshold for thumb-up to reduce false positives
+            if (currentQuestion.target === "thumb-up") {
+                currentThreshold = 0.80;
+            }
+
+            // Left hand detection logic
+            if (probability >= currentThreshold && isLeftHand) {
+                // Immediately give warning and reset correct timer
+                trySetFeedback(feedback, "left-hand", "Are you using your LEFT hand? Please use your RIGHT hand!", "#fff3cd", "#856404");
+                
+                if (correctTimer) {
+                    clearTimeout(correctTimer);
+                    correctTimer = null;
+                }
+                return; // Do not proceed to check for correct posture
+            } else {
+                if (leftHandTimer) {
+                    clearTimeout(leftHandTimer);
+                    leftHandTimer = null;
+                }
+            }
+
+            if (probability >= currentThreshold && targetMatched) {
+                // If we match the target, we are "correct" (or holding to be correct)
+                // If the leftHandTimer is active but hasn't fired yet, or even if it has, 
+                // the "Holding..." or "Perfect hold!" should take priority in the UI.
+                
+                if (!correctTimer) {
+                    // Start 1.5-second timer
+                    correctTimer = setTimeout(() => {
+                        feedbackLockUntil = 0;
+                        lastFeedbackKey = "correct";
+                        isCorrect = true;
+                        feedback.innerHTML = `
+                            <div>Perfect hold! Match: ${detectedClass}</div>
+                            <div style="margin-top:10px;">
+                                <button onclick="nextQuestion()" style="padding:5px 15px; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer;">Try Next Question?</button>
+                            </div>
+                        `;
+                        feedback.className = "feedback correct";
+                        feedback.style.backgroundColor = ""; // Reset inline styles
+                        feedback.style.color = "";
+                        visualContainer.classList.add("correct-state");
+                        
+                        // Take Snapshot
+                        takeSnapshot();
+                        
+                        correctTimer = null;
+                        
+                        // Clear left hand timer if we succeeded
+                        if (leftHandTimer) {
+                            clearTimeout(leftHandTimer);
+                            leftHandTimer = null;
+                        }
+                    }, 1500);
+                }
+                
+                // Show intermediate "holding" state — always update immediately so user knows to keep still
+                if (!isCorrect) {
+                  lastFeedbackKey = "holding";
+                  feedbackLockUntil = 0;
+                  feedback.innerText = "Holding... Keep it there! Match: " + detectedClass;
+                  feedback.style.backgroundColor = "#d4edda";
+                  feedback.style.color = "#155724";
+                  visualContainer.classList.add("correct-state");
+                }
+            } else {
+                // Reset timer if hand moves
+                if (correctTimer) {
+                    clearTimeout(correctTimer);
+                    correctTimer = null;
+                }
+                trySetFeedback(feedback, "waiting", "Waiting for correct posture...", "#e9ecef", "#666");
+                feedback.className = "feedback";
+                visualContainer.classList.remove("correct-state");
+            }
+        }
+
+        function takeSnapshot() {
+            const videoCanvas = webcam.canvas;
+            const snapCanvas = document.getElementById("snapshot-canvas");
+            const snapLabel = document.getElementById("snapshot-label");
+            
+            snapCanvas.width = videoCanvas.width;
+            snapCanvas.height = videoCanvas.height;
+            const ctx = snapCanvas.getContext("2d");
+            
+            // Draw current webcam frame to snapshot canvas
+            ctx.drawImage(videoCanvas, 0, 0);
+            
+            // Show the snapshot
+            snapCanvas.style.display = "block";
+            snapLabel.style.display = "block";
+        }
+    </script>
+</body>
+</html>
