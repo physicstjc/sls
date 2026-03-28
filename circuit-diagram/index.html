@@ -772,15 +772,10 @@
     }
 
     function componentSize(type, cells = 2) {
-      if (type === 'bulb') return { w: 58, h: 58 };
-      if (type === 'battery') return { w: 34 + cells * 18, h: 44 };
-      if (['resistor', 'variable-resistor', 'ldr', 'thermistor'].includes(type)) return { w: 80, h: 60 };
-      if (['voltmeter', 'ammeter', 'galvanometer', 'motor', 'ac-supply'].includes(type)) return { w: 58, h: 58 };
-      if (type === 'potentiometer') return { w: 80, h: 58 };
-      if (type === 'bell') return { w: 58, h: 58 };
-      if (['diode', 'led', 'fuse', 'heater', 'capacitor'].includes(type)) return { w: 58, h: 58 };
+      if (type === 'battery') return { w: 32 + cells * 20, h: 44 };
       if (type === 'transformer') return { w: 60, h: 60 };
-      return { w: 80, h: 30 };
+      // All other standard components use 60x60 bounding box for consistent terminal snapping
+      return { w: 60, h: 60 };
     }
 
     function getComponentNodes(comp) {
@@ -1060,7 +1055,7 @@
         }
       } else {
         if (!shift) state.selected = [];
-        state.dragging = { mode: 'marquee', start: p, current: p };
+        state.dragging = { mode: 'canvas-pan', start: snapped, current: snapped };
       }
       render();
     });
@@ -1098,9 +1093,24 @@
         });
         rebuildJunctions();
         render();
-      } else if (state.dragging.mode === 'marquee') {
-        state.dragging.current = p;
-        render();
+      } else if (state.dragging.mode === 'canvas-pan') {
+        const dx = snapped.x - state.dragging.current.x;
+        const dy = snapped.y - state.dragging.current.y;
+        
+        if (dx !== 0 || dy !== 0) {
+          state.components.forEach(c => {
+            c.x += dx;
+            c.y += dy;
+          });
+          state.wires.forEach(w => {
+            w.a.x += dx; w.a.y += dy;
+            w.b.x += dx; w.b.y += dy;
+          });
+          
+          state.dragging.current = snapped;
+          rebuildJunctions();
+          render();
+        }
       }
     });
 
@@ -1115,31 +1125,8 @@
           state.selected = [{ kind: 'wire', id: state.nextId - 1 }];
         }
         state.wirePreview = null;
-      } else if (state.dragging.mode === 'move-group' || state.dragging.mode === 'move-label') {
+      } else if (state.dragging.mode === 'move-group' || state.dragging.mode === 'move-label' || state.dragging.mode === 'canvas-pan') {
         saveHistory();
-      } else if (state.dragging.mode === 'marquee') {
-        const d = state.dragging;
-        const x1 = Math.min(d.start.x, d.current.x), x2 = Math.max(d.start.x, d.current.x);
-        const y1 = Math.min(d.start.y, d.current.y), y2 = Math.max(d.start.y, d.current.y);
-        
-        const shift = evt.shiftKey;
-        if (!shift) state.selected = [];
-
-        state.components.forEach(c => {
-          if (c.x >= x1 && c.x <= x2 && c.y >= y1 && c.y <= y2) {
-            if (!state.selected.some(s => s.kind === 'component' && s.id === c.id)) {
-              state.selected.push({ kind: 'component', id: c.id });
-            }
-          }
-        });
-        state.wires.forEach(w => {
-          if (w.a.x >= x1 && w.a.x <= x2 && w.a.y >= y1 && w.a.y <= y2 &&
-              w.b.x >= x1 && w.b.x <= x2 && w.b.y >= y1 && w.b.y <= y2) {
-            if (!state.selected.some(s => s.kind === 'wire' && s.id === w.id)) {
-              state.selected.push({ kind: 'wire', id: w.id });
-            }
-          }
-        });
       }
       state.dragging = null;
       render();
@@ -1334,8 +1321,8 @@
     }
 
     function drawResistor(g, th = 3) {
-      g.appendChild(make('line', { x1: -40, y1: 0, x2: -20, y2: 0, stroke: '#111827', 'stroke-width': th }));
-      g.appendChild(make('line', { x1: 20, y1: 0, x2: 40, y2: 0, stroke: '#111827', 'stroke-width': th }));
+      g.appendChild(make('line', { x1: -30, y1: 0, x2: -20, y2: 0, stroke: '#111827', 'stroke-width': th }));
+      g.appendChild(make('line', { x1: 20, y1: 0, x2: 30, y2: 0, stroke: '#111827', 'stroke-width': th }));
       g.appendChild(make('rect', { x: -20, y: -10, width: 40, height: 20, fill: 'white', stroke: '#111827', 'stroke-width': th }));
     }
 
@@ -1349,7 +1336,7 @@
 
     function drawPotentiometer(g, th = 3) {
       drawResistor(g, th);
-      g.appendChild(make('line', { x1: 0, y1: -29, x2: 0, y2: -10, stroke: '#111827', 'stroke-width': th }));
+      g.appendChild(make('line', { x1: 0, y1: -30, x2: 0, y2: -10, stroke: '#111827', 'stroke-width': th }));
       // Vector style (Open arrow head)
       g.appendChild(make('path', { d: 'M -6 -18 L 0 -10 L 6 -18', fill: 'none', stroke: '#111827', 'stroke-width': th, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
     }
@@ -1377,7 +1364,7 @@
       drawResistor(g, th);
       // Steeper angle: from (-20, 20) to (20, -20)
       g.appendChild(make('line', { x1: -20, y1: 20, x2: 20, y2: -20, stroke: '#111827', 'stroke-width': th * 0.83, 'stroke-linecap': 'round' }));
-      g.appendChild(make('line', { x1: -28, y1: 20, x2: -20, y2: 20, stroke: '#111827', 'stroke-width': th * 0.83, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+      g.appendChild(make('line', { x1: -30, y1: 20, x2: -20, y2: 20, stroke: '#111827', 'stroke-width': th * 0.83, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
     }
 
     function drawMeter(g, label, th = 3) {
