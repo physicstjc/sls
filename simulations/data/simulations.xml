@@ -4668,4 +4668,16 @@
   </topics>
   <author>Tan Seng Kwang</author>
  </simulation>
+ <simulation>
+  <id>js-046</id>
+  <title>Circuit Diagram Generator</title>
+  <description>Draw circuit diagrams using standard symbols. Add components, connect wires, and export your diagram as an image.</description>
+  <image>../circuit-diagram/circuit-diagram.png</image>
+  <url>../circuit-diagram/</url>
+  <platform>JavaScript</platform>
+  <topics>
+   <topic>electricity</topic>
+  </topics>
+  <author>Tan Seng Kwang</author>
+ </simulation>
 </simulations>
