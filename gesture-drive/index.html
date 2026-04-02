@@ -1,11 +1,3 @@
-
-gesture_drive (2).html
-
-Page
-1
-/
-2
-100%
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -4180,5 +4172,491 @@ function drawPt(pt){
   } else {
     ctx.rotate(pt.spin*0.26);ctx.fillStyle='rgba(0,0,0,0.15)';ctx.beginPath();ctx.ellipse(0.8,1.8,8.5,4.8,0,0,Math.PI*2);ctx.fill();
     const cg=ctx.createRadialGradient(-2.8,-2.8,0,0,0,9.5);cg.addColorStop(0,'#FFF8DC');cg.addColorStop(0.5,'#FFD700');cg.addColorStop(1,'#B8860B');ctx.fillStyle=cg;ctx.beginPath();ctx.arc(0,0,8.5,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle='#B8860B';ctx.lineWidth=1.2;ctx.stroke();ctx.fillStyle='#7A5C00';ctx.font='bold 6.5px Exo 2';ctx.textAlign='center';ctx.textBaseline='midd
-Displaying gesture_drive (2).html.
+    ctx.strokeStyle='#B8860B';ctx.lineWidth=1.2;ctx.stroke();ctx.fillStyle='#7A5C00';ctx.font='bold 6.5px Exo 2';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('+1',0,0.4);
+  }
+  ctx.restore();
+}
+
+// ==============================================
+//  CAR
+// ==============================================
+function drawPlayerCar(ti){
+  const def=CAR_DEFS[G.carStyle];
+  // Tire marks
+  if(G.speed>1){
+    ctx.save();ctx.globalAlpha=Math.min(0.072,G.speed*0.0072);ctx.strokeStyle='#111';ctx.lineWidth=4.8;ctx.lineCap='butt';
+    const w1=G.carX-14.5,w2=G.carX+14.5;
+    ctx.beginPath();ctx.moveTo(w1,CAR_Y+26);ctx.lineTo(w1,CAR_Y+26+G.speed*9.5);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(w2,CAR_Y+26);ctx.lineTo(w2,CAR_Y+26+G.speed*9.5);ctx.stroke();
+    ctx.globalAlpha=1;ctx.restore();
+  }
+  // Exhaust particles on high speed
+  if(G.speed>6&&Math.random()<0.35){
+    const ex=G.carX+(Math.random()-0.5)*10;
+    G.particles.push({x:ex,y:CAR_Y+28,vx:(Math.random()-0.5)*0.8,vy:0.8+Math.random()*1.2,
+      color:`rgba(${160+Math.random()*40},${160+Math.random()*40},${160+Math.random()*40},0.6)`,size:2.5+Math.random()*2,life:0.6});
+  }
+  // Car animation state
+  const animY=G.carBounce*-3+G.carIdleShake;
+  const animTilt=G.carTilt*0.46+G.laneChangeTilt*0.08;
+  ctx.save();ctx.translate(G.carX,CAR_Y+animY);
+  drawCar3D(ctx,def,animTilt,G.carWheelAngle,G.speed,ti);
+  ctx.restore();
+}
+
+// ==============================================
+//  PARTICLES & FLOAT TEXTS
+// ==============================================
+function drawParticle(p){ctx.save();ctx.globalAlpha=p.life*0.86;ctx.fillStyle=p.color;ctx.shadowBlur=5;ctx.shadowColor=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();ctx.restore();}
+function drawFT(f){ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.scale,f.scale);ctx.globalAlpha=f.life;if(f.special){ctx.font='bold 14px Orbitron';ctx.fillStyle='#FFD700';ctx.shadowBlur=8;ctx.shadowColor='#FFD700';}else{ctx.font='bold 10px Orbitron';ctx.fillStyle='#FFF9C4';ctx.shadowBlur=4;ctx.shadowColor='#FFD93D';}ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(f.text,0,0);ctx.globalAlpha=1;ctx.restore();}
+
+// ==============================================
+//  HUD
+// ==============================================
+function updateHUD(){
+  document.getElementById('hudSc').textContent=Math.floor(G.score);
+  document.getElementById('hudD').textContent=Math.floor(G.distance)+' m';
+  document.getElementById('hudSp').textContent=G.speed.toFixed(1);
+  document.getElementById('hudB').textContent=BIOMES[G.biome].name;
+  const tn=getTimeName();
+  document.getElementById('hudT').textContent=TLABELS[tn];document.getElementById('hudTI').textContent=TICONS[tn];
+  const sn=SEASONS[W.season];
+  document.getElementById('hudS').textContent=sn.name;document.getElementById('hudSI').textContent=sn.icon;
+  const wxIcons={clear:'☀️',rain:'🌧',snow:'❄️',hail:'🌨',sandstorm:'🌪',fog:'🌫'};
+  const wxLabel=W.type==='clear'?'CLEAR':(W.type.toUpperCase()+(W.intensity>0.6?' ●●●':W.intensity>0.3?' ●●':' ●'));
+  document.getElementById('hudW').textContent=wxLabel;
+  document.getElementById('hudWI').textContent=wxIcons[W.type]||'☀️';
+  document.getElementById('spFill').style.width=(G.speed/A.sl*100)+'%';
+  // Weather HUD label colour
+  const wHud=document.getElementById('hudW');
+  if(W.type==='hail'&&W.intensity>0.3) wHud.style.color='#82CFFF';
+  else if(W.type==='sandstorm') wHud.style.color='#FFB347';
+  else if(W.type==='rain'&&W.intensity>0.3) wHud.style.color='#87CEEB';
+  else if(W.type==='snow') wHud.style.color='#E0F0FF';
+  else if(W.type==='fog') wHud.style.color='#B0C4DE';
+  else wHud.style.color='';
+  // Tint HUD border based on weather severity
+  const hud=document.getElementById('hud');
+  if(W.type==='sandstorm'&&W.intensity>0.3) hud.style.borderColor='rgba(210,150,40,0.6)';
+  else if(W.type==='hail'&&W.intensity>0.3) hud.style.borderColor='rgba(180,210,240,0.5)';
+  else if(W.type==='snow'&&W.intensity>0.3) hud.style.borderColor='rgba(200,220,255,0.5)';
+  else hud.style.borderColor='';
+}
+
+// ==============================================
+//  GAME OVER & QUIT
+// ==============================================
+function gameOver(reason){
+  G.state='gameover';G.gameOverReason=reason;
+  if(G.animId) cancelAnimationFrame(G.animId);
+  if(tmWebcam){try{tmWebcam.stop();}catch(e){}}
+  SFX.stopAll();
+  showGoScreen(reason, false);
+}
+function quitGame(){
+  // Quit during game — go to game over screen to save score
+  if(G.state!=='playing'&&G.state!=='paused') return;
+  G.state='gameover';G.gameOverReason='🚪 Driver Quit';
+  if(G.animId) cancelAnimationFrame(G.animId);
+  if(tmWebcam){try{tmWebcam.stop();}catch(e){}}
+  SFX.stopAll();
+  // Set title to "YOU QUIT" instead of "GAME OVER"
+  showGoScreen('🚪 You quit the run.', true);
+}
+function showGoScreen(reason, isQuit){
+  // Fresh save area
+  document.getElementById('saveArea').innerHTML=`
+    <div class="name-row">
+      <input type="text" class="name-inp" id="nameInp" placeholder="Your name..." maxlength="20">
+      <button class="btn btn-primary btn-sm" onclick="saveScore()">SAVE</button>
+    </div>`;
+  document.getElementById('goTitle').textContent=isQuit?'YOU QUIT':'GAME OVER';
+  document.getElementById('goReason').textContent=reason;
+  document.getElementById('goSc').textContent=Math.floor(G.score);
+  document.getElementById('goDist').textContent=Math.floor(G.distance)+' m';
+  document.getElementById('goBiome').textContent=BIOMES[G.biome].name;
+  document.getElementById('goSeason').textContent=SEASONS[W.season].name;
+  document.getElementById('goWeather').textContent=W.type.charAt(0).toUpperCase()+W.type.slice(1);
+  buildGoLb();switchScreen('goScreen');
+}
+function buildGoLb(){
+  const lb=getLBPts();const my=Math.floor(G.score);
+  let rank=1,beaten=0;lb.forEach(e=>{if(e.score>=my)rank++;else beaten++;});
+  const total=lb.length+1;const pct=Math.round((beaten/total)*100);
+  const msgIdx=Math.floor(Math.random()*PCT_MSGS.length);
+  const myDist=Math.floor(G.distance);
+  const lbD=getLBDist();let dRank=1;lbD.forEach(e=>{if(e.distance>=myDist)dRank++;});
+  document.getElementById('rankBox').innerHTML=`<div class="rank-num">#${rank}</div><div class="rank-beat">${PCT_MSGS[msgIdx](pct)}</div><div style="font-size:10px;color:#888;font-family:Exo 2;margin-top:5px">📏 Distance rank: #${dRank}</div>`;
+  // Points leaderboard in game over
+  buildGoLbPanel(getLBPts(),'goLbPts','pts',my,myDist);
+  // Distance leaderboard in game over
+  buildGoLbPanel(getLBDist(),'goLbDist','dist',my,myDist);
+}
+function buildGoLbPanel(lb,elId,tab,myScore,myDist){
+  const carEmoji=['🔴','🔵','🟡','🟢','🟣','⚪'];
+  const youEntry={name:'▶ YOU',score:myScore,distance:myDist,car:G.carStyle,isYou:true};
+  // Check if a saved entry is identical to the current run (avoid duplicate "YOU" row)
+  const savedInputName=document.getElementById('nameInp')?.value?.trim()||'';
+  const all=[...lb];
+  // Only add the "YOU" entry if the player hasn't saved (or score doesn't match a saved entry exactly)
+  const alreadySaved=G.scoreSaved&&lb.some(e=>
+    e.score===Math.floor(myScore)&&
+    e.distance===Math.floor(myDist)&&
+    (savedInputName===''||(e.name||'').replace('[admin] ','').includes(savedInputName))
+  );
+  if(!alreadySaved) all.push(youEntry);
+  if(tab==='pts') all.sort((a,b)=>b.score-a.score||a.distance-b.distance);
+  else all.sort((a,b)=>b.distance-a.distance||b.score-a.score);
+  const list=document.getElementById(elId);if(!list) return;list.innerHTML='';
+  const rankColors=['#FFD700','#C0C0C0','#CD7F32'];
+  all.forEach((e,i)=>{
+    const d=document.createElement('div');d.className='go-lb-e'+(e.isYou?' you':'');
+    const carIdx=e.car??0;
+    const carEm=carEmoji[carIdx]||'🔴';
+    const carDef=CAR_DEFS[carIdx];
+    const carName=carDef?.name||'';
+    const isAdmin=!e.isYou&&(e.adminRun||e.name?.startsWith('[admin]'));
+    // Strip [admin] prefix cleanly — only one badge shown
+    const cleanName=e.isYou?'▶ YOU':(e.name?.startsWith('[admin] ')?e.name.slice(8):(e.name||'Player'));
+    const adminBadge=isAdmin?'<span style="font-size:7px;background:rgba(255,152,0,.2);color:#FF9800;border:1px solid rgba(255,152,0,.35);border-radius:3px;padding:0 4px;margin-right:4px;vertical-align:middle">A</span>':'';
+    const rankColor=rankColors[i]||'#444';
+    const medalIcon=i<3?['🥇','🥈','🥉'][i]:`<span style="font-size:9px;color:#444">#${i+1}</span>`;
+    const mainVal=tab==='pts'
+      ?`<div style="color:#FFD93D;font-weight:800;font-size:11px">⭐ ${e.score||0}</div><div style="color:#4ECDC4;font-size:8px;margin-top:1px">📏 ${e.distance||0}m</div>`
+      :`<div style="color:#4ECDC4;font-weight:800;font-size:11px">📏 ${e.distance||0}m</div><div style="color:#FFD93D;font-size:8px;margin-top:1px">⭐ ${e.score||0}</div>`;
+    d.innerHTML=`
+      <div class="go-lb-rk" style="font-size:15px;min-width:28px;text-align:center">${medalIcon}</div>
+      <div style="font-size:15px;margin:0 7px;flex-shrink:0;filter:drop-shadow(0 0 4px rgba(0,0,0,.4))">${carEm}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:10px;font-family:Exo 2;color:${e.isYou?'#fff':'#ccc'};font-weight:${e.isYou?700:400};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${adminBadge}${cleanName}</div>
+        <div style="font-size:8px;color:#556;font-family:Exo 2;margin-top:1px">${carName}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">${mainVal}</div>`;
+    if(e.isYou) d.setAttribute('data-you','1');
+    list.appendChild(d);
+  });
+  setTimeout(()=>{const y=list.querySelector('[data-you]');if(y)y.scrollIntoView({behavior:'smooth',block:'center'});},750);
+}
+function saveScore(){
+  if(!A.lbe){alert('Leaderboard is disabled.');return;}
+  if(G.score<0){
+    document.getElementById('saveArea').innerHTML='<div class="saved-ok" style="color:#FF6B6B">✕ Cannot save — negative score!</div>';
+    return;
+  }
+  const inp=document.getElementById('nameInp');if(!inp) return;
+  const raw=inp.value.trim()||'Anonymous';
+  const baseName=A.anon?`Driver${Date.now()%9999}`:raw;
+  const display=G.adminRun?`[admin] ${baseName}`:baseName;
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  const timeStr=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  const entry={name:display,score:Math.floor(G.score),distance:Math.floor(G.distance),car:G.carStyle,
+    date:dateStr,time:timeStr,adminRun:G.adminRun||false};
+  // Save to points leaderboard
+  const lbPts=getLBPts();
+  lbPts.push(entry);lbPts.sort((a,b)=>b.score-a.score);lbPts.splice(A.me);
+  localStorage.setItem('gd_lb_pts',JSON.stringify(lbPts));
+  // Save to distance leaderboard
+  const lbDist=getLBDist();
+  lbDist.push(entry);lbDist.sort((a,b)=>b.distance-a.distance);lbDist.splice(A.me);
+  localStorage.setItem('gd_lb_dist',JSON.stringify(lbDist));
+  G.scoreSaved=true;
+  document.getElementById('saveArea').innerHTML=`<div class="saved-ok">✓ Saved as <strong>${display}</strong>!</div>`;
+  buildGoLb();
+}
+function getLB(){return getLBPts();}// legacy compat
+function getLBPts(){try{return JSON.parse(localStorage.getItem('gd_lb_pts'))||JSON.parse(localStorage.getItem('gd_lb'))||[];}catch(e){return[];}}
+function getLBDist(){try{return JSON.parse(localStorage.getItem('gd_lb_dist'))||[];}catch(e){return[];}}
+
+// ==============================================
+//  LEADERBOARD SCREEN
+// ==============================================
+function showLbScreen(){renderLbList();updateMenuStats();switchScreen('lbScreen');}
+let currentLbTab='pts';
+function switchLbTab(tab,btn){
+  currentLbTab=tab;
+  document.querySelectorAll('.lb-tab').forEach(b=>b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  document.getElementById('lbListPts').classList.toggle('hidden',tab!=='pts');
+  document.getElementById('lbListDist').classList.toggle('hidden',tab!=='dist');
+}
+function renderLbList(){
+  renderLbTabList('pts',getLBPts(),'lbListPts','score','⭐');
+  renderLbTabList('dist',getLBDist(),'lbListDist','distance','📏');
+}
+function renderLbTabList(tab,lb,elId,sortKey,icon){
+  const list=document.getElementById(elId);if(!list) return;
+  const isAdm=document.getElementById('adminBtn')?.classList.contains('active');
+  const carEmoji=['🔴','🔵','🟡','🟢','🟣','⚪'];
+  if(!lb.length){list.innerHTML='<div class="lb-empty">🏁 No entries yet!<br>Be the first on the board!</div>';return;}
+  const isPts=tab==='pts';
+  list.innerHTML=lb.map((e,i)=>{
+    const isAdmin=e.adminRun||e.name?.startsWith('[admin]');
+    // Strip [admin] prefix from raw name for clean display
+    const rawName=e.name?.startsWith('[admin] ')?(e.name.slice(8)):e.name;
+    const displayName=A.sn?(rawName||'Anonymous'):'Driver '+(i+1);
+    const carIdx=e.car??0;
+    const carEm=carEmoji[carIdx]||'🔴';
+    const carName=CAR_DEFS[carIdx]?.name||'Unknown';
+    const datetime=[e.date,e.time].filter(Boolean).join(' · ');
+    const adminTag=isAdmin?'<span class="admin-tag">ADMIN</span>':'';
+    return `<div class="lb-entry ${i===0?'lb-top1':i===1?'lb-top2':i===2?'lb-top3':''}">
+      <div class="lb-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':'grey'}">${i<3?['🥇','🥈','🥉'][i]:'#'+(i+1)}</div>
+      <div class="lb-car-badge" title="${carName}">${carEm}</div>
+      <div class="lb-info">
+        <div class="lb-name">${adminTag}${displayName}</div>
+        <div class="lb-car-name">${carName}</div>
+        <div class="lb-datetime">${datetime}</div>
+      </div>
+      <div class="lb-values">
+        ${isPts
+          ?`<div class="lb-score">⭐ ${e.score||0}</div><div class="lb-score-sub">📏 ${e.distance||0} m</div>`
+          :`<div class="lb-score" style="color:#4ECDC4">📏 ${e.distance||0}m</div><div class="lb-score-sub">⭐ ${e.score||0} pts</div>`
+        }
+      </div>
+      ${isAdm?`<button class="lb-del" onclick="deleteEntryFrom('${tab}',${i})" title="Delete">✕</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ==============================================
+//  UI HELPERS
+// ==============================================
+function switchScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function startWithCountdown(){
+  switchScreen('gameScreen');
+  // Draw intro canvas (prevents showing previous run)
+  drawIntroCanvas();
+  runCountdown(()=>init());
+}
+function drawIntroCanvas(){
+  const ti=Math.floor(Math.random()*TIMES.length);
+  const biomes=['city','garden','desert'];
+  const b=biomes[Math.floor(Math.random()*3)];
+  const skyRGBs={midnight:[[2,4,12],[8,12,26]],morning:[[255,225,130],[174,220,255]],noon:[[30,165,230],[140,200,242]],evening:[[210,65,15],[46,6,30]],night:[[6,9,24],[24,30,52]]};
+  const tn=TIMES[ti];const cols=skyRGBs[tn]||skyRGBs.noon;
+  const skyG=ctx.createLinearGradient(0,0,0,68);
+  skyG.addColorStop(0,`rgb(${cols[0].join(',')})`)
+  skyG.addColorStop(1,`rgb(${cols[1].join(',')})`)
+  ctx.fillStyle=skyG;ctx.fillRect(0,0,CW,68);
+  const biomeColors={city:'#7A8A98',garden:'#4BAE50',desert:'#CE9E48'};
+  ctx.fillStyle=biomeColors[b]||'#555';ctx.fillRect(0,68,CW,CH-68);
+  ctx.fillStyle='#2A2A2A';ctx.fillRect(RL,68,RW,CH-68);
+  // Simple lane lines
+  ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=2;ctx.setLineDash([28,25]);
+  [200,300].forEach(lx=>{ctx.beginPath();ctx.moveTo(lx,68);ctx.lineTo(lx,CH);ctx.stroke();});
+  ctx.setLineDash([]);
+  // Centered text
+  ctx.fillStyle='rgba(0,0,0,0.45)';ctx.fillRect(CW/2-110,CH/2-34,220,68);
+  ctx.beginPath();ctx.roundRect(CW/2-110,CH/2-34,220,68,[8]);ctx.fill();
+  ctx.fillStyle='rgba(78,205,196,0.9)';ctx.font='bold 13px Orbitron';ctx.textAlign='center';
+  ctx.fillText('GET READY', CW/2, CH/2-10);
+  ctx.fillStyle='rgba(255,255,255,0.55)';ctx.font='10px Exo 2';
+  ctx.fillText(`${BIOMES[b]?.name||b.toUpperCase()} · ${TIMES[ti].toUpperCase()}`, CW/2, CH/2+12);
+  ctx.textAlign='left';
+}
+function runCountdown(cb){
+  const ov=document.getElementById('cdOverlay');ov.classList.remove('hidden');let n=3;
+  const hints=['AVOID RED LIGHTS!','DODGE THE HAIL!','STAY ON THE ROAD!','COLLECT THE STARS!','WATCH THE WEATHER!'];
+  const hint=hints[Math.floor(Math.random()*hints.length)];
+  function tick(){
+    if(n>0){
+      const sz=80+n*14;
+      ov.innerHTML=`<div class="cd-ring-wrap">
+        <div class="cd-ring" style="width:${sz}px;height:${sz}px;border:3px solid rgba(255,217,61,.65)"></div>
+        <div class="cd-ring" style="width:${sz*1.7}px;height:${sz*1.7}px;border:2px solid rgba(255,217,61,.25);animation-duration:1.05s"></div>
+        <div class="cd-n">${n}</div>
+      </div>
+      <div class="cd-bar"></div>
+      <div class="cd-sub">${hint}</div>`;
+      n--;setTimeout(tick,1000);
+    } else {
+      ov.innerHTML='<div class="cd-go">GO!</div>';
+      setTimeout(()=>{ov.classList.add('hidden');ov.innerHTML='';if(cb)cb();},660);
+    }
+  }
+  tick();
+}
+function retryGame(){
+  if(tmWebcam){try{tmWebcam.stop();}catch(e){}}tmWebcam=null;tmModel=null;
+  document.getElementById('webcam-container').innerHTML='';document.getElementById('label-container').innerHTML='';
+  document.getElementById('camStatus').className='cam-status cam-off';document.getElementById('camStatus').textContent='⌨ Keyboard Mode';
+  switchScreen('gameScreen');runCountdown(()=>init());
+}
+function quitToMenu(){
+  if(G.animId) cancelAnimationFrame(G.animId);if(tmWebcam){try{tmWebcam.stop();}catch(e){}}tmWebcam=null;tmModel=null;
+  SFX.stopAll();G.state='menu';switchScreen('menuScreen');
+}
+function togglePause(){
+  if(G.state==='playing'){G.state='paused';G.paused=true;document.getElementById('pauseBtn').textContent='▶';if(G.animId)cancelAnimationFrame(G.animId);}
+  else if(G.state==='paused'){G.state='playing';G.paused=false;document.getElementById('pauseBtn').textContent='⏸';G.lastFrame=performance.now();gameLoop();}
+}
+
+// ==============================================
+//  INIT
+// ==============================================
+window.addEventListener('load',()=>{
+  [0,1,2,3,4,5].forEach(renderCarPreview);
+  animateMenuCar();
+  initMenuBg();
+  animateMenuBg();
+  updateMenuStats();
+  // Sync key config from DEF
+  if(DEF.keys) G.keys={...DEF.keys};
+  if(DEF.keys) A.keys={...DEF.keys};
+});
+
+// ── Menu background animated canvas ──────────────
+let _menuBgT=0, _menuBgParts=[];
+function initMenuBg(){
+  _menuBgParts=[];
+  // Stars
+  for(let i=0;i<60;i++){
+    _menuBgParts.push({star:true,x:Math.random()*1400,y:Math.random()*400,r:0.4+Math.random()*1.2,a:0.3+Math.random()*0.5,fq:0.8+Math.random()*2});
+  }
+  // Colour particles
+  for(let i=0;i<18;i++){
+    _menuBgParts.push({star:false,x:Math.random()*1400,y:Math.random()*800,
+      vx:(Math.random()-0.5)*0.28,vy:-(0.12+Math.random()*0.35),
+      r:0.8+Math.random()*1.8,a:0.06+Math.random()*0.18,hue:160+Math.random()*80});
+  }
+}
+function animateMenuBg(){
+  if(!document.getElementById('menuScreen')?.classList.contains('active')){
+    requestAnimationFrame(animateMenuBg); return;
+  }
+  const c=document.getElementById('menuBgCanvas');
+  if(!c){requestAnimationFrame(animateMenuBg);return;}
+  const W2=window.innerWidth, H2=window.innerHeight;
+  c.width=W2; c.height=H2;
+  const cx=c.getContext('2d');
+  _menuBgT+=0.008;
+  cx.clearRect(0,0,W2,H2);
+
+  // Sky gradient
+  const skyG=cx.createLinearGradient(0,0,0,H2*0.55);
+  skyG.addColorStop(0,'rgba(2,4,14,1)');skyG.addColorStop(0.5,'rgba(8,12,30,1)');skyG.addColorStop(1,'rgba(18,22,48,0.6)');
+  cx.fillStyle=skyG;cx.fillRect(0,0,W2,H2*0.55);
+
+  // Stars
+  _menuBgParts.forEach(p=>{
+    if(p.star){const flicker=0.3+0.7*Math.abs(Math.sin(_menuBgT*p.fq+p.x));cx.globalAlpha=p.a*flicker;cx.fillStyle='#fff';cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);cx.fill();}
+  });cx.globalAlpha=1;
+
+  // Distant city skyline (silhouette)
+  const horizY=H2*0.52;
+  cx.fillStyle='rgba(10,14,28,1)';
+  const bldgs=[[0,0.11],[0.05,0.18],[0.1,0.12],[0.16,0.22],[0.22,0.15],[0.27,0.09],
+    [0.68,0.09],[0.73,0.18],[0.79,0.13],[0.84,0.24],[0.9,0.14],[0.96,0.1]];
+  bldgs.forEach(([bx,bh])=>{const bw=W2*0.055;cx.fillRect(W2*bx,horizY-H2*bh,bw,H2*bh);});
+  // Building windows
+  cx.fillStyle='rgba(255,220,80,0.35)';
+  bldgs.forEach(([bx,bh])=>{
+    const bw=W2*0.055;const rows=Math.floor(H2*bh/14);const cols=Math.floor(bw/10);
+    for(let r=0;r<rows;r++) for(let cl=0;cl<cols;cl++){
+      if(Math.sin(bx*100+r*7+cl*3)>0.2){cx.fillRect(W2*bx+cl*10+2,horizY-H2*bh+r*14+2,5,7);}
+    }
+  });
+
+  // Ground
+  const groundG=cx.createLinearGradient(0,horizY,0,H2);
+  groundG.addColorStop(0,'rgba(14,18,36,1)');groundG.addColorStop(1,'rgba(6,9,20,1)');
+  cx.fillStyle=groundG;cx.fillRect(0,horizY,W2,H2-horizY);
+
+  // Road (perspective trapezoid)
+  const rl=W2*0.5-20,rr=W2*0.5+20;
+  const rlF=W2*0.18,rrF=W2*0.82;
+  cx.fillStyle='rgba(22,22,28,0.95)';
+  cx.beginPath();cx.moveTo(rl,horizY);cx.lineTo(rr,horizY);cx.lineTo(rrF,H2);cx.lineTo(rlF,H2);cx.closePath();cx.fill();
+
+  // Road edge lines
+  cx.strokeStyle='rgba(255,200,50,0.45)';cx.lineWidth=2;
+  cx.beginPath();cx.moveTo(rl,horizY);cx.lineTo(rlF,H2);cx.stroke();
+  cx.beginPath();cx.moveTo(rr,horizY);cx.lineTo(rrF,H2);cx.stroke();
+
+  // Lane dash (scrolling)
+  const dashOff=(_menuBgT*55)%1;
+  for(let t2=dashOff;t2<1;t2+=0.12){
+    const y=horizY+(H2-horizY)*t2;const x=W2*0.5;const w2=2+(H2-horizY)*t2*0.08;const len=(H2-horizY)*0.05;
+    cx.fillStyle=`rgba(255,255,255,${0.08+t2*0.12})`;cx.fillRect(x-w2/2,y,w2,len);
+  }
+
+  // Headlight beams from bottom (player car implied)
+  cx.save();cx.globalAlpha=0.06+Math.sin(_menuBgT*1.5)*0.02;
+  const bl1=cx.createLinearGradient(W2*0.38,H2,W2*0.25,horizY);bl1.addColorStop(0,'rgba(255,240,180,0.5)');bl1.addColorStop(1,'transparent');
+  const bl2=cx.createLinearGradient(W2*0.62,H2,W2*0.75,horizY);bl2.addColorStop(0,'rgba(255,240,180,0.5)');bl2.addColorStop(1,'transparent');
+  cx.fillStyle=bl1;cx.beginPath();cx.moveTo(W2*0.45,H2);cx.lineTo(W2*0.5,H2);cx.lineTo(W2*0.25,horizY);cx.lineTo(W2*0.2,horizY);cx.closePath();cx.fill();
+  cx.fillStyle=bl2;cx.beginPath();cx.moveTo(W2*0.55,H2);cx.lineTo(W2*0.5,H2);cx.lineTo(W2*0.75,horizY);cx.lineTo(W2*0.8,horizY);cx.closePath();cx.fill();
+  cx.restore();
+
+  // Floating colour particles
+  _menuBgParts.forEach(p=>{
+    if(p.star) return;
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.y<-10) p.y=H2+10;if(p.x<-10) p.x=W2+10;if(p.x>W2+10) p.x=-10;
+    const flicker=0.4+0.6*Math.sin(_menuBgT*2.5+p.x*0.04);
+    cx.globalAlpha=p.a*flicker;cx.fillStyle=`hsl(${p.hue},80%,68%)`;
+    cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);cx.fill();
+  });
+  cx.globalAlpha=1;
+
+  // Neon scan lines
+  for(let i=0;i<2;i++){
+    const lx=W2/2+Math.sin(_menuBgT*0.5+i*1.7)*W2*0.3;
+    cx.globalAlpha=0.03+Math.abs(Math.sin(_menuBgT+i))*0.03;
+    cx.strokeStyle=`hsl(${170+i*55},85%,65%)`;cx.lineWidth=1;
+    cx.beginPath();cx.moveTo(lx,0);cx.lineTo(lx,H2);cx.stroke();cx.globalAlpha=1;
+  }
+  requestAnimationFrame(animateMenuBg);
+}
+
+// ── Menu stats (best score / dist / player count) ─
+function updateMenuStats(){
+  const lbP=getLBPts();const lbD=getLBDist();
+  const topScore=lbP[0]?.score;
+  const topDist=lbD[0]?.distance;
+  const players=Math.max(lbP.length,lbD.length);
+  const fmt=n=>n===undefined?'—':n>9999?Math.round(n/1000)+'k':n;
+  const elS=document.getElementById('menuTopScore');
+  const elD=document.getElementById('menuTopDist');
+  const elP=document.getElementById('menuPlayers');
+  if(elS) elS.textContent=fmt(topScore);
+  if(elD) elD.textContent=topDist===undefined?'—':(topDist>999?Math.round(topDist/1000)+'km':topDist+'m');
+  if(elP) elP.textContent=players||'—';
+}
+
+// ── Animated menu car (cycles through all 6 cars) ─
+let _menuCarWheelA=0,_menuCarStyleIdx=0,_menuCarTimer=0;
+function animateMenuCar(){
+  const c=document.getElementById('menuCarCanvas');if(!c){requestAnimationFrame(animateMenuCar);return;}
+  const sz=148;
+  const cx2=c.getContext('2d');cx2.clearRect(0,0,sz,sz);
+  _menuCarWheelA+=0.042;_menuCarTimer+=0.014;
+  if(_menuCarTimer>4.5){_menuCarTimer=0;_menuCarStyleIdx=(_menuCarStyleIdx+1)%CAR_DEFS.length;}
+  // Background glow
+  const t=_menuCarTimer;
+  const hue=170+Math.sin(t*0.5)*40;
+  cx2.save();cx2.globalAlpha=0.18+Math.sin(t*1.8)*0.07;
+  const bgG=cx2.createRadialGradient(sz/2,sz*0.6,8,sz/2,sz*0.6,sz*0.45);
+  bgG.addColorStop(0,`hsl(${hue},80%,60%)`);bgG.addColorStop(1,'transparent');
+  cx2.fillStyle=bgG;cx2.beginPath();cx2.arc(sz/2,sz*0.6,sz*0.45,0,Math.PI*2);cx2.fill();
+  cx2.restore();
+  // Car
+  cx2.save();cx2.translate(sz/2,sz*0.56);cx2.scale(0.9,0.9);
+  const idleB=Math.sin(t*3.5)*1.4;
+  cx2.translate(0,idleB);
+  drawCar3D(cx2,CAR_DEFS[_menuCarStyleIdx],Math.sin(t*0.75)*0.03,_menuCarWheelA,4,2);
+  cx2.restore();
+  // Ground shadow glow
+  cx2.save();cx2.globalAlpha=0.2+Math.sin(t*2)*0.07;
+  const sg=cx2.createRadialGradient(sz/2,sz*0.78,0,sz/2,sz*0.78,34);
+  sg.addColorStop(0,`hsl(${hue},80%,60%)`);sg.addColorStop(1,'transparent');
+  cx2.fillStyle=sg;cx2.beginPath();cx2.ellipse(sz/2,sz*0.78,34,11,0,0,Math.PI*2);cx2.fill();
+  cx2.restore();
+  requestAnimationFrame(animateMenuCar);
+}
+switchScreen('menuScreen');
+</script>
+</body>
+</html>
+
