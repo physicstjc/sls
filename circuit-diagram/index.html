@@ -714,7 +714,8 @@
           if (sel.kind === 'component') {
             const comp = state.components.find(c => c.id === sel.id);
             if (comp) {
-              comp.rotation = (comp.rotation + 90) % 360;
+              const step = isComponentSnappedToWire(comp) ? 180 : 90;
+              comp.rotation = (comp.rotation + step) % 360;
               autoAlignComponent(comp);
             }
           }
@@ -1246,6 +1247,18 @@
       return res;
     }
 
+    function isComponentSnappedToWire(comp) {
+      const nodes = getComponentNodes(comp);
+      for (const n of nodes) {
+        for (const wire of state.wires) {
+          if (pointLineDistance(n, wire.a, wire.b) <= 0.5) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
     function deleteSelected() {
       if (state.selected.length === 0) return;
       saveHistory();
@@ -1690,16 +1703,20 @@
     }
 
     function drawBell(g, th = 3) {
-      // Horizontal connections (lie on y=0, the grid line)
-      g.appendChild(make('line', { x1: -40, y1: 0, x2: -10, y2: 0, stroke: '#111827', 'stroke-width': th }));
-      g.appendChild(make('line', { x1: 10, y1: 0, x2: 40, y2: 0, stroke: '#111827', 'stroke-width': th }));
-      
-      // Vertical legs (connecting to the dome above y=0)
-      g.appendChild(make('line', { x1: -10, y1: 0, x2: -10, y2: -15, stroke: '#111827', 'stroke-width': th }));
-      g.appendChild(make('line', { x1: 10, y1: 0, x2: 10, y2: -15, stroke: '#111827', 'stroke-width': th }));
+      // Side wires + vertical legs as continuous paths to avoid tiny antialiasing gaps at 90° joints.
+      g.appendChild(make('path', {
+        d: 'M -40 0 L -10 0 L -10 -15',
+        fill: 'none', stroke: '#111827', 'stroke-width': th,
+        'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+      }));
+      g.appendChild(make('path', {
+        d: 'M 40 0 L 10 0 L 10 -15',
+        fill: 'none', stroke: '#111827', 'stroke-width': th,
+        'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+      }));
 
       // Dome base (flat line)
-      g.appendChild(make('line', { x1: -20, y1: -15, x2: 20, y2: -15, stroke: '#111827', 'stroke-width': th }));
+      g.appendChild(make('line', { x1: -20, y1: -15, x2: 20, y2: -15, stroke: '#111827', 'stroke-width': th, 'stroke-linecap': 'round' }));
       
       // Dome (half-circle facing UP)
       g.appendChild(make('path', { d: 'M -20 -15 A 20 20 0 0 1 20 -15 Z', fill: 'white', stroke: '#111827', 'stroke-width': th }));
