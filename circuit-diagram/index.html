@@ -1555,7 +1555,13 @@
           }));
         }
 
-        if (comp.type === 'bulb') drawBulb(wrap, th);
+        // Non-rotating overlay for inner symbols of circle-based components
+        const circleTypes = new Set(['bulb', 'voltmeter', 'ammeter', 'galvanometer', 'motor', 'ac-supply']);
+        const overlay = circleTypes.has(comp.type)
+          ? make('g', { transform: `translate(${comp.x} ${comp.y})` })
+          : null;
+
+        if (comp.type === 'bulb') drawBulb(wrap, th, overlay);
         if (comp.type === 'battery') drawBattery(wrap, comp.cells || 2, th, comp.batteryVariant);
         if (comp.type === 'switch') drawSwitch(wrap, comp.variant === 'switch-closed', th);
         if (comp.type === 'resistor') drawResistor(wrap, th);
@@ -1563,16 +1569,16 @@
         if (comp.type === 'potentiometer') drawPotentiometer(wrap, th);
         if (comp.type === 'ldr') drawLDR(wrap, th);
         if (comp.type === 'thermistor') drawThermistor(wrap, th);
-        if (comp.type === 'voltmeter') drawMeter(wrap, 'V', th);
-        if (comp.type === 'ammeter') drawMeter(wrap, 'A', th);
-        if (comp.type === 'galvanometer') drawMeter(wrap, 'G', th, comp.galvVariant);
-        if (comp.type === 'motor') drawMotor(wrap, th, comp.motorVariant);
+        if (comp.type === 'voltmeter') drawMeter(wrap, 'V', th, undefined, overlay);
+        if (comp.type === 'ammeter') drawMeter(wrap, 'A', th, undefined, overlay);
+        if (comp.type === 'galvanometer') drawMeter(wrap, 'G', th, comp.galvVariant, overlay);
+        if (comp.type === 'motor') drawMotor(wrap, th, comp.motorVariant, overlay);
         if (comp.type === 'bell') drawBell(wrap, th);
         if (comp.type === 'diode') drawDiode(wrap, th);
         if (comp.type === 'led') drawLED(wrap, th);
         if (comp.type === 'transformer') drawTransformer(wrap, th);
         if (comp.type === 'inductor') drawInductor(wrap, th, comp.inductorVariant);
-        if (comp.type === 'ac-supply') drawACSupply(wrap, th);
+        if (comp.type === 'ac-supply') drawACSupply(wrap, th, overlay);
         if (comp.type === 'fuse') drawFuse(wrap, th);
         if (comp.type === 'heater') drawHeater(wrap, th);
         if (comp.type === 'capacitor') drawCapacitor(wrap, th);
@@ -1581,6 +1587,7 @@
         if (comp.type === 'current-arrow') drawCurrentArrow(wrap, th);
         if (comp.type === 'junction-wire') drawJunctionWire(wrap, th);
         svg.appendChild(wrap);
+        if (overlay) svg.appendChild(overlay);
 
         // Labels are drawn outside the rotation group to stay upright and be shiftable
         if (comp.label) {
@@ -1680,14 +1687,13 @@
       g.appendChild(make('line', { x1: -35, y1: 22, x2: -25, y2: 22, stroke: '#111827', 'stroke-width': th * 0.83, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
     }
 
-    function drawMeter(g, label, th = 3, galvVariant) {
-      g.appendChild(make('line', { x1: -29, y1: 0, x2: -20, y2: 0, stroke: '#111827', 'stroke-width': th }));
-      g.appendChild(make('line', { x1: 20, y1: 0, x2: 29, y2: 0, stroke: '#111827', 'stroke-width': th }));
+    function drawMeter(g, label, th = 3, galvVariant, overlay = null) {
       g.appendChild(make('circle', { cx: 0, cy: 0, r: 20, fill: 'white', stroke: '#111827', 'stroke-width': th }));
+      const target = overlay || g;
       if (galvVariant === 'arrow') {
         // Vertical upward arrow inside circle
-        g.appendChild(make('line', { x1: 0, y1: 11, x2: 0, y2: -8, stroke: '#111827', 'stroke-width': th, 'stroke-linecap': 'round' }));
-        g.appendChild(make('path', { d: 'M -5 -4 L 0 -13 L 5 -4', fill: 'none', stroke: '#111827', 'stroke-width': th, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+        target.appendChild(make('line', { x1: 0, y1: 11, x2: 0, y2: -8, stroke: '#111827', 'stroke-width': th, 'stroke-linecap': 'round' }));
+        target.appendChild(make('path', { d: 'M -5 -4 L 0 -13 L 5 -4', fill: 'none', stroke: '#111827', 'stroke-width': th, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
       } else {
         const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         txt.setAttribute('x', '0');
@@ -1698,7 +1704,7 @@
         txt.setAttribute('font-weight', 'bold');
         txt.setAttribute('fill', '#111827');
         txt.textContent = label;
-        g.appendChild(txt);
+        target.appendChild(txt);
       }
     }
 
@@ -1722,13 +1728,12 @@
       g.appendChild(make('path', { d: 'M -20 -15 A 20 20 0 0 1 20 -15 Z', fill: 'white', stroke: '#111827', 'stroke-width': th }));
     }
 
-    function drawBulb(g, th = 3) {
-      g.appendChild(make('line', { x1: -29, y1: 0, x2: -20, y2: 0, stroke: '#111827', 'stroke-width': th }));
-      g.appendChild(make('line', { x1: 20, y1: 0, x2: 29, y2: 0, stroke: '#111827', 'stroke-width': th }));
+    function drawBulb(g, th = 3, overlay = null) {
       g.appendChild(make('circle', { cx: 0, cy: 0, r: 20, fill: 'white', stroke: '#111827', 'stroke-width': th }));
+      const target = overlay || g;
       const offset = 14.14;
-      g.appendChild(make('line', { x1: -offset, y1: -offset, x2: offset, y2: offset, stroke: '#111827', 'stroke-width': th * 0.83, 'stroke-linecap': 'round' }));
-      g.appendChild(make('line', { x1: -offset, y1: offset, x2: offset, y2: -offset, stroke: '#111827', 'stroke-width': th * 0.83, 'stroke-linecap': 'round' }));
+      target.appendChild(make('line', { x1: -offset, y1: -offset, x2: offset, y2: offset, stroke: '#111827', 'stroke-width': th * 0.83, 'stroke-linecap': 'round' }));
+      target.appendChild(make('line', { x1: -offset, y1: offset, x2: offset, y2: -offset, stroke: '#111827', 'stroke-width': th * 0.83, 'stroke-linecap': 'round' }));
     }
 
     function drawBattery(g, cells, th = 3, variant = 'battery-standard') {
@@ -1789,10 +1794,9 @@
       }));
     }
 
-    function drawMotor(g, th = 3, motorVariant) {
-      g.appendChild(make('line', { x1: -29, y1: 0, x2: -20, y2: 0, stroke: '#111827', 'stroke-width': th }));
-      g.appendChild(make('line', { x1: 20, y1: 0, x2: 29, y2: 0, stroke: '#111827', 'stroke-width': th }));
+    function drawMotor(g, th = 3, motorVariant, overlay = null) {
       g.appendChild(make('circle', { cx: 0, cy: 0, r: 20, fill: 'white', stroke: '#111827', 'stroke-width': th }));
+      const target = overlay || g;
       const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       txt.setAttribute('x', '0');
       txt.setAttribute('text-anchor', 'middle');
@@ -1804,13 +1808,13 @@
         txt.setAttribute('y', '-5');
         txt.setAttribute('font-size', '14px');
         txt.textContent = 'M';
-        g.appendChild(txt);
+        target.appendChild(txt);
         // Step symbol: left vertical drops below horizontal, right vertical rises above horizontal
-        g.appendChild(make('path', { d: 'M -9 9 L -9 5 L 9 5 L 9 1', fill: 'none', stroke: '#111827', 'stroke-width': th * 0.67, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+        target.appendChild(make('path', { d: 'M -9 9 L -9 5 L 9 5 L 9 1', fill: 'none', stroke: '#111827', 'stroke-width': th * 0.67, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
       } else {
         txt.setAttribute('y', '0');
         txt.textContent = 'M';
-        g.appendChild(txt);
+        target.appendChild(txt);
       }
     }
 
@@ -1862,12 +1866,11 @@
       g.appendChild(make('line', { x1: 30, y1: 14, x2: 30, y2: 30, stroke: '#111827', 'stroke-width': th }));
     }
 
-    function drawACSupply(g, th = 3) {
-       g.appendChild(make('line', { x1: -29, y1: 0, x2: -20, y2: 0, stroke: '#111827', 'stroke-width': th }));
-       g.appendChild(make('line', { x1: 20, y1: 0, x2: 29, y2: 0, stroke: '#111827', 'stroke-width': th }));
+    function drawACSupply(g, th = 3, overlay = null) {
        g.appendChild(make('circle', { cx: 0, cy: 0, r: 20, fill: 'white', stroke: '#111827', 'stroke-width': th }));
+       const target = overlay || g;
        // Two-cycle sine: starts at -13,0, rises to peak at -6.5,-10, crosses 0 at 0, dips to 6.5,10, ends at 13,0
-       g.appendChild(make('path', { d: 'M -13 0 C -11 -12 -2 -12 0 0 C 2 12 11 12 13 0', fill: 'none', stroke: '#111827', 'stroke-width': th, 'stroke-linecap': 'round' }));
+       target.appendChild(make('path', { d: 'M -13 0 C -11 -12 -2 -12 0 0 C 2 12 11 12 13 0', fill: 'none', stroke: '#111827', 'stroke-width': th, 'stroke-linecap': 'round' }));
     }
 
     function drawFuse(g, th = 3) {
