@@ -43,20 +43,19 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Navigation container found:', navContainer);
             if (navContainer) {
                 navContainer.innerHTML = `
-                    <ul class="nav-menu">
-                        <li class="nav-item">
-                            <button class="nav-button" data-theme="Mechanics">Mechanics</button>
-                            <div class="dropdown-menu">
-                                <ul class="dropdown-list">
-                                    <li><a href="#measurement" class="dropdown-link">Measurement</a></li>
-                                    <li><a href="#kinematics" class="dropdown-link">Kinematics</a></li>
-                                    <li><a href="#dynamics" class="dropdown-link">Dynamics</a></li>
-                                    <li><a href="#forces" class="dropdown-link">Forces</a></li>
-                                </ul>
-                            </div>
-                        </li>
-                    </ul>
+                    <li class="nav-item">
+                        <button class="nav-button" data-theme="Mechanics">Mechanics</button>
+                        <div class="dropdown-menu">
+                            <ul class="dropdown-list">
+                                <li><a href="#measurement" class="dropdown-link">Measurement</a></li>
+                                <li><a href="#kinematics" class="dropdown-link">Kinematics</a></li>
+                                <li><a href="#dynamics" class="dropdown-link">Dynamics</a></li>
+                                <li><a href="#forces" class="dropdown-link">Forces</a></li>
+                            </ul>
+                        </div>
+                    </li>
                 `;
+                navContainer.className = 'nav-menu';
                 // Initialize search functionality after fallback navigation is created
                 initializeSearch();
             }
@@ -182,7 +181,8 @@ function processSimulations(xmlDoc) {
         console.error('Navigation container is null at innerHTML assignment');
         return;
     }
-    navContainer.innerHTML = `<ul class="nav-menu">${navHTML}</ul>`;
+    navContainer.className = 'nav-menu';
+    navContainer.innerHTML = navHTML;
     
     // Add click handlers for navigation filtering
     setupNavigationHandlers();
