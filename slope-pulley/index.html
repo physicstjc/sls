@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Slope + Pulley Interactive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell" aria-label="Slope and pulley simulator">
+    <section class="sim-card">
+      <header class="sim-header">
+        <h1>Slope + Pulley Lab</h1>
+      </header>
+
+      <div class="sim-layout">
+        <aside class="controls" aria-label="Simulation controls">
+          <div class="control-row">
+            <div class="control-group compact">
+              <label for="slopeMass">Slope Mass (kg)</label>
+              <input id="slopeMass" type="number" min="1" step="0.5" value="3">
+            </div>
+            <div class="control-group compact">
+              <label for="hangingMass">Hanging Mass (kg)</label>
+              <input id="hangingMass" type="number" min="1" step="0.5" value="2">
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label>Slope Control</label>
+            <p>Choose a pulley corner, then drag the pulley on the canvas to tilt the slope (max 90°).</p>
+          </div>
+
+          <div class="control-group">
+            <label for="pulleyCorner">Pulley Corner</label>
+            <select id="pulleyCorner">
+              <option value="left">Left Corner</option>
+              <option value="right" selected>Right Corner</option>
+            </select>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-wrap">
+              <span class="toggle-text">Calculations</span>
+              <label class="lozenge-toggle" for="calcToggle">
+                <input id="calcToggle" type="checkbox" aria-controls="calcBox" aria-expanded="false">
+                <span class="lozenge-track"></span>
+              </label>
+            </div>
+
+            <div class="mini-actions" aria-label="Simulation actions">
+              <button id="playBtn" class="pill-btn accent icon-btn" type="button" aria-label="Animate" title="Animate">
+                <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                  <path d="M8 5v14l11-7z" fill="currentColor"></path>
+                </svg>
+              </button>
+              <button id="pauseBtn" class="pill-btn icon-btn" type="button" aria-label="Pause" title="Pause">
+                <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                  <path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"></path>
+                </svg>
+              </button>
+              <button id="resetBtn" class="pill-btn icon-btn" type="button" aria-label="Reset" title="Reset">
+                <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                  <path d="M12 5a7 7 0 0 1 6.7 5h-2.2A5 5 0 1 0 15.5 15l-2-2H20v6l-2.1-2.1A7 7 0 1 1 12 5z" fill="currentColor"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div id="calcBox" class="calc-box hidden" aria-label="Force calculations">
+            <h2>Calculations</h2>
+            <p><strong>1.</strong> Weight of hanging mass:</p>
+            <p class="calc-formula">W<sub>h</sub> = m<sub>h</sub>g</p>
+            <p id="weightHangingValue" class="calc-value">-</p>
+
+            <p><strong>2.</strong> Component of slope mass weight parallel to slope:</p>
+            <p class="calc-formula">W<sub>parallel</sub> = m<sub>s</sub>g sin&theta;</p>
+            <p id="slopeParallelValue" class="calc-value">-</p>
+          </div>
+
+          <div id="status" class="status">Ready.</div>
+        </aside>
+
+        <section class="viewport" aria-label="Simulation canvas">
+          <canvas id="simCanvas" width="860" height="460"></canvas>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
