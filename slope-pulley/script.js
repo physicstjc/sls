@@ -98,6 +98,20 @@ function syncMassInputs() {
   state.slope.mass = clamp(Number.isFinite(slopeMassValue) && slopeMassValue > 0 ? slopeMassValue : state.slope.mass, 1, 500);
   state.hanging.mass = clamp(Number.isFinite(hangingMassValue) && hangingMassValue > 0 ? hangingMassValue : state.hanging.mass, 1, 500);
   updateCalculations();
+  updateAcceleration();
+}
+
+function updateAcceleration() {
+  const { slopeTowardPulleySign, accel } = currentSystemAcceleration();
+  state.motionAccel = accel;
+  state.motionSign = slopeTowardPulleySign;
+  
+  // Update initial conditions for the current pose
+  state.slopePos0 = state.slope.pos;
+  state.hangingPos0 = state.hanging.pos;
+  state.slopeVel0 = state.slope.vel;
+  state.hangingVel0 = state.hanging.vel;
+  state.motionElapsed = 0;
 }
 
 function updateCalculations() {
@@ -137,6 +151,7 @@ function updateSlopeVectors() {
   world.slopeTy = world.slopeUnit.y;
   world.angleDisplay = roundToHalfDeg(Math.abs((Math.atan2(vy, vx) * 180) / Math.PI));
   updateCalculations();
+  updateAcceleration();
 
   const minSlope = world.blockSize * 0.7;
   const maxSlope = world.slopeLength - world.blockSize * 0.7;
@@ -540,7 +555,34 @@ function drawRope() {
   ctx.restore();
 }
 
-function drawBlock(center, label, mass, color, angleRad = 0) {
+function drawArrow(x, y, dx, dy, color, label) {
+  if (Math.hypot(dx, dy) < 2) return;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + dx, y + dy);
+  ctx.stroke();
+
+  const angle = Math.atan2(dy, dx);
+  const headLen = 8;
+  ctx.beginPath();
+  ctx.moveTo(x + dx, y + dy);
+  ctx.lineTo(x + dx - headLen * Math.cos(angle - Math.PI / 6), y + dy - headLen * Math.sin(angle - Math.PI / 6));
+  ctx.lineTo(x + dx - headLen * Math.cos(angle + Math.PI / 6), y + dy - headLen * Math.sin(angle + Math.PI / 6));
+  ctx.closePath();
+  ctx.fill();
+
+  if (label) {
+    ctx.font = "12px Space Grotesk";
+    ctx.fillText(label, x + dx + 5, y + dy + 5);
+  }
+  ctx.restore();
+}
+
+function drawBlock(center, label, mass, color, angleRad = 0, isSlopeBlock = false) {
   const size = world.blockSize;
 
   ctx.save();
@@ -562,8 +604,34 @@ function drawBlock(center, label, mass, color, angleRad = 0) {
 
   ctx.font = "600 10px Space Grotesk";
   ctx.fillText(`${mass.toFixed(1)}kg`, 0, 9);
-
   ctx.restore();
+
+  if (isSlopeBlock && ui.calcToggle && ui.calcToggle.checked) {
+    const scale = 2.5; 
+    const maxVectorLen = 100;
+    const W = clamp(mass * state.gravity * scale, 0, maxVectorLen);
+    const theta = Math.atan2(world.slopeUnit.y, world.slopeUnit.x);
+    
+    // Weight (Vertical - always downwards)
+    drawArrow(center.x, center.y, 0, W, "#e74c3c", "W");
+    
+    // Components (relative to slope)
+    // We scale the components by the dampened Weight to keep them proportional
+    const W_para = W * Math.sin(theta);
+    const W_perp = W * Math.cos(theta);
+    
+    // Perpendicular component (down into slope - always in direction of slope normal)
+    drawArrow(center.x, center.y, W_perp * world.slopeNormal.x, W_perp * world.slopeNormal.y, "#9b59b6", "W\u22A5");
+    
+    // Parallel component (along slope - parallel weight component always pulls "down" the slope)
+    drawArrow(center.x, center.y, W_para * world.slopeUnit.x, W_para * world.slopeUnit.y, "#3498db", "W\u2225");
+  } else if (!isSlopeBlock && ui.calcToggle && ui.calcToggle.checked) {
+    // Hanging weight (Vertical - always downwards)
+    const scale = 2.5;
+    const maxVectorLen = 100;
+    const W = clamp(mass * state.gravity * scale, 0, maxVectorLen);
+    drawArrow(center.x, center.y, 0, W, "#e74c3c", "W");
+  }
 }
 
 function drawBlocks() {
@@ -571,8 +639,8 @@ function drawBlocks() {
   const hangingCenter = getHangingBlockCenter();
   const slopeAngle = Math.atan2(world.slopeUnit.y, world.slopeUnit.x);
 
-  drawBlock(slopeCenter, "A", state.slope.mass, "#8dd3c7", slopeAngle);
-  drawBlock(hangingCenter, "B", state.hanging.mass, "#fb8072");
+  drawBlock(slopeCenter, "A", state.slope.mass, "#8dd3c7", slopeAngle, true);
+  drawBlock(hangingCenter, "B", state.hanging.mass, "#fb8072", 0, false);
 }
 
 function draw() {
@@ -663,14 +731,14 @@ function boot() {
   syncMassInputs();
 
   if (ui.slopeMass) {
-    ui.slopeMass.addEventListener("change", () => {
+    ui.slopeMass.addEventListener("input", () => {
       syncMassInputs();
       setStatus("Updated slope mass.");
     });
   }
 
   if (ui.hangingMass) {
-    ui.hangingMass.addEventListener("change", () => {
+    ui.hangingMass.addEventListener("input", () => {
       syncMassInputs();
       setStatus("Updated hanging mass.");
     });

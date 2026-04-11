@@ -34,14 +34,6 @@
             <p>Choose a pulley corner, then drag the pulley on the canvas to tilt the slope (max 90°).</p>
           </div>
 
-          <div class="control-group">
-            <label for="pulleyCorner">Pulley Corner</label>
-            <select id="pulleyCorner">
-              <option value="left">Left Corner</option>
-              <option value="right" selected>Right Corner</option>
-            </select>
-          </div>
-
           <div class="toggle-row">
             <div class="toggle-wrap">
               <span class="toggle-text">Calculations</span>
@@ -52,6 +44,10 @@
             </div>
 
             <div class="mini-actions" aria-label="Simulation actions">
+              <select id="pulleyCorner" class="mini-select" title="Pulley Corner">
+                <option value="left">Pulley L</option>
+                <option value="right" selected>Pulley R</option>
+              </select>
               <button id="playBtn" class="pill-btn accent icon-btn" type="button" aria-label="Animate" title="Animate">
                 <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
                   <path d="M8 5v14l11-7z" fill="currentColor"></path>
