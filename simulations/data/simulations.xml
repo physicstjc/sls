@@ -4680,4 +4680,16 @@
   </topics>
   <author>Julienne Tan and Tan Seng Kwang</author>
  </simulation>
+ <simulation>
+  <id>js-047</id>
+  <title>Slope + Pulley Lab</title>
+  <description>Explore the forces on a mass on a slope connected via a pulley to a hanging mass. Adjust masses and tilt angle; view free body diagrams and calculated net force and acceleration.</description>
+  <image>../slope-pulley/slope-pulley.png</image>
+  <url>../slope-pulley/</url>
+  <platform>JavaScript</platform>
+  <topics>
+   <topic>dynamics</topic>
+  </topics>
+  <author>Tan Seng Kwang</author>
+ </simulation>
 </simulations>
