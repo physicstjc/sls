@@ -4,13 +4,13 @@ const ctx = canvas.getContext("2d");
 const ui = {
   slopeMass: document.getElementById("slopeMass"),
   hangingMass: document.getElementById("hangingMass"),
-  pulleyCorner: document.getElementById("pulleyCorner"),
+  pulleyLeftBtn: document.getElementById("pulleyLeftBtn"),
+  pulleyRightBtn: document.getElementById("pulleyRightBtn"),
   calcToggle: document.getElementById("calcToggle"),
   calcBox: document.getElementById("calcBox"),
   weightHangingValue: document.getElementById("weightHangingValue"),
   slopeParallelValue: document.getElementById("slopeParallelValue"),
-  playBtn: document.getElementById("playBtn"),
-  pauseBtn: document.getElementById("pauseBtn"),
+  playPauseBtn: document.getElementById("playPauseBtn"),
   resetBtn: document.getElementById("resetBtn"),
   status: document.getElementById("status")
 };
@@ -40,6 +40,7 @@ const state = {
     vel: 0,
     initialPos: 110
   },
+  pulleyCorner: "right",
   pulley: {
     radius: 25,
     spin: 0
@@ -88,7 +89,35 @@ function allowedSpanLimits() {
 }
 
 function currentPulleyCorner() {
-  return ui.pulleyCorner?.value === "left" ? "left" : "right";
+  return state.pulleyCorner === "left" ? "left" : "right";
+}
+
+function updatePulleyCornerButtons() {
+  if (!ui.pulleyLeftBtn || !ui.pulleyRightBtn) {
+    return;
+  }
+
+  const leftActive = currentPulleyCorner() === "left";
+  ui.pulleyLeftBtn.classList.toggle("accent", leftActive);
+  ui.pulleyRightBtn.classList.toggle("accent", !leftActive);
+  ui.pulleyLeftBtn.setAttribute("aria-pressed", leftActive ? "true" : "false");
+  ui.pulleyRightBtn.setAttribute("aria-pressed", leftActive ? "false" : "true");
+}
+
+function updatePlayPauseButton() {
+  if (!ui.playPauseBtn) {
+    return;
+  }
+
+  if (state.running) {
+    ui.playPauseBtn.innerHTML = '<svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"></path></svg>';
+    ui.playPauseBtn.setAttribute("aria-label", "Pause");
+    ui.playPauseBtn.title = "Pause";
+  } else {
+    ui.playPauseBtn.innerHTML = '<svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M8 5v14l11-7z" fill="currentColor"></path></svg>';
+    ui.playPauseBtn.setAttribute("aria-label", "Play");
+    ui.playPauseBtn.title = "Play";
+  }
 }
 
 function syncMassInputs() {
@@ -394,6 +423,7 @@ function simulate(dt) {
   const hitLimit = enforceConstraintBounds();
   if (hitLimit) {
     state.running = false;
+    updatePlayPauseButton();
     setStatus("Motion stopped at travel limit.");
   }
 
@@ -672,10 +702,13 @@ function resetSimulation() {
   state.hanging.vel = 0;
 
   state.pulley.spin = 0;
+  updatePlayPauseButton();
   setStatus("Simulation reset. Slope returned to 0.0°.");
 }
 
-function onPulleyCornerChange() {
+function onPulleyCornerChange(nextCorner) {
+  state.pulleyCorner = nextCorner === "left" ? "left" : "right";
+  updatePulleyCornerButtons();
   resetSlopeGeometry();
   state.motionElapsed = 0;
   state.slope.vel = 0;
@@ -694,12 +727,22 @@ function startAnimation() {
   state.hangingPos0 = state.hanging.pos;
   state.hangingVel0 = state.hanging.vel;
   state.running = true;
+  updatePlayPauseButton();
   setStatus("Animation running.");
 }
 
 function pauseAnimation() {
   state.running = false;
+  updatePlayPauseButton();
   setStatus("Paused.");
+}
+
+function toggleAnimation() {
+  if (state.running) {
+    pauseAnimation();
+  } else {
+    startAnimation();
+  }
 }
 
 function loop(timestamp) {
@@ -744,18 +787,16 @@ function boot() {
     });
   }
 
-  if (ui.pulleyCorner) {
-    ui.pulleyCorner.addEventListener("change", onPulleyCornerChange);
+  if (ui.pulleyLeftBtn) {
+    ui.pulleyLeftBtn.addEventListener("click", () => onPulleyCornerChange("left"));
   }
 
-  if (ui.playBtn) {
-    ui.playBtn.addEventListener("click", startAnimation);
-    ui.playBtn.addEventListener("pointerup", startAnimation);
+  if (ui.pulleyRightBtn) {
+    ui.pulleyRightBtn.addEventListener("click", () => onPulleyCornerChange("right"));
   }
 
-  if (ui.pauseBtn) {
-    ui.pauseBtn.addEventListener("click", pauseAnimation);
-    ui.pauseBtn.addEventListener("pointerup", pauseAnimation);
+  if (ui.playPauseBtn) {
+    ui.playPauseBtn.addEventListener("click", toggleAnimation);
   }
 
   if (ui.resetBtn) {
@@ -767,6 +808,9 @@ function boot() {
     ui.calcToggle.addEventListener("change", toggleCalculations);
     toggleCalculations();
   }
+
+  updatePulleyCornerButtons();
+  updatePlayPauseButton();
 
   canvas.addEventListener("pointerdown", onCanvasPointerDown);
   canvas.addEventListener("pointermove", onCanvasPointerMove);

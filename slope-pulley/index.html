@@ -31,7 +31,7 @@
 
           <div class="control-group">
             <label>Slope Control</label>
-            <p>Choose a pulley corner, then drag the pulley on the canvas to tilt the slope (max 90°).</p>
+            <p>Choose pulley side with L/R, then drag the pulley on the canvas to tilt the slope (max 90°).</p>
           </div>
 
           <div class="toggle-row">
@@ -44,18 +44,11 @@
             </div>
 
             <div class="mini-actions" aria-label="Simulation actions">
-              <select id="pulleyCorner" class="mini-select" title="Pulley Corner">
-                <option value="left">Pulley L</option>
-                <option value="right" selected>Pulley R</option>
-              </select>
-              <button id="playBtn" class="pill-btn accent icon-btn" type="button" aria-label="Animate" title="Animate">
+              <button id="pulleyLeftBtn" class="pill-btn corner-btn" type="button" aria-label="Pulley Left" title="Pulley Left" aria-pressed="false">L</button>
+              <button id="pulleyRightBtn" class="pill-btn corner-btn accent" type="button" aria-label="Pulley Right" title="Pulley Right" aria-pressed="true">R</button>
+              <button id="playPauseBtn" class="pill-btn accent icon-btn" type="button" aria-label="Play" title="Play">
                 <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
                   <path d="M8 5v14l11-7z" fill="currentColor"></path>
-                </svg>
-              </button>
-              <button id="pauseBtn" class="pill-btn icon-btn" type="button" aria-label="Pause" title="Pause">
-                <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-                  <path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"></path>
                 </svg>
               </button>
               <button id="resetBtn" class="pill-btn icon-btn" type="button" aria-label="Reset" title="Reset">
