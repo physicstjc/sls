@@ -124,8 +124,15 @@ function syncMassInputs() {
   const slopeMassValue = Number(ui.slopeMass?.value);
   const hangingMassValue = Number(ui.hangingMass?.value);
 
-  state.slope.mass = clamp(Number.isFinite(slopeMassValue) && slopeMassValue > 0 ? slopeMassValue : state.slope.mass, 1, 500);
-  state.hanging.mass = clamp(Number.isFinite(hangingMassValue) && hangingMassValue > 0 ? hangingMassValue : state.hanging.mass, 1, 500);
+  state.slope.mass = clamp(Number.isFinite(slopeMassValue) && slopeMassValue > 0 ? slopeMassValue : state.slope.mass, 1, 20);
+  state.hanging.mass = clamp(Number.isFinite(hangingMassValue) && hangingMassValue > 0 ? hangingMassValue : state.hanging.mass, 1, 20);
+
+  if (ui.slopeMass) {
+    ui.slopeMass.value = String(state.slope.mass);
+  }
+  if (ui.hangingMass) {
+    ui.hangingMass.value = String(state.hanging.mass);
+  }
   updateCalculations();
   updateAcceleration();
 }
@@ -453,6 +460,39 @@ function drawBackgroundGrid() {
   ctx.restore();
 }
 
+function resizeCanvasToDisplaySize() {
+  const rect = canvas.getBoundingClientRect();
+  const displayWidth = Math.max(1, Math.round(rect.width));
+  const displayHeight = Math.max(1, Math.round(rect.height));
+
+  if (canvas.width === displayWidth && canvas.height === displayHeight) {
+    return;
+  }
+
+  const prevWidth = canvas.width;
+  const prevHeight = canvas.height;
+
+  canvas.width = displayWidth;
+  canvas.height = displayHeight;
+
+  if (prevWidth > 0 && prevHeight > 0) {
+    const sx = displayWidth / prevWidth;
+    const sy = displayHeight / prevHeight;
+
+    world.leftPoint.x *= sx;
+    world.rightPoint.x *= sx;
+    world.leftPoint.y *= sy;
+    world.rightPoint.y *= sy;
+
+    state.hanging.pos *= sy;
+  }
+
+  world.hangMax = Math.max(world.hangMin + world.blockSize, canvas.height - 90);
+  state.hanging.pos = clamp(state.hanging.pos, world.hangMin, world.hangMax);
+
+  updateSlopeVectors();
+}
+
 function drawSlope() {
   ctx.save();
   ctx.lineWidth = world.slopeStrokeWidth;
@@ -674,6 +714,7 @@ function drawBlocks() {
 }
 
 function draw() {
+  resizeCanvasToDisplaySize();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackgroundGrid();
   drawSlope();
@@ -766,6 +807,7 @@ function boot() {
     return;
   }
 
+  resizeCanvasToDisplaySize();
   resetSlopeGeometry();
 
   state.slope.pos = world.slopeLength * 0.5;
@@ -816,6 +858,7 @@ function boot() {
   canvas.addEventListener("pointermove", onCanvasPointerMove);
   canvas.addEventListener("pointerup", onCanvasPointerUp);
   canvas.addEventListener("pointercancel", onCanvasPointerUp);
+  window.addEventListener("resize", resizeCanvasToDisplaySize);
 
   setStatus("Ready: drag pulley to tilt, then animate.");
   requestAnimationFrame(loop);
