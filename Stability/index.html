@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stability & Equilibrium Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overscroll-behavior-y: contain;
+            margin: 0;
+            padding: 0;
+        }
+        canvas {
+            touch-action: none; 
+            background: #ffffff;
+            border-radius: 1rem;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .control-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 14px;
+            width: 14px;
+            border-radius: 50%;
+            background: #4f46e5;
+            cursor: pointer;
+            margin-top: -5px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #e2e8f0;
+            border-radius: 2px;
+        }
+        .btn-pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen p-3 md:p-6 flex flex-col">
+
+    <div class="max-w-6xl mx-auto w-full flex-grow flex flex-col">
+        <header class="mb-4 md:mb-6 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">Stability & Equilibrium</h1>
+                <p class="text-slate-500 text-sm md:text-base font-medium">Turning Effects & Center of Gravity</p>
+            </div>
+            <div id="status-display" class="px-5 py-2.5 md:px-6 md:py-3 rounded-full text-white font-bold text-sm md:text-base text-center shadow-md transition-all duration-300 bg-emerald-500">
+                STABLE
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 flex-grow">
+            <!-- Sidebar Controls -->
+            <div class="lg:col-span-4 xl:col-span-3 space-y-4 md:space-y-4 control-panel p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm order-2 lg:order-1 flex flex-col">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                    <section>
+                        <label class="text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 block">Object Shape</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="setShape('rectangle')" id="btn-rectangle" class="shape-btn p-2 rounded-lg border-2 border-indigo-600 bg-indigo-50 text-indigo-700 font-semibold text-sm transition-all">Rect</button>
+                            <button onclick="setShape('triangle')" id="btn-triangle" class="shape-btn p-2 rounded-lg border-2 border-transparent bg-slate-100 text-slate-600 font-semibold text-sm hover:bg-slate-200 transition-all">Tri</button>
+                            <button onclick="setShape('circle')" id="btn-circle" class="shape-btn p-2 rounded-lg border-2 border-transparent bg-slate-100 text-slate-600 font-semibold text-sm hover:bg-slate-200 transition-all">Circ</button>
+                        </div>
+                    </section>
+
+                    <section>
+                        <label class="text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 block">Placement</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="setMode('ground')" id="btn-ground" class="mode-btn p-2 rounded-lg border-2 border-indigo-600 bg-indigo-50 text-indigo-700 font-semibold text-sm">Standing</button>
+                            <button onclick="setMode('hang')" id="btn-hang" class="mode-btn p-2 rounded-lg border-2 border-transparent bg-slate-100 text-slate-600 font-semibold text-sm">Hanging</button>
+                        </div>
+                    </section>
+
+                    <section>
+                        <label class="text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 block">Density / CG</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="setUniform(true)" id="btn-uniform" class="density-btn p-2 rounded-lg border-2 border-indigo-600 bg-indigo-50 text-indigo-700 font-semibold text-[11px] md:text-sm text-center">
+                                Uniform
+                            </button>
+                            <button onclick="setUniform(false)" id="btn-non-uniform" class="density-btn p-2 rounded-lg border-2 border-transparent bg-slate-100 text-slate-600 font-semibold text-[11px] md:text-sm text-center">
+                                Non-Uniform
+                            </button>
+                        </div>
+                    </section>
+
+                    <section>
+                        <label class="text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 block">Presets</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="applyPreset('stable')" class="preset-btn p-2 rounded-lg border border-slate-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold text-[11px] md:text-sm transition-colors shadow-sm">Stable</button>
+                            <button onclick="applyPreset('unstable')" class="preset-btn p-2 rounded-lg border border-slate-200 bg-amber-50 text-amber-700 hover:bg-amber-100 font-semibold text-[11px] md:text-sm transition-colors shadow-sm">Unstable</button>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Dimensions</label>
+                        <div id="angleDisplay" class="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded shadow-sm">
+                            Angle: --
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-[10px] font-semibold text-slate-500 mb-1">
+                                <span>Base Width</span>
+                                <span id="width-val">160</span>
+                            </div>
+                            <input type="range" id="slider-width" min="60" max="260" value="160" oninput="updateDimensions()">
+                        </div>
+                        <div id="height-container">
+                            <div class="flex justify-between text-[10px] font-semibold text-slate-500 mb-1">
+                                <span>Height</span>
+                                <span id="height-val">160</span>
+                            </div>
+                            <input type="range" id="slider-height" min="60" max="260" value="160" oninput="updateDimensions()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50/80 p-3 rounded-xl border border-blue-100 mt-auto hidden lg:block">
+                    <p class="text-xs text-blue-800 font-semibold mb-1">Lab Note:</p>
+                    <p class="text-[10px] text-blue-700 leading-tight">
+                        Objects pause when moved. Use the <strong>Release</strong> button near the object to begin simulation. 
+                    </p>
+                </div>
+            </div>
+
+            <!-- Canvas Area -->
+            <div class="lg:col-span-8 xl:col-span-9 relative order-1 lg:order-2 h-[50vh] min-h-[450px] lg:h-auto group">
+                <canvas id="simCanvas"></canvas>
+                
+                <!-- Floating Interaction Buttons -->
+                <div class="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 p-1.5 bg-white/90 backdrop-blur border border-slate-200 rounded-2xl shadow-xl z-10 transition-opacity">
+                    <button id="releaseBtn" onclick="releaseObject()" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all opacity-50 cursor-not-allowed disabled:pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        Release
+                    </button>
+                    <div class="w-px h-6 bg-slate-200 mx-1"></div>
+                    <button onclick="resetSimulation()" class="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all active:scale-95">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                        Reset
+                    </button>
+                </div>
+
+                <!-- Information Legend Overlays -->
+                <div class="absolute bottom-4 left-4 pointer-events-none space-y-2 hidden sm:block">
+                    <div class="bg-white/90 p-2 md:p-2.5 rounded-lg border border-slate-200 shadow-sm backdrop-blur-md flex items-center gap-2">
+                        <div class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm shadow-red-200"></div>
+                        <span class="text-[10px] md:text-xs font-bold text-slate-600">Center of Gravity (CG)</span>
+                    </div>
+                    <div class="bg-white/90 p-2 md:p-2.5 rounded-lg border border-slate-200 shadow-sm backdrop-blur-md flex items-center gap-2">
+                        <div class="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm shadow-blue-200"></div>
+                        <span class="text-[10px] md:text-xs font-bold text-slate-600">Active Pivot Point</span>
+                    </div>
+                    <div class="bg-white/90 p-2 md:p-2.5 rounded-lg border border-slate-200 shadow-sm backdrop-blur-md flex items-center gap-2">
+                        <div class="w-4 h-1 bg-purple-600 rounded"></div>
+                        <span class="text-[10px] md:text-xs font-bold text-slate-600">Base Area</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const statusDisplay = document.getElementById('status-display');
+        const angleDisplay = document.getElementById('angleDisplay');
+        const releaseBtn = document.getElementById('releaseBtn');
+
+        const GRAVITY = 0.5;
+        const FRICTION = 0.95;
+        const BOUNCE = 0.2;
+
+        let baseW = 160;
+        let heightH = 160;
+        let shape = 'rectangle';
+        let mode = 'ground'; 
+        let isUniform = true;
+        let angle = 0;
+        let angularVelocity = 0;
+        
+        let isDragging = false;
+        let isDraggingCG = false;
+        let isDraggingPivot = false;
+        let isPresetUnstable = false;
+        let isPaused = false; 
+        
+        let startDragAngle = 0;
+        let startDragMouseX = 0;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+
+        let GROUND_Y = 0;
+        let startX = 0; 
+        let cgRel = { x: 0, y: 0 }; 
+        let pivotRel = { x: 0, y: 0 }; 
+
+        const shapeData = {
+            rectangle: {
+                draw: (ctx) => {
+                    ctx.rect(-baseW/2, -heightH/2, baseW, heightH);
+                },
+                corners: () => ({
+                    left: { x: -baseW/2, y: heightH/2 },
+                    right: { x: baseW/2, y: heightH/2 }
+                }),
+                attach: () => ({ x: 0, y: -heightH/2 }),
+                maxAngle: () => Math.PI / 2
+            },
+            triangle: {
+                draw: (ctx) => {
+                    ctx.moveTo(0, -2 * heightH / 3);
+                    ctx.lineTo(-baseW/2, heightH / 3);
+                    ctx.lineTo(baseW/2, heightH / 3);
+                    ctx.closePath();
+                },
+                corners: () => ({
+                    left: { x: -baseW/2, y: heightH / 3 },
+                    right: { x: baseW/2, y: heightH / 3 }
+                }),
+                attach: () => ({ x: 0, y: -2 * heightH / 3 }),
+                maxAngle: () => Math.PI - Math.atan2(heightH, baseW / 2) 
+            },
+            circle: {
+                draw: (ctx) => {
+                    ctx.arc(0, 0, baseW/2, 0, Math.PI * 2);
+                },
+                corners: () => ({
+                    left: { x: 0, y: baseW/2 }, 
+                    right: { x: 0, y: baseW/2 }
+                }),
+                attach: () => ({ x: 0, y: -baseW/2 }),
+                maxAngle: () => Math.PI * 4
+            }
+        };
+
+        function init() {
+            resize();
+            resetSimulation();
+            requestAnimationFrame(update);
+        }
+
+        function resize() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            GROUND_Y = rect.height - 100;
+            startX = rect.width / 2;
+        }
+
+        window.addEventListener('resize', resize);
+
+        function setShape(s) {
+            shape = s;
+            updateButtons('.shape-btn', 'btn-' + s);
+            const heightCont = document.getElementById('height-container');
+            const heightSlider = document.getElementById('slider-height');
+            if (s === 'circle') {
+                heightCont.style.opacity = '0.5';
+                heightSlider.disabled = true;
+            } else {
+                heightCont.style.opacity = '1';
+                heightSlider.disabled = false;
+            }
+            resetSimulation();
+        }
+
+        function setMode(m) {
+            mode = m;
+            updateButtons('.mode-btn', 'btn-' + m);
+            resetSimulation();
+        }
+
+        function setUniform(u) {
+            isUniform = u;
+            updateButtons('.density-btn', u ? 'btn-uniform' : 'btn-non-uniform');
+            if (u) cgRel = { x: 0, y: 0 };
+        }
+
+        function releaseObject() {
+            if (isDragging || isDraggingCG || isDraggingPivot) return;
+            isPaused = false;
+            updateReleaseButtonState();
+        }
+
+        function updateReleaseButtonState() {
+            if (isPaused && !isDragging && !isDraggingCG && !isDraggingPivot) {
+                releaseBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                releaseBtn.classList.add('btn-pulse');
+                releaseBtn.disabled = false;
+            } else {
+                releaseBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                releaseBtn.classList.remove('btn-pulse');
+                releaseBtn.disabled = true;
+            }
+        }
+
+        function updateDimensions() {
+            baseW = parseInt(document.getElementById('slider-width').value);
+            heightH = parseInt(document.getElementById('slider-height').value);
+            document.getElementById('width-val').innerText = baseW;
+            document.getElementById('height-val').innerText = heightH;
+            resetSimulation();
+        }
+
+        function updateButtons(selector, activeId) {
+            document.querySelectorAll(selector).forEach(b => {
+                b.classList.remove('border-indigo-600', 'bg-indigo-50', 'text-indigo-700');
+                b.classList.add('border-transparent', 'bg-slate-100', 'text-slate-600');
+            });
+            const btn = document.getElementById(activeId);
+            btn.classList.add('border-indigo-600', 'bg-indigo-50', 'text-indigo-700');
+            btn.classList.remove('border-transparent', 'bg-slate-100', 'text-slate-600');
+        }
+
+        function resetSimulation() {
+            angle = 0;
+            angularVelocity = 0;
+            isPresetUnstable = false;
+            isPaused = false;
+            if (isUniform) cgRel = { x: 0, y: 0 };
+            pivotRel = { x: shapeData[shape].attach().x, y: shapeData[shape].attach().y };
+            updateReleaseButtonState();
+            const rect = canvas.getBoundingClientRect();
+            startX = rect.width / 2;
+        }
+
+        function applyPreset(type) {
+            angularVelocity = 0;
+            isPresetUnstable = (type === 'unstable');
+            isPaused = false; 
+            if (mode === 'ground') {
+                if (type === 'stable') {
+                    angle = 0;
+                } else if (type === 'unstable') {
+                    if (shape === 'circle') { isPresetUnstable = false; return; }
+                    const corners = shapeData[shape].corners();
+                    const corner = corners.right;
+                    const dx = corner.x - cgRel.x;
+                    const dy = corner.y - cgRel.y;
+                    angle = Math.atan2(dx, dy);
+                }
+            } else {
+                const dx = cgRel.x - pivotRel.x;
+                const dy = cgRel.y - pivotRel.y;
+                let stableAngle = Math.atan2(dx, dy);
+                if (type === 'stable') angle = stableAngle;
+                else if (type === 'unstable') {
+                    angle = stableAngle + Math.PI;
+                    if (angle > Math.PI * 1.5) angle -= Math.PI * 2;
+                }
+            }
+            updateReleaseButtonState();
+        }
+
+        canvas.addEventListener('mousedown', startInteract);
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startInteract(e.touches[0]); }, {passive: false});
+        window.addEventListener('mousemove', handleInteract);
+        window.addEventListener('touchmove', (e) => { handleInteract(e.touches[0]); }, {passive: false});
+        window.addEventListener('mouseup', stopInteract);
+        window.addEventListener('touchend', stopInteract);
+
+        function startInteract(e) {
+            const pos = getMousePos(e);
+            lastMouseX = pos.x;
+            lastMouseY = pos.y;
+            isPresetUnstable = false; 
+            isPaused = true; 
+
+            if (!isUniform) {
+                const cw = getCenterWorld();
+                const cgWorld = getCGWorld(cw);
+                const distToCG = Math.hypot(pos.x - cgWorld.x, pos.y - cgWorld.y);
+                if (distToCG < 35) { isDraggingCG = true; updateReleaseButtonState(); return; }
+            }
+            if (mode === 'hang') {
+                const cw = getCenterWorld();
+                const cos = Math.cos(angle); const sin = Math.sin(angle);
+                const pW = {
+                    x: cw.x + (pivotRel.x * cos - pivotRel.y * sin),
+                    y: cw.y + (pivotRel.x * sin + pivotRel.y * cos)
+                };
+                const distToPivot = Math.hypot(pos.x - pW.x, pos.y - pW.y);
+                if (distToPivot < 35) { isDraggingPivot = true; updateReleaseButtonState(); return; }
+            }
+            isDragging = true;
+            startDragAngle = angle;
+            startDragMouseX = pos.x;
+            angularVelocity = 0;
+            updateReleaseButtonState();
+        }
+
+        function handleInteract(e) {
+            if (!isDragging && !isDraggingCG && !isDraggingPivot) return;
+            const pos = getMousePos(e);
+            if (isDraggingCG) {
+                const cw = getCenterWorld();
+                const cos = Math.cos(-angle); const sin = Math.sin(-angle);
+                cgRel.x = (pos.x - cw.x) * cos - (pos.y - cw.y) * sin;
+                cgRel.y = (pos.x - cw.x) * sin + (pos.y - cw.y) * cos;
+                const limitW = baseW/2 - 5;
+                const limitH = heightH/2 - 5;
+                cgRel.x = Math.max(-limitW, Math.min(limitW, cgRel.x));
+                cgRel.y = Math.max(shapeData[shape].attach().y + 5, Math.min(shapeData[shape].corners().right.y - 5, cgRel.y));
+            } 
+            else if (isDraggingPivot) {
+                const cos = Math.cos(-angle); const sin = Math.sin(-angle);
+                const lDx = -(pos.x - lastMouseX) * cos - -(pos.y - lastMouseY) * sin;
+                const lDy = -(pos.x - lastMouseX) * sin + -(pos.y - lastMouseY) * cos;
+                pivotRel.x = Math.max(-baseW/2, Math.min(baseW/2, pivotRel.x + lDx));
+                pivotRel.y = Math.max(shapeData[shape].attach().y, Math.min(shapeData[shape].corners().right.y, pivotRel.y + lDy));
+            } 
+            else if (isDragging) {
+                angle = startDragAngle + (pos.x - startDragMouseX) * 0.01;
+                const maxA = shapeData[shape].maxAngle();
+                if (mode === 'ground') {
+                    if (shape !== 'circle') angle = Math.max(-maxA, Math.min(maxA, angle));
+                } else {
+                    angle = Math.max(-Math.PI * 1.5, Math.min(Math.PI * 1.5, angle));
+                }
+            }
+            lastMouseX = pos.x;
+            lastMouseY = pos.y;
+        }
+
+        function stopInteract() {
+            if (isDragging) {
+                const snapTolerance = 0.045; 
+                let snapped = false;
+                if (Math.abs(angle - startDragAngle) > 0.01) {
+                    if (mode === 'ground' && shape !== 'circle') {
+                        const corners = shapeData[shape].corners();
+                        const tR = Math.atan2(corners.right.x - cgRel.x, corners.right.y - cgRel.y);
+                        const tL = Math.atan2(corners.left.x - cgRel.x, corners.left.y - cgRel.y);
+                        if (Math.abs(angle - tR) < snapTolerance) { angle = tR; snapped = true; }
+                        else if (Math.abs(angle - tL) < snapTolerance) { angle = tL; snapped = true; }
+                    } else if (mode === 'hang') {
+                        let unstableA = Math.atan2(cgRel.x - pivotRel.x, cgRel.y - pivotRel.y) + Math.PI;
+                        if (Math.abs(angle - unstableA) < snapTolerance) { angle = unstableA; snapped = true; }
+                    }
+                }
+                if (snapped) { isPresetUnstable = true; }
+            }
+            isDragging = false; isDraggingCG = false; isDraggingPivot = false;
+            updateReleaseButtonState();
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        }
+
+        function getCenterWorld() {
+            if (mode === 'ground') {
+                if (shape === 'circle') return { x: startX + angle * (baseW/2), y: GROUND_Y - baseW/2 };
+                const corners = shapeData[shape].corners();
+                let activeCorner = (angle > 0.001) ? corners.right : (angle < -0.001 ? corners.left : null);
+                if (activeCorner) {
+                    const pWX = startX + activeCorner.x;
+                    const cos = Math.cos(angle); const sin = Math.sin(angle);
+                    return { x: pWX + (-activeCorner.x * cos - -activeCorner.y * sin), y: GROUND_Y + (-activeCorner.x * sin + -activeCorner.y * cos) };
+                }
+                return { x: startX, y: GROUND_Y - corners.right.y };
+            }
+            const cos = Math.cos(angle); const sin = Math.sin(angle);
+            return { x: startX + (-pivotRel.x * cos - -pivotRel.y * sin), y: 150 + (-pivotRel.x * sin + -pivotRel.y * cos) };
+        }
+
+        function getCGWorld(centerWorld) {
+            const cos = Math.cos(angle); const sin = Math.sin(angle);
+            return { x: centerWorld.x + (cgRel.x * cos - cgRel.y * sin), y: centerWorld.y + (cgRel.x * sin + cgRel.y * cos) };
+        }
+
+        function update() {
+            const rect = canvas.getBoundingClientRect();
+            ctx.clearRect(0, 0, rect.width, rect.height);
+            const centerWorld = getCenterWorld();
+            const cgWorld = getCGWorld(centerWorld);
+            let status = "STABLE"; let statusColor = "bg-emerald-500"; let activePivotWorld = null;
+
+            let aR = 0, aL = 0;
+            if (shape !== 'circle') {
+                const corners = shapeData[shape].corners();
+                aR = Math.atan2(corners.right.x - cgRel.x, corners.right.y - cgRel.y) * 180 / Math.PI;
+                aL = Math.atan2(cgRel.x - corners.left.x, corners.left.y - cgRel.y) * 180 / Math.PI;
+                angleDisplay.innerText = isUniform ? `Topple at: ${aR.toFixed(1)}°` : `L: ${Math.max(0, aL).toFixed(0)}° | R: ${Math.max(0, aR).toFixed(0)}°`;
+            } else { angleDisplay.innerText = "N/A"; }
+
+            if (!isDragging && !isDraggingCG && !isDraggingPivot && !isPaused) {
+                if (mode === 'ground') {
+                    if (shape === 'circle') {
+                        const torque = (cgWorld.x - (startX + angle * (baseW/2))) * GRAVITY;
+                        angularVelocity += torque * 0.0015; angularVelocity *= FRICTION; angle += angularVelocity;
+                        status = Math.abs(angularVelocity) < 0.001 ? "STABLE" : "ROLLING"; statusColor = "bg-emerald-500";
+                    } else {
+                        const corners = shapeData[shape].corners();
+                        let activeCorner = (Math.abs(angle) < 0.001) ? 
+                            (cgWorld.x > startX + corners.right.x + 0.5 ? corners.right : (cgWorld.x < startX + corners.left.x - 0.5 ? corners.left : null)) :
+                            (angle > 0 ? corners.right : corners.left);
+
+                        if (activeCorner) {
+                            if (Math.abs(angle) < 0.001) angle = (activeCorner === corners.right) ? 0.002 : -0.002;
+                            activePivotWorld = { x: startX + activeCorner.x, y: GROUND_Y };
+                            let leverArm = isPresetUnstable ? 0 : cgWorld.x - activePivotWorld.x;
+                            angularVelocity += leverArm * GRAVITY * 0.003; angularVelocity *= FRICTION; angle += angularVelocity;
+                            if ((angle < 0 && activeCorner === corners.right) || (angle > 0 && activeCorner === corners.left)) {
+                                angle = 0; angularVelocity = -angularVelocity * BOUNCE; if (Math.abs(angularVelocity) < 0.02) angularVelocity = 0;
+                            }
+                            const maxA = shapeData[shape].maxAngle();
+                            if (Math.abs(angle) >= maxA - 0.01) { angle = (angle > 0 ? maxA : -maxA); angularVelocity = 0; status = "TOPPLED"; statusColor = "bg-rose-600"; }
+                            else if (isPresetUnstable) { status = "UNSTABLE EQUILIBRIUM"; statusColor = "bg-amber-500"; }
+                            else if (Math.sign(angle) === Math.sign(leverArm) && Math.abs(leverArm) > 0.1) { status = "UNSTABLE"; statusColor = "bg-rose-500"; }
+                            else { status = "RESTORING MOMENT"; statusColor = "bg-emerald-500"; }
+                        } else { angle = 0; angularVelocity = 0; status = "STABLE"; statusColor = "bg-emerald-500"; }
+                    }
+                } else {
+                    activePivotWorld = { x: startX, y: 150 };
+                    let leverArm = isPresetUnstable ? 0 : cgWorld.x - startX;
+                    angularVelocity += leverArm * GRAVITY * 0.002; angularVelocity *= FRICTION; angle += angularVelocity;
+                    if (isPresetUnstable) { status = "UNSTABLE EQUILIBRIUM"; statusColor = "bg-amber-500"; }
+                    else { status = (Math.abs(angularVelocity) < 0.001 && Math.abs(leverArm) < 0.5) ? "STABLE" : "SWINGING"; statusColor = status === "SWINGING" ? "bg-indigo-500" : "bg-emerald-500"; }
+                }
+            } else if ((isPaused || isDragging || isDraggingCG || isDraggingPivot)) {
+                // Ensure activePivotWorld is set during interaction so indicators draw
+                if (mode === 'ground') {
+                    if (shape !== 'circle') {
+                        const corners = shapeData[shape].corners();
+                        activePivotWorld = { x: startX + (angle >= 0 ? corners.right.x : corners.left.x), y: GROUND_Y };
+                    }
+                } else { activePivotWorld = { x: startX, y: 150 }; }
+
+                if (isDragging || isDraggingCG || isDraggingPivot) {
+                    status = "ADJUSTING..."; statusColor = "bg-slate-500";
+                } else {
+                    status = isPresetUnstable ? "UNSTABLE (READY)" : "PAUSED (READY)";
+                    statusColor = isPresetUnstable ? "bg-amber-500" : "bg-indigo-600";
+                }
+            }
+
+            statusDisplay.innerText = status; statusDisplay.className = `px-5 py-2.5 md:px-6 md:py-3 rounded-full text-white font-bold text-sm md:text-base text-center shadow-md transition-all duration-300 ${statusColor}`;
+            drawScene(centerWorld, cgWorld, activePivotWorld, aR, aL); requestAnimationFrame(update);
+        }
+
+        function drawScene(centerWorld, cgWorld, activePivotWorld, aR, aL) {
+            const rect = canvas.getBoundingClientRect();
+            if (mode === 'ground') {
+                ctx.beginPath(); ctx.moveTo(0, GROUND_Y); ctx.lineTo(rect.width, GROUND_Y); ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 4; ctx.stroke();
+            }
+
+            // --- Critical Angle Info Near Object ---
+            if (mode === 'ground' && shape !== 'circle') {
+                ctx.save();
+                ctx.fillStyle = '#4338ca';
+                ctx.font = 'bold 12px Inter';
+                ctx.textAlign = 'center';
+                let label = isUniform ? `Topple at: ${aR.toFixed(1)}°` : `Topple L: ${Math.max(0, aL).toFixed(0)}° | R: ${Math.max(0, aR).toFixed(0)}°`;
+                ctx.fillText(label, centerWorld.x, 100); 
+                ctx.restore();
+            }
+
+            // --- Tilt angle indicators ---
+            if (activePivotWorld && Math.abs(angle) > 0.01) {
+                ctx.save();
+                ctx.setLineDash([5, 5]);
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(activePivotWorld.x, activePivotWorld.y);
+                ctx.lineTo(activePivotWorld.x, activePivotWorld.y - 150);
+                ctx.strokeStyle = '#94a3b8';
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(activePivotWorld.x, activePivotWorld.y);
+                const axisX = activePivotWorld.x + Math.sin(angle) * 150;
+                const axisY = activePivotWorld.y - Math.cos(angle) * 150;
+                ctx.lineTo(axisX, axisY);
+                ctx.strokeStyle = '#6366f1';
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.beginPath();
+                const startAngle = -Math.PI/2;
+                const endAngle = startAngle + angle;
+                ctx.arc(activePivotWorld.x, activePivotWorld.y, 60, startAngle, endAngle, angle < 0);
+                ctx.strokeStyle = '#6366f1';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.fillStyle = '#6366f1';
+                ctx.font = 'bold 12px Inter';
+                const labelX = activePivotWorld.x + Math.sin(angle/2) * 80;
+                const labelY = activePivotWorld.y - Math.cos(angle/2) * 80;
+                ctx.fillText(`${Math.abs(angle * 180 / Math.PI).toFixed(1)}°`, labelX - 10, labelY);
+                ctx.restore();
+            }
+
+            ctx.save(); ctx.translate(centerWorld.x, centerWorld.y); ctx.rotate(angle);
+            ctx.beginPath(); shapeData[shape].draw(ctx);
+            ctx.fillStyle = 'rgba(99, 102, 241, 0.1)'; ctx.fill(); ctx.strokeStyle = '#4f46e5'; ctx.lineWidth = 3; ctx.stroke();
+            if (shape !== 'circle') {
+                const corners = shapeData[shape].corners();
+                ctx.beginPath();
+                ctx.moveTo(corners.left.x, corners.left.y);
+                ctx.lineTo(corners.right.x, corners.right.y);
+                ctx.strokeStyle = '#9333ea'; 
+                ctx.lineWidth = 6;
+                ctx.stroke();
+                ctx.fillStyle = '#9333ea';
+                ctx.font = 'bold 14px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText('BASE', (corners.left.x + corners.right.x)/2, corners.left.y - 10);
+            } else {
+                ctx.beginPath();
+                ctx.arc(0, baseW/2, 10, Math.PI - 0.2, Math.PI + 0.2); 
+                ctx.strokeStyle = '#9333ea';
+                ctx.lineWidth = 6;
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            let pW;
+            if (mode === 'hang') {
+                const cos = Math.cos(angle); const sin = Math.sin(angle);
+                pW = {
+                    x: centerWorld.x + (pivotRel.x * cos - pivotRel.y * sin),
+                    y: centerWorld.y + (pivotRel.x * sin + pivotRel.y * cos)
+                };
+            } else {
+                pW = activePivotWorld;
+            }
+
+            if (pW) {
+                if (mode === 'hang') {
+                    ctx.beginPath(); ctx.moveTo(pW.x, pW.y); ctx.lineTo(pW.x, pW.y - 150); ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2; ctx.stroke();
+                }
+                ctx.beginPath(); ctx.arc(pW.x, pW.y, 6, 0, Math.PI*2); ctx.fillStyle = isDraggingPivot ? '#60a5fa' : '#3b82f6'; ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke();
+            }
+            
+            ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.moveTo(cgWorld.x, cgWorld.y); ctx.lineTo(cgWorld.x, mode === 'ground' ? GROUND_Y + 40 : rect.height); ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)'; ctx.stroke(); ctx.setLineDash([]);
+            ctx.beginPath(); ctx.moveTo(cgWorld.x, cgWorld.y); ctx.lineTo(cgWorld.x, cgWorld.y + 70); ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 3; ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(cgWorld.x - 6, cgWorld.y + 60); ctx.lineTo(cgWorld.x, cgWorld.y + 70); ctx.lineTo(cgWorld.x + 6, cgWorld.y + 60); ctx.fillStyle = '#ef4444'; ctx.fill();
+            ctx.font = 'bold 16px Inter'; ctx.fillStyle = '#ef4444'; ctx.fillText('W', cgWorld.x + 12, cgWorld.y + 65);
+            ctx.beginPath(); ctx.arc(cgWorld.x, cgWorld.y, 8, 0, Math.PI*2); ctx.fillStyle = isDraggingCG ? '#f87171' : '#ef4444'; ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke(); ctx.fillText('CG', cgWorld.x + 15, cgWorld.y - 10);
+        }
+
+        init();
+    </script>
+</body>
+</html>
