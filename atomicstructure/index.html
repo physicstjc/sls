@@ -104,7 +104,7 @@
         <!-- Simulation Display Wrapper -->
         <div class="flex flex-col gap-6">
             
-            <!-- Bohr Model Visualizer (Main Top Row) -->
+            <!-- Bohr Model Visualizer -->
             <section class="w-full bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="w-full flex flex-col md:flex-row justify-between items-start mb-4 gap-4">
                     <div class="flex items-center gap-4">
@@ -190,9 +190,8 @@
                 </div>
             </section>
 
-            <!-- Side-by-Side Windows Row (Bottom Row) -->
+            <!-- Bottom Row -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Controls Section -->
                 <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h3 class="text-lg font-bold mb-4">Adjust Particles</h3>
                     <div class="space-y-5">
@@ -203,7 +202,6 @@
                             </div>
                             <input type="range" id="proton-slider" min="1" max="20" value="8" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-red-500">
                         </div>
-
                         <div>
                             <div class="flex justify-between text-sm font-bold mb-2">
                                 <span class="text-slate-600">Neutrons</span>
@@ -211,7 +209,6 @@
                             </div>
                             <input type="range" id="neutron-slider" min="0" max="25" value="8" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-500">
                         </div>
-
                         <div class="flex gap-3">
                             <button id="ionize-btn" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-95">
                                 Form Ion
@@ -223,10 +220,8 @@
                     </div>
                 </section>
 
-                <!-- Data & Formulas Section -->
                 <section class="bg-slate-800 text-white p-6 rounded-2xl shadow-sm">
                     <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Atomic Data & Formulas</h3>
-                    
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div class="border-b border-slate-700 pb-2">
                             <span class="text-xs text-slate-400 block mb-1">Atomic No. (Z)</span>
@@ -237,7 +232,6 @@
                             <span id="info-nucleon-a" class="font-mono font-bold text-lg">16</span>
                         </div>
                     </div>
-
                     <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700 mb-4">
                         <div class="flex items-center justify-around gap-1 font-mono text-xs">
                             <div class="text-center"><span id="calc-nucleon" class="block font-bold">16</span><span class="text-[0.55rem] text-slate-500">A</span></div>
@@ -247,7 +241,6 @@
                             <div class="text-center"><span id="calc-neutrons" class="block text-slate-300 font-bold">8</span><span class="text-[0.55rem] text-slate-500">N</span></div>
                         </div>
                     </div>
-
                     <div class="space-y-2">
                         <div class="flex justify-between text-sm border-b border-slate-700 pb-1">
                             <span class="text-slate-400">Electronic Config</span>
@@ -266,7 +259,7 @@
     <script>
         const elementsData = [
             { z: 1, s: 'H', n: 'Hydrogen', mass: 1, group: 9, period: 1, f: "Hydrogen is the most abundant element in the universe!" },
-            { z: 2, s: 'He', n: 'Helium', mass: 4, group: 18, period: 1, f: "Helium is the second lightest element and never freezes at normal pressure." },
+            { z: 2, s: 'He', n: 'Helium', mass: 4, group: 18, period: 1, f: "Helium is a noble gas and never freezes at normal pressure." },
             { z: 3, s: 'Li', n: 'Lithium', mass: 7, group: 1, period: 2, f: "Lithium is so light it can float on water!" },
             { z: 4, s: 'Be', n: 'Beryllium', mass: 9, group: 2, period: 2, f: "Beryllium is found in gemstones like emeralds and aquamarines." },
             { z: 5, s: 'B', n: 'Boron', mass: 11, group: 13, period: 2, f: "Boron is used to make heat-resistant glass like Pyrex." },
@@ -274,17 +267,17 @@
             { z: 7, s: 'N', n: 'Nitrogen', mass: 14, group: 15, period: 2, f: "Nitrogen gas makes up about 78% of Earth's atmosphere." },
             { z: 8, s: 'O', n: 'Oxygen', mass: 16, group: 16, period: 2, f: "Oxygen is the most abundant element in the Earth's crust." },
             { z: 9, s: 'F', n: 'Fluorine', mass: 19, group: 17, period: 2, f: "Fluorine is the most reactive of all chemical elements." },
-            { z: 10, s: 'Ne', n: 'Neon', mass: 20, group: 18, period: 2, f: "Neon is famous for the bright reddish-orange glow it emits in signs." },
+            { z: 10, s: 'Ne', n: 'Neon', mass: 20, group: 18, period: 2, f: "Neon is a noble gas, famous for its bright reddish-orange glow in signs." },
             { z: 11, s: 'Na', n: 'Sodium', mass: 23, group: 1, period: 3, f: "Sodium is a soft metal that can be cut with a table knife." },
             { z: 12, s: 'Mg', n: 'Magnesium', mass: 24, group: 2, period: 3, f: "Magnesium burns with a very bright white light, used in flares." },
             { z: 13, s: 'Al', n: 'Aluminium', mass: 27, group: 13, period: 3, f: "Aluminium is the most common metal found in Earth's crust." },
             { z: 14, s: 'Si', n: 'Silicon', mass: 28, group: 14, period: 3, f: "Silicon is used to make computer chips and glass." },
             { z: 15, s: 'P', n: 'Phosphorus', mass: 31, group: 15, period: 3, f: "White phosphorus is so reactive it glows in the dark when exposed to air." },
-            { z: 16, s: 'S', n: 'Sulphur', mass: 32, group: 16, period: 3, f: "Pure sulphur has no smell, but many of its its compounds smell like rotten eggs!" },
+            { z: 16, s: 'S', n: 'Sulphur', mass: 32, group: 16, period: 3, f: "Many sulphur compounds smell like rotten eggs!" },
             { z: 17, s: 'Cl', n: 'Chlorine', mass: 35.5, group: 17, period: 3, f: "Chlorine was the first gas used as a chemical weapon in WWI." },
-            { z: 18, s: 'Ar', n: 'Argon', mass: 40, group: 18, period: 3, f: "Argon is often used in light bulbs to prevent the filament from burning." },
+            { z: 18, s: 'Ar', n: 'Argon', mass: 40, group: 18, period: 3, f: "Argon is a noble gas often used in light bulbs to protect the filament." },
             { z: 19, s: 'K', n: 'Potassium', mass: 39, group: 1, period: 4, f: "Potassium is essential for nerves and muscles to work properly." },
-            { z: 20, s: 'Ca', n: 'Calcium', mass: 40, group: 2, period: 4, f: "Calcium is the most abundant mineral in the human body, mostly in bones." }
+            { z: 20, s: 'Ca', n: 'Calcium', mass: 40, group: 2, period: 4, f: "Calcium is the mineral mostly found in human bones." }
         ];
 
         let state = {
@@ -333,6 +326,7 @@
         function updateUI() {
             const el = elementsData.find(e => e.z === state.protons);
             const standardNeutrons = Math.round(el.mass) - el.z;
+            const nobleGases = {2: 'Helium', 10: 'Neon', 18: 'Argon'};
             
             document.getElementById('proton-val').innerText = state.protons;
             document.getElementById('neutron-val').innerText = state.neutrons;
@@ -386,15 +380,15 @@
                 badge.innerText = isCation ? "Cation (+)" : "Anion (-)";
                 badges.appendChild(badge);
                 
-                const nobleGases = {2: {name: 'Helium', symbol: 'He'}, 10: {name: 'Neon', symbol: 'Ne'}, 18: {name: 'Argon', symbol: 'Ar'}, 0: {name: 'None', symbol: ''}};
-                const target = nobleGases[state.targetElectrons] || {name: 'Unknown', symbol: '??'};
+                const targetName = nobleGases[state.targetElectrons] || 'Unknown';
+                const targetSymbol = elementsData.find(e => e.z === state.targetElectrons)?.s || '??';
                 
                 explainBox.classList.remove('hidden');
                 explainBox.innerHTML = `
                     <div>
                         <p class="font-bold mb-1">Stable Electron Configuration Achievement:</p>
                         <p class="leading-relaxed">
-                            To achieve the stable electronic structure of <strong>${target.name} (${target.symbol})</strong>, 
+                            To achieve the stable electronic structure of the noble gas <strong>${targetName} (${targetSymbol})</strong>, 
                             this atom has <strong>${isCation ? 'lost' : 'gained'} ${absDiff} electron(s)</strong>. 
                             It is now a <strong>${isCation ? 'positively charged cation' : 'negatively charged anion'}</strong> 
                             because it has <strong>${isCation ? 'fewer electrons than protons' : 'more electrons than protons'}</strong>.
@@ -404,7 +398,8 @@
                 document.getElementById('sub-title').innerText = isCation ? "Positive Ion (Cation)" : "Negative Ion (Anion)";
             } else {
                 explainBox.classList.add('hidden');
-                document.getElementById('sub-title').innerText = "Neutral Atom";
+                const isNoble = !!nobleGases[state.protons];
+                document.getElementById('sub-title').innerText = isNoble ? `Neutral Atom (Stable Noble Gas)` : "Neutral Atom";
             }
 
             let e = Math.round(state.targetElectrons);
@@ -436,7 +431,6 @@
         function draw() {
             state.animFrame++;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
             const centerX = canvas.width / 4;
             const centerY = canvas.height / 4;
             
@@ -468,7 +462,6 @@
                 const dist = seededRandom() * (nucleusRadius - 6);
                 const px = centerX + Math.cos(angle) * dist;
                 const py = centerY + Math.sin(angle) * dist;
-                
                 ctx.beginPath();
                 ctx.arc(px, py, 4, 0, Math.PI * 2);
                 ctx.fillStyle = i < state.protons ? '#ef4444' : '#94a3b8';
@@ -501,14 +494,12 @@
                             const opacity = currentDisplayE >= 1 ? 1 : currentDisplayE;
                             ctx.beginPath();
                             ctx.arc(ex, ey, 5.5, 0, Math.PI * 2);
-                            
                             if (nativeELeft > 0) {
                                 ctx.fillStyle = `rgba(59, 130, 246, ${opacity})`;
                                 nativeELeft--;
                             } else {
                                 ctx.fillStyle = `rgba(16, 185, 129, ${opacity})`;
                             }
-                            
                             ctx.fill();
                             ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
                             ctx.lineWidth = 1.5;
