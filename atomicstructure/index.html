@@ -185,7 +185,7 @@
                     </div>
                 </div>
 
-                <div id="ionization-explanation" class="mt-4 p-3 bg-indigo-50 rounded-lg text-xs md:text-sm text-indigo-900 border border-indigo-100 hidden">
+                <div id="ionization-explanation" class="mt-4 p-4 bg-indigo-50 rounded-xl text-xs md:text-sm text-indigo-900 border border-indigo-200 hidden">
                     <!-- Ionization logic text here -->
                 </div>
             </section>
@@ -280,7 +280,7 @@
             { z: 13, s: 'Al', n: 'Aluminium', mass: 27, group: 13, period: 3, f: "Aluminium is the most common metal found in Earth's crust." },
             { z: 14, s: 'Si', n: 'Silicon', mass: 28, group: 14, period: 3, f: "Silicon is used to make computer chips and glass." },
             { z: 15, s: 'P', n: 'Phosphorus', mass: 31, group: 15, period: 3, f: "White phosphorus is so reactive it glows in the dark when exposed to air." },
-            { z: 16, s: 'S', n: 'Sulphur', mass: 32, group: 16, period: 3, f: "Pure sulphur has no smell, but many of its compounds smell like rotten eggs!" },
+            { z: 16, s: 'S', n: 'Sulphur', mass: 32, group: 16, period: 3, f: "Pure sulphur has no smell, but many of its its compounds smell like rotten eggs!" },
             { z: 17, s: 'Cl', n: 'Chlorine', mass: 35.5, group: 17, period: 3, f: "Chlorine was the first gas used as a chemical weapon in WWI." },
             { z: 18, s: 'Ar', n: 'Argon', mass: 40, group: 18, period: 3, f: "Argon is often used in light bulbs to prevent the filament from burning." },
             { z: 19, s: 'K', n: 'Potassium', mass: 39, group: 1, period: 4, f: "Potassium is essential for nerves and muscles to work properly." },
@@ -386,13 +386,20 @@
                 badge.innerText = isCation ? "Cation (+)" : "Anion (-)";
                 badges.appendChild(badge);
                 
-                const nobleGases = {2: 'He', 10: 'Ne', 18: 'Ar'};
-                const configName = nobleGases[state.targetElectrons] || 'None';
+                const nobleGases = {2: {name: 'Helium', symbol: 'He'}, 10: {name: 'Neon', symbol: 'Ne'}, 18: {name: 'Argon', symbol: 'Ar'}, 0: {name: 'None', symbol: ''}};
+                const target = nobleGases[state.targetElectrons] || {name: 'Unknown', symbol: '??'};
                 
                 explainBox.classList.remove('hidden');
                 explainBox.innerHTML = `
-                    <strong>Ionization Insight:</strong> Lost/Gained <strong>${absDiff} e⁻</strong> 
-                    to mimic <strong>${configName}</strong>. 
+                    <div>
+                        <p class="font-bold mb-1">Stable Electron Configuration Achievement:</p>
+                        <p class="leading-relaxed">
+                            To achieve the stable electronic structure of <strong>${target.name} (${target.symbol})</strong>, 
+                            this atom has <strong>${isCation ? 'lost' : 'gained'} ${absDiff} electron(s)</strong>. 
+                            It is now a <strong>${isCation ? 'positively charged cation' : 'negatively charged anion'}</strong> 
+                            because it has <strong>${isCation ? 'fewer electrons than protons' : 'more electrons than protons'}</strong>.
+                        </p>
+                    </div>
                 `;
                 document.getElementById('sub-title').innerText = isCation ? "Positive Ion (Cation)" : "Negative Ion (Anion)";
             } else {
