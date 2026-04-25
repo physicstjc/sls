@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2D Topple Simulation</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="container">
+    <canvas id="simCanvas" width="800" height="600"></canvas>
+    <div id="sidebar">
+      <h1>Topple Test</h1>
+      <div id="instructions">
+        <p><strong>Drag corners</strong> to reshape the object</p>
+        <p><strong>Drag the object</strong> to push and test stability</p>
+        <p>The object rotates about a floor corner when pushed</p>
+      </div>
+      <div id="cogDisplay">CoG: (0.0, 0.0)</div>
+      <div id="statusDisplay">Ready</div>
+      <label id="forcesLabel">
+        <input type="checkbox" id="showForces"> Show Forces
+      </label>
+      <button id="resetBtn">🔄 Reset Object</button>
+    </div>
+  </div>
+  <script src="sim.js"></script>
+</body>
+</html>
