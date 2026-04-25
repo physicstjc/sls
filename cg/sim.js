@@ -135,6 +135,7 @@ let isAnimating = false;
 let animationMode = null; // 'topple' or 'settle'
 let lastMouse = { x: 0, y: 0 };
 let baseStatusText = 'Ready';
+let activePointerId = null;
 
 // Animation variables
 let angle = 0;
@@ -619,12 +620,29 @@ function updateStatus(text) {
 
 // ============ EVENT HANDLERS ============
 
-canvas.addEventListener('mousedown', (e) => {
-  if (isAnimating) return;
-
+function getCanvasPointerPosition(event) {
   const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  return {
+    x: (event.clientX - rect.left) * scaleX,
+    y: (event.clientY - rect.top) * scaleY,
+  };
+}
+
+function handlePointerDown(e) {
+  if (isAnimating) return;
+  if (activePointerId !== null) return;
+
+  if (e.pointerType === 'touch') {
+    e.preventDefault();
+  }
+
+  activePointerId = e.pointerId;
+  canvas.setPointerCapture(e.pointerId);
+
+  const { x: mx, y: my } = getCanvasPointerPosition(e);
   lastMouse = { x: mx, y: my };
 
   // Check if clicking on a corner
@@ -661,14 +679,17 @@ canvas.addEventListener('mousedown', (e) => {
     activePivot = null; // Will be determined during mousemove based on drag direction
     updateStatus('Dragging...');
   }
-});
+}
 
-canvas.addEventListener('mousemove', (e) => {
+function handlePointerMove(e) {
   if (isAnimating) return;
+  if (e.pointerId !== activePointerId) return;
 
-  const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
+  if (e.pointerType === 'touch') {
+    e.preventDefault();
+  }
+
+  const { x: mx, y: my } = getCanvasPointerPosition(e);
 
   // Handle corner dragging
   if (draggingCorner !== null) {
@@ -754,10 +775,16 @@ canvas.addEventListener('mousemove', (e) => {
   }
 
   lastMouse = { x: mx, y: my };
-});
+}
 
-canvas.addEventListener('mouseup', (e) => {
+function handlePointerUpOrCancel(e) {
   if (isAnimating) return;
+  if (e.pointerId !== activePointerId) return;
+
+  if (canvas.hasPointerCapture(e.pointerId)) {
+    canvas.releasePointerCapture(e.pointerId);
+  }
+  activePointerId = null;
 
   if (draggingCorner !== null) {
     draggingCorner = null;
@@ -814,7 +841,12 @@ canvas.addEventListener('mouseup', (e) => {
       updateStatus('Ready');
     }
   }
-});
+}
+
+canvas.addEventListener('pointerdown', handlePointerDown);
+canvas.addEventListener('pointermove', handlePointerMove);
+canvas.addEventListener('pointerup', handlePointerUpOrCancel);
+canvas.addEventListener('pointercancel', handlePointerUpOrCancel);
 
 // ============ ANIMATION ============
 

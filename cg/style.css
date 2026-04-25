@@ -28,13 +28,13 @@ body {
   justify-content: center;
   align-items: center;
   padding: 24px 16px;
-  max-width: 960px;
+  max-width: 1120px;
   margin: 0 auto;
 }
 
 #simFrame {
   position: relative;
-  width: min(100%, 840px);
+  width: min(100%, 1120px);
   --control-band-height: 26.0869565%;
 }
 
@@ -76,6 +76,7 @@ body {
   border-radius: 0;
   box-shadow: none;
   cursor: grab;
+  touch-action: none;
 }
 
 #simCanvas:active {
@@ -155,15 +156,29 @@ body {
 #forcesLabel {
   display: inline-flex;
   align-items: center;
+  justify-self: start;
   margin: 0;
+  padding: 6px 10px;
   font-size: 0.78em;
+  font-weight: 700;
   white-space: nowrap;
+  background: #fff8cc;
+  border: var(--border);
+  border-radius: 999px;
+  box-shadow: 2px 2px 0 #0a0a0a;
+  cursor: pointer;
 }
 
 #showForces {
-  transform: scale(1.02);
-  margin-right: 6px;
+  transform: scale(1.25);
+  margin-right: 8px;
   vertical-align: middle;
+  accent-color: var(--brand);
+}
+
+#forcesLabel:has(#showForces:checked) {
+  background: #d7f5f2;
+  box-shadow: 3px 3px 0 #0a0a0a;
 }
 
 #resetBtn {
@@ -218,5 +233,46 @@ body {
 
   #instructions {
     display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  #container {
+    padding: 8px;
+    max-width: 100%;
+  }
+
+  #simFrame {
+    width: 100%;
+  }
+
+  #sidebar {
+    position: static;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    height: auto;
+    min-height: 0;
+    border-top: var(--border);
+    border-radius: 0;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    row-gap: 8px;
+    margin-top: 0;
+  }
+
+  #instructions {
+    display: none;
+  }
+
+  #cogDisplay,
+  #forcesLabel,
+  #resetBtn {
+    grid-row: auto;
+  }
+
+  #statusDisplay {
+    grid-column: 1 / -1;
+    grid-row: 3;
   }
 }
