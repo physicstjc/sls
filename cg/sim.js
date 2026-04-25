@@ -95,8 +95,8 @@ const MARGIN = 50;
 const ORIGINAL_CORNERS = [
   { x: 250, y: FLOOR_Y },      // bottom left
   { x: 450, y: FLOOR_Y },      // bottom right
-  { x: 450, y: FLOOR_Y - 300 }, // top right
-  { x: 250, y: FLOOR_Y - 300 }, // top left
+  { x: 450, y: FLOOR_Y - 240 }, // top right
+  { x: 250, y: FLOOR_Y - 240 }, // top left
 ];
 let corners = ORIGINAL_CORNERS.map(pt => ({...pt}));
 // Reset button logic
@@ -517,7 +517,7 @@ function drawDisequilibriumWarning(polygon, cog, pivotIdx = null) {
 
   const warningText = 'WARNING: NOT IN EQUILIBRIUM';
   const boxX = 22;
-  const boxY = 22;
+  const boxY = 56;
   const horizontalPadding = 16;
   const maxBoxWidth = canvas.width - 44;
 
