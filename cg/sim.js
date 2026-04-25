@@ -87,7 +87,8 @@ const cogDisplay = document.getElementById('cogDisplay');
 const statusDisplay = document.getElementById('statusDisplay');
 
 // Canvas parameters
-const FLOOR_Y = 480;
+const CONTROL_BAND_HEIGHT = 120;
+const FLOOR_Y = canvas.height - CONTROL_BAND_HEIGHT;
 const MARGIN = 50;
 
 // Initial rectangle corners
