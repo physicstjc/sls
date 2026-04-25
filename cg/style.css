@@ -34,7 +34,8 @@ body {
 
 #simFrame {
   position: relative;
-  width: min(100%, 1120px);
+  width: min(100%, 1120px, calc(480px * 840 / 460));
+  max-height: 480px;
   --control-band-height: 26.0869565%;
 }
 
@@ -88,8 +89,8 @@ body {
   left: 4px;
   right: 4px;
   bottom: 4px;
-  height: max(calc(var(--control-band-height) - 4px), 108px);
-  min-height: 108px;
+  height: calc(var(--control-band-height) - 4px);
+  min-height: 0;
   background: rgba(255, 254, 248, 0.95);
   border-top: var(--border);
   border-radius: 0 0 4px 4px;
@@ -100,6 +101,8 @@ body {
   gap: 8px;
   align-items: center;
   backdrop-filter: blur(1px);
+  overflow-x: hidden;
+  overflow-y: auto;
   z-index: 2;
 }
 
@@ -216,8 +219,8 @@ body {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto auto;
     row-gap: 6px;
-    height: auto;
-    min-height: 108px;
+    height: calc(var(--control-band-height) - 4px);
+    min-height: 0;
   }
 
   #cogDisplay,
@@ -274,5 +277,12 @@ body {
   #statusDisplay {
     grid-column: 1 / -1;
     grid-row: 3;
+  }
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  #simFrame {
+    max-height: none;
+    width: 100%;
   }
 }
