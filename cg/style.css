@@ -46,16 +46,27 @@ body {
   left: 4px;
   right: 4px;
   bottom: 4px;
-  height: calc(var(--control-band-height) - 4px);
+  height: max(calc(var(--control-band-height) - 4px), 108px);
+  min-height: 108px;
   background: rgba(255, 255, 255, 0.93);
   border-top: 4px solid #222;
   border-radius: 0 0 4px 4px;
   padding: 8px 10px;
   display: grid;
   grid-template-columns: 120px 1.2fr 1fr 1fr auto auto;
+  grid-template-rows: auto auto;
   gap: 8px;
   align-items: center;
   backdrop-filter: blur(1px);
+  z-index: 2;
+}
+
+#sidebar h1,
+#instructions,
+#cogDisplay,
+#forcesLabel,
+#resetBtn {
+  grid-row: 1;
 }
 
 #sidebar h1 {
@@ -94,6 +105,9 @@ body {
 }
 
 #statusDisplay {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
   background: #e0e0e0;
   border: 2px solid #222;
   border-radius: 4px;
@@ -155,7 +169,20 @@ body {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto auto;
     row-gap: 6px;
-    height: calc(var(--control-band-height) - 6px);
+    height: auto;
+    min-height: 108px;
+  }
+
+  #sidebar h1,
+  #cogDisplay,
+  #forcesLabel,
+  #resetBtn {
+    grid-row: auto;
+  }
+
+  #statusDisplay {
+    grid-column: 1 / -1;
+    grid-row: 3;
   }
 
   #instructions {
