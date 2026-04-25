@@ -632,6 +632,8 @@ function getCanvasPointerPosition(event) {
 }
 
 function handlePointerDown(e) {
+  if (!e.isPrimary) return;
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
   if (isAnimating) return;
   if (activePointerId !== null) return;
 
@@ -778,13 +780,20 @@ function handlePointerMove(e) {
 }
 
 function handlePointerUpOrCancel(e) {
-  if (isAnimating) return;
   if (e.pointerId !== activePointerId) return;
 
   if (canvas.hasPointerCapture(e.pointerId)) {
     canvas.releasePointerCapture(e.pointerId);
   }
   activePointerId = null;
+
+  // Always clear pointer lock first; animation may have started mid-drag.
+  if (isAnimating) {
+    draggingCorner = null;
+    isDraggingObject = false;
+    dragStart = null;
+    return;
+  }
 
   if (draggingCorner !== null) {
     draggingCorner = null;
@@ -843,10 +852,18 @@ function handlePointerUpOrCancel(e) {
   }
 }
 
+function handleLostPointerCapture() {
+  activePointerId = null;
+  draggingCorner = null;
+  isDraggingObject = false;
+  dragStart = null;
+}
+
 canvas.addEventListener('pointerdown', handlePointerDown);
 canvas.addEventListener('pointermove', handlePointerMove);
 canvas.addEventListener('pointerup', handlePointerUpOrCancel);
 canvas.addEventListener('pointercancel', handlePointerUpOrCancel);
+canvas.addEventListener('lostpointercapture', handleLostPointerCapture);
 
 // ============ ANIMATION ============
 
