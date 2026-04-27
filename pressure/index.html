@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluid Pressure & Container Shape Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <style>
+        /* Neobrutalist theme */
+        :root {
+            --ink: #111111;
+            --paper: #fffdf7;
+            --bg: #ffe06b;
+            --panel: #ffffff;
+            --teal: #39d2c0;
+            --orange: #ff8f3f;
+            --pink: #ff5ca8;
+            --blue: #4a8dff;
+        }
+
+        body {
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.18) 25%, transparent 25%) -14px 0/28px 28px,
+                linear-gradient(225deg, rgba(255, 255, 255, 0.18) 25%, transparent 25%) -14px 0/28px 28px,
+                linear-gradient(315deg, rgba(255, 255, 255, 0.18) 25%, transparent 25%) 0 0/28px 28px,
+                linear-gradient(45deg, rgba(255, 255, 255, 0.18) 25%, transparent 25%) 0 0/28px 28px,
+                var(--bg);
+            font-family: "Trebuchet MS", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--ink);
+            line-height: 1.6;
+            margin: 0;
+            padding: 14px;
+        }
+
+        .main-container {
+            max-width: 860px;
+            margin: 12px auto;
+            background: var(--paper);
+            padding: 25px;
+            border-radius: 0;
+            border: 4px solid var(--ink);
+            box-shadow: 10px 10px 0 var(--ink);
+        }
+
+        h1 {
+            color: var(--ink);
+            font-weight: 700;
+            border-bottom: 4px solid var(--ink);
+            display: inline-block;
+            margin-bottom: 1rem;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            background: var(--orange);
+            padding: 3px 10px;
+        }
+
+        .canvas-wrap {
+            display: flex;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        canvas {
+            background-color: #f6fbff;
+            border: 4px solid var(--ink);
+            border-radius: 0;
+            cursor: crosshair;
+            width: 100%;
+            max-width: 800px;
+            min-height: 500px;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 6px 6px 0 var(--ink);
+        }
+
+        .control-group {
+            background: var(--panel);
+            border: 3px solid var(--ink);
+            border-radius: 0;
+            padding: 15px;
+            margin-top: 15px;
+            box-shadow: 4px 4px 0 var(--ink);
+        }
+
+        .control-label {
+            font-weight: 600;
+            color: var(--ink);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 10px;
+            cursor: pointer;
+            background: var(--teal);
+            border: 2px solid var(--ink);
+            border-radius: 0;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            height: 24px;
+            width: 24px;
+            border-radius: 0;
+            background: var(--pink);
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -9px;
+            border: 2px solid var(--ink);
+            box-shadow: 2px 2px 0 var(--ink);
+        }
+
+        .btn-reset {
+            background-color: var(--blue);
+            color: var(--ink);
+            padding: 8px 16px;
+            border-radius: 0;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.85rem;
+            border: 3px solid var(--ink);
+            box-shadow: 4px 4px 0 var(--ink);
+        }
+
+        .btn-reset:hover {
+            background-color: var(--orange);
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 var(--ink);
+        }
+
+        .info-box {
+            background-color: #fff4db;
+            border: 3px solid var(--ink);
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: var(--ink);
+            box-shadow: 4px 4px 0 var(--ink);
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .checkbox-container input {
+            accent-color: var(--orange);
+        }
+
+        @media (max-width: 860px) {
+            .main-container {
+                padding: 16px;
+            }
+
+            canvas {
+                min-height: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <header class="mb-6 text-center">
+            <h1>Hydrostatic Pressure</h1>
+            <p class="text-slate-600 mt-1 italic">Investigating $P = P_{atm} + \rho gh$</p>
+        </header>
+
+        <div class="canvas-wrap">
+            <canvas id="simCanvas"></canvas>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div class="control-group">
+                <span class="control-label">Visualization</span>
+                <div class="space-y-2">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="showMolecules" checked>
+                        <span>Show High-Density Particles (2500)</span>
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="showPressureGauges" checked>
+                        <span>Pressure Reference Gauges</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="control-label">Water Level Settings</span>
+                <div class="space-y-4">
+                    <input type="range" id="waterLevelSlider" min="50" max="400" value="300">
+                    <button id="resetBtn" class="btn-reset w-full">Reset Simulation</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box" id="infoBox">
+            <strong>Fluid Dynamics:</strong> The molecules now redistribute faster when the container is reshaped. Red arrows indicate the <strong>inward normal force</strong> from the walls, occurring more frequently at depth where molecular bombardment (pressure) is higher.
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const showMoleculesCheck = document.getElementById('showMolecules');
+        const showPressureGaugesCheck = document.getElementById('showPressureGauges');
+        const waterLevelSlider = document.getElementById('waterLevelSlider');
+        const resetBtn = document.getElementById('resetBtn');
+
+        const CONTAINER_BOTTOM = 450;
+        const P_ATM = 101.3; 
+
+        function resize() {
+            const containerWidth = canvas.parentElement.clientWidth - 50;
+            canvas.width = Math.min(containerWidth, 800);
+            canvas.height = 500;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        let waterHeight = 300; 
+        let molecules = [];
+        let collisionEffects = [];
+        const numMolecules = 2500; 
+        let draggingElement = null;
+
+        let nodes = [
+            { x: 200, y: 100, id: 'tl' }, 
+            { x: 600, y: 100, id: 'tr' }, 
+            { x: 550, y: CONTAINER_BOTTOM, id: 'br' }, 
+            { x: 250, y: CONTAINER_BOTTOM, id: 'bl' }  
+        ];
+
+        let probe = {
+            x: 400,
+            y: 350,
+            radius: 12
+        };
+
+        const defaultNodes = JSON.parse(JSON.stringify(nodes));
+        const defaultProbe = JSON.parse(JSON.stringify(probe));
+
+        function addForceVector(x, y, nx, ny) {
+            // High frequency display
+            if (Math.random() > 0.12) return; 
+            collisionEffects.push({ x, y, nx, ny, life: 1.0 });
+        }
+
+        function getXAtY(y, p1, p2) {
+            return p1.x + (y - p1.y) * (p2.x - p1.x) / (p2.y - p1.y);
+        }
+
+        function getInwardNormal(pTop, pBottom, isLeftWall) {
+            const dx = pBottom.x - pTop.x;
+            const dy = pBottom.y - pTop.y;
+            const mag = Math.sqrt(dx*dx + dy*dy);
+            if (isLeftWall) {
+                return { nx: dy / mag, ny: -dx / mag };
+            } else {
+                return { nx: -dy / mag, ny: dx / mag };
+            }
+        }
+
+        class Molecule {
+            constructor(index) {
+                this.index = index;
+                this.radius = 2.5;
+                this.init();
+            }
+
+            init() {
+                const surfaceY = CONTAINER_BOTTOM - waterHeight;
+                this.y = CONTAINER_BOTTOM - (this.index / numMolecules) * waterHeight;
+                const lx = getXAtY(this.y, nodes[0], nodes[3]);
+                const rx = getXAtY(this.y, nodes[1], nodes[2]);
+                this.x = lx + Math.random() * (rx - lx);
+                this.vx = (Math.random() - 0.5) * 3;
+                this.vy = 0;
+            }
+
+            update() {
+                const surfaceY = CONTAINER_BOTTOM - waterHeight;
+                // Target Y based on index for layered simulation
+                const targetY = CONTAINER_BOTTOM - (this.index / numMolecules) * waterHeight;
+                
+                // Diffusion and restoration
+                // vx is increased to speed up horizontal spreading
+                this.vx += (Math.random() - 0.5) * 0.8;
+                // vy restoration is snappy to adapt to shape changes quickly
+                this.vy += (targetY - this.y) * 0.2 + (Math.random() - 0.5) * 0.3;
+
+                this.vx *= 0.88; // Lower damping = faster spread
+                this.vy *= 0.88;
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                const lx = getXAtY(this.y, nodes[0], nodes[3]);
+                const rx = getXAtY(this.y, nodes[1], nodes[2]);
+
+                // Left Wall Collision 
+                if (this.x < lx + this.radius + 1.5) { 
+                    if (this.x < lx + this.radius) {
+                        this.x = lx + this.radius;
+                        this.vx = Math.abs(this.vx) * 0.7;
+                    }
+                    const norm = getInwardNormal(nodes[0], nodes[3], true);
+                    addForceVector(lx, this.y, norm.nx, norm.ny);
+                }
+                
+                // Right Wall Collision
+                if (this.x > rx - this.radius - 1.5) {
+                    if (this.x > rx - this.radius) {
+                        this.x = rx - this.radius;
+                        this.vx = -Math.abs(this.vx) * 0.7;
+                    }
+                    const norm = getInwardNormal(nodes[1], nodes[2], false);
+                    addForceVector(rx, this.y, norm.nx, norm.ny);
+                }
+
+                // Top/Bottom
+                if (this.y < surfaceY + this.radius) {
+                    this.y = surfaceY + this.radius;
+                    this.vy *= -0.5;
+                }
+                if (this.y > CONTAINER_BOTTOM - this.radius - 1.5) {
+                    if (this.y > CONTAINER_BOTTOM - this.radius) {
+                        this.y = CONTAINER_BOTTOM - this.radius;
+                        this.vy = -Math.abs(this.vy) * 0.7;
+                    }
+                    addForceVector(this.x, CONTAINER_BOTTOM, 0, -1); 
+                }
+
+                // Probe Collision
+                const dx = this.x - probe.x;
+                const dy = this.y - probe.y;
+                const distSq = dx*dx + dy*dy;
+                const minDist = probe.radius + this.radius;
+                if (distSq < (minDist + 1) * (minDist + 1)) {
+                    const dist = Math.sqrt(distSq);
+                    const nx = dx / dist;
+                    const ny = dy / dist;
+                    if (dist < minDist) {
+                        this.x = probe.x + nx * minDist;
+                        this.y = probe.y + ny * minDist;
+                        const dot = this.vx * nx + this.vy * ny;
+                        this.vx -= 1.6 * dot * nx;
+                        this.vy -= 1.6 * dot * ny;
+                    }
+                    addForceVector(probe.x + nx * probe.radius, probe.y + ny * probe.radius, nx, ny);
+                }
+            }
+
+            draw() {
+                ctx.moveTo(this.x + this.radius, this.y);
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            }
+        }
+
+        function spawnMolecules() {
+            molecules = [];
+            for (let i = 0; i < numMolecules; i++) {
+                molecules.push(new Molecule(i));
+            }
+        }
+        spawnMolecules();
+
+        canvas.addEventListener('mousedown', startDrag);
+        canvas.addEventListener('mousemove', drag);
+        window.addEventListener('mouseup', endDrag);
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrag(e.touches[0]); });
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); drag(e.touches[0]); });
+        window.addEventListener('touchend', endDrag);
+
+        function startDrag(e) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            if (Math.sqrt((mouseX - probe.x)**2 + (mouseY - probe.y)**2) < probe.radius + 15) {
+                draggingElement = { type: 'probe' };
+                return;
+            }
+            nodes.forEach(node => {
+                if (Math.sqrt((mouseX - node.x)**2 + (mouseY - node.y)**2) < 25) {
+                    draggingElement = { type: 'node', target: node };
+                }
+            });
+        }
+
+        function drag(e) {
+            if (!draggingElement) return;
+            const rect = canvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+            if (draggingElement.type === 'node') {
+                const node = draggingElement.target;
+                node.x = Math.max(50, Math.min(canvas.width - 50, mx));
+                if (node.id.startsWith('t')) node.y = 100;
+                else node.y = CONTAINER_BOTTOM;
+            } else if (draggingElement.type === 'probe') {
+                probe.x = Math.max(50, Math.min(canvas.width - 50, mx));
+                probe.y = Math.max(50, Math.min(CONTAINER_BOTTOM, my));
+            }
+        }
+
+        function endDrag() { draggingElement = null; }
+
+        resetBtn.onclick = () => {
+            nodes = JSON.parse(JSON.stringify(defaultNodes));
+            probe = JSON.parse(JSON.stringify(defaultProbe));
+            waterLevelSlider.value = 300;
+            spawnMolecules();
+        };
+
+        function drawContainer() {
+            const surfaceY = CONTAINER_BOTTOM - waterHeight;
+            const ltx = getXAtY(surfaceY, nodes[0], nodes[3]);
+            const rtx = getXAtY(surfaceY, nodes[1], nodes[2]);
+            
+            ctx.beginPath();
+            ctx.moveTo(ltx, surfaceY);
+            ctx.lineTo(rtx, surfaceY);
+            ctx.lineTo(nodes[2].x, nodes[2].y);
+            ctx.lineTo(nodes[3].x, nodes[3].y);
+            ctx.fillStyle = '#f0f9ff';
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(nodes[0].x, nodes[0].y);
+            ctx.lineTo(nodes[3].x, nodes[3].y);
+            ctx.lineTo(nodes[2].x, nodes[2].y);
+            ctx.lineTo(nodes[1].x, nodes[1].y);
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(ltx, surfaceY);
+            ctx.lineTo(rtx, surfaceY);
+            ctx.strokeStyle = '#3498db';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function calculatePressureAtY(y) {
+            const surfaceY = CONTAINER_BOTTOM - waterHeight;
+            const h = Math.max(0, y - surfaceY) / 10;
+            return (P_ATM + h).toFixed(1);
+        }
+
+        function drawForceVectors() {
+            for (let i = collisionEffects.length - 1; i >= 0; i--) {
+                const f = collisionEffects[i];
+                ctx.strokeStyle = `rgba(231, 76, 60, ${f.life})`;
+                ctx.lineWidth = 3; 
+                
+                const arrowLength = 22; 
+                const headSize = 7;
+                
+                ctx.beginPath();
+                ctx.moveTo(f.x, f.y);
+                const ex = f.x + f.nx * arrowLength;
+                const ey = f.y + f.ny * arrowLength;
+                ctx.lineTo(ex, ey);
+                
+                const angle = Math.atan2(f.ny, f.nx);
+                ctx.lineTo(ex - headSize * Math.cos(angle - Math.PI / 6), ey - headSize * Math.sin(angle - Math.PI / 6));
+                ctx.moveTo(ex, ey);
+                ctx.lineTo(ex - headSize * Math.cos(angle + Math.PI / 6), ey - headSize * Math.sin(angle + Math.PI / 6));
+                ctx.stroke();
+                
+                f.life -= 0.05; 
+                if (f.life <= 0) collisionEffects.splice(i, 1);
+            }
+        }
+
+        function drawGauges() {
+            if (!showPressureGaugesCheck.checked) return;
+            [250, 350, 440].forEach(cy => {
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(50, cy); ctx.lineTo(canvas.width - 50, cy);
+                ctx.strokeStyle = '#bdc3c7';
+                ctx.stroke();
+                ctx.setLineDash([]);
+                const press = calculatePressureAtY(cy);
+                ctx.fillStyle = '#7f8c8d';
+                ctx.font = '11px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText(`${press} kPa`, 60, cy - 6);
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            waterHeight = parseInt(waterLevelSlider.value);
+
+            drawContainer();
+
+            if (showMoleculesCheck.checked) {
+                ctx.beginPath();
+                ctx.fillStyle = 'rgba(52, 152, 219, 0.45)';
+                molecules.forEach(m => {
+                    m.update();
+                    m.draw();
+                });
+                ctx.fill();
+                drawForceVectors(); 
+            }
+
+            drawGauges();
+            
+            // Probe
+            const surfaceY = CONTAINER_BOTTOM - waterHeight;
+            const press = calculatePressureAtY(probe.y);
+            ctx.beginPath();
+            ctx.arc(probe.x, probe.y, probe.radius, 0, Math.PI * 2);
+            ctx.fillStyle = probe.y < surfaceY ? '#f1c40f' : '#2ecc71';
+            ctx.fill();
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = 'bold 13px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${press} kPa`, probe.x, probe.y - 22);
+            
+            // Handles
+            nodes.forEach(node => {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 8, 0, Math.PI * 2);
+                ctx.fillStyle = '#f39c12';
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.onload = function() {
+            if (typeof renderMathInElement === 'function') {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ]
+                });
+            }
+            animate();
+        };
+    </script>
+</body>
+</html>
