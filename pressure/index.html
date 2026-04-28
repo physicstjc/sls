@@ -22,6 +22,8 @@
             --orange: #ff8f3f;
             --pink: #ff5ca8;
             --blue: #4a8dff;
+            --accent: #ffb347;
+            --border: 3px solid var(--ink);
         }
 
         body {
@@ -39,31 +41,52 @@
         }
 
         .main-container {
-            max-width: 860px;
+            max-width: 960px;
             margin: 12px auto;
             background: var(--paper);
-            padding: 25px;
+            padding: 16px;
             border-radius: 0;
             border: 4px solid var(--ink);
             box-shadow: 10px 10px 0 var(--ink);
+            position: relative;
+            padding-top: 56px;
         }
 
-        h1 {
+        .sim-layout {
+            display: grid;
+            grid-template-columns: 240px minmax(0, 1fr);
+            gap: 14px;
+            align-items: center;
+            max-height: 480px;
+        }
+
+        #topTitleBar {
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            right: 1px;
+            background: var(--accent);
+            border-bottom: var(--border);
+            border-radius: 0;
+            padding: 6px 10px;
+            z-index: 3;
+        }
+
+        #topTitleBar h1 {
+            margin: 0;
             color: var(--ink);
+            font-size: clamp(0.95rem, 1.5vw, 1.2rem);
+            line-height: 1.1;
             font-weight: 700;
-            border-bottom: 4px solid var(--ink);
-            display: inline-block;
-            margin-bottom: 1rem;
-            letter-spacing: 0.6px;
-            text-transform: uppercase;
-            background: var(--orange);
-            padding: 3px 10px;
         }
 
         .canvas-wrap {
             display: flex;
             justify-content: center;
+            align-items: center;
             margin: 0 auto;
+            min-height: 480px;
+            width: 100%;
         }
 
         canvas {
@@ -72,11 +95,12 @@
             border-radius: 0;
             cursor: crosshair;
             width: 100%;
-            max-width: 800px;
-            min-height: 500px;
+            max-width: 100%;
+            min-height: 480px;
             display: block;
             margin: 0 auto;
             box-shadow: 6px 6px 0 var(--ink);
+            touch-action: none;
         }
 
         .control-group {
@@ -150,10 +174,11 @@
             background-color: #fff4db;
             border: 3px solid var(--ink);
             padding: 15px;
-            margin-top: 20px;
             font-size: 0.9rem;
             color: var(--ink);
             box-shadow: 4px 4px 0 var(--ink);
+            height: 100%;
+            overflow: auto;
         }
 
         .checkbox-container {
@@ -168,7 +193,16 @@
             accent-color: var(--orange);
         }
 
-        @media (max-width: 860px) {
+        .legend-block {
+            margin-top: 14px;
+        }
+
+        @media (max-width: 980px) {
+            .sim-layout {
+                grid-template-columns: 1fr;
+                max-height: none;
+            }
+
             .main-container {
                 padding: 16px;
             }
@@ -176,47 +210,61 @@
             canvas {
                 min-height: 0;
             }
+
+            .canvas-wrap {
+                min-height: 0;
+            }
+
+            .info-box {
+                height: auto;
+            }
+
+            #topTitleBar {
+                position: static;
+                margin-bottom: 12px;
+            }
+
+            .main-container {
+                padding-top: 16px;
+            }
         }
     </style>
 </head>
 <body>
 
     <div class="main-container">
-        <header class="mb-6 text-center">
+        <header id="topTitleBar" aria-label="Simulation top title bar">
             <h1>Hydrostatic Pressure</h1>
-            <p class="text-slate-600 mt-1 italic">Investigating $P = P_{atm} + \rho gh$</p>
         </header>
 
-        <div class="canvas-wrap">
-            <canvas id="simCanvas"></canvas>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div class="control-group">
-                <span class="control-label">Visualization</span>
-                <div class="space-y-2">
-                    <label class="checkbox-container">
-                        <input type="checkbox" id="showMolecules" checked>
-                        <span>Show High-Density Particles (2500)</span>
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" id="showPressureGauges" checked>
-                        <span>Pressure Reference Gauges</span>
-                    </label>
+        <div class="sim-layout">
+            <aside class="info-box" id="infoBox">
+                <div class="control-group mt-0">
+                    <span class="control-label">Water Level</span>
+                    <div class="space-y-4">
+                        <input type="range" id="waterLevelSlider" min="50" max="400" value="300">
+                        <button id="resetBtn" class="btn-reset w-full">Reset Simulation</button>
+                    </div>
                 </div>
-            </div>
 
-            <div class="control-group">
-                <span class="control-label">Water Level Settings</span>
-                <div class="space-y-4">
-                    <input type="range" id="waterLevelSlider" min="50" max="400" value="300">
-                    <button id="resetBtn" class="btn-reset w-full">Reset Simulation</button>
+                <div class="legend-block">
+                    <strong>Legend:</strong> Red arrows show wall normal force from molecule collisions. Pressure rises with depth.
+                    <div class="mt-3 space-y-2">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="showMolecules" checked>
+                            <span>Show Molecules</span>
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="showPressureGauges" checked>
+                            <span>Show Pressure Gauges</span>
+                        </label>
+                    </div>
                 </div>
-            </div>
-        </div>
+            </aside>
 
-        <div class="info-box" id="infoBox">
-            <strong>Fluid Dynamics:</strong> The molecules now redistribute faster when the container is reshaped. Red arrows indicate the <strong>inward normal force</strong> from the walls, occurring more frequently at depth where molecular bombardment (pressure) is higher.
+            <div class="canvas-wrap">
+                <canvas id="simCanvas"></canvas>
+            </div>
         </div>
     </div>
 
@@ -230,11 +278,13 @@
 
         const CONTAINER_BOTTOM = 450;
         const P_ATM = 101.3; 
+        const CANVAS_MAX_WIDTH = 960;
+        const CANVAS_HEIGHT = 480;
 
         function resize() {
-            const containerWidth = canvas.parentElement.clientWidth - 50;
-            canvas.width = Math.min(containerWidth, 800);
-            canvas.height = 500;
+            const containerWidth = canvas.parentElement.clientWidth;
+            canvas.width = Math.max(320, Math.min(containerWidth, CANVAS_MAX_WIDTH));
+            canvas.height = CANVAS_HEIGHT;
         }
         window.addEventListener('resize', resize);
         resize();
@@ -393,26 +443,44 @@
         canvas.addEventListener('touchmove', (e) => { e.preventDefault(); drag(e.touches[0]); });
         window.addEventListener('touchend', endDrag);
 
-        function startDrag(e) {
+        function getCanvasPoint(e) {
             const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        function isPointInsideLiquid(px, py) {
+            const surfaceY = CONTAINER_BOTTOM - waterHeight;
+            if (py < surfaceY || py > CONTAINER_BOTTOM) {
+                return false;
+            }
+
+            const lx = getXAtY(py, nodes[0], nodes[3]);
+            const rx = getXAtY(py, nodes[1], nodes[2]);
+            return px >= lx && px <= rx;
+        }
+
+        function startDrag(e) {
+            const { x: mouseX, y: mouseY } = getCanvasPoint(e);
             if (Math.sqrt((mouseX - probe.x)**2 + (mouseY - probe.y)**2) < probe.radius + 15) {
                 draggingElement = { type: 'probe' };
                 return;
             }
-            nodes.forEach(node => {
+            for (const node of nodes) {
                 if (Math.sqrt((mouseX - node.x)**2 + (mouseY - node.y)**2) < 25) {
                     draggingElement = { type: 'node', target: node };
+                    break;
                 }
-            });
+            }
         }
 
         function drag(e) {
             if (!draggingElement) return;
-            const rect = canvas.getBoundingClientRect();
-            const mx = e.clientX - rect.left;
-            const my = e.clientY - rect.top;
+            const { x: mx, y: my } = getCanvasPoint(e);
             if (draggingElement.type === 'node') {
                 const node = draggingElement.target;
                 node.x = Math.max(50, Math.min(canvas.width - 50, mx));
@@ -467,6 +535,13 @@
             const surfaceY = CONTAINER_BOTTOM - waterHeight;
             const h = Math.max(0, y - surfaceY) / 10;
             return (P_ATM + h).toFixed(1);
+        }
+
+        function calculateProbePressure(x, y) {
+            if (!isPointInsideLiquid(x, y)) {
+                return P_ATM.toFixed(1);
+            }
+            return calculatePressureAtY(y);
         }
 
         function drawForceVectors() {
@@ -533,10 +608,11 @@
             
             // Probe
             const surfaceY = CONTAINER_BOTTOM - waterHeight;
-            const press = calculatePressureAtY(probe.y);
+            const probeInLiquid = isPointInsideLiquid(probe.x, probe.y);
+            const press = calculateProbePressure(probe.x, probe.y);
             ctx.beginPath();
             ctx.arc(probe.x, probe.y, probe.radius, 0, Math.PI * 2);
-            ctx.fillStyle = probe.y < surfaceY ? '#f1c40f' : '#2ecc71';
+            ctx.fillStyle = probeInLiquid ? '#2ecc71' : '#f1c40f';
             ctx.fill();
             ctx.strokeStyle = '#2c3e50';
             ctx.lineWidth = 2;
