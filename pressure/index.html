@@ -387,26 +387,22 @@
 
             init() {
                 const surfaceY = CONTAINER_BOTTOM - waterHeight;
-                this.y = CONTAINER_BOTTOM - (this.index / numMolecules) * waterHeight;
+                this.y = surfaceY + Math.random() * waterHeight;
                 const lx = getXAtY(this.y, nodes[0], nodes[3]);
                 const rx = getXAtY(this.y, nodes[1], nodes[2]);
                 this.x = lx + Math.random() * (rx - lx);
                 this.vx = (Math.random() - 0.5) * 3;
-                this.vy = 0;
+                this.vy = (Math.random() - 0.5) * 3;
             }
 
             update() {
                 const surfaceY = CONTAINER_BOTTOM - waterHeight;
-                // Target Y based on index for layered simulation
-                const targetY = CONTAINER_BOTTOM - (this.index / numMolecules) * waterHeight;
-                
-                // Diffusion and restoration
-                // vx is increased to speed up horizontal spreading
-                this.vx += (Math.random() - 0.5) * 0.8;
-                // vy restoration is snappy to adapt to shape changes quickly
-                this.vy += (targetY - this.y) * 0.2 + (Math.random() - 0.5) * 0.3;
 
-                this.vx *= 0.88; // Lower damping = faster spread
+                // True random Brownian motion — equal kick in all directions
+                this.vx += (Math.random() - 0.5) * 1.2;
+                this.vy += (Math.random() - 0.5) * 1.2;
+
+                this.vx *= 0.88;
                 this.vy *= 0.88;
 
                 this.x += this.vx;
