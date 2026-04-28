@@ -240,9 +240,19 @@
         <div class="sim-layout">
             <aside class="info-box" id="infoBox">
                 <div class="control-group mt-0">
-                    <span class="control-label">Water Level</span>
+                    <span class="control-label">Liquid Level & Density</span>
                     <div class="space-y-4">
-                        <input type="range" id="waterLevelSlider" min="50" max="400" value="300">
+                        <div>
+                            <span style="font-size: 0.8rem; color: #666; display: block; margin-bottom: 4px;">Liquid Level</span>
+                            <input type="range" id="waterLevelSlider" min="50" max="350" value="300">
+                        </div>
+                        <div>
+                            <span style="font-size: 0.8rem; color: #666; display: block; margin-bottom: 4px;">Density</span>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="range" id="densitySlider" min="0.5" max="2" step="0.1" value="1" style="flex: 1;">
+                                <span id="densityValue" style="font-size: 0.85rem; color: var(--ink); min-width: 35px;">1.0x</span>
+                            </div>
+                        </div>
                         <button id="resetBtn" class="btn-reset w-full">Reset Simulation</button>
                     </div>
                 </div>
@@ -274,40 +284,76 @@
         const showMoleculesCheck = document.getElementById('showMolecules');
         const showPressureGaugesCheck = document.getElementById('showPressureGauges');
         const waterLevelSlider = document.getElementById('waterLevelSlider');
+        const densitySlider = document.getElementById('densitySlider');
+        const densityValue = document.getElementById('densityValue');
         const resetBtn = document.getElementById('resetBtn');
 
         const CONTAINER_BOTTOM = 450;
+        const CONTAINER_TOP = 100;
         const P_ATM = 101.3; 
         const CANVAS_MAX_WIDTH = 960;
         const CANVAS_HEIGHT = 480;
+        const BASE_DENSITY = 1.0; // Reference density
+        const BASE_MOLECULES = 2500; // Reference molecule count at base density and max volume
+
+        function calculateVolume(liquidHeight) {
+            // Calculate volume of trapezoidal container filled to given height
+            // Top width at surface varies with height, bottom width is constant
+            const surfaceY = CONTAINER_BOTTOM - liquidHeight;
+            const topWidth = 400 - 2 * (surfaceY - CONTAINER_TOP) / 7;
+            const bottomWidth = 300;
+            // Volume approximation (trapezoid)
+            return liquidHeight * (topWidth + bottomWidth) / 2;
+        }
+
+        function calculateNumMolecules(density, liquidHeight) {
+            // numMolecules is proportional to density and volume
+            const maxVolume = calculateVolume(350); // Max container volume
+            const currentVolume = calculateVolume(liquidHeight);
+            const volumeFraction = currentVolume / maxVolume;
+            return Math.round(BASE_MOLECULES * density * volumeFraction);
+        }
+
+        function centerContainer() {
+            const containerWidth = 400; // Fixed container width
+            const centerX = canvas.width / 2;
+            nodes[0].x = centerX - containerWidth / 2;  // tl
+            nodes[1].x = centerX + containerWidth / 2;  // tr
+            nodes[2].x = centerX + containerWidth / 2 - 50; // br (slightly narrower at bottom)
+            nodes[3].x = centerX - containerWidth / 2 + 50; // bl (slightly narrower at bottom)
+            probe.x = centerX;
+        }
 
         function resize() {
             const containerWidth = canvas.parentElement.clientWidth;
             canvas.width = Math.max(320, Math.min(containerWidth, CANVAS_MAX_WIDTH));
             canvas.height = CANVAS_HEIGHT;
+            centerContainer();
         }
-        window.addEventListener('resize', resize);
-        resize();
 
         let waterHeight = 300; 
         let molecules = [];
         let collisionEffects = [];
-        const numMolecules = 2500; 
+        let currentDensity = 1.0;
+        let numMolecules = BASE_MOLECULES;
         let draggingElement = null;
 
         let nodes = [
-            { x: 200, y: 100, id: 'tl' }, 
-            { x: 600, y: 100, id: 'tr' }, 
-            { x: 550, y: CONTAINER_BOTTOM, id: 'br' }, 
-            { x: 250, y: CONTAINER_BOTTOM, id: 'bl' }  
+            { x: 240, y: 100, id: 'tl' }, 
+            { x: 640, y: 100, id: 'tr' }, 
+            { x: 590, y: CONTAINER_BOTTOM, id: 'br' }, 
+            { x: 290, y: CONTAINER_BOTTOM, id: 'bl' }  
         ];
 
         let probe = {
-            x: 400,
+            x: 440,
             y: 350,
             radius: 12
         };
 
+        window.addEventListener('resize', resize);
+        resize();
+        centerContainer(); // Center nodes after canvas is sized
         const defaultNodes = JSON.parse(JSON.stringify(nodes));
         const defaultProbe = JSON.parse(JSON.stringify(probe));
 
@@ -483,9 +529,29 @@
             const { x: mx, y: my } = getCanvasPoint(e);
             if (draggingElement.type === 'node') {
                 const node = draggingElement.target;
-                node.x = Math.max(50, Math.min(canvas.width - 50, mx));
-                if (node.id.startsWith('t')) node.y = 100;
-                else node.y = CONTAINER_BOTTOM;
+                const minX = 50;
+                const maxX = canvas.width - 50;
+                
+                if (node.id === 'tl') {
+                    // Top-left: must stay left of top-right, with minimum gap
+                    node.x = Math.max(minX, Math.min(mx, nodes[1].x - 100));
+                    node.y = 100;
+                } else if (node.id === 'tr') {
+                    // Top-right: must stay right of top-left, with minimum gap
+                    node.x = Math.min(maxX, Math.max(mx, nodes[0].x + 100));
+                    node.y = 100;
+                } else if (node.id === 'bl') {
+                    // Bottom-left: must stay left of bottom-right, with minimum gap
+                    node.x = Math.max(minX, Math.min(mx, nodes[2].x - 50));
+                    node.y = CONTAINER_BOTTOM;
+                } else if (node.id === 'br') {
+                    // Bottom-right: must stay right of bottom-left, with minimum gap
+                    node.x = Math.min(maxX, Math.max(mx, nodes[3].x + 50));
+                    node.y = CONTAINER_BOTTOM;
+                }
+                // Recalculate molecules when container shape changes
+                numMolecules = calculateNumMolecules(currentDensity, parseInt(waterLevelSlider.value));
+                spawnMolecules();
             } else if (draggingElement.type === 'probe') {
                 probe.x = Math.max(50, Math.min(canvas.width - 50, mx));
                 probe.y = Math.max(50, Math.min(CONTAINER_BOTTOM, my));
@@ -494,10 +560,27 @@
 
         function endDrag() { draggingElement = null; }
 
+        waterLevelSlider.addEventListener('input', () => {
+            numMolecules = calculateNumMolecules(currentDensity, parseInt(waterLevelSlider.value));
+            spawnMolecules();
+        });
+
+        densitySlider.addEventListener('input', () => {
+            currentDensity = parseFloat(densitySlider.value);
+            densityValue.textContent = currentDensity.toFixed(1) + 'x';
+            numMolecules = calculateNumMolecules(currentDensity, parseInt(waterLevelSlider.value));
+            spawnMolecules();
+        });
+
         resetBtn.onclick = () => {
             nodes = JSON.parse(JSON.stringify(defaultNodes));
             probe = JSON.parse(JSON.stringify(defaultProbe));
+            centerContainer();
             waterLevelSlider.value = 300;
+            densitySlider.value = 1.0;
+            currentDensity = 1.0;
+            densityValue.textContent = '1.0x';
+            numMolecules = calculateNumMolecules(currentDensity, 300);
             spawnMolecules();
         };
 
