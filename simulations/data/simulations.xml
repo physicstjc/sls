@@ -4696,7 +4696,7 @@
   <id>js-048</id>
   <title>Pressure</title>
   <description>Explore pressure, force, and area relationships with an interactive simulation.</description>
-  <image>images/placeholder.svg</image>
+  <image>../pressure/pressure.png</image>
   <url>../pressure/</url>
   <platform>JavaScript</platform>
   <topics>
@@ -4708,7 +4708,7 @@
   <id>js-049</id>
   <title>Topple Test</title>
   <description>Investigate stability and toppling by changing the centre of gravity and support conditions.</description>
-  <image>images/placeholder.svg</image>
+  <image>../cg/cg.png</image>
   <url>../cg/</url>
   <platform>JavaScript</platform>
   <topics>
