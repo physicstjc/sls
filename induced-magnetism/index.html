@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Induced Magnetism Simulator</title>
+    
+    </head>
+<body>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    #canvas {
+      width: 100%;
+      height: auto;
+      background: #f9f9f9;
+      border: 1px solid #ccc;
+      display: block;
+      touch-action: none;
+    }
+
+    #magnet, #solenoid, #solenoidN, #solenoidS {
+      position: absolute;
+      display: none;
+    }
+
+    #magnet, #solenoid {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: bold;
+      transform-origin: center;
+    }
+
+    #north, #south {
+      width: 50%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1em;
+    }
+
+    #north { background: red; color: white; }
+    #south { background: blue; color: white; }
+
+    #solenoid {
+      background: repeating-linear-gradient(
+        90deg,
+        #1f8a8a,
+        #1f8a8a 2px,
+        #dff7f7 2px,
+        #dff7f7 10px
+      );
+      border: 1px solid #176a6a;
+      color: #0f4e4e;
+    }
+
+    .solenoid-label {
+      position: absolute;
+      font-size: 0.9em;
+      top: 5px;
+    }
+
+    .controls {
+      margin: 14px auto 18px;
+      max-width: 860px;
+      padding: 0 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .controls button {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: #fff;
+      background: linear-gradient(135deg, #2f3a44, #1f272e);
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+      transition: transform 0.12s ease, box-shadow 0.2s ease, filter 0.2s ease;
+      min-width: 240px;
+    }
+
+    .controls button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+      filter: brightness(1.05);
+    }
+
+    .controls button:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+    }
+
+    .controls button:focus-visible {
+      outline: 3px solid #222;
+      outline-offset: 2px;
+    }
+
+    @media (max-width: 600px) {
+      .controls button {
+        font-size: 0.9em;
+        padding: 6px 12px;
+        flex: 1 1 calc(50% - 10px);
+        min-width: 150px;
+      }
+    }
+  </style>
+
+  <div class="container">
+    <div id="magnet">
+      <div id="north">N</div>
+      <div id="south">S</div>
+    </div>
+    <div id="solenoid"></div>
+    <div class="solenoid-label" id="solenoidN">N</div>
+    <div class="solenoid-label" id="solenoidS">S</div>
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <div class="controls">
+    <button id="solenoidBtn" class="btn-solenoid" onclick="showSolenoid()">Use Solenoid</button>
+    <button id="magnetBtn" class="btn-magnet" onclick="showMagnet()">Use Permanent Magnet</button>
+    <button id="compassBtn" onclick="toggleCompass()">Add Compass</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas'),
+          ctx = canvas.getContext('2d'),
+          magnet = document.getElementById('magnet'),
+          solenoid = document.getElementById('solenoid'),
+          solenoidN = document.getElementById('solenoidN'),
+          solenoidS = document.getElementById('solenoidS'),
+          solenoidBtn = document.getElementById('solenoidBtn'),
+              magnetBtn = document.getElementById('magnetBtn'),
+              compassBtn = document.getElementById('compassBtn');
+
+    let mode = 'none';
+    let magnetAngle = 0;
+    let solenoidAngle = 0;
+            const compass = {
+          visible: false,
+          x: 80,
+          y: 80,
+          radius: 16
+            };
+    const rows = 12, cols = 12;
+    const domains = Array(rows * cols).fill().map(() => ({ angle: Math.random() * 2 * Math.PI }));
+
+    function getElementCenter(elem) {
+      const left = parseFloat(elem.style.left) || 0;
+      const top = parseFloat(elem.style.top) || 0;
+      return {
+        x: left + elem.offsetWidth / 2,
+        y: top + elem.offsetHeight / 2
+      };
+    }
+
+    function getPoleCenters(elem, angle) {
+      const center = getElementCenter(elem);
+      const offset = elem.offsetWidth * 0.25;
+      const ux = Math.cos(angle);
+      const uy = Math.sin(angle);
+
+      return {
+        northCenter: {
+          x: center.x - ux * offset,
+          y: center.y - uy * offset
+        },
+        southCenter: {
+          x: center.x + ux * offset,
+          y: center.y + uy * offset
+        }
+      };
+    }
+
+    function updateSolenoidLabelsPosition() {
+      if (solenoid.style.display === 'none') {
+        return;
+      }
+
+      const poles = getPoleCenters(solenoid, solenoidAngle);
+      solenoidN.style.left = (poles.northCenter.x - 8) + 'px';
+      solenoidN.style.top = (poles.northCenter.y - 12) + 'px';
+      solenoidS.style.left = (poles.southCenter.x - 8) + 'px';
+      solenoidS.style.top = (poles.southCenter.y - 12) + 'px';
+    }
+
+    function applyElementRotation(elem, angle) {
+      elem.style.transform = `rotate(${angle}rad)`;
+    }
+
+    function normalizeAngle(angle) {
+      return Math.atan2(Math.sin(angle), Math.cos(angle));
+    }
+
+    function getElementAngle(elem) {
+      return elem === magnet ? magnetAngle : solenoidAngle;
+    }
+
+    function setElementAngle(elem, angle) {
+      if (elem === magnet) {
+        magnetAngle = angle;
+      } else {
+        solenoidAngle = angle;
+      }
+
+      applyElementRotation(elem, angle);
+      if (elem === solenoid) {
+        updateSolenoidLabelsPosition();
+      }
+    }
+
+    function getPointerPositionOnCanvas(clientX, clientY) {
+      const cRect = canvas.getBoundingClientRect();
+      return {
+        x: clientX - cRect.left,
+        y: clientY - cRect.top
+      };
+    }
+
+    function getActiveSourceElement() {
+      if (mode === 'bar' && magnet.style.display !== 'none') {
+        return { elem: magnet, angle: magnetAngle };
+      }
+
+      if (mode === 'solenoid' && solenoid.style.display !== 'none') {
+        return { elem: solenoid, angle: solenoidAngle };
+      }
+
+      return null;
+    }
+
+    function isPointInsideRotatedElement(x, y, elem, angle, padding = 0) {
+      const center = getElementCenter(elem);
+      const dx = x - center.x;
+      const dy = y - center.y;
+      const cosA = Math.cos(angle);
+      const sinA = Math.sin(angle);
+
+      const localX = dx * cosA + dy * sinA;
+      const localY = -dx * sinA + dy * cosA;
+      const halfW = elem.offsetWidth / 2 + padding;
+      const halfH = elem.offsetHeight / 2 + padding;
+
+      return Math.abs(localX) <= halfW && Math.abs(localY) <= halfH;
+    }
+
+    function isCompassPositionValid(x, y) {
+      const r = compass.radius;
+      if (x < r || x > canvas.width - r || y < r || y > canvas.height - r) {
+        return false;
+      }
+
+      const activeSource = getActiveSourceElement();
+      if (!activeSource) {
+        return true;
+      }
+
+      return !isPointInsideRotatedElement(x, y, activeSource.elem, activeSource.angle, r);
+    }
+
+    function ensureCompassValidPosition() {
+      const r = compass.radius;
+      let candidateX = Math.min(Math.max(compass.x, r), canvas.width - r);
+      let candidateY = Math.min(Math.max(compass.y, r), canvas.height - r);
+
+      if (isCompassPositionValid(candidateX, candidateY)) {
+        compass.x = candidateX;
+        compass.y = candidateY;
+        return;
+      }
+
+      const activeSource = getActiveSourceElement();
+      if (!activeSource) {
+        compass.x = candidateX;
+        compass.y = candidateY;
+        return;
+      }
+
+      const center = getElementCenter(activeSource.elem);
+      const baseDistance = Math.max(activeSource.elem.offsetWidth, activeSource.elem.offsetHeight) + r;
+      for (let dist = baseDistance; dist <= baseDistance + 260; dist += 8) {
+        for (let step = 0; step < 36; step++) {
+          const theta = (step / 36) * 2 * Math.PI;
+          const x = center.x + Math.cos(theta) * dist;
+          const y = center.y + Math.sin(theta) * dist;
+          if (isCompassPositionValid(x, y)) {
+            compass.x = x;
+            compass.y = y;
+            return;
+          }
+        }
+      }
+    }
+
+    function getDraggedEnd(elem, x, y) {
+      const center = getElementCenter(elem);
+      const angle = getElementAngle(elem);
+      const ux = Math.cos(angle);
+      const uy = Math.sin(angle);
+      const halfWidth = elem.offsetWidth / 2;
+
+      const northEnd = {
+        x: center.x - ux * halfWidth,
+        y: center.y - uy * halfWidth
+      };
+      const southEnd = {
+        x: center.x + ux * halfWidth,
+        y: center.y + uy * halfWidth
+      };
+
+      const distNorth = Math.hypot(x - northEnd.x, y - northEnd.y);
+      const distSouth = Math.hypot(x - southEnd.x, y - southEnd.y);
+      const threshold = Math.max(14, elem.offsetHeight * 0.9);
+
+      if (distNorth <= threshold || distSouth <= threshold) {
+        return distNorth <= distSouth ? 'north' : 'south';
+      }
+
+      return null;
+    }
+
+    function resizeFieldElements() {
+      const width = canvas.width;
+      const magnetWidth = width * 0.24;
+      const magnetHeight = width * 0.08;
+
+      magnet.style.width = magnetWidth + 'px';
+      magnet.style.height = magnetHeight + 'px';
+      magnet.style.left = width * 0.1 + 'px';
+      magnet.style.top = width * 0.05 + 'px';
+
+      solenoid.style.width = magnetWidth + 'px';
+      solenoid.style.height = magnetHeight + 'px';
+      solenoid.style.left = width * 0.1 + 'px';
+      solenoid.style.top = width * 0.05 + 'px';
+
+      applyElementRotation(magnet, magnetAngle);
+      applyElementRotation(solenoid, solenoidAngle);
+      updateSolenoidLabelsPosition();
+      ensureCompassValidPosition();
+    }
+
+    function resizeCanvas() {
+      const container = document.querySelector('.container');
+      const width = container.clientWidth;
+      const aspectRatio = 5 / 3;
+      canvas.width = width;
+      canvas.height = width / aspectRatio;
+      resizeFieldElements();
+    }
+
+    function resetDomains() {
+      domains.forEach(d => d.angle = Math.random() * 2 * Math.PI);
+    }
+
+    function hideAllSources() {
+      magnet.style.display = 'none';
+      solenoid.style.display = 'none';
+      solenoidN.style.display = 'none';
+      solenoidS.style.display = 'none';
+    }
+
+    function updateControlButtons() {
+      solenoidBtn.textContent = mode === 'solenoid' ? 'Remove Solenoid' : 'Use Solenoid';
+      magnetBtn.textContent = mode === 'bar' ? 'Remove Permanent Magnet' : 'Use Permanent Magnet';
+      compassBtn.textContent = compass.visible ? 'Remove Compass' : 'Add Compass';
+    }
+
+    function toggleCompass() {
+      compass.visible = !compass.visible;
+      if (compass.visible) {
+        ensureCompassValidPosition();
+      }
+      updateControlButtons();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function showSolenoid() {
+      if (mode === 'solenoid') {
+        hideAllSources();
+        mode = 'none';
+        resetDomains();
+        updateControlButtons();
+        return;
+      }
+
+      magnet.style.display = 'none';
+      solenoid.style.display = 'flex';
+      solenoidN.style.display = 'block';
+      solenoidS.style.display = 'block';
+      applyElementRotation(solenoid, solenoidAngle);
+      updateSolenoidLabelsPosition();
+      mode = 'solenoid';
+      ensureCompassValidPosition();
+      updateControlButtons();
+    }
+
+    function showMagnet() {
+      if (mode === 'bar') {
+        hideAllSources();
+        mode = 'none';
+        resetDomains();
+        updateControlButtons();
+        return;
+      }
+
+      magnet.style.display = 'flex';
+      solenoid.style.display = 'none';
+      solenoidN.style.display = 'none';
+      solenoidS.style.display = 'none';
+      applyElementRotation(magnet, magnetAngle);
+      mode = 'bar';
+      ensureCompassValidPosition();
+      updateControlButtons();
+    }
+
+    [magnet, solenoid].forEach(elem => {
+      function startInteraction(x0, y0, isTouch) {
+        const rect = elem.getBoundingClientRect();
+        const canvasRect = canvas.getBoundingClientRect();
+        const offsetLeft = rect.left - canvasRect.left;
+        const offsetTop = rect.top - canvasRect.top;
+        const pointerStart = getPointerPositionOnCanvas(x0, y0);
+        const draggedEnd = getDraggedEnd(elem, pointerStart.x, pointerStart.y);
+
+        let grabOffset = 0;
+        const center = getElementCenter(elem);
+        if (draggedEnd) {
+          const pointerAngleStart = Math.atan2(pointerStart.y - center.y, pointerStart.x - center.x);
+          const angleStart = getElementAngle(elem);
+          const grabbedDirectionStart = draggedEnd === 'south' ? angleStart : angleStart + Math.PI;
+          grabOffset = normalizeAngle(grabbedDirectionStart - pointerAngleStart);
+        }
+
+        function moveHandler(e) {
+          if (isTouch) {
+            e.preventDefault();
+          }
+
+          const x = isTouch ? e.touches[0].clientX : e.clientX;
+          const y = isTouch ? e.touches[0].clientY : e.clientY;
+
+          if (draggedEnd) {
+            const pointer = getPointerPositionOnCanvas(x, y);
+            const pointerAngle = Math.atan2(pointer.y - center.y, pointer.x - center.x);
+            const grabbedDirection = pointerAngle + grabOffset;
+            const nextAngle = draggedEnd === 'south' ? grabbedDirection : grabbedDirection - Math.PI;
+            setElementAngle(elem, nextAngle);
+            mode = (elem === magnet) ? 'bar' : 'solenoid';
+            return;
+          }
+
+          const dx = x - x0;
+          const dy = y - y0;
+
+          const newLeft = offsetLeft + dx;
+          const newTop = offsetTop + dy;
+
+          const elemWidth = elem.offsetWidth;
+          const elemHeight = elem.offsetHeight;
+          const maxLeft = canvas.width - elemWidth;
+          const maxTop = canvas.height - elemHeight;
+
+          const clampedLeft = Math.min(Math.max(newLeft, 0), maxLeft);
+          const clampedTop = Math.min(Math.max(newTop, 0), maxTop);
+
+          elem.style.left = clampedLeft + 'px';
+          elem.style.top = clampedTop + 'px';
+
+          if (elem === solenoid) {
+            updateSolenoidLabelsPosition();
+          }
+
+          mode = (elem === magnet) ? 'bar' : 'solenoid';
+        }
+
+        function stopDrag() {
+          window.removeEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler);
+          window.removeEventListener(isTouch ? 'touchend' : 'mouseup', stopDrag);
+        }
+
+        window.addEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler, isTouch ? { passive: false } : undefined);
+        window.addEventListener(isTouch ? 'touchend' : 'mouseup', stopDrag);
+      }
+
+      elem.addEventListener('mousedown', e => {
+        e.preventDefault();
+        startInteraction(e.clientX, e.clientY, false);
+      });
+
+      elem.addEventListener('touchstart', e => {
+        if (e.touches.length === 1) {
+          startInteraction(e.touches[0].clientX, e.touches[0].clientY, true);
+        }
+      });
+    });
+
+    function startCompassDrag(x0, y0, isTouch) {
+      if (!compass.visible) {
+        return;
+      }
+
+      const pointerStart = getPointerPositionOnCanvas(x0, y0);
+      const dist = Math.hypot(pointerStart.x - compass.x, pointerStart.y - compass.y);
+      if (dist > compass.radius + 6) {
+        return;
+      }
+
+      const offsetX = pointerStart.x - compass.x;
+      const offsetY = pointerStart.y - compass.y;
+
+      function moveCompass(e) {
+        if (isTouch) {
+          e.preventDefault();
+        }
+
+        const x = isTouch ? e.touches[0].clientX : e.clientX;
+        const y = isTouch ? e.touches[0].clientY : e.clientY;
+        const pointer = getPointerPositionOnCanvas(x, y);
+        const r = compass.radius;
+        const nextX = Math.min(Math.max(pointer.x - offsetX, r), canvas.width - r);
+        const nextY = Math.min(Math.max(pointer.y - offsetY, r), canvas.height - r);
+
+        if (isCompassPositionValid(nextX, nextY)) {
+          compass.x = nextX;
+          compass.y = nextY;
+        }
+      }
+
+      function stopCompassDrag() {
+        window.removeEventListener(isTouch ? 'touchmove' : 'mousemove', moveCompass);
+        window.removeEventListener(isTouch ? 'touchend' : 'mouseup', stopCompassDrag);
+      }
+
+      window.addEventListener(isTouch ? 'touchmove' : 'mousemove', moveCompass, isTouch ? { passive: false } : undefined);
+      window.addEventListener(isTouch ? 'touchend' : 'mouseup', stopCompassDrag);
+    }
+
+    canvas.addEventListener('mousedown', e => {
+      startCompassDrag(e.clientX, e.clientY, false);
+    });
+
+    canvas.addEventListener('touchstart', e => {
+      if (e.touches.length === 1) {
+        startCompassDrag(e.touches[0].clientX, e.touches[0].clientY, true);
+      }
+    }, { passive: true });
+
+
+
+    function drawArrow(x, y, angle, len = 15) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(-len / 2, 0);
+      ctx.lineTo(len / 2, 0);
+      ctx.moveTo(len / 2, 0);
+      ctx.lineTo(len / 2 - 5, -5);
+      ctx.moveTo(len / 2, 0);
+      ctx.lineTo(len / 2 - 5, 5);
+      ctx.strokeStyle = '#444';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawCellSymbol(x, y, angle = 0) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-3, -10); ctx.lineTo(-3, 10); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(3, -5); ctx.lineTo(3, 5); ctx.stroke();
+      ctx.restore();
+    }
+
+    function getFieldAngleAt(x, y, northCenter, southCenter) {
+      if (!northCenter || !southCenter) {
+        return null;
+      }
+
+      const dxN = x - northCenter.x;
+      const dyN = y - northCenter.y;
+      const rN2 = Math.max(dxN * dxN + dyN * dyN, 1);
+      const dxS = x - southCenter.x;
+      const dyS = y - southCenter.y;
+      const rS2 = Math.max(dxS * dxS + dyS * dyS, 1);
+      const fieldX = (dxN / rN2) - (dxS / rS2);
+      const fieldY = (dyN / rN2) - (dyS / rS2);
+
+      return Math.atan2(fieldY, fieldX);
+    }
+
+    function drawCompass(x, y, angle) {
+      const r = compass.radius;
+
+      ctx.save();
+      ctx.translate(x, y);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#1f272e';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.rotate(angle);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#b32020';
+      ctx.beginPath();
+      ctx.moveTo(-2, 0);
+      ctx.lineTo(r - 4, 0);
+      ctx.stroke();
+
+      ctx.fillStyle = '#b32020';
+      ctx.beginPath();
+      ctx.moveTo(r - 2, 0);
+      ctx.lineTo(r - 8, -4);
+      ctx.lineTo(r - 8, 4);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = '#1a4f9c';
+      ctx.beginPath();
+      ctx.moveTo(2, 0);
+      ctx.lineTo(-(r - 4), 0);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const rectWidth = canvas.width * 0.533;
+      const rectHeight = canvas.width * 0.5;
+      const rectX = (canvas.width - rectWidth) / 2;
+      const rectY = (canvas.height - rectHeight) / 2;
+      ctx.fillStyle = '#ddd';
+      ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
+
+      const usingMagnet = mode === 'bar' && magnet.style.display !== 'none';
+      const usingSolenoid = mode === 'solenoid' && solenoid.style.display !== 'none';
+      const poles = usingMagnet ? getPoleCenters(magnet, magnetAngle) :
+                    usingSolenoid ? getPoleCenters(solenoid, solenoidAngle) : null;
+      const northCenter = poles ? poles.northCenter : null;
+      const southCenter = poles ? poles.southCenter : null;
+
+      if (mode === 'solenoid' && northCenter && southCenter) {
+        const solenoidWidth = solenoid.offsetWidth;
+        const axisLength = Math.hypot(southCenter.x - northCenter.x, southCenter.y - northCenter.y) || 1;
+        const ux = (southCenter.x - northCenter.x) / axisLength;
+        const uy = (southCenter.y - northCenter.y) / axisLength;
+        const nx = -uy;
+        const ny = ux;
+
+        const leadBack = Math.max(20, solenoidWidth * 0.25);
+        const leadForward = Math.max(14, solenoidWidth * 0.16);
+        const wireDepth = Math.max(44, solenoidWidth * 0.5);
+
+        const p0 = { x: northCenter.x, y: northCenter.y };
+        const p1 = { x: northCenter.x - ux * leadBack, y: northCenter.y - uy * leadBack };
+        const p2 = { x: p1.x + nx * wireDepth, y: p1.y + ny * wireDepth };
+        const p3 = {
+          x: southCenter.x + ux * leadForward + nx * wireDepth,
+          y: southCenter.y + uy * leadForward + ny * wireDepth
+        };
+        const p4 = { x: southCenter.x + ux * leadForward, y: southCenter.y + uy * leadForward };
+
+        ctx.strokeStyle = '#555';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(p0.x, p0.y);
+        ctx.lineTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.lineTo(p3.x, p3.y);
+        ctx.lineTo(p4.x, p4.y);
+        ctx.stroke();
+
+        drawCellSymbol(
+          (northCenter.x + southCenter.x) / 2 + nx * wireDepth,
+          (northCenter.y + southCenter.y) / 2 + ny * wireDepth,
+          solenoidAngle
+        );
+
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+
+      }
+
+      const gridWidth = rectWidth * 0.75;
+      const gridHeight = rectHeight * 0.8;
+      const cellSpacingX = gridWidth / (cols - 1);
+      const cellSpacingY = gridHeight / (rows - 1);
+      const gridStartX = (canvas.width - gridWidth) / 2;
+      const gridStartY = (canvas.height - gridHeight) / 2;
+
+      domains.forEach((d, i) => {
+        const r = Math.floor(i / cols), c = i % cols;
+        const x = gridStartX + c * cellSpacingX;
+        const y = gridStartY + r * cellSpacingY;
+        let target = null;
+
+        if ((mode === 'bar' || mode === 'solenoid') && northCenter && southCenter) {
+          target = getFieldAngleAt(x, y, northCenter, southCenter);
+        }
+
+        if (target !== null) {
+          const diff = ((target - d.angle + Math.PI) % (2 * Math.PI)) - Math.PI;
+          d.angle += diff * 0.1;
+        } else {
+          d.angle += (Math.random() - 0.5) * 0.1;
+        }
+
+        drawArrow(x, y, d.angle);
+      });
+
+      if (compass.visible) {
+        const fieldAngle = (mode === 'bar' || mode === 'solenoid') ?
+          getFieldAngleAt(compass.x, compass.y, northCenter, southCenter) : null;
+        drawCompass(compass.x, compass.y, fieldAngle !== null ? fieldAngle : -Math.PI / 2);
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    // Hide all on load
+    hideAllSources();
+    updateControlButtons();
+
+    draw();
+  </script>
+</body>
+</html>
