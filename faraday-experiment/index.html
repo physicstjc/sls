@@ -1,219 +1,669 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Faraday's Experiment</title> 
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faraday's Experiment</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='%232f4f3b'/%3E%3C/svg%3E">
+  <style>
+    body {
+      margin: 0;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #f7faf8 0%, #e7f0eb 100%);
+    }
+
+    #simulation-container {
+      width: 100%;
+      max-width: 980px;
+      margin: 16px auto;
+      padding: 12px;
+      box-sizing: border-box;
+    }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border: 1px solid #6d7d73;
+      border-radius: 6px;
+      box-shadow: 0 10px 24px rgba(41, 58, 49, 0.18);
+      background: #ffffff;
+    }
+
+    .controls {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 10px;
+      align-items: center;
+      overflow-x: auto;
+    }
+
+    .controls label {
+      color: #203228;
+      font-size: 0.95rem;
+    }
+
+    .slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+
+    .controls input[type="range"] {
+      width: 220px;
+    }
+
+    .controls button {
+      border: 1px solid #42614f;
+      background: #f0f8f3;
+      color: #23392c;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .mode-btn.active {
+      background: #2f4f3b;
+      color: #ffffff;
+      border-color: #1a2e22;
+    }
+
+    #simulation-container:fullscreen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100vw;
+      height: 100vh;
+      background-color: #f4f8f6;
+    }
+
+    #simulation-container:fullscreen canvas {
+      width: min(95vw, 1200px);
+      height: auto;
+    }
+  </style>
 </head>
 <body>
+  <div id="simulation-container">
+    <canvas id="simCanvas" width="940" height="430"></canvas>
+    <div class="controls">
+      <div class="slider-wrap">
+        <label for="magnetPos">Move Magnet:</label>
+        <input type="range" id="magnetPos" min="40" max="320" value="95">
+      </div>
+      <label><input type="checkbox" id="flipMagnet"> Flip Magnet Polarity</label>
+      <button id="btnManual"    type="button" class="mode-btn active">Manual</button>
+      <button id="btnOscillate" type="button" class="mode-btn">Oscillate</button>
+      <button id="btnFreeFall" type="button" class="mode-btn">Free Fall</button>
+      <button id="btnPauseResume" type="button">Pause</button>
+      <button id="fullscreenBtn" type="button">Fullscreen</button>
+    </div>
+  </div>
 
-      <style>    
-            
-            canvas {
-              border: 2px solid #333;
-              border-radius: 6px;
-              box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
-              border: 1px solid #ccc;
-              background: #ffffff;
-            }
-            #slider {
-              margin-top: 20px;
-            }
-            #simulation-container {
-              width: 100%;
-              max-width: 640px;
-              margin: 0 auto;
-            }
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const slider = document.getElementById('magnetPos');
+    const flipMagnet = document.getElementById('flipMagnet');
+    const btnPauseResume = document.getElementById('btnPauseResume');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const container = document.getElementById('simulation-container');
 
-            #simCanvas {
-              width: 100%;
-              height: auto;
-              display: block;
-            }
-            #simulation-container:fullscreen {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              width: 100vw;
-              height: 100vh;
-              background-color: white;
-            }
+    const graphArea = {
+      x: 560,
+      y: 40,
+      width: 340,
+      height: 330,
+      maxAbsVoltage: 7
+    };
 
-            #simulation-container:fullscreen canvas {
-              width: 90vw;
-              height: 60vh;
-            }
-            #simulation-container:fullscreen input[type=range],
-            #simulation-container:fullscreen label,
-            #simulation-container:fullscreen button {
-              font-size: 1.2rem;
-              margin: 10px;
-                
-        </style>
+    // dataLog stores {t, v} entries; we keep a fixed time window of 2 oscillation periods.
+    const dataLog = [];
+    const GRAPH_WINDOW = 2 * 3.0; // seconds — updated dynamically in draw()
+    let prevPosition = parseInt(slider.value, 10);
+    let prevTime = performance.now();
+    let smoothedVelocity = 0;
+    let isMoving = false;
 
-    <div id="simulation-container">
-        <canvas id="simCanvas" width="640" height="300"></canvas>
-              <br />
-              <label for="magnetPos">Move Magnet:</label>
-              <input type="range" id="magnetPos" min="40" max="550" value="100" style="width: 20vw; max-width: 600px;" />
-              <label><input type="checkbox" id="flipMagnet" /> Flip Magnet Polarity</label>
-              <button onclick="toggleFullscreen()">Fullscreen</button>
-    </div> <!-- end of simulation-container -->
-              <script>
-                function toggleFullscreen() {
-                  const container = document.getElementById('simulation-container');
-                  if (!document.fullscreenElement) {
-                    container.requestFullscreen().catch(err => {
-                      alert(`Error attempting to enable fullscreen: ${err.message}`);
-                    });
-                  } else {
-                    document.exitFullscreen();
-                  }
-                };
-                  
-                const canvas = document.getElementById('simCanvas');
-                const ctx = canvas.getContext('2d');
-                const slider = document.getElementById('magnetPos');
+    // Animation modes: 'manual' | 'oscillate' | 'freefall'
+    let animMode = 'manual';
+    let animStartTime = null;   // for oscillate
+    let fallVelocity = 0;       // px/s for freefall
+    let fallPosition = 40;      // current y for freefall
+    let freeFallActive = false;
+    let analyticVelocity = null; // set by oscillate mode for clean EMF calc
+    let isPaused = false;
+    let pausedAtTime = 0;
+    let pausedPosition = prevPosition;
+    let pausedOscElapsed = 0;
 
-                let prevPosition = parseInt(slider.value);
-                let induced = 0;
-                let inducedDirection = 1;
-                let isMoving = false;
-                let animationFrameId;
-                function drawMagnet(x) {
-                      if (!flipPolarity) {
-                        ctx.fillStyle = 'red';
-                        ctx.fillRect(x, 120, 40, 40);
-                        ctx.fillStyle = 'white';
-                        ctx.fillText('N', x + 15, 145);
+    const MAGNET_HALF_HEIGHT = 42; // half of the 84px total magnet height
+    const SLIDER_MIN = 40;
+    const SLIDER_MAX = 320;
+    const COIL_CENTER = 210;
+    const COIL_X = 314;
+    const COIL_TOP_Y = 156;
+    const COIL_LOOPS = 7;
+    const COIL_PITCH = 18;
+    const COIL_RADIUS_X = 38;
+    const COIL_RADIUS_Y = 7;
+    const COIL_FRONT_ROTATION = 0.10;
+    const COIL_FRONT_START_ANGLE = 0.02 * Math.PI;
+    const COIL_BACK_ROTATION = -COIL_FRONT_ROTATION;
+    const COIL_BACK_END_ANGLE = 2.02 * Math.PI;
+    const OSC_AMPLITUDE = 90;   // px — passes well through the coil
+    const OSC_PERIOD = 5.0;     // seconds per full oscillation
+    const VOLTS_PER_PIXEL_PER_SECOND = 0.024;
+    const GRAVITY = 260;        // px/s²
+    const DROP_BUTTON = { x: 185, y: 18, w: 84, h: 34 };
 
-                        ctx.fillStyle = 'blue';
-                        ctx.fillRect(x + 40, 120, 40, 40);
-                        ctx.fillStyle = 'white';
-                        ctx.fillText('S', x + 55, 145);
-                      } else {
-                        ctx.fillStyle = 'blue';
-                        ctx.fillRect(x, 120, 40, 40);
-                        ctx.fillStyle = 'white';
-                        ctx.fillText('S', x + 15, 145);
+    function setMode(mode) {
+      animMode = mode;
+      animStartTime = null;
+      fallVelocity = 0;
+      fallPosition = SLIDER_MIN;
+      freeFallActive = false;
+      isPaused = false;
+      btnPauseResume.textContent = 'Pause';
+      slider.disabled = isPaused || (mode !== 'manual');
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      const map = { manual: 'btnManual', oscillate: 'btnOscillate', freefall: 'btnFreeFall' };
+      document.getElementById(map[mode]).classList.add('active');
+    }
 
-                        ctx.fillStyle = 'red';
-                        ctx.fillRect(x + 40, 120, 40, 40);
-                        ctx.fillStyle = 'white';
-                        ctx.fillText('N', x + 55, 145);
-                      }};
+    document.getElementById('btnManual').addEventListener('click',    () => setMode('manual'));
+    document.getElementById('btnOscillate').addEventListener('click', () => setMode('oscillate'));
+    document.getElementById('btnFreeFall').addEventListener('click',  () => setMode('freefall'));
 
-                function drawCoil() {
-                  const xStart = 300;
-                  const yTop = 120;
-                  const yBottom = 160;
+    btnPauseResume.addEventListener('click', () => {
+      if (!isPaused) {
+        isPaused = true;
+        pausedAtTime = performance.now();
+        pausedPosition = prevPosition;
+        if (animMode === 'oscillate' && animStartTime !== null) {
+          pausedOscElapsed = (performance.now() - animStartTime) / 1000;
+        }
+        slider.disabled = true;
+        btnPauseResume.textContent = 'Resume';
+        return;
+      }
 
-                  // Rectangular base for the solenoid
-                  ctx.fillStyle = '#ccc';
-                  ctx.fillRect(xStart - 10, yTop, 110, yBottom - yTop);    
+      const now = performance.now();
+      const pauseDurationSec = (now - pausedAtTime) / 1000;
+      for (const point of dataLog) {
+        point.t += pauseDurationSec;
+      }
+      if (animMode === 'oscillate') {
+        animStartTime = now - pausedOscElapsed * 1000;
+      }
+      prevPosition = pausedPosition;
+      prevTime = now;
+      isPaused = false;
+      btnPauseResume.textContent = 'Pause';
+      slider.disabled = (animMode !== 'manual');
+    });
+
+    function drawDropButton() {
+      if (animMode !== 'freefall' || freeFallActive) return;
+
+      ctx.save();
+      ctx.fillStyle = '#2f4f3b';
+      ctx.strokeStyle = '#1b2f22';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(DROP_BUTTON.x, DROP_BUTTON.y, DROP_BUTTON.w, DROP_BUTTON.h, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 14px Trebuchet MS';
+      ctx.fillText('Drop', DROP_BUTTON.x + 24, DROP_BUTTON.y + 22);
+      ctx.restore();
+    }
+
+    canvas.addEventListener('click', (event) => {
+      if (animMode !== 'freefall' || freeFallActive || isPaused) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (event.clientX - rect.left) * scaleX;
+      const y = (event.clientY - rect.top) * scaleY;
+
+      const inside = x >= DROP_BUTTON.x && x <= DROP_BUTTON.x + DROP_BUTTON.w
+        && y >= DROP_BUTTON.y && y <= DROP_BUTTON.y + DROP_BUTTON.h;
+
+      if (inside) {
+        freeFallActive = true;
+        fallPosition = SLIDER_MIN;
+        fallVelocity = 0;
+        prevPosition = SLIDER_MIN;
+      }
+    });
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        container.requestFullscreen().catch((err) => {
+          alert(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    function drawMagnet(y, flipped) {
+      const x = 290;
+      const magnetWidth = 48;
+      const sectionHeight = 42;
+
+      if (!flipped) {
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(x, y, magnetWidth, sectionHeight);
+        ctx.fillStyle = 'white';
+        ctx.fillText('S', x + 20, y + 27);
+
+        ctx.fillStyle = 'red';
+        ctx.fillRect(x, y + sectionHeight, magnetWidth, sectionHeight);
+        ctx.fillStyle = 'white';
+        ctx.fillText('N', x + 19, y + sectionHeight + 27);
+      } else {
+        ctx.fillStyle = 'red';
+        ctx.fillRect(x, y, magnetWidth, sectionHeight);
+        ctx.fillStyle = 'white';
+        ctx.fillText('N', x + 19, y + 27);
+
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(x, y + sectionHeight, magnetWidth, sectionHeight);
+        ctx.fillStyle = 'white';
+        ctx.fillText('S', x + 20, y + sectionHeight + 27);
+      }
+
+      ctx.fillStyle = '#25352b';
+      ctx.font = '14px Trebuchet MS';
+      ctx.fillText('Magnet', x - 3, y - 8);
+    }
+
+    function drawDataloggerConnections(currentSign = 0) {
+      const terminalX = graphArea.x - 10;
+      const terminalTopY = graphArea.y + 92;
+      const terminalBottomY = graphArea.y + graphArea.height - 92;
+
+      function ellipsePoint(cx, cy, rx, ry, theta, rot) {
+        const cosT = Math.cos(theta);
+        const sinT = Math.sin(theta);
+        const cosR = Math.cos(rot);
+        const sinR = Math.sin(rot);
+        return {
+          x: cx + rx * cosT * cosR - ry * sinT * sinR,
+          y: cy + rx * cosT * sinR + ry * sinT * cosR
+        };
+      }
+
+      const frontYOffset = COIL_PITCH / 2;
+      const topFrontLoopY = COIL_TOP_Y + frontYOffset;
+      const bottomFrontLoopY = COIL_TOP_Y + (COIL_LOOPS - 1) * COIL_PITCH + frontYOffset;
+      const topStart = ellipsePoint(
+        COIL_X,
+        topFrontLoopY,
+        COIL_RADIUS_X,
+        COIL_RADIUS_Y,
+        COIL_BACK_END_ANGLE,
+        COIL_BACK_ROTATION
+      );
+      topStart.y -= 10;
+      const bottomStart = ellipsePoint(
+        COIL_X,
+        bottomFrontLoopY,
+        COIL_RADIUS_X,
+        COIL_RADIUS_Y,
+        COIL_FRONT_START_ANGLE,
+        COIL_FRONT_ROTATION
+      );
+
+      const topC1 = { x: topStart.x + 54, y: topStart.y - 10 };
+      const topC2 = { x: terminalX - 42, y: terminalTopY - 10 };
+      const topEnd = { x: terminalX, y: terminalTopY };
+      const bottomC1 = { x: bottomStart.x + 54, y: bottomStart.y + 10 };
+      const bottomC2 = { x: terminalX - 42, y: terminalBottomY + 10 };
+      const bottomEnd = { x: terminalX, y: terminalBottomY };
+
+      // Wires from solenoid to datalogger terminal pair.
+      ctx.strokeStyle = '#2f3d36';
+      ctx.lineWidth = 3.8;
+      ctx.lineCap = 'round';
+
+      ctx.beginPath();
+      ctx.moveTo(topStart.x, topStart.y);
+      ctx.bezierCurveTo(topC1.x, topC1.y, topC2.x, topC2.y, topEnd.x, topEnd.y);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(bottomStart.x, bottomStart.y);
+      ctx.bezierCurveTo(bottomC1.x, bottomC1.y, bottomC2.x, bottomC2.y, bottomEnd.x, bottomEnd.y);
+      ctx.stroke();
+
+      function cubicPoint(p0, p1, p2, p3, t) {
+        const u = 1 - t;
+        const tt = t * t;
+        const uu = u * u;
+        const uuu = uu * u;
+        const ttt = tt * t;
+        return {
+          x: uuu * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + ttt * p3.x,
+          y: uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y
+        };
+      }
+
+      function cubicTangent(p0, p1, p2, p3, t) {
+        const u = 1 - t;
+        return {
+          x: 3 * u * u * (p1.x - p0.x) + 6 * u * t * (p2.x - p1.x) + 3 * t * t * (p3.x - p2.x),
+          y: 3 * u * u * (p1.y - p0.y) + 6 * u * t * (p2.y - p1.y) + 3 * t * t * (p3.y - p2.y)
+        };
+      }
+
+      function drawArrowOnBezier(p0, p1, p2, p3, t, reverse) {
+        const p = cubicPoint(p0, p1, p2, p3, t);
+        const tan = cubicTangent(p0, p1, p2, p3, t);
+        let angle = Math.atan2(tan.y, tan.x);
+        if (reverse) angle += Math.PI;
+
+        const len = 17;
+        const wing = 7.2;
+        ctx.strokeStyle = '#183227';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(p.x - len * Math.cos(angle), p.y - len * Math.sin(angle));
+        ctx.lineTo(p.x, p.y);
+        ctx.lineTo(
+          p.x - wing * Math.cos(angle - Math.PI / 4),
+          p.y - wing * Math.sin(angle - Math.PI / 4)
+        );
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(
+          p.x - wing * Math.cos(angle + Math.PI / 4),
+          p.y - wing * Math.sin(angle + Math.PI / 4)
+        );
+        ctx.stroke();
+      }
+
+      if (Math.abs(currentSign) > 1e-5) {
+        const positive = currentSign > 0;
+        // Positive current: top wire coil -> logger, bottom wire logger -> coil.
+        drawArrowOnBezier(topStart, topC1, topC2, topEnd, 0.56, !positive);
+        drawArrowOnBezier(bottomStart, bottomC1, bottomC2, bottomEnd, 0.56, positive);
+      }
+
+      // Simulated datalogger terminals.
+      ctx.fillStyle = '#dce9e1';
+      ctx.strokeStyle = '#2f4f3b';
+      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+      ctx.arc(terminalX, terminalTopY, 7, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(terminalX, terminalBottomY, 7, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#1f3025';
+      ctx.font = 'bold 11px Trebuchet MS';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('+', terminalX, terminalTopY + 0.5);
+      ctx.fillText('-', terminalX, terminalBottomY + 0.5);
+
+      // Reset text alignment so other labels render as expected.
+      ctx.textAlign = 'start';
+      ctx.textBaseline = 'alphabetic';
+    }
+
+    function drawCoilLayer(frontLayer) {
+      const centerX = COIL_X;
+      const topY = COIL_TOP_Y;
+      const loops = COIL_LOOPS;
+      const pitch = COIL_PITCH;
+      const radiusX = COIL_RADIUS_X;
+      const radiusY = COIL_RADIUS_Y;
+      const rotation = frontLayer ? COIL_FRONT_ROTATION : COIL_BACK_ROTATION;
+      const startAngle = frontLayer ? COIL_FRONT_START_ANGLE : 1.02 * Math.PI;
+      const endAngle = frontLayer ? 1.02 * Math.PI : 2.02 * Math.PI;
+
+      function ellipsePoint(cx, cy, rx, ry, theta, rot) {
+        const cosT = Math.cos(theta);
+        const sinT = Math.sin(theta);
+        const cosR = Math.cos(rot);
+        const sinR = Math.sin(rot);
+        return {
+          x: cx + rx * cosT * cosR - ry * sinT * sinR,
+          y: cy + rx * cosT * sinR + ry * sinT * cosR
+        };
+      }
+
+      // Front arcs are offset by half a pitch so they sit between the back arcs,
+      // making the two half-ellipses join into one continuous helical spiral.
+      const yOffset = frontLayer ? pitch / 2 : 0;
+      for (let i = 0; i < loops; i++) {
+        const loopY = topY + i * pitch + yOffset;
+
+        ctx.strokeStyle = frontLayer ? '#4f5f57' : '#9fa9a3';
+        ctx.lineWidth = frontLayer ? 4 : 3;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.ellipse(centerX, loopY, radiusX, radiusY, rotation, startAngle, endAngle);
+        ctx.stroke();
+
+        if (frontLayer) {
+          ctx.strokeStyle = '#b9c8c0';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.ellipse(centerX - 1, loopY - 0.6, radiusX - 1, radiusY - 0.8, rotation, startAngle, endAngle);
+          ctx.stroke();
+        }
 
 
-                      // Draw arcs to represent the coil above the grey rectangle
-                  ctx.strokeStyle = 'black';
-                  ctx.lineWidth = 2;
-                  for (let i = 0; i <5; i++) {
-                    ctx.beginPath();
-                    const centerX = xStart + i * 20;
-                    const centerY = yTop + 20;
-                    ctx.save();
-                    ctx.translate(centerX, centerY);
-                    ctx.scale(0.5, 1.5); // Narrow and tall ellipse
-                    ctx.beginPath();
-                    ctx.arc(5, 0, 15, -0.7 * Math.PI, 0.7 * Math.PI, false);
-                    ctx.restore();
-                    ctx.stroke();
-                  }
-                }
+      }
 
-                function drawGalvanometer(velocity) {
-                  const cx = 350;
-                  const cy = 250;
-                  const radius = 20;
+      const bottomY = topY + (loops - 1) * pitch + yOffset;
 
-                  // Draw meter box
-                  ctx.strokeStyle = 'black';
-                  ctx.strokeRect(320, 220, 60, 60);
+      if (frontLayer) {
+        ctx.fillStyle = '#25352b';
+        ctx.font = '14px Trebuchet MS';
+        ctx.fillText('Solenoid', centerX + radiusX + 12, topY + 10);
+      }
+    }
 
-                  // Draw circular dial
-                  ctx.beginPath();
-                  ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
-                  ctx.strokeStyle = '#888';
-                  ctx.stroke();
+    function drawGraphBackground() {
+      ctx.fillStyle = '#f4fff8';
+      ctx.fillRect(graphArea.x, graphArea.y, graphArea.width, graphArea.height);
 
-                  // Constrain velocity to a range for angle mapping
-                  const maxVelocity = 1000;
-                  const clampedVelocity = Math.max(Math.min(velocity, maxVelocity), -maxVelocity);
-                  const angle = Math.PI / 2 - (clampedVelocity / maxVelocity) * Math.PI / 2;
+      ctx.strokeStyle = '#2f4f3b';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(graphArea.x, graphArea.y, graphArea.width, graphArea.height);
 
-                  const needleLength = 18;
-                  const needleX = cx - needleLength * Math.cos(angle);
-                  const needleY = cy - needleLength * Math.sin(angle);
+      ctx.fillStyle = '#1f3025';
+      ctx.font = '13px Trebuchet MS';
+      ctx.fillText('Data Logger: Potential Difference (V)', graphArea.x + 10, graphArea.y - 12);
 
-                  ctx.beginPath();
-                  ctx.moveTo(cx, cy);
-                  ctx.lineTo(needleX, needleY);
-                  ctx.strokeStyle = 'red';
-                  ctx.lineWidth = 2;
-                  ctx.stroke();
+      const rows = 6;
+      ctx.strokeStyle = '#b9d1c2';
+      ctx.lineWidth = 1;
+      for (let i = 1; i < rows; i++) {
+        const y = graphArea.y + (graphArea.height / rows) * i;
+        ctx.beginPath();
+        ctx.moveTo(graphArea.x, y);
+        ctx.lineTo(graphArea.x + graphArea.width, y);
+        ctx.stroke();
+      }
 
-                  ctx.fillStyle = 'black';
-                  ctx.font = '12px Arial';
-                  ctx.fillText('Galvanometer', 390, 270);
-                }
+      const zeroY = graphArea.y + graphArea.height / 2;
+      ctx.strokeStyle = '#4a6757';
+      ctx.beginPath();
+      ctx.moveTo(graphArea.x, zeroY);
+      ctx.lineTo(graphArea.x + graphArea.width, zeroY);
+      ctx.stroke();
 
+      ctx.fillStyle = '#2f4f3b';
+      ctx.fillText('+V', graphArea.x + 8, graphArea.y + 14);
+      ctx.fillText('-V', graphArea.x + 8, graphArea.y + graphArea.height - 6);
+    }
 
-                let prevTime = performance.now();
-                let smoothedVelocity = 0;
-                let flipPolarity = false;
-                function draw() {
-                  ctx.clearRect(0, 0, canvas.width, canvas.height);
-                  const position = parseInt(slider.value);
+    function drawGraphTrace() {
+      if (dataLog.length < 2) return;
 
-                  drawMagnet(position);
-                  drawCoil();
+      // Use 2 cycles for oscillate, 10 s window otherwise
+      const window = (animMode === 'oscillate') ? 2 * OSC_PERIOD : 10;
+      const tNow = dataLog[dataLog.length - 1].t;
+      const tMin = tNow - window;
 
-                  const currentTime = performance.now();
-                  const dt = (currentTime - prevTime) / 1000; // seconds
-                  const rawVelocity = dt > 0 ? (position - prevPosition) / dt : 0;
-                  const adjustedVelocity = flipPolarity ? -rawVelocity : rawVelocity;
-                  // Smooth velocity using exponential moving average
-                  const alpha = 0.2;
-                  smoothedVelocity = alpha * adjustedVelocity + (1 - alpha) * smoothedVelocity;
+      // Filter to entries within the window
+      const visible = dataLog.filter(d => d.t >= tMin);
+      if (visible.length < 2) return;
 
-                  prevPosition = position;
-                  prevTime = currentTime;
+      ctx.strokeStyle = '#136f3a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
 
-                  drawGalvanometer(smoothedVelocity);
-                    if (!isMoving) {
-                    smoothedVelocity *= 0.9;
-                    if (Math.abs(smoothedVelocity) < 0.01) smoothedVelocity = 0;
-                    drawGalvanometer(smoothedVelocity);
-                  }
+      for (let i = 0; i < visible.length; i++) {
+        const x = graphArea.x + ((visible[i].t - tMin) / window) * graphArea.width;
+        const normalized = Math.max(Math.min(visible[i].v / graphArea.maxAbsVoltage, 1), -1);
+        const y = graphArea.y + graphArea.height / 2 - normalized * (graphArea.height * 0.45);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
 
-                  animationFrameId = requestAnimationFrame(draw);
-                }
+      const latest = dataLog[dataLog.length - 1].v;
+      ctx.fillStyle = '#183827';
+      ctx.font = '13px Trebuchet MS';
+      ctx.fillText(`Reading: ${latest.toFixed(2)} V`, graphArea.x + 10, graphArea.y + graphArea.height + 24);
+    }
 
-                slider.addEventListener('input', () => {
-                  isMoving = true;
-                });
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                slider.addEventListener('change', () => {
-                  isMoving = false;
-                });
+      const currentTime = performance.now();
+      const dt = Math.min((currentTime - prevTime) / 1000, 0.05); // cap dt to avoid jumps
 
-                requestAnimationFrame(draw);  
-                draw();
-                
-                document.getElementById('flipMagnet').addEventListener('change', (e) => {
-                  flipPolarity = e.target.checked;
-                });
-                </script>
+      if (isPaused) {
+        drawCoilLayer(false);
+        drawMagnet(pausedPosition, flipMagnet.checked);
+        drawCoilLayer(true);
+        const lastVoltage = dataLog.length ? dataLog[dataLog.length - 1].v : 0;
+        drawDataloggerConnections(lastVoltage);
+        drawDropButton();
+        drawGraphBackground();
+        drawGraphTrace();
+        requestAnimationFrame(draw);
+        return;
+      }
 
-      </body>
+      let position;
+
+      if (animMode === 'oscillate') {
+        if (animStartTime === null) animStartTime = currentTime;
+        const t = (currentTime - animStartTime) / 1000;
+        const omega = 2 * Math.PI / OSC_PERIOD;
+        position = Math.round((COIL_CENTER - MAGNET_HALF_HEIGHT) + OSC_AMPLITUDE * Math.sin(omega * t));
+        analyticVelocity = OSC_AMPLITUDE * omega * Math.cos(omega * t);
+        isMoving = true;
+      } else if (animMode === 'freefall') {
+        if (!freeFallActive) {
+          position = SLIDER_MIN;
+          analyticVelocity = 0;
+          isMoving = false;
+        } else {
+          if (animStartTime === null) animStartTime = currentTime;
+          fallVelocity += GRAVITY * dt;
+          fallPosition += fallVelocity * dt;
+          if (fallPosition > SLIDER_MAX + 100) {
+            freeFallActive = false;
+            fallPosition = SLIDER_MIN;
+            fallVelocity = 0;
+            animStartTime = currentTime;
+            position = SLIDER_MIN;
+            analyticVelocity = 0;
+            isMoving = false;
+          } else {
+            position = Math.round(fallPosition);
+            analyticVelocity = null;
+            isMoving = true;
+          }
+        }
+      } else {
+        position = parseInt(slider.value, 10);
+        analyticVelocity = null;
+      }
+
+      drawCoilLayer(false);
+      drawMagnet(position, flipMagnet.checked);
+      drawCoilLayer(true);
+      drawDropButton();
+
+      const rawVelocity = dt > 0 ? (position - prevPosition) / dt : 0;
+      const adjustedVelocity = flipMagnet.checked ? -rawVelocity : rawVelocity;
+
+      const alpha = 0.2;
+      smoothedVelocity = alpha * adjustedVelocity + (1 - alpha) * smoothedVelocity;
+
+      // Use analytic velocity for oscillate mode; smoothed frame-diff otherwise
+      const effectiveVelocity = analyticVelocity !== null
+        ? (flipMagnet.checked ? -analyticVelocity : analyticVelocity)
+        : smoothedVelocity;
+
+      // For oscillate mode, use an ideal sinusoid for a clean datalogger trace.
+      // Keep the physics-shaped emf model for manual and free-fall motion.
+      let voltage;
+      if (animMode === 'oscillate' && animStartTime !== null) {
+        const t = (currentTime - animStartTime) / 1000;
+        const omega = 2 * Math.PI / OSC_PERIOD;
+        const sign = flipMagnet.checked ? -1 : 1;
+        const peakVelocity = OSC_AMPLITUDE * omega;
+        const peakVoltage = peakVelocity * VOLTS_PER_PIXEL_PER_SECOND;
+        voltage = sign * peakVoltage * Math.sin(2 * omega * t);
+      } else {
+        const sigma = 70;
+        const distance = (position + MAGNET_HALF_HEIGHT) - COIL_CENTER;
+        const flux = Math.exp(-(distance * distance) / (2 * sigma * sigma));
+        voltage = (effectiveVelocity / 80) * (distance / sigma) * flux;
+      }
+
+      drawDataloggerConnections(voltage);
+
+      dataLog.push({ t: currentTime / 1000, v: voltage });
+      // Keep only the last 20 seconds of data to limit memory
+      const cutoff = currentTime / 1000 - 20;
+      while (dataLog.length > 1 && dataLog[0].t < cutoff) dataLog.shift();
+
+      if (!isMoving) {
+        smoothedVelocity *= 0.9;
+        if (Math.abs(smoothedVelocity) < 0.01) smoothedVelocity = 0;
+      }
+
+      drawGraphBackground();
+      drawGraphTrace();
+
+      prevPosition = position;
+      prevTime = currentTime;
+      requestAnimationFrame(draw);
+    }
+
+    slider.addEventListener('input', () => {
+      isMoving = true;
+    });
+
+    slider.addEventListener('change', () => {
+      isMoving = false;
+    });
+
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+    requestAnimationFrame(draw);
+  </script>
+</body>
 </html>
