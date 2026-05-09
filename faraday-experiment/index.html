@@ -30,6 +30,7 @@
       display: flex;
       align-items: center;
       justify-content: flex-start;
+      position: relative;
     }
 
     canvas {
@@ -45,11 +46,20 @@
     }
 
     .controls {
-      margin-top: 2px;
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
       display: flex;
       flex-direction: column;
       gap: 4px;
       align-items: stretch;
+      z-index: 2;
+      background: rgba(247, 252, 249, 0.9);
+      border: 1px solid #9bb1a4;
+      border-radius: 8px;
+      padding: 4px 6px;
+      backdrop-filter: blur(1px);
     }
 
     .controls-row {
@@ -180,6 +190,15 @@
       }
 
       .controls {
+        position: static;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        padding: 0;
+        backdrop-filter: none;
+      }
+
+      .controls {
         gap: 5px;
       }
 
@@ -229,21 +248,21 @@
   <div id="simulation-container">
     <div class="canvas-stage">
       <canvas id="simCanvas" width="940" height="430"></canvas>
-    </div>
-    <div class="controls">
-      <div class="controls-row controls-row-top">
-      </div>
-      <div class="controls-row controls-row-buttons">
-        <button id="btnManual"    type="button" class="mode-btn active">Manual</button>
-        <button id="btnOscillate" type="button" class="mode-btn">Oscillate</button>
-        <button id="btnFreeFall" type="button" class="mode-btn">Free Fall</button>
-        <button id="btnPauseResume" type="button">Pause</button>
-        <button id="outputModeBtn" type="button" class="output-toggle-btn">Output: Datalogger</button>
-        <label class="toggle-switch">
-          <input type="checkbox" id="flipMagnet">
-          <span class="toggle-slider" aria-hidden="true"></span>
-          <span>Reverse poles</span>
-        </label>
+      <div class="controls">
+        <div class="controls-row controls-row-top">
+        </div>
+        <div class="controls-row controls-row-buttons">
+          <button id="btnManual"    type="button" class="mode-btn active">Manual</button>
+          <button id="btnOscillate" type="button" class="mode-btn">Oscillate</button>
+          <button id="btnFreeFall" type="button" class="mode-btn">Free Fall</button>
+          <button id="btnPauseResume" type="button">Pause</button>
+          <button id="outputModeBtn" type="button" class="output-toggle-btn">Output: Datalogger</button>
+          <label class="toggle-switch">
+            <input type="checkbox" id="flipMagnet">
+            <span class="toggle-slider" aria-hidden="true"></span>
+            <span>Reverse poles</span>
+          </label>
+        </div>
       </div>
     </div>
   </div>
@@ -260,7 +279,7 @@
       x: 450,
       y: 40,
       width: 460,
-      height: 330,
+      height: 308,
       maxAbsVoltage: 7
     };
 
