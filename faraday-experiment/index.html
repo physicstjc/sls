@@ -60,13 +60,55 @@
 
     .controls input[type="range"] {
       width: 220px;
+      height: 28px;
+      accent-color: #1f7a45;
+      cursor: pointer;
+      background: transparent;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .controls input[type="range"]::-webkit-slider-runnable-track {
+      height: 8px;
+      border-radius: 2px;
+      background: #3f7d59;
+      border: 1px solid #2d5b42;
+    }
+
+    .controls input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      margin-top: -6px;
+      border-radius: 2px;
+      background: #0f5b31;
+      border: 2px solid #e8fff2;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+    }
+
+    .controls input[type="range"]::-moz-range-track {
+      height: 8px;
+      border-radius: 2px;
+      background: #3f7d59;
+      border: 1px solid #2d5b42;
+    }
+
+    .controls input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 2px;
+      background: #0f5b31;
+      border: 2px solid #e8fff2;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
     }
 
     .controls button {
       border: 1px solid #42614f;
       background: #f0f8f3;
       color: #23392c;
-      padding: 8px 12px;
+      padding: 3px 7px;
+      font-size: 0.78rem;
       border-radius: 6px;
       cursor: pointer;
     }
@@ -165,7 +207,7 @@
     const OSC_PERIOD = 5.0;     // seconds per full oscillation
     const VOLTS_PER_PIXEL_PER_SECOND = 0.024;
     const GRAVITY = 260;        // px/s²
-    const DROP_BUTTON = { x: 185, y: 18, w: 84, h: 34 };
+    const DROP_BUTTON = { x: 185, y: 46, w: 84, h: 34 };
 
     function setMode(mode) {
       animMode = mode;
