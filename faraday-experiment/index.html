@@ -278,9 +278,9 @@
 
     const graphArea = {
       x: 450,
-      y: 40,
+      y: 56,
       width: 460,
-      height: 308,
+      height: 274,
       maxAbsVoltage: 7
     };
 
@@ -447,7 +447,9 @@
 
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 16px Trebuchet MS';
-      ctx.fillText('Drop', DROP_BUTTON.x + 24, DROP_BUTTON.y + 22);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      fillTextStretched('Drop', DROP_BUTTON.x + DROP_BUTTON.w / 2, DROP_BUTTON.y + DROP_BUTTON.h / 2);
       ctx.restore();
     }
 
@@ -493,30 +495,36 @@
       const x = MAGNET_X;
       const magnetWidth = 48;
       const sectionHeight = 42;
+      const centerX = x + magnetWidth / 2;
 
       ctx.font = 'bold 20px Trebuchet MS';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
 
       if (!flipped) {
         ctx.fillStyle = 'blue';
         ctx.fillRect(x, y, magnetWidth, sectionHeight);
         ctx.fillStyle = 'white';
-        fillTextStretched('S', x + 20, y + 27);
+        fillTextStretched('S', centerX, y + sectionHeight / 2);
 
         ctx.fillStyle = 'red';
         ctx.fillRect(x, y + sectionHeight, magnetWidth, sectionHeight);
         ctx.fillStyle = 'white';
-        fillTextStretched('N', x + 19, y + sectionHeight + 27);
+        fillTextStretched('N', centerX, y + sectionHeight + sectionHeight / 2);
       } else {
         ctx.fillStyle = 'red';
         ctx.fillRect(x, y, magnetWidth, sectionHeight);
         ctx.fillStyle = 'white';
-        fillTextStretched('N', x + 19, y + 27);
+        fillTextStretched('N', centerX, y + sectionHeight / 2);
 
         ctx.fillStyle = 'blue';
         ctx.fillRect(x, y + sectionHeight, magnetWidth, sectionHeight);
         ctx.fillStyle = 'white';
-        fillTextStretched('S', x + 20, y + sectionHeight + 27);
+        fillTextStretched('S', centerX, y + sectionHeight + sectionHeight / 2);
       }
+
+      ctx.textAlign = 'start';
+      ctx.textBaseline = 'alphabetic';
 
     }
 
@@ -755,8 +763,8 @@
       ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
 
       ctx.fillStyle = '#1f3025';
-      ctx.font = '15px Trebuchet MS';
-      ctx.fillText('LED Indicator Pair', panelX + 10, panelY - 12);
+      ctx.font = '14px Trebuchet MS';
+      fillTextStretched('LED Indicator Pair', panelX + 10, panelY + panelHeight + 24);
 
       ctx.strokeStyle = '#4d6157';
       ctx.lineWidth = 3;
@@ -864,8 +872,8 @@
       ctx.strokeRect(graphArea.x, graphArea.y, graphArea.width, graphArea.height);
 
       ctx.fillStyle = '#1f3025';
-      ctx.font = '15px Trebuchet MS';
-      fillTextStretched('Data Logger: EMF (V)', graphArea.x + 10, graphArea.y - 12);
+      ctx.font = '14px Trebuchet MS';
+      fillTextStretched('Data Logger: EMF (V)', graphArea.x + 10, graphArea.y + graphArea.height + 24);
 
       const rows = 6;
       ctx.strokeStyle = '#b9d1c2';
@@ -918,13 +926,21 @@
       const latest = dataLog[dataLog.length - 1].v;
       ctx.fillStyle = '#183827';
       ctx.font = '15px Trebuchet MS';
-      fillTextStretched(`Reading: ${latest.toFixed(2)} V`, graphArea.x + 10, graphArea.y + graphArea.height + 24);
+      ctx.textAlign = 'right';
+      fillTextStretched(`Reading: ${latest.toFixed(2)} V`, graphArea.x + graphArea.width - 10, graphArea.y + graphArea.height + 24);
+      ctx.textAlign = 'start';
     }
 
     function drawAppLabel() {
-      ctx.fillStyle = '#2a3a31';
-      ctx.font = '14px Trebuchet MS';
-      fillTextStretched('Electromagnetic Induction Experiment', 14, 22);
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#dbe9e1';
+      ctx.fillStyle = '#1d3528';
+      ctx.font = 'bold 20px Trebuchet MS';
+      fillTextStretched('Electromagnetic Induction Experiment', canvas.width / 2, 10);
+      ctx.restore();
     }
 
     function draw() {
