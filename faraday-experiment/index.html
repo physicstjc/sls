@@ -14,9 +14,9 @@
     }
 
     #simulation-container {
-      width: min(720px, 100%);
-      max-width: 720px;
-      height: auto;
+      width: min(640px, 100%);
+      max-width: 640px;
+      height: 480px;
       margin: 0 auto;
       padding: 4px;
       box-sizing: border-box;
@@ -25,8 +25,8 @@
     }
 
     .canvas-stage {
-      flex: 0 0 auto;
-      min-height: auto;
+      flex: 1 1 auto;
+      min-height: 0;
       display: flex;
       align-items: center;
       justify-content: flex-start;
@@ -34,9 +34,9 @@
 
     canvas {
       width: 100%;
-      height: auto;
-      max-height: 100%;
-      aspect-ratio: 940 / 430;
+      height: 100%;
+      max-height: none;
+      aspect-ratio: auto;
       display: block;
       border: 1px solid #6d7d73;
       border-radius: 6px;
@@ -61,7 +61,7 @@
     }
 
     .controls-row-top {
-      min-height: 0;
+      display: none;
     }
 
     .controls-row-buttons {
@@ -101,6 +101,60 @@
 
     .toggle-label input {
       margin: 0;
+    }
+
+    .toggle-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #203228;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      padding: 2px 0;
+      cursor: pointer;
+    }
+
+    .toggle-switch input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .toggle-slider {
+      position: relative;
+      width: 34px;
+      height: 18px;
+      border-radius: 999px;
+      background: #b7c8be;
+      border: 1px solid #6f8578;
+      transition: background 0.15s ease;
+      flex: 0 0 auto;
+    }
+
+    .toggle-slider::after {
+      content: '';
+      position: absolute;
+      top: 1px;
+      left: 1px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      transition: transform 0.15s ease;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background: #2f4f3b;
+      border-color: #1a2e22;
+    }
+
+    .toggle-switch input:checked + .toggle-slider::after {
+      transform: translateX(16px);
+    }
+
+    .output-toggle-btn {
+      min-width: 104px;
     }
 
     #simulation-container:fullscreen {
@@ -164,6 +218,10 @@
       .toggle-label {
         font-size: 0.74rem;
       }
+
+      .toggle-switch {
+        font-size: 0.74rem;
+      }
     }
   </style>
 </head>
@@ -180,8 +238,12 @@
         <button id="btnOscillate" type="button" class="mode-btn">Oscillate</button>
         <button id="btnFreeFall" type="button" class="mode-btn">Free Fall</button>
         <button id="btnPauseResume" type="button">Pause</button>
-        <button id="fullscreenBtn" type="button">Fullscreen</button>
-        <label class="toggle-label"><input type="checkbox" id="flipMagnet"> Flip Magnet Polarity</label>
+        <button id="outputModeBtn" type="button" class="output-toggle-btn">Output: Datalogger</button>
+        <label class="toggle-switch">
+          <input type="checkbox" id="flipMagnet">
+          <span class="toggle-slider" aria-hidden="true"></span>
+          <span>Reverse poles</span>
+        </label>
       </div>
     </div>
   </div>
@@ -191,13 +253,13 @@
     const ctx = canvas.getContext('2d');
     const flipMagnet = document.getElementById('flipMagnet');
     const btnPauseResume = document.getElementById('btnPauseResume');
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const outputModeBtn = document.getElementById('outputModeBtn');
     const container = document.getElementById('simulation-container');
 
     const graphArea = {
       x: 450,
       y: 40,
-      width: 340,
+      width: 460,
       height: 330,
       maxAbsVoltage: 7
     };
@@ -224,6 +286,7 @@
     let pausedAtTime = 0;
     let pausedPosition = prevPosition;
     let pausedOscElapsed = 0;
+    let outputMode = 'datalogger';
 
     const MAGNET_HALF_HEIGHT = 42; // half of the 84px total magnet height
     const SLIDER_MIN = 40;
@@ -244,7 +307,8 @@
     const OSC_PERIOD = 5.0;     // seconds per full oscillation
     const VOLTS_PER_PIXEL_PER_SECOND = 0.024;
     const GRAVITY = 260;        // px/s²
-    const DROP_BUTTON = { x: 148, y: 46, w: 84, h: 34 };
+    const DROP_BUTTON = { x: 18, y: 46, w: 84, h: 34 };
+    const LED_THRESHOLD_VOLTAGE = 0.85;
 
     function setMode(mode) {
       animMode = mode;
@@ -263,6 +327,11 @@
     document.getElementById('btnManual').addEventListener('click',    () => setMode('manual'));
     document.getElementById('btnOscillate').addEventListener('click', () => setMode('oscillate'));
     document.getElementById('btnFreeFall').addEventListener('click',  () => setMode('freefall'));
+
+    outputModeBtn.addEventListener('click', () => {
+      outputMode = outputMode === 'datalogger' ? 'leds' : 'datalogger';
+      outputModeBtn.textContent = outputMode === 'datalogger' ? 'Output: Datalogger' : 'Output: LEDs';
+    });
 
     btnPauseResume.addEventListener('click', () => {
       if (!isPaused) {
@@ -382,14 +451,22 @@
       }
     });
 
-    function toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        container.requestFullscreen().catch((err) => {
-          alert(`Error attempting to enable fullscreen: ${err.message}`);
-        });
-      } else {
-        document.exitFullscreen();
-      }
+    function getTextStretchX() {
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return 1;
+
+      const intrinsicAspect = canvas.width / canvas.height;
+      const displayedAspect = rect.width / rect.height;
+      return intrinsicAspect / displayedAspect;
+    }
+
+    function fillTextStretched(text, x, y) {
+      const stretchX = getTextStretchX();
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(stretchX, 1);
+      ctx.fillText(text, 0, 0);
+      ctx.restore();
     }
 
     function drawMagnet(y, flipped) {
@@ -403,30 +480,27 @@
         ctx.fillStyle = 'blue';
         ctx.fillRect(x, y, magnetWidth, sectionHeight);
         ctx.fillStyle = 'white';
-        ctx.fillText('S', x + 20, y + 27);
+        fillTextStretched('S', x + 20, y + 27);
 
         ctx.fillStyle = 'red';
         ctx.fillRect(x, y + sectionHeight, magnetWidth, sectionHeight);
         ctx.fillStyle = 'white';
-        ctx.fillText('N', x + 19, y + sectionHeight + 27);
+        fillTextStretched('N', x + 19, y + sectionHeight + 27);
       } else {
         ctx.fillStyle = 'red';
         ctx.fillRect(x, y, magnetWidth, sectionHeight);
         ctx.fillStyle = 'white';
-        ctx.fillText('N', x + 19, y + 27);
+        fillTextStretched('N', x + 19, y + 27);
 
         ctx.fillStyle = 'blue';
         ctx.fillRect(x, y + sectionHeight, magnetWidth, sectionHeight);
         ctx.fillStyle = 'white';
-        ctx.fillText('S', x + 20, y + sectionHeight + 27);
+        fillTextStretched('S', x + 20, y + sectionHeight + 27);
       }
 
-      ctx.fillStyle = '#25352b';
-      ctx.font = '16px Trebuchet MS';
-      ctx.fillText('Magnet', x - 3, y - 8);
     }
 
-    function drawDataloggerConnections(currentSign = 0) {
+    function drawOutputWires(currentSign = 0, showArrows = false) {
       const terminalX = graphArea.x - 10;
       const terminalTopY = graphArea.y + 92;
       const terminalBottomY = graphArea.y + graphArea.height - 92;
@@ -530,12 +604,18 @@
         ctx.stroke();
       }
 
-      if (Math.abs(currentSign) > 1e-5) {
+      if (showArrows && Math.abs(currentSign) > 1e-5) {
         const positive = currentSign > 0;
         // Positive current: top wire coil -> logger, bottom wire logger -> coil.
         drawArrowOnBezier(topStart, topC1, topC2, topEnd, 0.56, !positive);
         drawArrowOnBezier(bottomStart, bottomC1, bottomC2, bottomEnd, 0.56, positive);
       }
+
+      return { terminalX, terminalTopY, terminalBottomY };
+    }
+
+    function drawDataloggerConnections() {
+      const { terminalX, terminalTopY, terminalBottomY } = drawOutputWires(0, false);
 
       // Simulated datalogger terminals.
       ctx.fillStyle = '#dce9e1';
@@ -556,12 +636,146 @@
       ctx.font = 'bold 13px Trebuchet MS';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('+', terminalX, terminalTopY + 0.5);
-      ctx.fillText('-', terminalX, terminalBottomY + 0.5);
+      fillTextStretched('+', terminalX, terminalTopY + 0.5);
+      fillTextStretched('-', terminalX, terminalBottomY + 0.5);
 
       // Reset text alignment so other labels render as expected.
       ctx.textAlign = 'start';
       ctx.textBaseline = 'alphabetic';
+    }
+
+    function drawLedSymbol(centerX, centerY, color, reverse, lit) {
+      const lead = 24;
+      const triHalf = 11;
+      const triLength = 17;
+      const lineStart = centerX - lead;
+      const lineEnd = centerX + lead;
+      const tipX = reverse ? centerX - triLength / 2 : centerX + triLength / 2;
+      const baseX = reverse ? centerX + triLength / 2 : centerX - triLength / 2;
+      const barX = reverse ? centerX - triLength / 2 - 5 : centerX + triLength / 2 + 5;
+
+      ctx.save();
+      ctx.strokeStyle = lit ? color : '#5c6d64';
+      ctx.fillStyle = lit ? color : '#d9e3dd';
+      ctx.lineWidth = 2.4;
+      ctx.lineCap = 'round';
+
+      ctx.beginPath();
+      ctx.moveTo(lineStart, centerY);
+      ctx.lineTo(baseX, centerY);
+      ctx.moveTo(barX, centerY);
+      ctx.lineTo(lineEnd, centerY);
+      ctx.stroke();
+
+      ctx.beginPath();
+      if (reverse) {
+        ctx.moveTo(baseX, centerY - triHalf);
+        ctx.lineTo(baseX, centerY + triHalf);
+        ctx.lineTo(tipX, centerY);
+      } else {
+        ctx.moveTo(baseX, centerY - triHalf);
+        ctx.lineTo(tipX, centerY);
+        ctx.lineTo(baseX, centerY + triHalf);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(barX, centerY - triHalf - 2);
+      ctx.lineTo(barX, centerY + triHalf + 2);
+      ctx.stroke();
+
+      if (lit) {
+        const arrowBaseX = reverse ? centerX - 3 : centerX + 3;
+        const arrowBaseY = centerY - 18;
+        for (let i = 0; i < 2; i++) {
+          const dir = reverse ? -1 : 1;
+          const offsetX = i * 7;
+          const startX = arrowBaseX + dir * offsetX;
+          ctx.beginPath();
+          ctx.moveTo(startX, arrowBaseY);
+          ctx.lineTo(startX + dir * 10, arrowBaseY - 10);
+          ctx.lineTo(startX + dir * 6, arrowBaseY - 10);
+          ctx.moveTo(startX + dir * 10, arrowBaseY - 10);
+          ctx.lineTo(startX + dir * 10, arrowBaseY - 6);
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.18;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 24, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawLedOutput(voltage) {
+      const { terminalX, terminalTopY, terminalBottomY } = drawOutputWires(voltage, true);
+      const panelX = graphArea.x;
+      const panelY = graphArea.y;
+      const panelWidth = graphArea.width;
+      const panelHeight = graphArea.height;
+      const centerX = panelX + panelWidth / 2;
+      const centerY = panelY + panelHeight / 2;
+      const leftNodeX = centerX - 88;
+      const rightNodeX = centerX + 88;
+      const topBranchY = centerY - 34;
+      const bottomBranchY = centerY + 34;
+      const redOn = voltage >= LED_THRESHOLD_VOLTAGE;
+      const greenOn = voltage <= -LED_THRESHOLD_VOLTAGE;
+
+      ctx.fillStyle = '#fbfdfb';
+      ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
+      ctx.strokeStyle = '#2f4f3b';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
+
+      ctx.fillStyle = '#1f3025';
+      ctx.font = '15px Trebuchet MS';
+      ctx.fillText('LED Indicator Pair', panelX + 10, panelY - 12);
+
+      ctx.strokeStyle = '#4d6157';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+
+      ctx.beginPath();
+      ctx.moveTo(terminalX, terminalTopY);
+      ctx.lineTo(leftNodeX, terminalTopY);
+      ctx.lineTo(leftNodeX, centerY);
+      ctx.lineTo(leftNodeX, topBranchY);
+      ctx.moveTo(leftNodeX, centerY);
+      ctx.lineTo(leftNodeX, bottomBranchY);
+      ctx.moveTo(rightNodeX, topBranchY);
+      ctx.lineTo(rightNodeX, centerY);
+      ctx.lineTo(rightNodeX, terminalBottomY);
+      ctx.lineTo(terminalX, terminalBottomY);
+      ctx.moveTo(rightNodeX, centerY);
+      ctx.lineTo(rightNodeX, bottomBranchY);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(leftNodeX, topBranchY);
+      ctx.lineTo(rightNodeX, topBranchY);
+      ctx.moveTo(leftNodeX, bottomBranchY);
+      ctx.lineTo(rightNodeX, bottomBranchY);
+      ctx.stroke();
+
+      ctx.fillStyle = '#4d6157';
+      ctx.beginPath();
+      ctx.arc(leftNodeX, centerY, 4.5, 0, Math.PI * 2);
+      ctx.arc(rightNodeX, centerY, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      drawLedSymbol(centerX, topBranchY, '#d63c35', false, redOn);
+      drawLedSymbol(centerX, bottomBranchY, '#2f9e44', true, greenOn);
+
+      ctx.fillStyle = '#31453b';
+      ctx.font = '14px Trebuchet MS';
+      fillTextStretched('Red LED: + current', panelX + 18, panelY + panelHeight - 44);
+      fillTextStretched('Green LED: - current', panelX + 18, panelY + panelHeight - 20);
     }
 
     function drawCoilLayer(frontLayer) {
@@ -615,7 +829,7 @@
       if (frontLayer) {
         ctx.fillStyle = '#25352b';
         ctx.font = '16px Trebuchet MS';
-        ctx.fillText('Solenoid', centerX + radiusX + 12, topY + 10);
+        fillTextStretched('Solenoid', centerX + radiusX + 12, topY + 10);
       }
     }
 
@@ -629,7 +843,7 @@
 
       ctx.fillStyle = '#1f3025';
       ctx.font = '15px Trebuchet MS';
-      ctx.fillText('Data Logger: EMF (V)', graphArea.x + 10, graphArea.y - 12);
+      fillTextStretched('Data Logger: EMF (V)', graphArea.x + 10, graphArea.y - 12);
 
       const rows = 6;
       ctx.strokeStyle = '#b9d1c2';
@@ -651,8 +865,8 @@
 
       ctx.fillStyle = '#2f4f3b';
       ctx.font = '14px Trebuchet MS';
-      ctx.fillText('+V', graphArea.x + 8, graphArea.y + 14);
-      ctx.fillText('-V', graphArea.x + 8, graphArea.y + graphArea.height - 6);
+      fillTextStretched('+V', graphArea.x + 8, graphArea.y + 14);
+      fillTextStretched('-V', graphArea.x + 8, graphArea.y + graphArea.height - 6);
     }
 
     function drawGraphTrace() {
@@ -682,13 +896,13 @@
       const latest = dataLog[dataLog.length - 1].v;
       ctx.fillStyle = '#183827';
       ctx.font = '15px Trebuchet MS';
-      ctx.fillText(`Reading: ${latest.toFixed(2)} V`, graphArea.x + 10, graphArea.y + graphArea.height + 24);
+      fillTextStretched(`Reading: ${latest.toFixed(2)} V`, graphArea.x + 10, graphArea.y + graphArea.height + 24);
     }
 
     function drawAppLabel() {
       ctx.fillStyle = '#2a3a31';
       ctx.font = '14px Trebuchet MS';
-      ctx.fillText('Electromagnetic Induction Experiment', 14, 22);
+      fillTextStretched('Electromagnetic Induction Experiment', 14, 22);
     }
 
     function draw() {
@@ -703,10 +917,16 @@
         drawCoilLayer(true);
         drawAppLabel();
         const lastVoltage = dataLog.length ? dataLog[dataLog.length - 1].v : 0;
-        drawDataloggerConnections(lastVoltage);
+        if (outputMode === 'datalogger') {
+          drawDataloggerConnections();
+        } else {
+          drawLedOutput(lastVoltage);
+        }
         drawDropButton();
-        drawGraphBackground();
-        drawGraphTrace();
+        if (outputMode === 'datalogger') {
+          drawGraphBackground();
+          drawGraphTrace();
+        }
         requestAnimationFrame(draw);
         return;
       }
@@ -781,8 +1001,11 @@
         const flux = Math.exp(-(distance * distance) / (2 * sigma * sigma));
         voltage = (effectiveVelocity / 80) * (distance / sigma) * flux;
       }
-
-      drawDataloggerConnections(voltage);
+      if (outputMode === 'datalogger') {
+        drawDataloggerConnections();
+      } else {
+        drawLedOutput(voltage);
+      }
 
       dataLog.push({ t: currentTime / 1000, v: voltage });
       // Keep only the last 20 seconds of data to limit memory
@@ -793,15 +1016,15 @@
         smoothedVelocity *= 0.9;
         if (Math.abs(smoothedVelocity) < 0.01) smoothedVelocity = 0;
       }
-
-      drawGraphBackground();
-      drawGraphTrace();
+      if (outputMode === 'datalogger') {
+        drawGraphBackground();
+        drawGraphTrace();
+      }
 
       prevPosition = position;
       prevTime = currentTime;
       requestAnimationFrame(draw);
     }
-    fullscreenBtn.addEventListener('click', toggleFullscreen);
     requestAnimationFrame(draw);
   </script>
 </body>
