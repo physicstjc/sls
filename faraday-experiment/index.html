@@ -10,7 +10,7 @@
     body {
       margin: 0;
       font-family: "Trebuchet MS", "Segoe UI", sans-serif;
-      background: linear-gradient(180deg, #f7faf8 0%, #e7f0eb 100%);
+      background: #ffffff;
     }
 
     #simulation-container {
@@ -18,10 +18,11 @@
       max-width: 640px;
       height: 480px;
       margin: 0 auto;
-      padding: 4px;
+      padding: 0;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
+      background: #ffffff;
     }
 
     .canvas-stage {
@@ -39,9 +40,9 @@
       max-height: none;
       aspect-ratio: auto;
       display: block;
-      border: 1px solid #6d7d73;
-      border-radius: 6px;
-      box-shadow: 0 10px 24px rgba(41, 58, 49, 0.18);
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
       background: #ffffff;
     }
 
@@ -55,11 +56,11 @@
       gap: 4px;
       align-items: stretch;
       z-index: 2;
-      background: rgba(247, 252, 249, 0.9);
-      border: 1px solid #9bb1a4;
-      border-radius: 8px;
-      padding: 4px 6px;
-      backdrop-filter: blur(1px);
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      backdrop-filter: none;
     }
 
     .controls-row {
@@ -186,7 +187,7 @@
       #simulation-container {
         height: auto;
         margin: 0 auto;
-        padding: 4px;
+        padding: 0;
       }
 
       .controls {
@@ -214,7 +215,7 @@
       #simulation-container {
         height: auto;
         margin: 0 auto;
-        padding: 2px;
+        padding: 0;
       }
 
       .controls {
@@ -635,6 +636,7 @@
 
     function drawDataloggerConnections() {
       const { terminalX, terminalTopY, terminalBottomY } = drawOutputWires(0, false);
+      const stretchX = getTextStretchX();
 
       // Simulated datalogger terminals.
       ctx.fillStyle = '#dce9e1';
@@ -642,12 +644,12 @@
       ctx.lineWidth = 2;
 
       ctx.beginPath();
-      ctx.arc(terminalX, terminalTopY, 7, 0, 2 * Math.PI);
+      ctx.ellipse(terminalX, terminalTopY, 7 * stretchX, 7, 0, 0, 2 * Math.PI);
       ctx.fill();
       ctx.stroke();
 
       ctx.beginPath();
-      ctx.arc(terminalX, terminalBottomY, 7, 0, 2 * Math.PI);
+      ctx.ellipse(terminalX, terminalBottomY, 7 * stretchX, 7, 0, 0, 2 * Math.PI);
       ctx.fill();
       ctx.stroke();
 
@@ -783,9 +785,10 @@
       ctx.stroke();
 
       ctx.fillStyle = '#4d6157';
+      const stretchX = getTextStretchX();
       ctx.beginPath();
-      ctx.arc(leftNodeX, centerY, 4.5, 0, Math.PI * 2);
-      ctx.arc(rightNodeX, centerY, 4.5, 0, Math.PI * 2);
+      ctx.ellipse(leftNodeX, centerY, 4.5 * stretchX, 4.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(rightNodeX, centerY, 4.5 * stretchX, 4.5, 0, 0, Math.PI * 2);
       ctx.fill();
 
       drawLedSymbol(centerX, topBranchY, '#d63c35', false, redOn);
