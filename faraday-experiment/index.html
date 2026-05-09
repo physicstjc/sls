@@ -17,8 +17,8 @@
       width: 100%;
       max-width: 980px;
       height: 460px;
-      margin: 16px auto;
-      padding: 12px;
+      margin: 6px auto;
+      padding: 8px;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
@@ -37,10 +37,10 @@
     }
 
     .controls {
-      margin-top: 12px;
+      margin-top: 6px;
       display: flex;
       flex-wrap: nowrap;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
       overflow-x: auto;
     }
@@ -551,6 +551,12 @@
       ctx.fillText(`Reading: ${latest.toFixed(2)} V`, graphArea.x + 10, graphArea.y + graphArea.height + 24);
     }
 
+    function drawAppLabel() {
+      ctx.fillStyle = '#2a3a31';
+      ctx.font = '12px Trebuchet MS';
+      ctx.fillText('Electromagnetic Induction Experiment', 14, 22);
+    }
+
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -561,6 +567,7 @@
         drawCoilLayer(false);
         drawMagnet(pausedPosition, flipMagnet.checked);
         drawCoilLayer(true);
+        drawAppLabel();
         const lastVoltage = dataLog.length ? dataLog[dataLog.length - 1].v : 0;
         drawDataloggerConnections(lastVoltage);
         drawDropButton();
@@ -610,6 +617,7 @@
       drawCoilLayer(false);
       drawMagnet(position, flipMagnet.checked);
       drawCoilLayer(true);
+      drawAppLabel();
       drawDropButton();
 
       const rawVelocity = dt > 0 ? (position - prevPosition) / dt : 0;
