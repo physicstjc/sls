@@ -14,21 +14,29 @@
     }
 
     #simulation-container {
-      width: 100%;
-      max-width: 980px;
-      height: 460px;
-      margin: 6px auto;
-      padding: 8px;
+      width: min(720px, 100%);
+      max-width: 720px;
+      height: auto;
+      margin: 0 auto;
+      padding: 4px;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
     }
 
+    .canvas-stage {
+      flex: 0 0 auto;
+      min-height: auto;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
     canvas {
       width: 100%;
-      height: 100%;
-      flex: 1 1 auto;
-      min-height: 0;
+      height: auto;
+      max-height: 100%;
+      aspect-ratio: 940 / 430;
       display: block;
       border: 1px solid #6d7d73;
       border-radius: 6px;
@@ -37,7 +45,14 @@
     }
 
     .controls {
-      margin-top: 6px;
+      margin-top: 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: stretch;
+    }
+
+    .controls-row {
       display: flex;
       flex-wrap: nowrap;
       gap: 8px;
@@ -45,62 +60,17 @@
       overflow-x: auto;
     }
 
+    .controls-row-top {
+      min-height: 0;
+    }
+
+    .controls-row-buttons {
+      justify-content: flex-start;
+    }
+
     .controls label {
       color: #203228;
       font-size: 0.95rem;
-    }
-
-    .slider-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      white-space: nowrap;
-      flex: 0 0 auto;
-    }
-
-    .controls input[type="range"] {
-      width: 220px;
-      height: 28px;
-      accent-color: #1f7a45;
-      cursor: pointer;
-      background: transparent;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-
-    .controls input[type="range"]::-webkit-slider-runnable-track {
-      height: 8px;
-      border-radius: 2px;
-      background: #3f7d59;
-      border: 1px solid #2d5b42;
-    }
-
-    .controls input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 16px;
-      height: 16px;
-      margin-top: -6px;
-      border-radius: 2px;
-      background: #0f5b31;
-      border: 2px solid #e8fff2;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
-    }
-
-    .controls input[type="range"]::-moz-range-track {
-      height: 8px;
-      border-radius: 2px;
-      background: #3f7d59;
-      border: 1px solid #2d5b42;
-    }
-
-    .controls input[type="range"]::-moz-range-thumb {
-      width: 16px;
-      height: 16px;
-      border-radius: 2px;
-      background: #0f5b31;
-      border: 2px solid #e8fff2;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
     }
 
     .controls button {
@@ -119,6 +89,20 @@
       border-color: #1a2e22;
     }
 
+    .toggle-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #203228;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      padding: 3px 2px;
+    }
+
+    .toggle-label input {
+      margin: 0;
+    }
+
     #simulation-container:fullscreen {
       display: flex;
       flex-direction: column;
@@ -133,36 +117,85 @@
       width: min(95vw, 1200px);
       height: auto;
     }
+
+    @media (max-width: 900px) {
+      #simulation-container {
+        height: auto;
+        margin: 0 auto;
+        padding: 4px;
+      }
+
+      .controls {
+        gap: 5px;
+      }
+
+      .controls-row {
+        flex-wrap: wrap;
+        overflow-x: visible;
+        gap: 6px;
+      }
+
+    }
+
+    @media (max-width: 560px) {
+      #simulation-container {
+        height: auto;
+        margin: 0 auto;
+        padding: 2px;
+      }
+
+      .controls {
+        margin-top: 2px;
+      }
+
+      .controls-row {
+        gap: 5px;
+      }
+
+      .controls label {
+        font-size: 0.82rem;
+      }
+
+      .controls button {
+        padding: 2px 6px;
+        font-size: 0.72rem;
+      }
+
+      .toggle-label {
+        font-size: 0.74rem;
+      }
+    }
   </style>
 </head>
 <body>
   <div id="simulation-container">
-    <canvas id="simCanvas" width="940" height="430"></canvas>
+    <div class="canvas-stage">
+      <canvas id="simCanvas" width="940" height="430"></canvas>
+    </div>
     <div class="controls">
-      <div class="slider-wrap">
-        <label for="magnetPos">Move Magnet:</label>
-        <input type="range" id="magnetPos" min="40" max="320" value="95">
+      <div class="controls-row controls-row-top">
       </div>
-      <label><input type="checkbox" id="flipMagnet"> Flip Magnet Polarity</label>
-      <button id="btnManual"    type="button" class="mode-btn active">Manual</button>
-      <button id="btnOscillate" type="button" class="mode-btn">Oscillate</button>
-      <button id="btnFreeFall" type="button" class="mode-btn">Free Fall</button>
-      <button id="btnPauseResume" type="button">Pause</button>
-      <button id="fullscreenBtn" type="button">Fullscreen</button>
+      <div class="controls-row controls-row-buttons">
+        <button id="btnManual"    type="button" class="mode-btn active">Manual</button>
+        <button id="btnOscillate" type="button" class="mode-btn">Oscillate</button>
+        <button id="btnFreeFall" type="button" class="mode-btn">Free Fall</button>
+        <button id="btnPauseResume" type="button">Pause</button>
+        <button id="fullscreenBtn" type="button">Fullscreen</button>
+        <label class="toggle-label"><input type="checkbox" id="flipMagnet"> Flip Magnet Polarity</label>
+      </div>
     </div>
   </div>
 
   <script>
     const canvas = document.getElementById('simCanvas');
     const ctx = canvas.getContext('2d');
-    const slider = document.getElementById('magnetPos');
     const flipMagnet = document.getElementById('flipMagnet');
     const btnPauseResume = document.getElementById('btnPauseResume');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
     const container = document.getElementById('simulation-container');
 
     const graphArea = {
-      x: 560,
+      x: 450,
       y: 40,
       width: 340,
       height: 330,
@@ -172,10 +205,13 @@
     // dataLog stores {t, v} entries; we keep a fixed time window of 2 oscillation periods.
     const dataLog = [];
     const GRAPH_WINDOW = 2 * 3.0; // seconds — updated dynamically in draw()
-    let prevPosition = parseInt(slider.value, 10);
+    let manualPosition = 95;
+    let prevPosition = manualPosition;
     let prevTime = performance.now();
     let smoothedVelocity = 0;
     let isMoving = false;
+    let isDraggingMagnet = false;
+    let dragOffsetY = 0;
 
     // Animation modes: 'manual' | 'oscillate' | 'freefall'
     let animMode = 'manual';
@@ -193,7 +229,8 @@
     const SLIDER_MIN = 40;
     const SLIDER_MAX = 320;
     const COIL_CENTER = 210;
-    const COIL_X = 314;
+    const COIL_X = 210;
+    const MAGNET_X = 186;
     const COIL_TOP_Y = 156;
     const COIL_LOOPS = 7;
     const COIL_PITCH = 18;
@@ -207,7 +244,7 @@
     const OSC_PERIOD = 5.0;     // seconds per full oscillation
     const VOLTS_PER_PIXEL_PER_SECOND = 0.024;
     const GRAVITY = 260;        // px/s²
-    const DROP_BUTTON = { x: 185, y: 46, w: 84, h: 34 };
+    const DROP_BUTTON = { x: 148, y: 46, w: 84, h: 34 };
 
     function setMode(mode) {
       animMode = mode;
@@ -216,8 +253,8 @@
       fallPosition = SLIDER_MIN;
       freeFallActive = false;
       isPaused = false;
+      isDraggingMagnet = false;
       btnPauseResume.textContent = 'Pause';
-      slider.disabled = isPaused || (mode !== 'manual');
       document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
       const map = { manual: 'btnManual', oscillate: 'btnOscillate', freefall: 'btnFreeFall' };
       document.getElementById(map[mode]).classList.add('active');
@@ -235,7 +272,6 @@
         if (animMode === 'oscillate' && animStartTime !== null) {
           pausedOscElapsed = (performance.now() - animStartTime) / 1000;
         }
-        slider.disabled = true;
         btnPauseResume.textContent = 'Resume';
         return;
       }
@@ -252,8 +288,61 @@
       prevTime = now;
       isPaused = false;
       btnPauseResume.textContent = 'Pause';
-      slider.disabled = (animMode !== 'manual');
     });
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function getCanvasPoint(event) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY
+      };
+    }
+
+    function isPointInMagnet(x, y) {
+      return x >= MAGNET_X
+        && x <= MAGNET_X + 48
+        && y >= manualPosition
+        && y <= manualPosition + MAGNET_HALF_HEIGHT * 2;
+    }
+
+    canvas.addEventListener('pointerdown', (event) => {
+      if (animMode !== 'manual' || isPaused) return;
+
+      const point = getCanvasPoint(event);
+      if (!isPointInMagnet(point.x, point.y)) return;
+
+      isDraggingMagnet = true;
+      dragOffsetY = point.y - manualPosition;
+      isMoving = true;
+      canvas.setPointerCapture(event.pointerId);
+    });
+
+    canvas.addEventListener('pointermove', (event) => {
+      if (!isDraggingMagnet || animMode !== 'manual' || isPaused) return;
+
+      const point = getCanvasPoint(event);
+      manualPosition = clamp(Math.round(point.y - dragOffsetY), SLIDER_MIN, SLIDER_MAX);
+      isMoving = true;
+    });
+
+    function stopMagnetDrag(event) {
+      if (!isDraggingMagnet) return;
+
+      isDraggingMagnet = false;
+      isMoving = false;
+      if (event && canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    canvas.addEventListener('pointerup', stopMagnetDrag);
+    canvas.addEventListener('pointercancel', stopMagnetDrag);
 
     function drawDropButton() {
       if (animMode !== 'freefall' || freeFallActive) return;
@@ -268,7 +357,7 @@
       ctx.stroke();
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 14px Trebuchet MS';
+      ctx.font = 'bold 16px Trebuchet MS';
       ctx.fillText('Drop', DROP_BUTTON.x + 24, DROP_BUTTON.y + 22);
       ctx.restore();
     }
@@ -304,9 +393,11 @@
     }
 
     function drawMagnet(y, flipped) {
-      const x = 290;
+      const x = MAGNET_X;
       const magnetWidth = 48;
       const sectionHeight = 42;
+
+      ctx.font = 'bold 20px Trebuchet MS';
 
       if (!flipped) {
         ctx.fillStyle = 'blue';
@@ -331,7 +422,7 @@
       }
 
       ctx.fillStyle = '#25352b';
-      ctx.font = '14px Trebuchet MS';
+      ctx.font = '16px Trebuchet MS';
       ctx.fillText('Magnet', x - 3, y - 8);
     }
 
@@ -462,7 +553,7 @@
       ctx.stroke();
 
       ctx.fillStyle = '#1f3025';
-      ctx.font = 'bold 11px Trebuchet MS';
+      ctx.font = 'bold 13px Trebuchet MS';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('+', terminalX, terminalTopY + 0.5);
@@ -523,7 +614,7 @@
 
       if (frontLayer) {
         ctx.fillStyle = '#25352b';
-        ctx.font = '14px Trebuchet MS';
+        ctx.font = '16px Trebuchet MS';
         ctx.fillText('Solenoid', centerX + radiusX + 12, topY + 10);
       }
     }
@@ -537,8 +628,8 @@
       ctx.strokeRect(graphArea.x, graphArea.y, graphArea.width, graphArea.height);
 
       ctx.fillStyle = '#1f3025';
-      ctx.font = '13px Trebuchet MS';
-      ctx.fillText('Data Logger: Potential Difference (V)', graphArea.x + 10, graphArea.y - 12);
+      ctx.font = '15px Trebuchet MS';
+      ctx.fillText('Data Logger: EMF (V)', graphArea.x + 10, graphArea.y - 12);
 
       const rows = 6;
       ctx.strokeStyle = '#b9d1c2';
@@ -559,6 +650,7 @@
       ctx.stroke();
 
       ctx.fillStyle = '#2f4f3b';
+      ctx.font = '14px Trebuchet MS';
       ctx.fillText('+V', graphArea.x + 8, graphArea.y + 14);
       ctx.fillText('-V', graphArea.x + 8, graphArea.y + graphArea.height - 6);
     }
@@ -589,13 +681,13 @@
 
       const latest = dataLog[dataLog.length - 1].v;
       ctx.fillStyle = '#183827';
-      ctx.font = '13px Trebuchet MS';
+      ctx.font = '15px Trebuchet MS';
       ctx.fillText(`Reading: ${latest.toFixed(2)} V`, graphArea.x + 10, graphArea.y + graphArea.height + 24);
     }
 
     function drawAppLabel() {
       ctx.fillStyle = '#2a3a31';
-      ctx.font = '12px Trebuchet MS';
+      ctx.font = '14px Trebuchet MS';
       ctx.fillText('Electromagnetic Induction Experiment', 14, 22);
     }
 
@@ -652,7 +744,7 @@
           }
         }
       } else {
-        position = parseInt(slider.value, 10);
+        position = manualPosition;
         analyticVelocity = null;
       }
 
@@ -709,15 +801,6 @@
       prevTime = currentTime;
       requestAnimationFrame(draw);
     }
-
-    slider.addEventListener('input', () => {
-      isMoving = true;
-    });
-
-    slider.addEventListener('change', () => {
-      isMoving = false;
-    });
-
     fullscreenBtn.addEventListener('click', toggleFullscreen);
     requestAnimationFrame(draw);
   </script>
