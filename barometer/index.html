@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Barometer</title>
+	<meta name="description" content="Interactive barometer simulation with selectable liquids, probe-based pressure readouts, and environment controls for altitude and planets.">
+	<link rel="canonical" href="https://physicstjc.github.io/sls/barometer/">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="Barometer Simulation">
+	<meta property="og:description" content="Explore how barometer pressure readings change with fluid type, altitude, and planet.">
+	<meta property="og:url" content="https://physicstjc.github.io/sls/barometer/">
+	<meta property="og:image" content="https://physicstjc.github.io/sls/barometer/barometer.png">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="Barometer Simulation">
+	<meta name="twitter:description" content="Explore how barometer pressure readings change with fluid type, altitude, and planet.">
+	<script src="https://cdn.tailwindcss.com"></script>
+
+	<style>
+		:root {
+			--ink: #111111;
+			--paper: #fffdf7;
+			--bg: #ffe06b;
+			--panel: #ffffff;
+			--teal: #39d2c0;
+			--orange: #ff8f3f;
+			--pink: #ff5ca8;
+			--blue: #4a8dff;
+			--accent: #ffb347;
+			--border: 2px solid var(--ink);
+		}
+
+		body {
+			background:
+				linear-gradient(135deg, rgba(255, 255, 255, 0.18) 25%, transparent 25%) -14px 0/28px 28px,
+				linear-gradient(225deg, rgba(255, 255, 255, 0.18) 25%, transparent 25%) -14px 0/28px 28px,
+				linear-gradient(315deg, rgba(255, 255, 255, 0.18) 25%, transparent 25%) 0 0/28px 28px,
+				linear-gradient(45deg, rgba(255, 255, 255, 0.18) 25%, transparent 25%) 0 0/28px 28px,
+				var(--bg);
+			font-family: "Trebuchet MS", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+			color: var(--ink);
+			line-height: 1.6;
+			margin: 0;
+			padding: 14px;
+		}
+
+		.main-container {
+			max-width: 1060px;
+			margin: 12px auto;
+			background: var(--paper);
+			padding: 8px;
+			border-radius: 0;
+			border: 3px solid var(--ink);
+			box-shadow: 6px 6px 0 var(--ink);
+			height: 480px;
+			box-sizing: border-box;
+			display: flex;
+			flex-direction: column;
+			overflow: hidden;
+		}
+
+		#topTitleBar {
+			position: static;
+			background: var(--accent);
+			border-bottom: var(--border);
+			border-radius: 0;
+			padding: 4px 8px;
+			z-index: 3;
+			margin-bottom: 8px;
+			flex: 0 0 auto;
+		}
+
+		#topTitleBar h1 {
+			margin: 0;
+			color: var(--ink);
+			font-size: clamp(0.95rem, 1.5vw, 1.2rem);
+			line-height: 1.1;
+			font-weight: 700;
+		}
+
+		.sim-layout {
+			display: grid;
+			grid-template-columns: 280px minmax(0, 1fr);
+			gap: 10px;
+			align-items: stretch;
+			flex: 1 1 auto;
+			min-height: 0;
+		}
+
+		.info-box {
+			background-color: #fff4db;
+			border: 2px solid var(--ink);
+			padding: 10px;
+			font-size: 0.9rem;
+			color: var(--ink);
+			box-shadow: 2px 2px 0 var(--ink);
+			height: 100%;
+			overflow: auto;
+		}
+
+		.control-group {
+			background: var(--panel);
+			border: 2px solid var(--ink);
+			border-radius: 0;
+			padding: 8px;
+			margin-bottom: 8px;
+			box-shadow: 2px 2px 0 var(--ink);
+		}
+
+		.control-label {
+			font-weight: 700;
+			color: var(--ink);
+			font-size: 0.8rem;
+			margin-bottom: 8px;
+			display: block;
+			text-transform: uppercase;
+			letter-spacing: 0.4px;
+		}
+
+		.tiny-help {
+			font-size: 0.75rem;
+			color: #444;
+			margin-top: 4px;
+			display: block;
+			line-height: 1.25;
+		}
+
+		select,
+		input[type="range"] {
+			width: 100%;
+		}
+
+		select {
+			border: 2px solid var(--ink);
+			padding: 6px;
+			background: white;
+			font-weight: 600;
+		}
+
+		input[type=range] {
+			-webkit-appearance: none;
+			appearance: none;
+			background: transparent;
+		}
+
+		input[type=range]::-webkit-slider-runnable-track {
+			height: 10px;
+			cursor: pointer;
+			background: var(--teal);
+			border: 2px solid var(--ink);
+		}
+
+		input[type=range]::-webkit-slider-thumb {
+			height: 22px;
+			width: 22px;
+			background: var(--pink);
+			cursor: pointer;
+			-webkit-appearance: none;
+			margin-top: -8px;
+			border: 2px solid var(--ink);
+			box-shadow: 2px 2px 0 var(--ink);
+		}
+
+		.value-row {
+			margin-top: 6px;
+			font-size: 0.8rem;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 8px;
+			color: #303030;
+		}
+
+		.canvas-wrap {
+			position: relative;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			width: 100%;
+			height: 100%;
+			min-height: 0;
+			overflow: hidden;
+		}
+
+		.calc-overlay {
+			position: absolute;
+			top: 10px;
+			left: 50%;
+			transform: translateX(-50%);
+			width: min(92%, 660px);
+			background: rgba(255, 255, 255, 0.94);
+			border: 3px solid var(--ink);
+			box-shadow: 4px 4px 0 var(--ink);
+			padding: 8px 12px;
+			z-index: 2;
+			text-align: center;
+			pointer-events: none;
+		}
+
+		.calc-formula {
+			font-size: 0.82rem;
+			color: #1a1a1a;
+			line-height: 1.3;
+			font-weight: 700;
+		}
+
+		.calc-depth {
+			margin-top: 4px;
+			font-size: 0.76rem;
+			color: #444;
+		}
+
+		canvas {
+			background-color: #f6fbff;
+			border: 3px solid var(--ink);
+			cursor: crosshair;
+			width: auto;
+			height: auto;
+			max-width: 100%;
+			max-height: 100%;
+			display: block;
+			margin: 0 auto;
+			box-shadow: 3px 3px 0 var(--ink);
+			touch-action: none;
+		}
+
+		.btn-reset {
+			background-color: var(--blue);
+			color: var(--ink);
+			padding: 6px 10px;
+			border-radius: 0;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.4px;
+			font-size: 0.8rem;
+			border: 2px solid var(--ink);
+			box-shadow: 2px 2px 0 var(--ink);
+			width: 100%;
+			margin-top: 6px;
+			transition: all 0.2s;
+		}
+
+		.btn-reset:hover {
+			background-color: var(--orange);
+			transform: translate(2px, 2px);
+			box-shadow: 2px 2px 0 var(--ink);
+		}
+
+		@media (max-width: 980px) {
+			.sim-layout {
+				grid-template-columns: 1fr;
+				grid-template-rows: minmax(170px, 42%) minmax(0, 1fr);
+				gap: 10px;
+			}
+
+			#topTitleBar {
+				margin-bottom: 8px;
+			}
+
+			.canvas-wrap {
+				min-height: 0;
+			}
+		}
+	</style>
+</head>
+<body>
+	<div class="main-container">
+		<header id="topTitleBar" aria-label="Simulation top title bar">
+			<h1>Barometer</h1>
+		</header>
+
+		<div class="sim-layout">
+			<aside class="info-box" aria-label="Controls panel">
+				<div class="control-group">
+					<span class="control-label">Barometer Liquid</span>
+					<select id="liquidSelect" aria-label="Choose barometer liquid"></select>
+					<div class="value-row">
+						<span>Density</span>
+						<strong id="densityLabel">-</strong>
+					</div>
+					<span class="tiny-help">Different fluid densities change how quickly pressure rises with depth.</span>
+				</div>
+
+				<div class="control-group">
+					<span class="control-label">Planet</span>
+					<select id="planetSelect" aria-label="Choose planet"></select>
+					<div class="value-row">
+						<span>Gravity</span>
+						<strong id="gravityLabel">-</strong>
+					</div>
+				</div>
+
+				<div class="control-group">
+					<span class="control-label">Altitude (m)</span>
+					<input id="altitudeSlider" type="range" min="0" max="10000" step="100" value="0" aria-label="Set altitude">
+					<div class="value-row">
+						<span>Current altitude</span>
+						<strong id="altitudeLabel">0 m</strong>
+					</div>
+					<button id="resetBtn" class="btn-reset">Reset View</button>
+				</div>
+			</aside>
+
+			<div class="canvas-wrap">
+				<canvas id="simCanvas" width="760" height="520" aria-label="Barometer simulation canvas"></canvas>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		const liquids = [
+			{ key: "mercury", name: "Mercury", density: 13595, color: "#b8bcc6" },
+			{ key: "water", name: "Water", density: 1000, color: "#5ec8ff" },
+			{ key: "glycerin", name: "Glycerin", density: 1260, color: "#b2dcff" },
+			{ key: "ethanol", name: "Ethanol", density: 789, color: "#9be8ff" },
+			{ key: "saltwater", name: "Saltwater", density: 1030, color: "#53bfff" }
+		];
+
+		const planets = [
+			{ key: "earth", name: "Earth", gravity: 9.81, p0: 101325 },
+			{ key: "mars", name: "Mars", gravity: 3.71, p0: 610 },
+			{ key: "venus", name: "Venus", gravity: 8.87, p0: 9200000 },
+			{ key: "moon", name: "Moon", gravity: 1.62, p0: 0.0000003 }
+		];
+
+		const canvas = document.getElementById("simCanvas");
+		const ctx = canvas.getContext("2d");
+
+		const liquidSelect = document.getElementById("liquidSelect");
+		const planetSelect = document.getElementById("planetSelect");
+		const altitudeSlider = document.getElementById("altitudeSlider");
+		const resetBtn = document.getElementById("resetBtn");
+
+		const densityLabel = document.getElementById("densityLabel");
+		const gravityLabel = document.getElementById("gravityLabel");
+		const altitudeLabel = document.getElementById("altitudeLabel");
+
+		const FLASK = {
+			x: 120,
+			y: 312,
+			width: 520,
+			height: 148
+		};
+
+		const TUBE = {
+			x: 365,
+			y: 24,
+			width: 90,
+			height: 396
+		};
+		const DEFAULT_TUBE_Y = 24;
+		const SCALE_HEIGHT_PX = FLASK.y - DEFAULT_TUBE_Y;
+        const TUBE_WALL_PX = 2;
+        const TUBE_INNER_WIDTH_PX = TUBE.width - 2 * TUBE_WALL_PX;
+        const DEFAULT_RESERVOIR_SURFACE_Y = FLASK.y + 82;
+
+		const TUBE_BOTTOM_MARGIN_PX = 18;
+		const TUBE_MIN_SUBMERGED_PX = 24;
+
+		const PROBE_RADIUS = 9;
+		const P_MAX_VISUAL = 12000000;
+		const AIR_MOLAR_MASS = 0.0289644;
+		const GAS_R = 8.314462618;
+		const STANDARD_AIR_TEMP_K = 288.15;
+
+		const state = {
+			liquidKey: "mercury",
+			planetKey: "earth",
+			altitudeM: 0,
+			isDraggingProbe: false,
+			isDraggingTube: false,
+			tubeDragOffsetY: 0,
+			probe: {
+				x: 340,
+				y: 180
+			}
+		};
+
+		function setupSelectOptions() {
+			liquids.forEach((liquid) => {
+				const option = document.createElement("option");
+				option.value = liquid.key;
+				option.textContent = liquid.name;
+				liquidSelect.appendChild(option);
+			});
+
+			planets.forEach((planet) => {
+				const option = document.createElement("option");
+				option.value = planet.key;
+				option.textContent = planet.name;
+				planetSelect.appendChild(option);
+			});
+
+			liquidSelect.value = state.liquidKey;
+			planetSelect.value = state.planetKey;
+		}
+
+		function getLiquid() {
+			return liquids.find((liquid) => liquid.key === state.liquidKey);
+		}
+
+		function getPlanet() {
+			return planets.find((planet) => planet.key === state.planetKey);
+		}
+
+		function clamp(value, min, max) {
+			return Math.min(max, Math.max(min, value));
+		}
+
+		function atmosphericPressurePa() {
+			const planet = getPlanet();
+			const exponent = -(AIR_MOLAR_MASS * planet.gravity * state.altitudeM) / (GAS_R * STANDARD_AIR_TEMP_K);
+			return planet.p0 * Math.exp(exponent);
+		}
+
+		function columnHeightM() {
+			const liquid = getLiquid();
+			const planet = getPlanet();
+			const pAtm = atmosphericPressurePa();
+			if (planet.gravity <= 0 || liquid.density <= 0) {
+				return 0;
+			}
+			return pAtm / (liquid.density * planet.gravity);
+		}
+
+		function scaleMaxM() {
+			const h = columnHeightM();
+			const liquid = getLiquid();
+
+			// Mercury barometers are commonly read on a 0-1 m scale (for ~760 mm near Earth).
+			if (liquid.key === "mercury" && h <= 1) {
+				return 1;
+			}
+
+			const target = Math.max(0.5, h * 1.35);
+			const magnitude = Math.pow(10, Math.floor(Math.log10(target)));
+			const normalized = target / magnitude;
+			let niceNormalized;
+
+			if (normalized <= 1) {
+				niceNormalized = 1;
+			} else if (normalized <= 2) {
+				niceNormalized = 2;
+			} else if (normalized <= 5) {
+				niceNormalized = 5;
+			} else {
+				niceNormalized = 10;
+			}
+
+			return Math.min(20000, niceNormalized * magnitude);
+		}
+
+		function columnHeightPx() {
+			const maxM = scaleMaxM();
+			return clamp((columnHeightM() / maxM) * SCALE_HEIGHT_PX, 2, SCALE_HEIGHT_PX - 2);
+		}
+
+		function reservoirSurfaceY() {
+			return DEFAULT_RESERVOIR_SURFACE_Y;
+		}
+
+		function liquidTopY() {
+			return reservoirSurfaceY() - columnHeightPx();
+		}
+
+		function isInTube(x, y) {
+			return x >= TUBE.x && x <= TUBE.x + TUBE.width && y >= TUBE.y && y <= TUBE.y + TUBE.height;
+		}
+
+		function isOnTubeForDrag(x, y) {
+			const pad = 10;
+			return x >= TUBE.x - pad && x <= TUBE.x + TUBE.width + pad && y >= TUBE.y && y <= TUBE.y + TUBE.height;
+		}
+
+		function clampTubeY(y) {
+			const minY = 10;
+			const maxBottom = FLASK.y + FLASK.height - TUBE_BOTTOM_MARGIN_PX;
+			const minBottom = DEFAULT_RESERVOIR_SURFACE_Y + TUBE_MIN_SUBMERGED_PX;
+			const maxY = maxBottom - TUBE.height;
+			const minAllowedY = Math.max(minY, minBottom - TUBE.height);
+			return clamp(y, minAllowedY, maxY);
+		}
+
+		function isInReservoir(y) {
+			const surfaceY = reservoirSurfaceY();
+			return y >= surfaceY && y <= FLASK.y + FLASK.height;
+		}
+
+		function inLiquidAt(x, y) {
+			if (isInTube(x, y)) {
+				return y >= liquidTopY();
+			}
+			if (x >= FLASK.x && x <= FLASK.x + FLASK.width && isInReservoir(y)) {
+				return true;
+			}
+			return false;
+		}
+
+		function pressureAtProbePa() {
+			const pAir = atmosphericPressurePa();
+			const liquid = getLiquid();
+			const planet = getPlanet();
+			const surfaceY = reservoirSurfaceY();
+			const colTopY = liquidTopY();
+			const colHeightM = columnHeightM();
+			const colHeightPx = Math.max(1e-6, columnHeightPx());
+			const metersPerPxInColumn = colHeightM / colHeightPx;
+
+			if (isInTube(state.probe.x, state.probe.y) && state.probe.y < colTopY) {
+				// Vacuum region at the top of a barometer tube.
+				return 0;
+			}
+
+			if (!inLiquidAt(state.probe.x, state.probe.y)) {
+				return pAir;
+			}
+
+			let liquidSurfaceY = surfaceY;
+			let depthM;
+			if (isInTube(state.probe.x, state.probe.y)) {
+				liquidSurfaceY = colTopY;
+				const depthPxInColumn = Math.max(0, state.probe.y - liquidSurfaceY);
+				depthM = depthPxInColumn * metersPerPxInColumn;
+				return liquid.density * planet.gravity * depthM;
+			}
+
+			const depthPx = Math.max(0, state.probe.y - liquidSurfaceY);
+			depthM = depthPx / 50;
+			return pAir + liquid.density * planet.gravity * depthM;
+		}
+
+		function paToMmhg(pa) {
+			return pa / 133.322368;
+		}
+
+		function paToMmH2O(pa) {
+			return pa / 9.80665;
+		}
+
+		function paToMmOfCurrentLiquid(pa) {
+			const liquid = getLiquid();
+			const planet = getPlanet();
+			const denom = liquid.density * planet.gravity;
+			if (denom <= 0) {
+				return 0;
+			}
+			return (pa / denom) * 1000;
+		}
+
+		function fmt(value, digits) {
+			return Number(value).toLocaleString(undefined, {
+				maximumFractionDigits: digits,
+				minimumFractionDigits: digits
+			});
+		}
+
+		function pressureColor(pa) {
+			const t = clamp(pa / P_MAX_VISUAL, 0, 1);
+			const r = Math.round(80 + 170 * t);
+			const g = Math.round(210 - 150 * t);
+			const b = Math.round(255 - 185 * t);
+			return `rgb(${r}, ${g}, ${b})`;
+		}
+
+		function drawBackground() {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+			sky.addColorStop(0, "#d7f4ff");
+			sky.addColorStop(1, "#f8fcff");
+			ctx.fillStyle = sky;
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+		}
+
+		function drawBarometer() {
+			const liquid = getLiquid();
+			const topY = liquidTopY();
+			const surfaceY = reservoirSurfaceY();
+
+			ctx.fillStyle = "#ffffff";
+			ctx.fillRect(TUBE.x, TUBE.y, TUBE.width, TUBE.height);
+			ctx.strokeStyle = "#111";
+			ctx.lineWidth = 3;
+			ctx.strokeRect(TUBE.x, TUBE.y, TUBE.width, TUBE.height);
+
+			const gradient = ctx.createLinearGradient(TUBE.x, TUBE.y, TUBE.x + TUBE.width, TUBE.y);
+			gradient.addColorStop(0, liquid.color);
+			gradient.addColorStop(1, "#ffffff");
+
+			ctx.fillStyle = gradient;
+			ctx.fillRect(TUBE.x + TUBE_WALL_PX, topY, TUBE_INNER_WIDTH_PX, TUBE.y + TUBE.height - topY - TUBE_WALL_PX);
+
+			ctx.fillStyle = liquid.color;
+			ctx.fillRect(FLASK.x, surfaceY, FLASK.width, FLASK.y + FLASK.height - surfaceY);
+			ctx.strokeStyle = "#111";
+			ctx.lineWidth = 3;
+			ctx.beginPath();
+			ctx.moveTo(FLASK.x, FLASK.y);
+			ctx.lineTo(FLASK.x, FLASK.y + FLASK.height);
+			ctx.lineTo(FLASK.x + FLASK.width, FLASK.y + FLASK.height);
+			ctx.lineTo(FLASK.x + FLASK.width, FLASK.y);
+			ctx.stroke();
+
+			// Redraw the tube edges over the reservoir so the column container remains visible below the surface.
+			ctx.strokeStyle = "#111";
+			ctx.lineWidth = 3;
+			ctx.beginPath();
+			ctx.moveTo(TUBE.x, surfaceY);
+			ctx.lineTo(TUBE.x, TUBE.y + TUBE.height);
+			ctx.moveTo(TUBE.x + TUBE.width, surfaceY);
+			ctx.lineTo(TUBE.x + TUBE.width, TUBE.y + TUBE.height);
+			ctx.stroke();
+
+			ctx.fillStyle = "#111";
+			ctx.font = "700 15px Trebuchet MS";
+			ctx.fillText("Vacuum", TUBE.x + TUBE.width + 16, TUBE.y + 26);
+			ctx.beginPath();
+			ctx.moveTo(TUBE.x + TUBE.width + 10, TUBE.y + 20);
+			ctx.lineTo(TUBE.x + TUBE.width - 4, TUBE.y + 20);
+			ctx.strokeStyle = "#111";
+			ctx.lineWidth = 2;
+			ctx.stroke();
+
+			ctx.fillStyle = "#111";
+			ctx.font = "700 15px Trebuchet MS";
+			ctx.fillText("Liquid column", TUBE.x + TUBE.width + 16, topY + 20);
+			ctx.beginPath();
+			ctx.moveTo(TUBE.x + TUBE.width + 10, topY + 15);
+			ctx.lineTo(TUBE.x + TUBE.width - 4, topY + 15);
+			ctx.stroke();
+		}
+
+		function drawScale() {
+			const surface = reservoirSurfaceY();
+			const top = surface - SCALE_HEIGHT_PX;
+			const maxM = scaleMaxM();
+
+			ctx.strokeStyle = "#111";
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			ctx.moveTo(TUBE.x - 26, top);
+			ctx.lineTo(TUBE.x - 26, surface);
+			ctx.stroke();
+
+			const colHeightM = columnHeightM();
+			for (let i = 0; i <= 10; i += 1) {
+				const y = top + (i / 10) * (surface - top);
+				ctx.beginPath();
+				ctx.moveTo(TUBE.x - 26, y);
+				ctx.lineTo(TUBE.x - 14, y);
+				ctx.stroke();
+
+				const mAtTick = ((10 - i) / 10) * maxM;
+				if (i % 2 === 0) {
+					ctx.fillStyle = "#111";
+					ctx.font = "700 13px Trebuchet MS";
+					const digits = maxM < 10 ? 1 : 0;
+					ctx.fillText(`${fmt(mAtTick, digits)} m`, TUBE.x - 66, y + 4);
+				}
+			}
+
+			const colTop = liquidTopY();
+			ctx.strokeStyle = "#ff5ca8";
+			ctx.lineWidth = 3;
+			ctx.beginPath();
+			ctx.moveTo(TUBE.x - 30, colTop);
+			ctx.lineTo(TUBE.x + TUBE.width + 4, colTop);
+			ctx.stroke();
+
+			ctx.fillStyle = "#111";
+			ctx.font = "700 14px Trebuchet MS";
+			ctx.fillText(`Column height: ${fmt(colHeightM, 2)} m`, TUBE.x - 20, TUBE.y + TUBE.height + 22);
+		}
+
+		function drawProbe() {
+			const pa = pressureAtProbePa();
+			const c = pressureColor(pa);
+			const x = state.probe.x;
+			const y = state.probe.y;
+
+			ctx.fillStyle = c;
+			ctx.beginPath();
+			ctx.arc(x, y, PROBE_RADIUS + 5, 0, Math.PI * 2);
+			ctx.fill();
+
+			ctx.fillStyle = "#ff2b9a";
+			ctx.strokeStyle = "#111";
+			ctx.lineWidth = 3;
+			ctx.beginPath();
+			ctx.arc(x, y, PROBE_RADIUS, 0, Math.PI * 2);
+			ctx.fill();
+			ctx.stroke();
+
+			ctx.fillStyle = "#111";
+			ctx.font = "700 14px Trebuchet MS";
+			ctx.fillText("Probe", x + 15, y - 12);
+
+			ctx.fillStyle = "rgba(255,255,255,0.95)";
+			ctx.strokeStyle = "#111";
+			ctx.lineWidth = 2;
+			const labelW = 180;
+			const labelH = 44;
+			const labelX = clamp(x + 16, 8, canvas.width - labelW - 8);
+			const labelY = clamp(y + 10, 8, canvas.height - labelH - 8);
+			ctx.fillRect(labelX, labelY, labelW, labelH);
+			ctx.strokeRect(labelX, labelY, labelW, labelH);
+
+			ctx.fillStyle = "#111";
+			ctx.font = "700 13px Trebuchet MS";
+			ctx.fillText(`P = ${fmt(pa, 0)} Pa`, labelX + 8, labelY + 16);
+			ctx.fillText(`${fmt(paToMmOfCurrentLiquid(pa), 1)} mm ${getLiquid().name}`, labelX + 8, labelY + 32);
+		}
+
+		function drawLegend() {
+			const pAir = atmosphericPressurePa();
+			const planet = getPlanet();
+			const liquid = getLiquid();
+
+			ctx.fillStyle = "rgba(255,255,255,0.94)";
+			ctx.strokeStyle = "#111";
+			ctx.lineWidth = 2;
+			ctx.fillRect(12, 12, 228, 56);
+			ctx.strokeRect(12, 12, 228, 56);
+
+			ctx.fillStyle = "#111";
+			ctx.font = "700 12px Trebuchet MS";
+			ctx.fillText(`Planet: ${planet.name}  g=${fmt(planet.gravity, 2)} m/s²`, 18, 31);
+			ctx.fillText(`Pₐₜₘ=${fmt(pAir, 0)} Pa  ρ=${fmt(liquid.density, 0)} kg/m³`, 18, 49);
+		}
+
+		function updateLabels() {
+			const liquid = getLiquid();
+			const planet = getPlanet();
+
+			densityLabel.textContent = `${fmt(liquid.density, 0)} kg/m³`;
+			gravityLabel.textContent = `${fmt(planet.gravity, 2)} m/s²`;
+			altitudeLabel.textContent = `${fmt(state.altitudeM, 0)} m`;
+		}
+
+		function render() {
+			drawBackground();
+			drawBarometer();
+			drawScale();
+			drawProbe();
+			drawLegend();
+			updateLabels();
+		}
+
+		function getPointerPos(event) {
+			const rect = canvas.getBoundingClientRect();
+			return {
+				x: (event.clientX - rect.left) * (canvas.width / rect.width),
+				y: (event.clientY - rect.top) * (canvas.height / rect.height)
+			};
+		}
+
+		function bindEvents() {
+			liquidSelect.addEventListener("change", (event) => {
+				state.liquidKey = event.target.value;
+				render();
+			});
+
+			planetSelect.addEventListener("change", (event) => {
+				state.planetKey = event.target.value;
+				render();
+			});
+
+			altitudeSlider.addEventListener("input", (event) => {
+				state.altitudeM = Number(event.target.value);
+				render();
+			});
+
+			resetBtn.addEventListener("click", () => {
+				state.liquidKey = "mercury";
+				state.planetKey = "earth";
+				state.altitudeM = 0;
+				TUBE.y = DEFAULT_TUBE_Y;
+				state.probe.x = 340;
+				state.probe.y = 196;
+
+				liquidSelect.value = state.liquidKey;
+				planetSelect.value = state.planetKey;
+				altitudeSlider.value = String(state.altitudeM);
+				render();
+			});
+
+			canvas.addEventListener("pointerdown", (event) => {
+				const pointer = getPointerPos(event);
+				const dx = pointer.x - state.probe.x;
+				const dy = pointer.y - state.probe.y;
+				const dist2 = dx * dx + dy * dy;
+
+				if (dist2 <= (PROBE_RADIUS + 12) * (PROBE_RADIUS + 12)) {
+					state.isDraggingProbe = true;
+					canvas.setPointerCapture(event.pointerId);
+					return;
+				}
+
+				if (isOnTubeForDrag(pointer.x, pointer.y)) {
+					state.isDraggingTube = true;
+					state.tubeDragOffsetY = pointer.y - TUBE.y;
+					canvas.setPointerCapture(event.pointerId);
+				}
+			});
+
+			canvas.addEventListener("pointermove", (event) => {
+				const pointer = getPointerPos(event);
+
+				if (state.isDraggingProbe) {
+					state.probe.x = clamp(pointer.x, 8, canvas.width - 8);
+					state.probe.y = clamp(pointer.y, 8, canvas.height - 8);
+					render();
+					return;
+				}
+
+				if (state.isDraggingTube) {
+					TUBE.y = clampTubeY(pointer.y - state.tubeDragOffsetY);
+					render();
+				}
+			});
+
+			function stopDragging(event) {
+				if (state.isDraggingProbe || state.isDraggingTube) {
+					state.isDraggingProbe = false;
+					state.isDraggingTube = false;
+					if (event && canvas.hasPointerCapture(event.pointerId)) {
+						canvas.releasePointerCapture(event.pointerId);
+					}
+				}
+			}
+
+			canvas.addEventListener("pointerup", stopDragging);
+			canvas.addEventListener("pointercancel", stopDragging);
+			canvas.addEventListener("pointerleave", stopDragging);
+		}
+
+		function resizeCanvas() {
+			const parentWidth = canvas.parentElement.clientWidth;
+			const parentHeight = canvas.parentElement.clientHeight;
+			const aspect = 760 / 520;
+
+			let drawWidth = Math.min(parentWidth, 760);
+			let drawHeight = drawWidth / aspect;
+
+			if (drawHeight > parentHeight) {
+				drawHeight = parentHeight;
+				drawWidth = drawHeight * aspect;
+			}
+
+			drawWidth = Math.max(280, drawWidth);
+			drawHeight = Math.max(190, drawHeight);
+
+			// Keep a fixed internal coordinate system so geometry stays fully visible.
+			canvas.width = 760;
+			canvas.height = 520;
+			canvas.style.width = `${Math.round(drawWidth)}px`;
+			canvas.style.height = `${Math.round(drawHeight)}px`;
+
+			const centerTube = canvas.width / 2;
+			TUBE.x = centerTube - TUBE.width / 2;
+			TUBE.y = clampTubeY(TUBE.y);
+			FLASK.x = centerTube - FLASK.width / 2;
+
+			state.probe.x = clamp(state.probe.x, 8, canvas.width - 8);
+			state.probe.y = clamp(state.probe.y, 8, canvas.height - 8);
+			render();
+		}
+
+		function init() {
+			setupSelectOptions();
+			bindEvents();
+			resizeCanvas();
+			window.addEventListener("resize", resizeCanvas);
+		}
+
+		init();
+	</script>
+</body>
+</html>
