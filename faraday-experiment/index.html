@@ -335,6 +335,7 @@
     const OSC_AMPLITUDE = 90;   // px — passes well through the coil
     const OSC_PERIOD = 5.0;     // seconds per full oscillation
     const VOLTS_PER_PIXEL_PER_SECOND = 0.024;
+    const PHYSICS_EMF_GAIN = 3.1;
     const GRAVITY = 260;        // px/s²
     const DROP_BUTTON = { x: 18, y: 46, w: 84, h: 34 };
     const LED_THRESHOLD_VOLTAGE = 0.85;
@@ -1036,7 +1037,7 @@
       const sigma = 70;
       const distance = (position + MAGNET_HALF_HEIGHT) - COIL_CENTER;
       const flux = Math.exp(-(distance * distance) / (2 * sigma * sigma));
-      const voltage = (effectiveVelocity / 80) * (distance / sigma) * flux;
+      const voltage = PHYSICS_EMF_GAIN * (effectiveVelocity / 80) * (distance / sigma) * flux;
       if (outputMode === 'datalogger') {
         drawDataloggerConnections();
       } else {
