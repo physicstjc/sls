@@ -309,6 +309,10 @@
 						<span>Gravity</span>
 						<strong id="gravityLabel">-</strong>
 					</div>
+					<div class="value-row">
+						<span>P<sub>atm</sub></span>
+						<strong id="atmLabel">-</strong>
+					</div>
 				</div>
 
 				<div class="control-group">
@@ -354,6 +358,7 @@
 
 		const densityLabel = document.getElementById("densityLabel");
 		const gravityLabel = document.getElementById("gravityLabel");
+		const atmLabel = document.getElementById("atmLabel");
 		const altitudeLabel = document.getElementById("altitudeLabel");
 
 		const FLASK = {
@@ -367,7 +372,7 @@
 			x: 365,
 			y: 10,
 			width: 90,
-			height: 450
+			height: 400
 		};
 		const DEFAULT_TUBE_Y = 10;
 		const SCALE_HEIGHT_PX = FLASK.y - DEFAULT_TUBE_Y;
@@ -603,11 +608,7 @@
 			ctx.lineWidth = 3;
 			ctx.strokeRect(TUBE.x, TUBE.y, TUBE.width, TUBE.height);
 
-			const gradient = ctx.createLinearGradient(TUBE.x, TUBE.y, TUBE.x + TUBE.width, TUBE.y);
-			gradient.addColorStop(0, liquid.color);
-			gradient.addColorStop(1, "#ffffff");
-
-			ctx.fillStyle = gradient;
+			ctx.fillStyle = liquid.color;
 			ctx.fillRect(TUBE.x + TUBE_WALL_PX, topY, TUBE_INNER_WIDTH_PX, TUBE.y + TUBE.height - topY - TUBE_WALL_PX);
 
 			ctx.fillStyle = liquid.color;
@@ -745,8 +746,19 @@
 
 			ctx.fillStyle = "#111";
 			ctx.font = "700 14px Trebuchet MS";
-			ctx.fillText(`Planet: ${planet.name}  g=${fmt(planet.gravity, 2)} m/s²`, 18, 31);
-			ctx.fillText(`Pₐₜₘ=${fmt(pAir, 0)} Pa  ρ=${fmt(liquid.density, 0)} kg/m³`, 18, 49);
+			ctx.fillText(`Planet: ${planet.name}`, 18, 31);
+
+			const legendX = 18;
+			const legendY = 49;
+			ctx.fillText("P", legendX, legendY);
+			const pWidth = ctx.measureText("P").width;
+
+			ctx.font = "700 10px Trebuchet MS";
+			ctx.fillText("atm", legendX + pWidth + 1, legendY + 3);
+			const atmWidth = ctx.measureText("atm").width;
+
+			ctx.font = "700 14px Trebuchet MS";
+			ctx.fillText(`=${fmt(pAir, 0)} Pa`, legendX + pWidth + atmWidth + 4, legendY);
 		}
 
 		function updateLabels() {
@@ -755,6 +767,7 @@
 
 			densityLabel.textContent = `${fmt(liquid.density, 0)} kg/m³`;
 			gravityLabel.textContent = `${fmt(planet.gravity, 2)} m/s²`;
+			atmLabel.textContent = `${fmt(atmosphericPressurePa(), 0)} Pa`;
 			altitudeLabel.textContent = `${fmt(state.altitudeM, 0)} m`;
 		}
 
@@ -763,7 +776,6 @@
 			drawBarometer();
 			drawScale();
 			drawProbe();
-			drawLegend();
 			updateLabels();
 		}
 
@@ -858,18 +870,15 @@
 		function resizeCanvas() {
 			const parentWidth = canvas.parentElement.clientWidth;
 			const parentHeight = canvas.parentElement.clientHeight;
-			const aspect = 760 / 520;
+			const baseWidth = 760;
+			const baseHeight = 520;
 
-			let drawWidth = Math.min(parentWidth, 760);
-			let drawHeight = drawWidth / aspect;
+			let scale = Math.min(parentWidth / baseWidth, parentHeight / baseHeight);
+			const minScale = Math.max(280 / baseWidth, 420 / baseHeight);
+			scale = Math.max(minScale, scale);
 
-			if (drawHeight > parentHeight) {
-				drawHeight = parentHeight;
-				drawWidth = drawHeight * aspect;
-			}
-
-			drawWidth = Math.max(280, drawWidth);
-			drawHeight = Math.max(190, drawHeight);
+			const drawWidth = baseWidth * scale;
+			const drawHeight = baseHeight * scale;
 
 			// Keep a fixed internal coordinate system so geometry stays fully visible.
 			canvas.width = 760;
