@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinetic Particle Theory Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        canvas { touch-action: none; background-color: transparent; }
+        .highlight-text { color: #2563eb; font-weight: 600; }
+        button { -webkit-tap-highlight-color: transparent; }
+        .property-row { transition: background-color 0.3s ease; }
+        #propertiesTable thead th, #propertiesTable tbody td {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+
+<div class="max-w-6xl mx-auto p-4 lg:p-8">
+    <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900">Kinetic Particle Theory</h1>
+            <p class="text-slate-500 italic">States of Matter & Phase Changes</p>
+        </div>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div class="flex items-center gap-2 bg-white p-2 rounded-lg shadow-sm border border-slate-200">
+                <span class="text-sm font-medium">Substance:</span>
+                <select id="substanceSelect" class="bg-slate-100 border-none rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer">
+                    <option value="water">Water (H₂O)</option>
+                    <option value="chlorine">Chlorine (Cl₂)</option>
+                    <option value="bromine">Bromine (Br₂)</option>
+                    <option value="hydrogen">Hydrogen (H₂)</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left Column: Simulation & Graph -->
+        <div class="lg:col-span-8 flex flex-col gap-0">
+            <!-- Particle Container -->
+            <div id="canvasParent" class="relative bg-slate-900 rounded-t-xl overflow-hidden shadow-xl aspect-video md:aspect-auto md:min-h-[420px]">
+                <canvas id="particleCanvas" class="w-full h-full"></canvas>
+                <!-- Overlay Stats -->
+                <div class="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
+                    <div class="bg-black/50 text-white px-3 py-1 rounded-full text-sm backdrop-blur-md border border-white/20">
+                        Temp: <span id="tempDisplay" class="font-mono">25</span>°C
+                    </div>
+                    <div class="bg-black/50 text-white px-3 py-1 rounded-full text-sm backdrop-blur-md border border-white/20 font-bold uppercase tracking-wider">
+                        State: <span id="stateDisplay">Liquid</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Heat/Cool Controls -->
+            <div class="bg-white border-x border-b border-slate-200 rounded-b-xl p-4 mb-6 shadow-md flex justify-center items-center gap-12">
+                <div class="flex flex-col items-center gap-1">
+                    <button id="coolBtn" title="Cool Down" class="bg-blue-600 hover:bg-blue-700 text-white p-5 rounded-full shadow-lg transition-all active:scale-90 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m4.93 4.93 14.14 14.14"/><path d="M2 12h20"/><path d="m19.07 4.93-14.14 14.14"/></svg>
+                    </button>
+                    <span class="text-[10px] font-bold text-blue-600 uppercase">Cool</span>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <button id="heatBtn" title="Heat Up" class="bg-orange-600 hover:bg-orange-700 text-white p-5 rounded-full shadow-lg transition-all active:scale-90 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+                    </button>
+                    <span class="text-[10px] font-bold text-orange-600 uppercase">Heat</span>
+                </div>
+            </div>
+
+            <!-- Graphs Container -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-sm font-bold text-slate-400 mb-2 uppercase tracking-tighter">Heating / Cooling Curve</h3>
+                    <canvas id="tempGraph" height="180"></canvas>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-sm font-bold text-slate-400 mb-2 uppercase tracking-tighter">Energy Distribution</h3>
+                    <canvas id="energyGraph" height="180"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Explanations & Tables -->
+        <div class="lg:col-span-4 flex flex-col gap-6">
+            <!-- Dynamic Explanation -->
+            <div id="explanationCard" class="bg-blue-50 border border-blue-100 rounded-xl min-h-[250px] flex flex-col overflow-hidden">
+                <div class="bg-blue-600 p-3 text-white">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-sm" id="substanceNameLabel">Water (H₂O)</span>
+                        <div class="flex gap-3 text-[11px] font-mono">
+                            <span class="bg-blue-800/50 px-2 py-0.5 rounded border border-blue-400/30">MP: <span id="mpLabel">0</span>°C</span>
+                            <span class="bg-blue-800/50 px-2 py-0.5 rounded border border-blue-400/30">BP: <span id="bpLabel">100</span>°C</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-5 flex-grow flex flex-col">
+                    <h3 class="font-bold text-blue-800 mb-3 flex items-center gap-2 text-sm uppercase tracking-wider">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        Scientific Process
+                    </h3>
+                    <div id="dynamicText" class="text-sm leading-relaxed text-slate-700 flex-grow italic">
+                        Apply heat or cooling to begin the simulation.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Property Breakdown Table (Dynamic Columns) -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 border-b border-slate-200 px-4 py-2 flex justify-between items-center">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Properties Comparison</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table id="propertiesTable" class="w-full text-[11px] text-left border-collapse">
+                        <thead class="bg-slate-100/50 border-b border-slate-200">
+                            <tr id="tableHeaderRow">
+                                <!-- Headers injected here -->
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100" id="tableBody">
+                            <!-- Rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUBSTANCES = {
+        water: { name: 'Water (H₂O)', mp: 0, bp: 100, molecules: 3, color: '#60a5fa' },
+        chlorine: { name: 'Chlorine (Cl₂)', mp: -101, bp: -34, molecules: 2, color: '#bef264' },
+        bromine: { name: 'Bromine (Br₂)', mp: -7, bp: 59, molecules: 2, color: '#92400e' },
+        hydrogen: { name: 'Hydrogen (H₂)', mp: -259, bp: -253, molecules: 2, color: '#cbd5e1' }
+    };
+
+    const STATE_PROPS = {
+        solid: {
+            name: "Solid",
+            shape: "Definite shape and volume. No compression.",
+            arrangement: "Packed very close, orderly arrangement.",
+            forces: "Very strong.",
+            ke: "Very low.",
+            motion: "Vibrate about a fixed position."
+        },
+        liquid: {
+            name: "Liquid",
+            shape: "Indefinite shape, definite volume. No compression.",
+            arrangement: "Packed close together, disorderly arrangement.",
+            forces: "Strong.",
+            ke: "Low.",
+            motion: "Move freely and slide over one another."
+        },
+        gas: {
+            name: "Gas",
+            shape: "Indefinite shape and volume. Can be compressed.",
+            arrangement: "Far apart, random arrangement.",
+            forces: "Very weak / Negligible.",
+            ke: "High.",
+            motion: "Move about rapidly and freely in all directions."
+        }
+    };
+
+    const SIM_STATE = {
+        substance: 'water',
+        temperature: -20,
+        time: 0,
+        heating: false,
+        cooling: false,
+        lastMode: null, 
+        history: [],
+        particles: [],
+        phaseProgress: 0, 
+        currentPhase: null, // 'mp' or 'bp'
+        isPhaseChanging: false,
+        phaseDuration: 120
+    };
+
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+    const tgCanvas = document.getElementById('tempGraph');
+    const egCanvas = document.getElementById('energyGraph');
+    const tgCtx = tgCanvas.getContext('2d');
+    const egCtx = egCanvas.getContext('2d');
+    const tempDisplay = document.getElementById('tempDisplay');
+    const stateDisplay = document.getElementById('stateDisplay');
+    const dynamicText = document.getElementById('dynamicText');
+    const tableHeaderRow = document.getElementById('tableHeaderRow');
+    const tableBody = document.getElementById('tableBody');
+    const substanceSelect = document.getElementById('substanceSelect');
+    const substanceNameLabel = document.getElementById('substanceNameLabel');
+    const mpLabel = document.getElementById('mpLabel');
+    const bpLabel = document.getElementById('bpLabel');
+
+    function resize() {
+        const parent = document.getElementById('canvasParent');
+        if (parent) {
+            canvas.width = parent.clientWidth || 800;
+            canvas.height = parent.clientHeight || 400;
+        }
+        tgCanvas.width = tgCanvas.parentElement?.clientWidth || 300;
+        egCanvas.width = egCanvas.parentElement?.clientWidth || 300;
+    }
+
+    class Particle {
+        constructor(id, size) {
+            this.id = id;
+            this.radius = 9;
+            this.groupSize = size;
+            this.x = Math.random() * (canvas.width || 800);
+            this.y = Math.random() * (canvas.height || 400);
+            this.vx = (Math.random() - 0.5) * 4;
+            this.vy = (Math.random() - 0.5) * 4;
+            this.angle = Math.random() * Math.PI * 2;
+            this.va = (Math.random() - 0.5) * 0.1;
+            this.pState = 'solid'; 
+        }
+        draw(ctx, color) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.angle);
+            ctx.fillStyle = color;
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            if (this.groupSize === 3) {
+                ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#fff';
+                ctx.beginPath(); ctx.arc(this.radius*0.7, this.radius*0.5, this.radius*0.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                ctx.beginPath(); ctx.arc(-this.radius*0.7, this.radius*0.5, this.radius*0.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            } else {
+                ctx.beginPath(); ctx.arc(-this.radius*0.4, 0, this.radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                ctx.beginPath(); ctx.arc(this.radius*0.4, 0, this.radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            }
+            ctx.restore();
+        }
+    }
+
+    function setupParticles() {
+        const sub = SUBSTANCES[SIM_STATE.substance];
+        SIM_STATE.particles = [];
+        for (let i = 0; i < 32; i++) SIM_STATE.particles.push(new Particle(i, sub.molecules));
+    }
+
+    function handleTempLogic(sub) {
+        const rate = 0.4;
+        const reachingMP = (SIM_STATE.heating && SIM_STATE.temperature < sub.mp && SIM_STATE.temperature + rate >= sub.mp) ||
+                           (SIM_STATE.cooling && SIM_STATE.temperature > sub.mp && SIM_STATE.temperature - rate <= sub.mp);
+        const reachingBP = (SIM_STATE.heating && SIM_STATE.temperature < sub.bp && SIM_STATE.temperature + rate >= sub.bp) ||
+                           (SIM_STATE.cooling && SIM_STATE.temperature > sub.bp && SIM_STATE.temperature - rate <= sub.bp);
+
+        if (SIM_STATE.isPhaseChanging) {
+            if (SIM_STATE.heating) {
+                SIM_STATE.phaseProgress += 1;
+                if (SIM_STATE.phaseProgress >= SIM_STATE.phaseDuration) {
+                    SIM_STATE.temperature += 0.5;
+                    SIM_STATE.isPhaseChanging = false;
+                    SIM_STATE.phaseProgress = 0;
+                    SIM_STATE.currentPhase = null;
+                }
+            } else if (SIM_STATE.cooling) {
+                SIM_STATE.phaseProgress -= 1;
+                if (SIM_STATE.phaseProgress <= 0) {
+                    SIM_STATE.temperature -= 0.5;
+                    SIM_STATE.isPhaseChanging = false;
+                    SIM_STATE.phaseProgress = 0;
+                    SIM_STATE.currentPhase = null;
+                }
+            }
+        } else {
+            if (reachingMP) {
+                SIM_STATE.temperature = sub.mp;
+                SIM_STATE.isPhaseChanging = true;
+                SIM_STATE.currentPhase = 'mp';
+                SIM_STATE.phaseProgress = SIM_STATE.heating ? 1 : SIM_STATE.phaseDuration - 1;
+            } else if (reachingBP) {
+                SIM_STATE.temperature = sub.bp;
+                SIM_STATE.isPhaseChanging = true;
+                SIM_STATE.currentPhase = 'bp';
+                SIM_STATE.phaseProgress = SIM_STATE.heating ? 1 : SIM_STATE.phaseDuration - 1;
+            } else {
+                if (SIM_STATE.heating) SIM_STATE.temperature += rate;
+                else if (SIM_STATE.cooling) SIM_STATE.temperature -= rate;
+            }
+        }
+        SIM_STATE.temperature = Math.max(-273.15, Math.min(500, SIM_STATE.temperature));
+    }
+
+    function updatePhysics(sub) {
+        const state = getCurrentState(sub);
+        const tempEffect = (SIM_STATE.temperature + 274) / 100;
+        const particles = SIM_STATE.particles;
+        const ratio = SIM_STATE.phaseProgress / SIM_STATE.phaseDuration;
+
+        // Collision logic only for non-gas particles
+        for (let i = 0; i < particles.length; i++) {
+            const p1 = particles[i];
+            // Determine p1 state before loop
+            let p1State = state;
+            if (SIM_STATE.isPhaseChanging) {
+                const isSecond = (i / particles.length) < ratio;
+                p1State = (SIM_STATE.currentPhase === 'mp') ? (isSecond ? 'liquid' : 'solid') : (isSecond ? 'gas' : 'liquid');
+            }
+            p1.pState = p1State;
+
+            if (p1State === 'gas') continue; // Gas ignores bulk collisions
+
+            for (let j = i + 1; j < particles.length; j++) {
+                const p2 = particles[j];
+                let p2State = state;
+                if (SIM_STATE.isPhaseChanging) {
+                    const isSecond = (j / particles.length) < ratio;
+                    p2State = (SIM_STATE.currentPhase === 'mp') ? (isSecond ? 'liquid' : 'solid') : (isSecond ? 'gas' : 'liquid');
+                }
+                if (p2State === 'gas') continue;
+
+                const dx = p2.x - p1.x; const dy = p2.y - p1.y;
+                const dist = Math.sqrt(dx*dx + dy*dy) || 0.1;
+                const min = p1.radius * 2.1;
+                
+                if (dist < min) {
+                    const overlap = min - dist;
+                    const nx = dx / dist; const ny = dy / dist;
+                    p1.x -= nx * overlap * 0.4; p1.y -= ny * overlap * 0.4;
+                    p2.x += nx * overlap * 0.4; p2.y += ny * overlap * 0.4;
+                    // Damp only for solid/liquid to keep them "packed"
+                    p1.vx *= 0.8; p1.vy *= 0.8; p2.vx *= 0.8; p2.vy *= 0.8;
+                }
+            }
+        }
+
+        particles.forEach((p, i) => {
+            const pState = p.pState;
+
+            if (pState === 'solid') {
+                const cols = 8; const space = 32;
+                const tx = (canvas.width/2 - (cols*space)/2) + (i % cols) * space;
+                const ty = (canvas.height - 30) - Math.floor(i/cols) * space;
+                p.x = tx + Math.sin(Date.now()*0.02*tempEffect + i)*1.2*tempEffect;
+                p.y = ty + Math.cos(Date.now()*0.02*tempEffect + i)*1.2*tempEffect;
+                p.angle = Math.sin(Date.now()*0.01*tempEffect)*0.08;
+            } else if (pState === 'liquid') {
+                p.vx += (Math.random()-0.5)*0.2*tempEffect;
+                p.vy += (Math.random()-0.5)*0.2*tempEffect;
+                p.vx *= 0.85; p.vy *= 0.85;
+                const baseline = canvas.height - 25;
+                const surface = canvas.height - 90;
+                if (p.y < surface) p.vy += 1.2; else p.vy += 0.15;
+                p.x += p.vx; p.y += p.vy;
+                if (p.y > baseline) { p.y = baseline; p.vy *= -0.1; }
+                if (p.x < 30) { p.x = 30; p.vx *= -0.2; }
+                if (p.x > canvas.width - 30) { p.x = canvas.width - 30; p.vx *= -0.2; }
+            } else {
+                // Gas: No gravity, higher energy, use entire box
+                p.x += p.vx * tempEffect * 3.5; 
+                p.y += p.vy * tempEffect * 3.5;
+                p.angle += p.va * tempEffect;
+                
+                // Containment (Full volume)
+                if (p.x < 20) { p.x = 20; p.vx = Math.abs(p.vx); }
+                if (p.x > canvas.width - 20) { p.x = canvas.width - 20; p.vx = -Math.abs(p.vx); }
+                if (p.y < 20) { p.y = 20; p.vy = Math.abs(p.vy); }
+                if (p.y > canvas.height - 20) { p.y = canvas.height - 20; p.vy = -Math.abs(p.vy); }
+            }
+        });
+    }
+
+    function getCurrentState(sub) {
+        if (SIM_STATE.temperature < sub.mp) return 'solid';
+        if (SIM_STATE.temperature < sub.bp) return 'liquid';
+        return 'gas';
+    }
+
+    function drawParticles(sub) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Draw ground (visual only)
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(0, canvas.height - 12, canvas.width, 12);
+        SIM_STATE.particles.forEach(p => p.draw(ctx, sub.color));
+    }
+
+    function drawGraphs() {
+        const sub = SUBSTANCES[SIM_STATE.substance];
+        const pad = 30; const w = tgCanvas.width - pad*2; const h = tgCanvas.height - pad*2;
+        
+        tgCtx.clearRect(0,0,tgCanvas.width,tgCanvas.height);
+        if (SIM_STATE.history.length > 1) {
+            const minT = Math.min(...SIM_STATE.history.map(d=>d.t), sub.mp) - 10;
+            const maxT = Math.max(...SIM_STATE.history.map(d=>d.t), sub.bp) + 10;
+            const tRange = maxT - minT || 1;
+            const getY = (t) => (tgCanvas.height - pad) - ((t-minT)/tRange)*h;
+            
+            tgCtx.setLineDash([5,5]); tgCtx.strokeStyle = '#cbd5e1'; tgCtx.font = '9px Arial'; tgCtx.fillStyle = '#94a3b8';
+            const mpy = getY(sub.mp); const bpy = getY(sub.bp);
+            if (mpy > pad && mpy < tgCanvas.height-pad) { tgCtx.beginPath(); tgCtx.moveTo(pad, mpy); tgCtx.lineTo(tgCanvas.width-pad, mpy); tgCtx.stroke(); tgCtx.fillText(`MP: ${sub.mp}°C`, 5, mpy+3); }
+            if (bpy > pad && bpy < tgCanvas.height-pad) { tgCtx.beginPath(); tgCtx.moveTo(pad, bpy); tgCtx.lineTo(tgCanvas.width-pad, bpy); tgCtx.stroke(); tgCtx.fillText(`BP: ${sub.bp}°C`, 5, bpy+3); }
+            tgCtx.setLineDash([]); tgCtx.beginPath(); tgCtx.strokeStyle = '#ef4444'; tgCtx.lineWidth = 2.5;
+            SIM_STATE.history.forEach((d, i) => {
+                const x = pad + (i/(SIM_STATE.history.length-1))*w;
+                const y = getY(d.t); if (i===0) tgCtx.moveTo(x,y); else tgCtx.lineTo(x,y);
+            });
+            tgCtx.stroke();
+        }
+
+        egCtx.clearRect(0,0,egCanvas.width,egCanvas.height);
+        const state = getCurrentState(sub);
+        const keH = Math.max(0, Math.min(h, (SIM_STATE.temperature + 273)/600*h));
+        const PE_LEVELS = { solid: 0.2, liquid: 0.5, gas: 0.9 };
+        
+        let peH;
+        if (SIM_STATE.isPhaseChanging && SIM_STATE.currentPhase) {
+            const lowVal = SIM_STATE.currentPhase === 'mp' ? PE_LEVELS.solid : PE_LEVELS.liquid;
+            const highVal = SIM_STATE.currentPhase === 'mp' ? PE_LEVELS.liquid : PE_LEVELS.gas;
+            const ratio = SIM_STATE.phaseProgress / SIM_STATE.phaseDuration;
+            peH = (lowVal + (highVal - lowVal) * ratio) * h;
+        } else {
+            peH = PE_LEVELS[state] * h;
+        }
+
+        egCtx.fillStyle = '#3b82f6'; egCtx.fillRect(45, egCanvas.height-pad-keH, 35, keH);
+        egCtx.fillStyle = '#10b981'; egCtx.fillRect(105, egCanvas.height-pad-peH, 35, peH);
+        egCtx.fillStyle = '#64748b'; egCtx.font = 'bold 10px Arial';
+        egCtx.fillText('Kinetic', 45, egCanvas.height-10); egCtx.fillText('Potential', 100, egCanvas.height-10);
+    }
+
+    function updateTable() {
+        const sub = SUBSTANCES[SIM_STATE.substance];
+        const state = getCurrentState(sub);
+        let statesToShow = [state];
+
+        if (SIM_STATE.isPhaseChanging) {
+            if (SIM_STATE.currentPhase === 'mp') statesToShow = ['solid', 'liquid'];
+            else statesToShow = ['liquid', 'gas'];
+        }
+
+        let headerHtml = `<th class="p-2 border-r border-slate-200 w-1/4">Property</th>`;
+        statesToShow.forEach(s => {
+            headerHtml += `<th class="p-2 text-center text-blue-600 bg-blue-50/50">${STATE_PROPS[s].name}</th>`;
+        });
+        tableHeaderRow.innerHTML = headerHtml;
+
+        const rows = [
+            { label: 'Shape and volume', key: 'shape' },
+            { label: 'Arrangement of particles', key: 'arrangement' },
+            { label: 'Intermolecular forces', key: 'forces' },
+            { label: 'Average kinetic energy', key: 'ke' },
+            { label: 'Motion of particles', key: 'motion' }
+        ];
+
+        let bodyHtml = '';
+        rows.forEach(row => {
+            bodyHtml += `<tr><td class="p-2 font-semibold bg-slate-50/50 border-r border-slate-200">${row.label}</td>`;
+            statesToShow.forEach(s => {
+                bodyHtml += `<td class="p-2 text-[10px] text-slate-600">${STATE_PROPS[s][row.key]}</td>`;
+            });
+            bodyHtml += `</tr>`;
+        });
+        tableBody.innerHTML = bodyHtml;
+    }
+
+    function updateUI(sub) {
+        tempDisplay.innerText = Math.round(SIM_STATE.temperature);
+        const state = getCurrentState(sub);
+        
+        let stateLabel = state;
+        if (SIM_STATE.isPhaseChanging) {
+            stateLabel = SIM_STATE.currentPhase === 'mp' ? "Solid & Liquid" : "Liquid & Gas";
+        }
+        stateDisplay.innerText = stateLabel;
+
+        updateTable();
+
+        let text = "";
+        const mode = SIM_STATE.heating ? 'heating' : (SIM_STATE.cooling ? 'cooling' : SIM_STATE.lastMode);
+        
+        if (SIM_STATE.isPhaseChanging) {
+            if (SIM_STATE.currentPhase === 'mp') {
+                if (mode === 'heating') text = "<strong>DURING MELTING:</strong> Heat is used to <span class='highlight-text'>weaken attractive forces</span>. Particles break from fixed positions and slide over one another. Temperature remains constant.";
+                else text = "<strong>DURING FREEZING:</strong> Heat is released as <span class='highlight-text'>stronger attractive forces form</span>. Particles settle into an orderly lattice. Potential energy decreases.";
+            } else if (SIM_STATE.currentPhase === 'bp') {
+                if (mode === 'heating') text = "<strong>DURING BOILING:</strong> Heat is used to <span class='highlight-text'>overcome attractive forces</span>. Particles move randomly in all directions as a gas. Potential energy increases.";
+                else text = "<strong>DURING CONDENSATION:</strong> Particles come closer together as forces strengthen. <span class='highlight-text'>Average potential energy decreases</span>, while temperature remains constant.";
+            }
+        } else {
+            if (mode === 'heating') {
+                if (state === 'solid') text = "<strong>BEFORE MELTING:</strong> Energy is absorbed by particles. It is converted to <span class='highlight-text'>kinetic energy</span> and particles vibrate faster.";
+                else if (state === 'liquid') text = "<strong>BEFORE BOILING:</strong> Heat is converted to kinetic energy, causing particles to move faster. <span class='highlight-text'>Temperature increases</span>.";
+                else text = "<strong>AFTER BOILING:</strong> Heat continues to increase kinetic energy of gas particles. They move faster in all directions. <span class='highlight-text'>Gas particles move about rapidly and freely</span>.";
+            } else if (mode === 'cooling') {
+                if (state === 'gas') text = "<strong>BEFORE CONDENSATION:</strong> Particles lose kinetic energy. They move more slowly. <span class='highlight-text'>Since kinetic energy drops, temperature decreases</span>.";
+                else if (state === 'liquid') text = "<strong>BEFORE FREEZING:</strong> Particles move more slowly as they lose kinetic energy. Temperature decreases.";
+                else text = "<strong>COOLING SOLID:</strong> Particles lose energy and vibrate more slowly as heat is released.";
+            } else {
+                text = "Simulation idle. Select a substance and press <span class='text-orange-600 font-bold'>Heat</span> or <span class='text-blue-600 font-bold'>Cool</span>.";
+            }
+        }
+        if (text) dynamicText.innerHTML = text;
+    }
+
+    function loop() {
+        try {
+            const sub = SUBSTANCES[SIM_STATE.substance];
+            handleTempLogic(sub);
+            updatePhysics(sub);
+            drawParticles(sub);
+            drawGraphs();
+            updateUI(sub);
+            
+            if (SIM_STATE.heating || SIM_STATE.cooling) {
+                SIM_STATE.history.push({ t: SIM_STATE.temperature, isPhaseChanging: SIM_STATE.isPhaseChanging });
+                if (SIM_STATE.history.length > 600) SIM_STATE.history.shift();
+            }
+        } catch (e) {
+            console.error("Simulation loop error:", e);
+        }
+        requestAnimationFrame(loop);
+    }
+
+    window.onload = () => {
+        resize();
+        window.addEventListener('resize', resize);
+        
+        setupParticles();
+        const sub = SUBSTANCES[SIM_STATE.substance];
+        mpLabel.innerText = sub.mp; bpLabel.innerText = sub.bp; substanceNameLabel.innerText = sub.name;
+
+        substanceSelect.addEventListener('change', (e) => {
+            SIM_STATE.substance = e.target.value;
+            const sub = SUBSTANCES[SIM_STATE.substance];
+            SIM_STATE.temperature = sub.mp - 20; SIM_STATE.history = []; SIM_STATE.phaseProgress = 0;
+            SIM_STATE.isPhaseChanging = false; SIM_STATE.currentPhase = null;
+            mpLabel.innerText = sub.mp; bpLabel.innerText = sub.bp; substanceNameLabel.innerText = sub.name;
+            setupParticles();
+        });
+
+        const sHeat = () => { SIM_STATE.heating = true; SIM_STATE.cooling = false; SIM_STATE.lastMode = 'heating'; };
+        const sCool = () => { SIM_STATE.cooling = true; SIM_STATE.heating = false; SIM_STATE.lastMode = 'cooling'; };
+        const stop = () => { SIM_STATE.heating = false; SIM_STATE.cooling = false; };
+
+        document.getElementById('heatBtn').addEventListener('mousedown', sHeat);
+        document.getElementById('heatBtn').addEventListener('mouseup', stop);
+        document.getElementById('heatBtn').addEventListener('mouseleave', stop);
+        document.getElementById('heatBtn').addEventListener('touchstart', (e) => { e.preventDefault(); sHeat(); });
+        document.getElementById('heatBtn').addEventListener('touchend', stop);
+        document.getElementById('coolBtn').addEventListener('mousedown', sCool);
+        document.getElementById('coolBtn').addEventListener('mouseup', stop);
+        document.getElementById('coolBtn').addEventListener('mouseleave', stop);
+        document.getElementById('coolBtn').addEventListener('touchstart', (e) => { e.preventDefault(); sCool(); });
+        document.getElementById('coolBtn').addEventListener('touchend', stop);
+
+        loop();
+    };
+</script>
+</body>
+</html>
