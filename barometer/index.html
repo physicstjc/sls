@@ -28,6 +28,13 @@
 			--blue: #4a8dff;
 			--accent: #ffb347;
 			--border: 2px solid var(--ink);
+			--space-1: 4px;
+			--space-2: 6px;
+			--space-3: 8px;
+		}
+
+		* {
+			box-sizing: border-box;
 		}
 
 		body {
@@ -39,21 +46,20 @@
 				var(--bg);
 			font-family: "Trebuchet MS", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 			color: var(--ink);
-			line-height: 1.6;
+			line-height: 1.4;
 			margin: 0;
-			padding: 0 14px 14px;
+			padding: 0 10px 10px;
 		}
 
 		.main-container {
-			max-width: 1060px;
+			max-width: 640px;
 			margin: 0 auto;
 			background: var(--paper);
-			padding: 8px;
+			padding: var(--space-2);
 			border-radius: 0;
 			border: 3px solid var(--ink);
 			box-shadow: 6px 6px 0 var(--ink);
 			height: 480px;
-			box-sizing: border-box;
 			display: flex;
 			flex-direction: column;
 			overflow: hidden;
@@ -62,26 +68,26 @@
 		#topTitleBar {
 			position: static;
 			background: var(--accent);
-			border-bottom: var(--border);
+			border-bottom: 1px solid var(--ink);
 			border-radius: 0;
-			padding: 4px 8px;
+			padding: 2px 8px;
 			z-index: 3;
-			margin-bottom: 8px;
+			margin-bottom: var(--space-2);
 			flex: 0 0 auto;
 		}
 
 		#topTitleBar h1 {
 			margin: 0;
 			color: var(--ink);
-			font-size: clamp(0.95rem, 1.5vw, 1.2rem);
-			line-height: 1.1;
+			font-size: clamp(0.88rem, 1.3vw, 1.05rem);
+			line-height: 1.05;
 			font-weight: 700;
 		}
 
 		.sim-layout {
 			display: grid;
-			grid-template-columns: 280px minmax(0, 1fr);
-			gap: 10px;
+			grid-template-columns: 136px minmax(0, 1fr);
+			gap: var(--space-2);
 			align-items: stretch;
 			flex: 1 1 auto;
 			min-height: 0;
@@ -90,39 +96,45 @@
 		.info-box {
 			background-color: #fff4db;
 			border: 2px solid var(--ink);
-			padding: 10px;
-			font-size: 0.9rem;
+			padding: var(--space-2);
+			font-size: 0.86rem;
 			color: var(--ink);
 			box-shadow: 2px 2px 0 var(--ink);
 			height: 100%;
 			overflow: auto;
+			display: flex;
+			flex-direction: column;
 		}
 
 		.control-group {
 			background: var(--panel);
 			border: 2px solid var(--ink);
 			border-radius: 0;
-			padding: 8px;
-			margin-bottom: 8px;
+			padding: var(--space-2);
+			margin-bottom: var(--space-2);
 			box-shadow: 2px 2px 0 var(--ink);
+		}
+
+		.control-group:last-child {
+			margin-bottom: 0;
 		}
 
 		.control-label {
 			font-weight: 700;
 			color: var(--ink);
-			font-size: 0.8rem;
-			margin-bottom: 8px;
+			font-size: 0.76rem;
+			margin-bottom: var(--space-1);
 			display: block;
 			text-transform: uppercase;
-			letter-spacing: 0.4px;
+			letter-spacing: 0.3px;
 		}
 
 		.tiny-help {
-			font-size: 0.75rem;
+			font-size: 0.68rem;
 			color: #444;
-			margin-top: 4px;
+			margin-top: var(--space-1);
 			display: block;
-			line-height: 1.25;
+			line-height: 1.2;
 		}
 
 		select,
@@ -132,9 +144,17 @@
 
 		select {
 			border: 2px solid var(--ink);
-			padding: 6px;
+			padding: 3px 4px;
 			background: white;
 			font-weight: 600;
+			font-size: 0.78rem;
+			line-height: 1.2;
+		}
+
+		select:focus,
+		input[type=range]:focus {
+			outline: 2px solid #111;
+			outline-offset: 1px;
 		}
 
 		input[type=range] {
@@ -144,30 +164,30 @@
 		}
 
 		input[type=range]::-webkit-slider-runnable-track {
-			height: 10px;
+			height: 7px;
 			cursor: pointer;
 			background: var(--teal);
 			border: 2px solid var(--ink);
 		}
 
 		input[type=range]::-webkit-slider-thumb {
-			height: 22px;
-			width: 22px;
+			height: 16px;
+			width: 16px;
 			background: var(--pink);
 			cursor: pointer;
 			-webkit-appearance: none;
-			margin-top: -8px;
+			margin-top: -6px;
 			border: 2px solid var(--ink);
 			box-shadow: 2px 2px 0 var(--ink);
 		}
 
 		.value-row {
-			margin-top: 6px;
-			font-size: 0.8rem;
+			margin-top: var(--space-1);
+			font-size: 0.72rem;
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
-			gap: 8px;
+			gap: 4px;
 			color: #303030;
 		}
 
@@ -180,6 +200,7 @@
 			height: 100%;
 			min-height: 0;
 			overflow: hidden;
+			padding: 1px;
 		}
 
 		.calc-overlay {
@@ -227,16 +248,16 @@
 		.btn-reset {
 			background-color: var(--blue);
 			color: var(--ink);
-			padding: 6px 10px;
+			padding: 4px 8px;
 			border-radius: 0;
 			font-weight: 700;
 			text-transform: uppercase;
 			letter-spacing: 0.4px;
-			font-size: 0.8rem;
+			font-size: 0.74rem;
 			border: 2px solid var(--ink);
 			box-shadow: 2px 2px 0 var(--ink);
 			width: 100%;
-			margin-top: 6px;
+			margin-top: var(--space-1);
 			transition: all 0.2s;
 		}
 
@@ -249,12 +270,12 @@
 		@media (max-width: 980px) {
 			.sim-layout {
 				grid-template-columns: 1fr;
-				grid-template-rows: minmax(170px, 42%) minmax(0, 1fr);
-				gap: 10px;
+				grid-template-rows: minmax(138px, 32%) minmax(0, 1fr);
+				gap: var(--space-2);
 			}
 
 			#topTitleBar {
-				margin-bottom: 8px;
+				margin-bottom: var(--space-2);
 			}
 
 			.canvas-wrap {
@@ -337,25 +358,25 @@
 
 		const FLASK = {
 			x: 120,
-			y: 312,
-			width: 520,
-			height: 148
+			y: 330,
+			width: 380,
+			height: 170
 		};
 
 		const TUBE = {
 			x: 365,
-			y: 24,
+			y: 10,
 			width: 90,
-			height: 396
+			height: 450
 		};
-		const DEFAULT_TUBE_Y = 24;
+		const DEFAULT_TUBE_Y = 10;
 		const SCALE_HEIGHT_PX = FLASK.y - DEFAULT_TUBE_Y;
         const TUBE_WALL_PX = 2;
         const TUBE_INNER_WIDTH_PX = TUBE.width - 2 * TUBE_WALL_PX;
-        const DEFAULT_RESERVOIR_SURFACE_Y = FLASK.y + 82;
+		const DEFAULT_RESERVOIR_SURFACE_Y = FLASK.y + 70;
 
-		const TUBE_BOTTOM_MARGIN_PX = 18;
-		const TUBE_MIN_SUBMERGED_PX = 24;
+		const TUBE_BOTTOM_MARGIN_PX = 8;
+		const TUBE_MIN_SUBMERGED_PX = 10;
 
 		const PROBE_RADIUS = 9;
 		const P_MAX_VISUAL = 12000000;
@@ -473,7 +494,7 @@
 		}
 
 		function clampTubeY(y) {
-			const minY = 10;
+			const minY = 2;
 			const maxBottom = FLASK.y + FLASK.height - TUBE_BOTTOM_MARGIN_PX;
 			const minBottom = DEFAULT_RESERVOIR_SURFACE_Y + TUBE_MIN_SUBMERGED_PX;
 			const maxY = maxBottom - TUBE.height;
@@ -525,7 +546,7 @@
 			}
 
 			const depthPx = Math.max(0, state.probe.y - liquidSurfaceY);
-			depthM = depthPx / 50;
+			depthM = depthPx * metersPerPxInColumn;
 			return pAir + liquid.density * planet.gravity * depthM;
 		}
 
@@ -611,7 +632,7 @@
 			ctx.stroke();
 
 			ctx.fillStyle = "#111";
-			ctx.font = "700 15px Trebuchet MS";
+			ctx.font = "700 17px Trebuchet MS";
 			ctx.fillText("Vacuum", TUBE.x + TUBE.width + 16, TUBE.y + 26);
 			ctx.beginPath();
 			ctx.moveTo(TUBE.x + TUBE.width + 10, TUBE.y + 20);
@@ -621,7 +642,7 @@
 			ctx.stroke();
 
 			ctx.fillStyle = "#111";
-			ctx.font = "700 15px Trebuchet MS";
+			ctx.font = "700 17px Trebuchet MS";
 			ctx.fillText("Liquid column", TUBE.x + TUBE.width + 16, topY + 20);
 			ctx.beginPath();
 			ctx.moveTo(TUBE.x + TUBE.width + 10, topY + 15);
@@ -652,7 +673,7 @@
 				const mAtTick = ((10 - i) / 10) * maxM;
 				if (i % 2 === 0) {
 					ctx.fillStyle = "#111";
-					ctx.font = "700 13px Trebuchet MS";
+					ctx.font = "700 15px Trebuchet MS";
 					const digits = maxM < 10 ? 1 : 0;
 					ctx.fillText(`${fmt(mAtTick, digits)} m`, TUBE.x - 66, y + 4);
 				}
@@ -667,8 +688,9 @@
 			ctx.stroke();
 
 			ctx.fillStyle = "#111";
-			ctx.font = "700 14px Trebuchet MS";
-			ctx.fillText(`Column height: ${fmt(colHeightM, 2)} m`, TUBE.x - 20, TUBE.y + TUBE.height + 22);
+			ctx.font = "700 16px Trebuchet MS";
+			const columnLabelY = clamp(TUBE.y + TUBE.height + 22, 18, canvas.height - 10);
+			ctx.fillText(`Column height: ${fmt(colHeightM, 2)} m`, TUBE.x - 20, columnLabelY);
 		}
 
 		function drawProbe() {
@@ -691,23 +713,23 @@
 			ctx.stroke();
 
 			ctx.fillStyle = "#111";
-			ctx.font = "700 14px Trebuchet MS";
+			ctx.font = "700 16px Trebuchet MS";
 			ctx.fillText("Probe", x + 15, y - 12);
 
 			ctx.fillStyle = "rgba(255,255,255,0.95)";
 			ctx.strokeStyle = "#111";
 			ctx.lineWidth = 2;
-			const labelW = 180;
-			const labelH = 44;
+			const labelW = 220;
+			const labelH = 56;
 			const labelX = clamp(x + 16, 8, canvas.width - labelW - 8);
 			const labelY = clamp(y + 10, 8, canvas.height - labelH - 8);
 			ctx.fillRect(labelX, labelY, labelW, labelH);
 			ctx.strokeRect(labelX, labelY, labelW, labelH);
 
 			ctx.fillStyle = "#111";
-			ctx.font = "700 13px Trebuchet MS";
-			ctx.fillText(`P = ${fmt(pa, 0)} Pa`, labelX + 8, labelY + 16);
-			ctx.fillText(`${fmt(paToMmOfCurrentLiquid(pa), 1)} mm ${getLiquid().name}`, labelX + 8, labelY + 32);
+			ctx.font = "700 15px Trebuchet MS";
+			ctx.fillText(`P = ${fmt(pa, 0)} Pa`, labelX + 8, labelY + 20);
+			ctx.fillText(`${fmt(paToMmOfCurrentLiquid(pa), 1)} mm ${getLiquid().name}`, labelX + 8, labelY + 40);
 		}
 
 		function drawLegend() {
@@ -722,7 +744,7 @@
 			ctx.strokeRect(12, 12, 228, 56);
 
 			ctx.fillStyle = "#111";
-			ctx.font = "700 12px Trebuchet MS";
+			ctx.font = "700 14px Trebuchet MS";
 			ctx.fillText(`Planet: ${planet.name}  g=${fmt(planet.gravity, 2)} m/s²`, 18, 31);
 			ctx.fillText(`Pₐₜₘ=${fmt(pAir, 0)} Pa  ρ=${fmt(liquid.density, 0)} kg/m³`, 18, 49);
 		}
