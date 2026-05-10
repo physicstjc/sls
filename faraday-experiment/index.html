@@ -1032,22 +1032,11 @@
         ? (flipMagnet.checked ? -analyticVelocity : analyticVelocity)
         : smoothedVelocity;
 
-      // For oscillate mode, use an ideal sinusoid for a clean datalogger trace.
-      // Keep the physics-shaped emf model for manual and free-fall motion.
-      let voltage;
-      if (animMode === 'oscillate' && animStartTime !== null) {
-        const t = (currentTime - animStartTime) / 1000;
-        const omega = 2 * Math.PI / OSC_PERIOD;
-        const sign = flipMagnet.checked ? -1 : 1;
-        const peakVelocity = OSC_AMPLITUDE * omega;
-        const peakVoltage = peakVelocity * VOLTS_PER_PIXEL_PER_SECOND;
-        voltage = sign * peakVoltage * Math.sin(2 * omega * t);
-      } else {
-        const sigma = 70;
-        const distance = (position + MAGNET_HALF_HEIGHT) - COIL_CENTER;
-        const flux = Math.exp(-(distance * distance) / (2 * sigma * sigma));
-        voltage = (effectiveVelocity / 80) * (distance / sigma) * flux;
-      }
+      // Use a single physics-based EMF model for all motion modes.
+      const sigma = 70;
+      const distance = (position + MAGNET_HALF_HEIGHT) - COIL_CENTER;
+      const flux = Math.exp(-(distance * distance) / (2 * sigma * sigma));
+      const voltage = (effectiveVelocity / 80) * (distance / sigma) * flux;
       if (outputMode === 'datalogger') {
         drawDataloggerConnections();
       } else {
