@@ -163,6 +163,12 @@
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0xf5f5f5);
 
+            const startPrompt = document.getElementById('startPrompt');
+            const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            if (startPrompt && isTouchDevice) {
+                startPrompt.textContent = 'Touch device: press and hold a component to toggle it.';
+            }
+
             camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
             updateCameraPosition();
 
