@@ -504,6 +504,12 @@
 
         function toggleSwitch() {
             isSwitchClosed = !isSwitchClosed;
+            // If closing from an all-zero state, set a small nonzero current target
+            // so the ammeter immediately begins to change.
+            if (isSwitchClosed && targetI <= 0) {
+                targetI = 0.1;
+                updateSliderPositionFromValue();
+            }
             switchLever.rotation.z = isSwitchClosed ? -Math.PI/2 : 0;
             const prompt = document.getElementById('startPrompt');
             if (prompt) {
