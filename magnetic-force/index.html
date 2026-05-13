@@ -110,7 +110,11 @@
         let previousMouseY = 0;
         let rotationTheta = Math.PI / 4; 
         let rotationPhi = Math.PI / 6;   
-        const cameraRadius = 18;
+        let cameraRadius = 18;
+        const MIN_CAMERA_RADIUS = 8;
+        const MAX_CAMERA_RADIUS = 40;
+        let isPinching = false;
+        let lastPinchDistance = 0;
 
         const WIRE_HEIGHT = 1.6; 
         const BLOCK_X = 4.5;
@@ -163,6 +167,7 @@
             updateCameraPosition();
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
             document.getElementById('container').appendChild(renderer.domElement);
@@ -405,9 +410,11 @@
             container.addEventListener('mousedown', onPointerDown);
             window.addEventListener('mousemove', onPointerMove);
             window.addEventListener('mouseup', onPointerUp);
-            container.addEventListener('touchstart', (e) => onPointerDown(e.touches[0]), {passive: false});
-            window.addEventListener('touchmove', (e) => onPointerMove(e.touches[0]), {passive: false});
-            window.addEventListener('touchend', onPointerUp);
+            container.addEventListener('wheel', onWheel, { passive: false });
+            container.addEventListener('touchstart', onTouchStart, { passive: false });
+            window.addEventListener('touchmove', onTouchMove, { passive: false });
+            window.addEventListener('touchend', onTouchEnd);
+            window.addEventListener('touchcancel', onTouchEnd);
 
             document.getElementById('resetBtn').addEventListener('click', () => {
                 targetI = 0; currentI = 0; isSwitchClosed = false; polarityMultiplier = 1;
@@ -419,7 +426,10 @@
             });
 
             window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight);
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+                renderer.setSize(window.innerWidth, window.innerHeight);
             });
 
             animate();
@@ -487,6 +497,56 @@
             isRotatingScene = false;
             isDraggingSlider = false;
             document.getElementById('container').style.cursor = 'move';
+        }
+
+        function onWheel(e) {
+            e.preventDefault();
+            cameraRadius = Math.max(MIN_CAMERA_RADIUS, Math.min(MAX_CAMERA_RADIUS, cameraRadius + e.deltaY * 0.01));
+            updateCameraPosition();
+        }
+
+        function touchDistance(t1, t2) {
+            const dx = t1.clientX - t2.clientX;
+            const dy = t1.clientY - t2.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function onTouchStart(e) {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                isPinching = true;
+                isRotatingScene = false;
+                isDraggingSlider = false;
+                lastPinchDistance = touchDistance(e.touches[0], e.touches[1]);
+                return;
+            }
+            if (e.touches.length === 1) {
+                onPointerDown(e.touches[0]);
+            }
+        }
+
+        function onTouchMove(e) {
+            if (isPinching && e.touches.length === 2) {
+                e.preventDefault();
+                const dist = touchDistance(e.touches[0], e.touches[1]);
+                const delta = dist - lastPinchDistance;
+                cameraRadius = Math.max(MIN_CAMERA_RADIUS, Math.min(MAX_CAMERA_RADIUS, cameraRadius - delta * 0.03));
+                lastPinchDistance = dist;
+                updateCameraPosition();
+                return;
+            }
+            if (!isPinching && e.touches.length === 1) {
+                onPointerMove(e.touches[0]);
+            }
+        }
+
+        function onTouchEnd(e) {
+            if (e.touches.length < 2) {
+                isPinching = false;
+            }
+            if (e.touches.length === 0) {
+                onPointerUp();
+            }
         }
 
         function updateSliderPositionFromValue() {
