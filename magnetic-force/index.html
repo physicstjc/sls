@@ -4,82 +4,1205 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Magnetic Force 3D Simulation</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- KaTeX for math rendering -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="three.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; background-color: #1a1a1a; touch-action: none; }
-        #container { width: 100vw; height: 100vh; cursor: move; }
-        .reset-btn {
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        body {
+            overflow-x: hidden;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: radial-gradient(circle at top left, #2b2f4a 0%, #13161f 45%, #0b0d14 100%);
+            color: #f8fafc;
+            touch-action: none;
+            display: flex;
+            flex-direction: column;
+        }
+        #container {
+            width: 100vw;
+            height: 70vh;
+            cursor: grab;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
+        }
+
+        .ui-panel {
             position: absolute;
-            top: 12px;
-            left: 12px;
-            background: #1f2937;
-            color: #ffffff;
-            border: none;
-            padding: 6px 10px;
-            border-radius: 6px;
-            font-size: 12px;
+            z-index: 12;
+            max-width: 320px;
+            background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 16px;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+            padding: 14px 16px;
+            gap: 10px;
+            display: flex;
+            flex-direction: column;
+            color: #f8fafc;
+            font-size: 0.94rem;
+        }
+        #topPanel { top: 12px; left: 12px; width: calc(100vw - 32px); max-width: 780px; }
+        #statsPanel { top: 12px; right: 12px; }
+        #guidePanel { bottom: 12px; left: 12px; max-width: 360px; }
+        .panel-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 0.02em;
+        }
+        .title {
+            font-size: 1.18rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            margin-bottom: 8px;
+        }
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .control-btn {
+            flex: 1 1 160px;
+            min-width: 120px;
+            background: linear-gradient(180deg, #334155 0%, #1f2937 100%);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            border-radius: 999px;
+            color: #f8fafc;
+            padding: 10px 12px;
             font-weight: 700;
             cursor: pointer;
-            z-index: 10;
+            transition: transform 0.15s ease, background 0.15s ease;
         }
-        .reset-btn:hover { background: #111827; }
-        .display {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #111;
-            color: #0f0;
-            padding: 8px 20px;
-            border-radius: 6px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 2rem;
-            border: 3px solid #333;
-            text-shadow: 0 0 8px #0f0;
-            pointer-events: none;
+        .control-btn:hover {
+            transform: translateY(-1px);
+            background: linear-gradient(180deg, #475569 0%, #334155 100%);
         }
-        .hint {
+        .metric {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+        }
+        .metric:last-child { border-bottom: none; }
+        .metric-label { color: #94a3b8; }
+        .metric-value { font-weight: 700; color: #e2e8f0; }
+        #guidePanel p {
+            margin: 0 0 10px;
+            line-height: 1.5;
+            color: #cbd5e1;
+        }
+        #guidePanel strong { color: #f8fafc; }
+        input[type=range] {
+            width: 100%;
+            accent-color: #38bdf8;
+            cursor: pointer;
+        }
+        .footer {
             position: absolute;
-            bottom: 10px;
-            right: 15px;
-            color: #666;
-            font-size: 0.7rem;
-            pointer-events: none;
+            right: 12px;
+            bottom: 12px;
+            z-index: 12;
+            background: rgba(15, 23, 42, 0.78);
+            color: #94a3b8;
+            padding: 10px 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            font-size: 0.8rem;
+            max-width: 320px;
+            text-align: right;
         }
         .start-prompt {
             position: absolute;
-            top: 58px;
+            top: 90px;
             left: 12px;
-            background: rgba(255, 255, 255, 0.96);
+            background: rgba(255, 255, 255, 0.94);
             color: #111827;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            padding: 6px 10px;
-            font-size: 12px;
-            font-weight: 700;
-            z-index: 10;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            pointer-events: none;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.9rem;
+            z-index: 12;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+            max-width: 320px;
         }
-        input[type=range] { width: 100%; cursor: pointer; }
-        .label-val { font-weight: bold; color: #d946ef; }
-        .toggle-btn { transition: all 0.2s; }
-        .toggle-active { background-color: #ef4444; color: white; }
-        .math-block { margin-bottom: 4px; display: block; }
     </style>
-</head>
+
+    <script src="./lib/xapiwrapper.min.js"></script>
+    <script src="./lib/xAPI.js"></script>
+  
+    <!-- xAPI Timeline Tracking -->
+    <script>
+(function() {
+  // IMPORTANT:
+  // - Do not send statements directly with fetch/XHR (can trigger CORS failures)
+  // - Use the existing injected SLS glue: window.storeState(...) (vendor/xAPI.js)
+  const xapiState = { startTime: Date.now(), actions: [] };
+  const flushState = { timer: null, lastSentAt: 0, lastSig: '' };
+
+  function safeStore(payload) {
+    try {
+      if (typeof window.storeState === 'function') {
+        window.storeState(payload);
+      }
+    } catch (e) {
+      // never break content
+    }
+  }
+
+  function summarizeTarget(t) {
+    try {
+      return {
+        tag: (t && t.tagName) ? String(t.tagName).toLowerCase() : null,
+        id: t && t.id ? String(t.id).substring(0, 120) : null,
+        name: t && t.name ? String(t.name).substring(0, 120) : null,
+        value: t && t.value != null ? String(t.value).substring(0, 120) : null,
+        text: t && t.textContent ? String(t.textContent).trim().substring(0, 120) : null
+      };
+    } catch {
+      return {};
+    }
+  }
+
+  function logAction(type, data, timestamp) {
+    xapiState.actions.push({ t: timestamp || Date.now(), type, data: data || null });
+    if (xapiState.actions.length > 300) xapiState.actions.shift();
+  }
+
+  function captureDashboardSnapshot() {
+    // Best-effort: capture visible "dashboard"/"results" info without knowing the content structure.
+    try {
+      const selectors = [
+        '[id*="dashboard" i]', '[class*="dashboard" i]',
+        '[id*="result" i]', '[class*="result" i]',
+        '[id*="score" i]', '[class*="score" i]'
+      ];
+      const el = document.querySelector(selectors.join(','));
+      if (!el) return null;
+      const text = (el.textContent || '').trim().replace(/\s+/g, ' ');
+      if (!text) return null;
+      return { selector: el.id ? ('#' + el.id) : (el.className ? ('.' + String(el.className).split(/\s+/)[0]) : null), text: text.substring(0, 400) };
+    } catch {
+      return null;
+    }
+  }
+
+  function readDomNumberById(id) {
+    try {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      const text = (el.textContent || '').replace(/[^0-9.]/g, '');
+      const n = Number(text);
+      return Number.isFinite(n) ? n : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function extractScoreFromDom() {
+    try {
+      const directScore =
+        readDomNumberById('score') ??
+        readDomNumberById('points') ??
+        readDomNumberById('correctCount') ??
+        readDomNumberById('correct') ??
+        readDomNumberById('correctAnswers') ??
+        readDomNumberById('correctAnswersCount');
+
+      const directMax =
+        readDomNumberById('max') ??
+        readDomNumberById('total') ??
+        readDomNumberById('totalQuestions') ??
+        readDomNumberById('questionsToAdvance') ??
+        readDomNumberById('attemptCount') ??
+        readDomNumberById('attempts') ??
+        readDomNumberById('totalAttempts');
+
+      if (directScore != null) {
+        const max = directMax != null ? directMax : (directScore > 0 ? directScore : null);
+        return { score: directScore, max };
+      }
+
+      const selectors = [
+        '[id*="score" i]', '[class*="score" i]',
+        '[id*="result" i]', '[class*="result" i]',
+        '[id*="correct" i]', '[class*="correct" i]',
+        '[data-score]', '[data-points]', '[data-max]'
+      ];
+      const candidates = Array.from(document.querySelectorAll(selectors.join(',')));
+      for (const el of candidates) {
+        const dataScore = el.getAttribute('data-score') || el.getAttribute('data-points');
+        const dataMax = el.getAttribute('data-max');
+        if (dataScore != null) {
+          const score = Number(dataScore);
+          const max = dataMax != null ? Number(dataMax) : null;
+          if (!Number.isNaN(score)) return { score, max: Number.isNaN(max) ? null : max };
+        }
+        const text = (el.textContent || '').trim();
+        const scoreRegex = new RegExp('(\d+)\s*\/\s*(\d+)');
+        const m = text.match(scoreRegex);
+        if (m) return { score: Number(m[1]), max: Number(m[2]) };
+      }
+    } catch (e) {}
+    return { score: null, max: null };
+  }
+
+  function summarizeFormValue(t) {
+    try {
+      if (!t) return null;
+      const tag = t.tagName ? String(t.tagName).toLowerCase() : '';
+      const type = (t.type || '').toLowerCase();
+      if (tag === 'select') {
+        const opt = t.selectedOptions && t.selectedOptions[0] ? t.selectedOptions[0] : null;
+        if (opt) return String(opt.text || opt.value || '').trim().substring(0, 120);
+      }
+      if (tag === 'input' && (type === 'checkbox' || type === 'radio')) {
+        return t.checked ? (t.value != null ? String(t.value).substring(0, 120) : 'checked') : 'unchecked';
+      }
+      return t.value != null ? String(t.value).substring(0, 120) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function getDashboardSignature() {
+    try {
+      const scoreInfo = extractScoreFromDom();
+      const dashboard = captureDashboardSnapshot();
+      return [
+        scoreInfo && scoreInfo.score != null ? scoreInfo.score : '',
+        scoreInfo && scoreInfo.max != null ? scoreInfo.max : '',
+        dashboard && dashboard.selector ? dashboard.selector : '',
+        dashboard && dashboard.text ? String(dashboard.text).substring(0, 240) : ''
+      ].join('|');
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function computeMetrics(actions) {
+    const elapsedSec = Math.max(0, Math.round((Date.now() - xapiState.startTime) / 1000));
+    const actionTypes = {};
+    const uniqueTargets = new Set();
+    let seqSingle = 0;
+    let seqMulti = 0;
+    let headOn = 0;
+    let extremes = 0;
+
+    let prev = null;
+    actions.forEach(a => {
+      actionTypes[a.type] = (actionTypes[a.type] || 0) + 1;
+      const t = a.data || {};
+      const key = [t.tag, t.id, t.name, t.text, t.value].filter(Boolean).join('|');
+      if (key) uniqueTargets.add(key);
+
+      if (prev && prev.type !== a.type) {
+        seqSingle++;
+        const prevKey = prev.data ? [prev.data.tag, prev.data.id, prev.data.name, prev.data.text, prev.data.value].filter(Boolean).join('|') : '';
+        if (prevKey && key && prevKey !== key) seqMulti++;
+      }
+
+      const textBlob = [t.text, t.id, t.name, t.value].filter(Boolean).join(' ').toLowerCase();
+      if (textBlob.includes('head-on') || textBlob.includes('headon')) headOn++;
+      if (textBlob.includes('mass') || textBlob.includes('speed') || textBlob.includes('velocity')) extremes++;
+      prev = a;
+    });
+
+    return { elapsedSec, actionTypes, uniqueTargets: uniqueTargets.size, seqSingle, seqMulti, headOn, extremes };
+  }
+
+  function buildFeedback(summary, score, max, actionLog) {
+    const lines = [];
+    lines.push('Feedback');
+    lines.push('Interactive Response Assistant');
+    lines.push(new Date().toLocaleString());
+    lines.push('Interactions: ' + summary.interactions);
+    lines.push('Elapsed Time: ' + summary.elapsedSec + 's');
+    if (score != null) {
+      lines.push('Score: ' + score + (max != null ? (' / ' + max) : ''));
+    }
+    lines.push('Unique Explorations: ' + summary.uniqueTargets);
+    const diversity = Object.keys(summary.actionTypes)
+      .map(k => k + ': ' + summary.actionTypes[k])
+      .join(', ');
+    lines.push('Diversity — ' + (diversity || 'n/a'));
+    lines.push('');
+    lines.push('Action Log:');
+    if (Array.isArray(actionLog) && actionLog.length) {
+      actionLog.forEach(a => {
+        const label = a && a.label ? a.label : (a && a.type ? a.type : 'event');
+        const time = (a && a.t != null) ? a.t : 0;
+        lines.push('t=' + time + 's ' + label);
+      });
+    }
+    return lines.join('<br>');
+  }
+
+  function buildPayload(reason) {
+    const actions = xapiState.actions.slice();
+    const scoreInfo = extractScoreFromDom();
+    const metrics = computeMetrics(actions);
+    const dashboard = captureDashboardSnapshot();
+    const summary = {
+      interactions: actions.length,
+      elapsedSec: metrics.elapsedSec,
+      actionTypes: metrics.actionTypes,
+      uniqueTargets: metrics.uniqueTargets,
+      seqSingle: metrics.seqSingle,
+      seqMulti: metrics.seqMulti,
+      headOn: metrics.headOn,
+      extremes: metrics.extremes
+    };
+
+    const actionLog = actions
+      .filter(a => a.type === 'learning-analytics')
+      .map(a => {
+        const seconds = Math.max(0, Math.round((a.t - xapiState.startTime) / 100) / 10);
+        const label = a.data && a.data.text ? a.data.text : (a.type + ' event');
+        return { t: Number(seconds.toFixed(1)), type: a.type, label };
+      });
+    const feedback = buildFeedback(summary, scoreInfo.score, scoreInfo.max, actionLog);
+
+    return {
+      score: scoreInfo.score != null ? scoreInfo.score : 0,
+      max: scoreInfo.max != null ? scoreInfo.max : null,
+      feedback,
+      reason,
+      startedAt: xapiState.startTime,
+      summary,
+      actionLog,
+      actions,
+      dashboard,
+      details: {
+        summary,
+        actionLog,
+        dashboard
+      }
+    };
+  }
+
+  function signatureOfPayload(p) {
+    try {
+      const last = p && p.actions && p.actions.length ? p.actions[p.actions.length - 1] : null;
+      const dashboard = p && p.dashboard ? p.dashboard : null;
+      return [
+        p && p.actions ? p.actions.length : 0,
+        last ? last.t : 0,
+        p && p.score != null ? p.score : '',
+        p && p.max != null ? p.max : '',
+        dashboard && dashboard.selector ? dashboard.selector : '',
+        dashboard && dashboard.text ? String(dashboard.text).substring(0, 240) : ''
+      ].join('|');
+    } catch {
+      return String(Date.now());
+    }
+  }
+
+  function flush(reason) {
+    const p = buildPayload(reason);
+    const sig = signatureOfPayload(p);
+    if (sig === flushState.lastSig) return;
+    flushState.lastSig = sig;
+    flushState.lastSentAt = Date.now();
+    safeStore(p);
+  }
+
+  function scheduleFlush(reason, delayMs) {
+    if (flushState.timer) clearTimeout(flushState.timer);
+    const d = typeof delayMs === 'number' ? delayMs : 1200;
+    flushState.timer = setTimeout(() => {
+      flushState.timer = null;
+      // small throttle to avoid flooding
+      if (Date.now() - flushState.lastSentAt < 700) return scheduleFlush(reason, 700);
+      flush(reason);
+    }, d);
+  }
+
+  function parseAnalyticsEntry(entry) {
+    try {
+      const timeEl = entry.querySelector ? entry.querySelector('.log-time') : null;
+      const actionEl = entry.querySelector ? entry.querySelector('.log-action') : null;
+      const valueEl = entry.querySelector ? entry.querySelector('.log-value') : null;
+
+      const timeText = timeEl ? timeEl.textContent : (entry.textContent || '');
+      const actionText = actionEl ? actionEl.textContent : null;
+      const valueText = valueEl ? valueEl.textContent : null;
+
+      const timeMatch = /t=([0-9.]+)s/i.exec(timeText);
+      const timeSec = timeMatch ? Number(timeMatch[1]) : null;
+
+      const label = [actionText, valueText].filter(Boolean).join(' ').trim();
+      return {
+        timeSec: Number.isFinite(timeSec) ? timeSec : null,
+        action: actionText ? actionText.trim() : null,
+        details: valueText ? valueText.trim() : null,
+        label: label || null
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function hookLearningAnalyticsLog() {
+    try {
+      if (window.__xapiLearningAnalyticsHooked) return;
+      window.__xapiLearningAnalyticsHooked = true;
+
+      const seen = new Set();
+
+      function recordEntry(entry) {
+        const parsed = parseAnalyticsEntry(entry);
+        if (!parsed) return;
+        const sig = [parsed.timeSec, parsed.action, parsed.details].join('|');
+        if (seen.has(sig)) return;
+        seen.add(sig);
+        if (seen.size > 300) {
+          const keep = Array.from(seen).slice(-200);
+          seen.clear();
+          keep.forEach(k => seen.add(k));
+        }
+
+        const ts = parsed.timeSec != null
+          ? (xapiState.startTime + Math.round(parsed.timeSec * 1000))
+          : Date.now();
+
+        logAction('learning-analytics', {
+          text: parsed.label || parsed.action || 'Analytics Event',
+          action: parsed.action || null,
+          details: parsed.details || null,
+          source: 'learning-analytics',
+          timeSec: parsed.timeSec
+        }, ts);
+
+        scheduleFlush('learning-analytics', 400);
+      }
+
+      function attachToContainer(container) {
+        if (!container || container.__xapiObserverAttached) return;
+        container.__xapiObserverAttached = true;
+
+        Array.from(container.querySelectorAll('.log-entry')).forEach(recordEntry);
+
+        const observer = new MutationObserver(mutations => {
+          mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(node => {
+              if (!(node instanceof Element)) return;
+              if (node.classList.contains('log-entry')) {
+                recordEntry(node);
+              } else {
+                node.querySelectorAll && node.querySelectorAll('.log-entry').forEach(recordEntry);
+              }
+            });
+          });
+        });
+
+        observer.observe(container, { childList: true, subtree: true });
+      }
+
+      function tryAttach() {
+        const container = document.getElementById('logContainer') || document.querySelector('.analytics-content #logContainer');
+        if (container) {
+          attachToContainer(container);
+          return true;
+        }
+        const entry = document.querySelector('.log-entry');
+        if (entry && entry.parentElement) {
+          attachToContainer(entry.parentElement);
+          return true;
+        }
+        return false;
+      }
+
+      if (tryAttach()) return;
+
+      let attempts = 0;
+      const timer = setInterval(() => {
+        attempts += 1;
+        if (tryAttach() || attempts > 20) {
+          clearInterval(timer);
+        }
+      }, 500);
+    } catch (e) {}
+  }
+
+  // Keyboard tracking for text-based inputs and textareas
+  // This logs each keystroke as a lightweight "key" action so it
+  // appears in the same timeline analytics as clicks.
+  document.addEventListener('keydown', (e) => {
+    const t = e.target;
+    if (!t || !t.tagName) return;
+
+    const tag = String(t.tagName).toLowerCase();
+    const type = (t.type || '').toLowerCase();
+
+    // Limit to typical text input fields to avoid flooding from
+    // every key on the whole page.
+    const isTextField = (
+      tag === 'input' && (!type || type === 'text' || type === 'search' || type === 'email' || type === 'number')
+    ) || tag === 'textarea';
+
+    if (!isTextField) return;
+
+    logAction('key', {
+      tag,
+      id: t.id || null,
+      name: t.name || null,
+      value: t.value != null ? String(t.value).substring(0, 120) : null,
+      text: null,
+      key: String(e.key).substring(0, 40),
+      code: String(e.code || '').substring(0, 40)
+    });
+
+    // Group keystrokes slightly to avoid sending on every single key.
+    scheduleFlush('auto-key', 800);
+  }, true);
+
+  document.addEventListener('click', (e) => {
+    // Track ALL clicks (not only buttons/links)
+    const t = e.target;
+    if (!t) return;
+    logAction('click', {
+      tag: t.tagName ? String(t.tagName).toLowerCase() : null,
+      id: t.id || null,
+      name: t.name || null,
+      text: (t.textContent || '').trim().substring(0, 80)
+    });
+    scheduleFlush('auto-click');
+  }, true);
+
+  // Also flush when the tab is hidden / page unloads
+  document.addEventListener('visibilitychange', () => {
+    // In quiz contexts, we avoid sending "pause" events when switching tabs,
+    // because SLS learners commonly return to the parent tab.
+    try {
+      if (document.hidden && window.__xapiDisablePauseFlush === true) return;
+    } catch (e) {}
+    if (document.hidden) flush('pause');
+  });
+  window.addEventListener('beforeunload', () => {
+    try { flush('unload'); } catch (e) {}
+  });
+
+  document.addEventListener('change', (e) => {
+    const t = e.target;
+    if (!t || !t.tagName) return;
+
+    const tag = String(t.tagName).toLowerCase();
+    const type = (t.type || '').toLowerCase();
+    const trackChange =
+      tag === 'select' ||
+      tag === 'textarea' ||
+      (tag === 'input' && ['range', 'number', 'date', 'time', 'color'].includes(type));
+
+    if (!trackChange) return;
+
+    logAction('change', {
+      tag,
+      type: type || null,
+      id: t.id || null,
+      name: t.name || null,
+      value: summarizeFormValue(t),
+      text: tag === 'select' && t.selectedOptions && t.selectedOptions[0]
+        ? String(t.selectedOptions[0].text || '').trim().substring(0, 80)
+        : null
+    });
+    scheduleFlush('auto-change', 300);
+  }, true);
+
+  const releaseEvent = window.PointerEvent ? 'pointerup' : 'mouseup';
+  document.addEventListener(releaseEvent, (e) => {
+    const target = e.target && e.target.closest ? e.target.closest('canvas,svg') : null;
+    if (!target) return;
+
+    logAction('pointerup', {
+      tag: target.tagName ? String(target.tagName).toLowerCase() : null,
+      id: target.id || null,
+      name: target.name || null,
+      text: target.getAttribute ? (target.getAttribute('aria-label') || target.getAttribute('title') || null) : null
+    });
+    scheduleFlush('auto-canvas', 250);
+  }, true);
+
+  function startTimelineAutoSave() {
+    if (window.__xapiTimelineAutoSaveStarted) return;
+    window.__xapiTimelineAutoSaveStarted = true;
+
+    let lastDashboardSig = getDashboardSignature();
+
+    setInterval(() => {
+      const sig = getDashboardSignature();
+      if (!sig || sig === lastDashboardSig) return;
+      lastDashboardSig = sig;
+      if (xapiState.actions.length > 0) {
+        scheduleFlush('dashboard-change', 250);
+      }
+    }, 2000);
+
+    setInterval(() => {
+      if (xapiState.actions.length > 0) {
+        flush('heartbeat');
+      }
+    }, 15000);
+  }
+
+  function addSaveBtn() {
+    return;
+    if (document.getElementById('xapi-save-button')) return;
+    const b = document.createElement('button');
+    b.id = 'xapi-save-button';
+    b.textContent = '💾 Save to SLS';
+    b.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:10px 16px;background:#1976d2;color:white;border:none;border-radius:8px;z-index:9999';
+    b.onclick = () => flush('manual-save');
+    document.body.appendChild(b);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      hookLearningAnalyticsLog();
+      startTimelineAutoSave();
+    });
+  } else {
+    hookLearningAnalyticsLog();
+    startTimelineAutoSave();
+  }
+})();
+    </script>
+  
+    <!-- xAPI Quiz Tracking -->
+    <script>
+(function() {
+  // Unified tracking: quiz instrumentation is always present.
+  // We DO NOT force statement sending here. The vendor glue (lib/xAPI.js)
+  // will still send state reliably; statements are best-effort depending on CORS.
+
+  const qs = { questions: [], answers: {}, attempted: 0 };
+  const quizMeta = { total: 0, correct: 0, max: 0, lastScoreSent: null };
+  const history = [];
+  const flushState = { timer: null, lastSentAt: 0, lastSig: '' };
+  const answerDedup = { lastSig: '', lastAt: 0 };
+  const metricsState = { lastKey: '', timer: null };
+
+  // IMPORTANT:
+  // - Do not send statements directly with fetch/XHR (CORS failures in SLS hosting)
+  // - Use window.storeState(...) only; vendor/xAPI.js will send state + score statement.
+  function safeStore(payload) {
+    try {
+      if (typeof window.storeState === 'function') {
+        window.storeState(payload);
+      }
+    } catch (e) {
+      // no-op
+    }
+  }
+
+  function pushHistory(evt) {
+    history.push(Object.assign({ t: Date.now() }, evt));
+    if (history.length > 80) history.shift();
+  }
+
+  function toNumber(val) {
+    const n = Number(val);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function readDomNumber(id) {
+    try {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      const text = (el.textContent || '').replace(/[^0-9.]/g, '');
+      return toNumber(text);
+    } catch {
+      return null;
+    }
+  }
+
+  function getQuestionText() {
+    try {
+      const el = document.getElementById('question');
+      if (el && el.textContent) return el.textContent.trim().substring(0, 160);
+    } catch {}
+    return null;
+  }
+
+  function getGameState() {
+    try { return window.gameState || null; } catch { return null; }
+  }
+
+  function getMetricsFromGameState() {
+    const gs = getGameState();
+    if (!gs) return null;
+    const attempted = toNumber(gs.totalAttempts != null ? gs.totalAttempts : null);
+    const correct = toNumber(gs.correctCount != null ? gs.correctCount : null);
+    const points = toNumber(gs.score != null ? gs.score : null);
+    const max = toNumber(gs.questionsToAdvance != null ? gs.questionsToAdvance : null);
+    const hasAny = attempted != null || correct != null || points != null || max != null;
+    if (!hasAny) return null;
+    return { attempted, correct, points, max };
+  }
+
+  function getMetricsFromDom() {
+    const attempted = readDomNumber('totalAttempts');
+    const correct = readDomNumber('correctCount');
+    const points = readDomNumber('score');
+    const max = readDomNumber('totalQuestions');
+    const hasAny = attempted != null || correct != null || points != null || max != null;
+    if (!hasAny) return null;
+    return { attempted, correct, points, max };
+  }
+
+  function getMetrics() {
+    return getMetricsFromGameState() || getMetricsFromDom() || null;
+  }
+
+  function syncFromMetrics() {
+    const m = getMetrics();
+    if (!m) return;
+    if (m.attempted != null) qs.attempted = m.attempted;
+    if (m.correct != null) quizMeta.correct = m.correct;
+    if (m.max != null) quizMeta.max = m.max;
+  }
+
+  function startMetricsWatcher() {
+    if (metricsState.timer) return;
+    metricsState.timer = setInterval(() => {
+      const m = getMetrics();
+      if (!m) return;
+      const key = [m.attempted, m.correct, m.points, m.max].join('|');
+      if (key === metricsState.lastKey) return;
+      metricsState.lastKey = key;
+      syncFromMetrics();
+      scheduleFlush('auto-metrics');
+      maybeComputeAndSendScore();
+    }, 1200);
+  }
+
+  function recordAnswer(evt) {
+    try {
+      const sig = [evt.q, evt.value, evt.correct, evt.expected].join('|');
+      const now = Date.now();
+      if (sig === answerDedup.lastSig && now - answerDedup.lastAt < 800) return;
+      answerDedup.lastSig = sig;
+      answerDedup.lastAt = now;
+      pushHistory(evt);
+
+      const gs = getGameState();
+      const hasCounts = gs && (gs.totalAttempts != null || gs.correctCount != null);
+      if (!hasCounts) {
+        qs.attempted++;
+        if (evt.correct === true) quizMeta.correct++;
+      }
+    } catch (e) {}
+  }
+
+  // Build per-question breakdown for SLS and LRS analytics.
+  // Groups answer-like events by question id/text and derives:
+  // - question id/text
+  // - last user selection
+  // - inferred correct option (when available)
+  // - simple marks (1 for correct, 0 for not-certain/incorrect)
+  // This is emitted as quiz.items[] and also mirrored under
+  // hiddenMarks so vendor/xAPI.js can push it into result.extensions.
+  function buildQuizBreakdown() {
+    const byQ = new Map();
+
+    history.forEach(evt => {
+      if (!evt) return;
+      const type = (evt.type || '').toString();
+      if (!/answer/.test(type)) return; // focus on answer-like events
+
+      const keyRaw = evt.q != null ? String(evt.q) : '';
+      const key = keyRaw || (evt.name != null ? String(evt.name) : '');
+      if (!key) return;
+
+      let rec = byQ.get(key);
+      if (!rec) {
+        rec = {
+          id: key,
+          question: keyRaw || key,
+          correctOption: null,
+          lastEvent: null
+        };
+        byQ.set(key, rec);
+      }
+
+      rec.lastEvent = evt;
+      if (evt.expected != null && rec.correctOption == null) {
+        rec.correctOption = String(evt.expected).substring(0, 160);
+      }
+    });
+
+    const items = [];
+    let totalMarks = 0;
+    let maxMarks = 0;
+    let idx = 0;
+
+    byQ.forEach((rec, key) => {
+      const ev = rec.lastEvent || {};
+      const isCorrect = ev.correct === true;
+      const marks = isCorrect ? 1 : 0;
+      const max = 1;
+
+      items.push({
+        id: key || ('q' + (idx + 1)),
+        question: rec.question || null,
+        correctOption: rec.correctOption || (ev.expected != null ? String(ev.expected).substring(0, 160) : null),
+        userSelection: ev.value != null ? String(ev.value).substring(0, 160) : null,
+        marks,
+        maxMarks: max
+      });
+
+      totalMarks += marks;
+      maxMarks += max;
+      idx++;
+    });
+
+    return { items, totalMarks, maxMarks };
+  }
+
+  function signatureOfPayload(p) {
+    try {
+      const last = p && p.history && p.history.length ? p.history[p.history.length - 1] : null;
+      return String(p.reason) + '|' + p.score + '/' + p.max + '|' + (p.history ? p.history.length : 0) + '|' + (last ? last.t : 0);
+    } catch {
+      return String(Date.now());
+    }
+  }
+
+  function flush(reason) {
+    syncFromMetrics();
+    const max = quizMeta.max || quizMeta.total || qs.questions.length || 0;
+    const raw = (quizMeta.correct != null && quizMeta.correct > 0) ? quizMeta.correct : qs.attempted;
+    const m = getMetrics();
+    const breakdown = buildQuizBreakdown();
+    const hasBreakdown = breakdown && breakdown.maxMarks > 0;
+    const finalScore = hasBreakdown ? breakdown.totalMarks : raw;
+    const finalMax = hasBreakdown ? breakdown.maxMarks : max;
+
+    const payload = {
+      score: finalScore,
+      max: finalMax,
+      feedback: 'Quiz ' + reason + ': ' + raw + '/' + max + ' (correct ' + quizMeta.correct + '/' + max + ')',
+      reason,
+      quiz: { attempted: qs.attempted, correct: quizMeta.correct, total: max, points: m && m.points != null ? m.points : null },
+      history: history.slice(-80)
+    };
+
+    // Attach per-question breakdown when available so that vendor/xAPI.js
+    // can expose it via result.extensions.hiddenMarks and result.extensions.quizSummary.
+    if (hasBreakdown && breakdown.items.length) {
+      payload.quiz.items = breakdown.items;
+      payload.hiddenMarks = {
+        totalMarks: breakdown.totalMarks,
+        maxMarks: breakdown.maxMarks,
+        items: breakdown.items
+      };
+    }
+    const sig = signatureOfPayload(payload);
+    if (sig === flushState.lastSig) return;
+    flushState.lastSig = sig;
+    flushState.lastSentAt = Date.now();
+    safeStore(payload);
+  }
+
+  function scheduleFlush(reason, delayMs) {
+    if (flushState.timer) clearTimeout(flushState.timer);
+    const d = typeof delayMs === 'number' ? delayMs : 700;
+    flushState.timer = setTimeout(() => {
+      flushState.timer = null;
+      if (Date.now() - flushState.lastSentAt < 500) return scheduleFlush(reason, 500);
+      flush(reason);
+    }, d);
+  }
+
+  // Best-effort: attempt to infer correctness from common patterns.
+  // If we can't infer, we still send a score statement with raw=attempted.
+  function isCorrectFromInput(inputEl) {
+    try {
+      if (!inputEl) return null;
+      // Common patterns:
+      // - data-correct="true"
+      // - aria-correct / data-answer
+      // - value matches data-correct-value on group container
+      if (inputEl.dataset && (inputEl.dataset.correct === 'true' || inputEl.dataset.isCorrect === 'true')) return true;
+      const group = inputEl.closest('[data-correct],[data-answer],[data-correct-value]');
+      if (group) {
+        const correct = group.dataset.correct || group.dataset.answer || group.dataset.correctValue;
+        if (correct != null) return String(inputEl.value).trim() === String(correct).trim();
+      }
+      // Heuristic: label contains "(correct)"
+      const lbl = inputEl.closest('label');
+      if (lbl && /correct/i.test(lbl.textContent)) return true;
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  function sendScoreToSLS(scoreRaw, max, feedback) {
+    try {
+      if (typeof window.storeState === 'function') {
+        const breakdown = buildQuizBreakdown();
+        const hasBreakdown = breakdown && breakdown.maxMarks > 0;
+
+        const state = {
+          score: scoreRaw,
+          max: max,
+          feedback: feedback || '',
+          quiz: { attempted: qs.attempted, correct: quizMeta.correct, total: max },
+          history: history.slice(-80)
+        };
+
+        if (hasBreakdown && breakdown.items.length) {
+          state.quiz.items = breakdown.items;
+          state.hiddenMarks = {
+            totalMarks: breakdown.totalMarks,
+            maxMarks: breakdown.maxMarks,
+            items: breakdown.items
+          };
+        }
+
+        window.storeState(state);
+      }
+    } catch (e) {}
+  }
+
+  function maybeComputeAndSendScore() {
+    // If we know quizMeta.max, send a score on each change.
+    // Debounced by lastScoreSent.
+    syncFromMetrics();
+    const max = quizMeta.max || quizMeta.total || qs.questions.length || 0;
+    const raw = (quizMeta.correct != null && quizMeta.correct > 0) ? quizMeta.correct : qs.attempted;
+    const scoreKey = raw + '/' + max;
+    if (quizMeta.lastScoreSent === scoreKey) return;
+    quizMeta.lastScoreSent = scoreKey;
+
+    const feedback = 'Score: ' + raw + '/' + max;
+    sendScoreToSLS(raw, max, feedback);
+    // Score statement sending is handled by vendor/xAPI.js when storeState is called.
+    scheduleFlush('auto-score');
+  }
+
+  function initQuiz() {
+    const rgs = {};
+    document.querySelectorAll('input[type="radio"]').forEach(inp => {
+      if (!rgs[inp.name]) { rgs[inp.name] = true; qs.questions.push(inp.name); }
+    });
+    quizMeta.total = qs.questions.length;
+    quizMeta.max = quizMeta.total;
+    document.addEventListener('change', (e) => {
+      if (e.target.matches('input[type="radio"], input[type="checkbox"]')) {
+        const ix = qs.questions.indexOf(e.target.name);
+        if (ix >= 0) {
+          const ok = isCorrectFromInput(e.target);
+          recordAnswer({
+            type: 'answer',
+            q: e.target.name,
+            value: String(e.target.value).substring(0, 120),
+            correct: ok === true ? true : (ok === false ? false : null)
+          });
+          // Flush quickly so click history / correct-wrong shows up
+          scheduleFlush('answer');
+          maybeComputeAndSendScore();
+        }
+      }
+    });
+
+    // Button-based answers (common in Claude-generated interactives)
+    document.addEventListener('click', (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest('button,[role="button"],.answer-btn') : null;
+      if (!btn) return;
+      const inGrid = btn.closest && btn.closest('#answerGrid');
+      const looksLikeAnswer = inGrid || btn.classList.contains('answer-btn') || btn.dataset.answer != null;
+      if (!looksLikeAnswer) return;
+
+      const valueRaw = btn.dataset.answer != null ? btn.dataset.answer : (btn.textContent || '');
+      const value = String(valueRaw).trim().substring(0, 120);
+      const gs = getGameState();
+      const expected = gs && gs.correctAnswer != null ? String(gs.correctAnswer) : null;
+      const correct = expected != null ? (String(value) === String(expected)) : null;
+
+      recordAnswer({
+        type: 'answer_click',
+        q: getQuestionText(),
+        value,
+        correct,
+        expected
+      });
+
+      scheduleFlush('answer_click');
+      maybeComputeAndSendScore();
+    }, true);
+
+    startMetricsWatcher();
+
+    // Do not flush on visibility change for quiz mode.
+    // Switching back to the parent SLS tab should not mark the activity as paused.
+    window.addEventListener('beforeunload', () => { try { flush('unload'); } catch (e) {} });
+  }
+  function hookAnalytics() {
+    try {
+      if (typeof window.logAnalytics !== 'function') return;
+      if (window.__xapiAnalyticsHooked) return;
+      window.__xapiAnalyticsHooked = true;
+
+      const original = window.logAnalytics;
+      window.logAnalytics = function(action, challenge, studentAnswer, correctAnswer, result) {
+        try {
+          original.apply(this, arguments);
+        } catch (e) {}
+
+        const actionType = (action || '').toString().toLowerCase();
+        const isAnswer = actionType === 'answer_check' || actionType === 'answer' || actionType === 'check_answer';
+        const isStart = actionType === 'game_start' || actionType === 'start' || actionType === 'level_start';
+
+        recordAnswer({
+          type: actionType || 'event',
+          q: challenge ? String(challenge).substring(0, 140) : null,
+          value: studentAnswer != null ? String(studentAnswer).substring(0, 140) : null,
+          correct: result === 'correct' ? true : (result === 'incorrect' ? false : null),
+          expected: correctAnswer != null ? String(correctAnswer).substring(0, 140) : null,
+          result: result || null
+        });
+
+        if (isAnswer) {
+          scheduleFlush('answer_check');
+          maybeComputeAndSendScore();
+        } else if (isStart) {
+          scheduleFlush('game_start');
+        } else {
+          scheduleFlush(actionType || 'analytics');
+        }
+      };
+    } catch (e) {}
+  }
+
+  function hookCheckAnswer() {
+    try {
+      if (window.__xapiCheckAnswerHooked) return;
+      if (typeof window.checkAnswer !== 'function') return;
+      const original = window.checkAnswer;
+      window.checkAnswer = function(selectedAnswer, btn) {
+        try {
+          const gs = getGameState();
+          const expected = gs && gs.correctAnswer != null ? String(gs.correctAnswer) : null;
+          const value = selectedAnswer != null ? String(selectedAnswer).substring(0, 120) : null;
+          const correct = expected != null && value != null ? (String(value) === String(expected)) : null;
+          recordAnswer({
+            type: 'answer_check',
+            q: getQuestionText(),
+            value,
+            correct,
+            expected
+          });
+          scheduleFlush('answer_check');
+          maybeComputeAndSendScore();
+        } catch (e) {}
+        return original.apply(this, arguments);
+      };
+      window.__xapiCheckAnswerHooked = true;
+    } catch (e) {}
+  }
+
+  function startCheckAnswerWatcher() {
+    if (window.__xapiCheckAnswerWatch) return;
+    window.__xapiCheckAnswerWatch = true;
+    const timer = setInterval(() => {
+      hookCheckAnswer();
+      if (window.__xapiCheckAnswerHooked) clearInterval(timer);
+    }, 600);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      initQuiz();
+      hookAnalytics();
+      startCheckAnswerWatcher();
+    });
+  } else {
+    initQuiz();
+    hookAnalytics();
+    startCheckAnswerWatcher();
+  }
+})();
+    </script>
+  </head>
 <body>
 
-    <button id="resetBtn" class="reset-btn">Reset Apparatus</button>
-    <div id="startPrompt" class="start-prompt">Click the switch to start.</div>
-
-    <div class="hint">Click background to rotate | Click components to interact</div>
+    <div id="contentPanel" style="width: 100%; background: rgba(15, 23, 42, 0.98); border-bottom: 1px solid rgba(148, 163, 184, 0.2); padding: 8px 16px; box-sizing: border-box; position: relative; z-index: 5; pointer-events: auto;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="display: flex; gap: 16px; align-items: center; flex-wrap: nowrap; margin-bottom: 0;">
+                <!-- Controls Section -->
+                <div style="flex: 0 0 auto;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 0; flex-wrap: nowrap; align-items: center;">
+                        <span style="color: #f8fafc; font-size: 0.95rem; font-weight: 700; white-space: nowrap;">Controls:</span>
+                        <button id="switchBtn" class="control-btn" style="flex: 0 1 70px; min-width: 65px; padding: 8px 10px; font-size: 0.85rem;">On/Off</button>
+                        <label style="color: #cbd5e1; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; margin: 0; flex: 0 0 auto;">Current: <span id="rangeValue" style="color: #f8fafc; font-weight: 700; min-width: 35px;">5.0A</span><input id="currentRange" type="range" min="0" max="100" value="50" style="width: 80px; flex-shrink: 0;"></label>
+                        <button id="reverseCurrentBtn" class="control-btn" style="flex: 0 1 80px; min-width: 70px; padding: 8px 10px; font-size: 0.85rem;">Reverse I</button>
+                        <button id="reverseMagnetBtn" class="control-btn" style="flex: 0 1 65px; min-width: 60px; padding: 8px 10px; font-size: 0.85rem;">Flip B</button>
+                        <button id="resetCameraBtn" class="control-btn" style="flex: 0 1 90px; min-width: 80px; padding: 8px 10px; font-size: 0.85rem;">Reset View</button>
+                    </div>
+                </div>
+                
+                <!-- Measurements Section -->
+                <div style="flex: 0 0 auto;\">
+                    <div style="display: flex; gap: 20px; font-size: 0.85rem; flex-wrap: nowrap; align-items: center;\">
+                        <span style="color: #f8fafc; font-size: 0.95rem; font-weight: 700; white-space: nowrap;\">Live Data:</span>
+                        <div><span style="color: #94a3b8;\">I:</span> <span id="currentValue" style="color: #e2e8f0; font-weight: 700;\">0.00 A</span></div>
+                        <div><span style="color: #94a3b8;\">F:</span> <span id="forceValue" style="color: #e2e8f0; font-weight: 700;\">0.0 mN</span></div>
+                        <div><span style="color: #94a3b8;\">Mass:</span> <span id="scaleValue" style="color: #e2e8f0; font-weight: 700;\">100.00 g</span></div>
+                        <div><span style="color: #94a3b8;\">State:</span> <span id="switchState" style="color: #e2e8f0; font-weight: 700;\">Open</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="container"></div>
+    <div id="startPrompt" class="start-prompt">Click the switch to start.</div>
+
+    <div style="width: 100%; background: rgba(15, 23, 42, 0.98); border-top: 1px solid rgba(148, 163, 184, 0.2); padding: 30px 20px; box-sizing: border-box;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="margin-bottom: 20px; padding-top: 20px; border-top: 1px solid rgba(148, 163, 184, 0.12);">
+                <h3 style="color: #f8fafc; margin-top: 0; font-size: 1rem; margin-bottom: 12px;">How to Use</h3>
+                <p style="color: #cbd5e1; margin: 0 0 10px; line-height: 1.5; font-size: 0.9rem;">Drag the background to rotate the apparatus. Use the slider or drag the rheostat in the 3D model to change current. Click the switch to start, click the battery to reverse polarity, and click the magnet to flip poles.</p>
+                <p style="color: #cbd5e1; margin: 0 0 10px; line-height: 1.5; font-size: 0.9rem;"><strong>Physics:</strong> F = I × B . L (Lorentz Force). The magnet experiences an equal and opposite reaction force, which changes the scale reading via Newton's Third Law.</p>
+            </div>
+            
+            <!-- Activities Section -->
+            <div style="padding-top: 20px; border-top: 1px solid rgba(148, 163, 184, 0.12);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 style="color: #f8fafc; margin: 0; font-size: 1rem;">Suggested Activities</h3>
+                    <span style="font-size: 0.85rem; color: #94a3b8;">Score: <span id="actScoreDisplay" style="color: #22c55e; font-weight: 700;">0 / 4</span></span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 0.85rem; line-height: 1.5; color: #cbd5e1;">
+                    <p style="display:flex;align-items:flex-start;gap:6px;margin:0;"><span id="act1badge" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1e293b;border:1.5px solid #334155;color:#64748b;font-size:0.75rem;flex-shrink:0;margin-top:2px;transition:all 0.3s;">○</span><span><strong style="color:#f8fafc;">1. Force Observation:</strong> Turn on the switch and observe scale changes. What happens to the magnet?</span></p>
+                    <p style="display:flex;align-items:flex-start;gap:6px;margin:0;"><span id="act2badge" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1e293b;border:1.5px solid #334155;color:#64748b;font-size:0.75rem;flex-shrink:0;margin-top:2px;transition:all 0.3s;">○</span><span><strong style="color:#f8fafc;">2. Current Direction:</strong> Reverse polarity and note force direction. How does the right-hand rule apply?</span></p>
+                    <p style="display:flex;align-items:flex-start;gap:6px;margin:0;"><span id="act3badge" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1e293b;border:1.5px solid #334155;color:#64748b;font-size:0.75rem;flex-shrink:0;margin-top:2px;transition:all 0.3s;">○</span><span><strong style="color:#f8fafc;">3. Magnet Orientation:</strong> Flip the magnet poles and observe force changes. Make predictions first.</span></p>
+                    <p style="display:flex;align-items:flex-start;gap:6px;margin:0;"><span id="act4badge" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1e293b;border:1.5px solid #334155;color:#64748b;font-size:0.75rem;flex-shrink:0;margin-top:2px;transition:all 0.3s;">○</span><span><strong style="color:#f8fafc;">4. Quantitative Analysis:</strong> Adjust current 0-10A, record scale readings. Plot force vs current.</span></p>
+                </div>
+                <!-- Action Log -->
+                <div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(148,163,184,0.12);">
+                    <span style="font-size:0.82rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Action Log</span>
+                    <div id="logContainer" style="margin-top:6px;max-height:130px;overflow-y:auto;background:rgba(0,0,0,0.2);border-radius:8px;padding:6px 8px;">
+                        <div style="color:#475569;font-size:0.78rem;font-style:italic;">Actions will appear here as you interact with the simulation.</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Hidden score/total for xAPI tracker -->
+            <span id="score" style="display:none">0</span>
+            <span id="total" style="display:none">4</span>
+
+            <!-- Credit -->
+            <div style="margin-top: 20px; padding-top: 12px; border-top: 1px solid rgba(148, 163, 184, 0.12); text-align: center; font-size: 0.8rem; color: #94a3b8;">
+                Created by Sengkwang and Lookang
+            </div>
+        </div>
+    </div>
 
     <script>
         let scene, camera, renderer, scale, magnet, wire, arrowHelper, batteryGroup, switchLever, switchBase;
@@ -107,6 +1230,12 @@
         let raycaster = new THREE.Raycaster();
         let mouse = new THREE.Vector2();
         let previousMouseX = 0;
+        let container;
+        let currentRangeInput;
+        let switchButton;
+        let reverseCurrentButton;
+        let reverseMagnetButton;
+        let resetCameraBtn;
         let previousMouseY = 0;
         let rotationTheta = Math.PI / 4; 
         let rotationPhi = Math.PI / 6;   
@@ -116,8 +1245,60 @@
         let isPinching = false;
         let lastPinchDistance = 0;
 
-        const WIRE_HEIGHT = 1.6; 
+        const WIRE_HEIGHT = 1.6;
         const BLOCK_X = 4.5;
+
+        // ─── Activity Scoring ────────────────────────────────────────────────────
+        const simStart = Date.now();
+        const actDone = [false, false, false, false];
+        const act4Currents = new Set();
+
+        function simElapsed() {
+            return ((Date.now() - simStart) / 1000).toFixed(1);
+        }
+
+        function addLogEntry(action, value) {
+            const logCont = document.getElementById('logContainer');
+            if (!logCont) return;
+            const placeholder = logCont.querySelector('div[style*="italic"]');
+            if (placeholder) placeholder.remove();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.style.cssText = 'padding:2px 4px;border-bottom:1px solid rgba(148,163,184,0.08);font-size:0.78rem;font-family:monospace;';
+            entry.innerHTML = '<span class="log-time" style="color:#475569;">t=' + simElapsed() + 's</span> '
+                + '<span class="log-action" style="color:#cbd5e1;">' + action + '</span>'
+                + (value ? ' <span class="log-value" style="color:#94a3b8;">' + value + '</span>' : '');
+            logCont.insertBefore(entry, logCont.firstChild);
+            while (logCont.children.length > 40) logCont.removeChild(logCont.lastChild);
+        }
+
+        function awardMark(i) {
+            if (actDone[i]) return;
+            actDone[i] = true;
+            const earned = actDone.filter(Boolean).length;
+            const scoreEl = document.getElementById('score');
+            if (scoreEl) scoreEl.textContent = String(earned);
+            const display = document.getElementById('actScoreDisplay');
+            if (display) display.textContent = earned + ' / 4';
+            const badge = document.getElementById('act' + (i + 1) + 'badge');
+            if (badge) {
+                badge.textContent = '✓';
+                badge.style.background = '#22c55e';
+                badge.style.color = '#fff';
+                badge.style.borderColor = '#16a34a';
+            }
+            const actNames = ['Force Observation','Current Direction','Magnet Orientation','Quantitative Analysis'];
+            addLogEntry('★ Mark awarded — Activity ' + (i + 1) + ': ' + actNames[i], 'Score: ' + earned + ' / 4');
+        }
+
+        function physContext() {
+            const i = isSwitchClosed ? targetI * polarityMultiplier : 0;
+            const f = i * LORENTZ_CONSTANT * magnetPolarityMultiplier;
+            const sc = baseWeight + (-f / GRAVITY);
+            const fDir = f > 0.01 ? '↓ on wire' : f < -0.01 ? '↑ on wire' : 'no force';
+            const scDir = sc < baseWeight - 0.01 ? '↓' : sc > baseWeight + 0.01 ? '↑' : '–';
+            return 'F=' + f.toFixed(2) + 'mN (' + fDir + ') | scale ' + scDir + ' ' + sc.toFixed(2) + 'g';
+        }
 
 
         function updateScaleScreen(text) {
@@ -159,6 +1340,55 @@
             ammeterTexture.needsUpdate = true;
         }
 
+        function formatPolarityLabel() {
+            return polarityMultiplier === 1 ? 'Normal' : 'Reversed';
+        }
+
+        function formatMagnetLabel() {
+            return magnetPolarityMultiplier === 1 ? 'N → S' : 'S → N';
+        }
+
+        function updateCurrentControls() {
+            const currentLabel = document.getElementById('currentValue');
+            const forceLabel = document.getElementById('forceValue');
+            const scaleLabel = document.getElementById('scaleValue');
+            const switchLabel = document.getElementById('switchState');
+            const polarityLabel = document.getElementById('polarityState');
+            const magnetLabel = document.getElementById('magnetPolarityState');
+            if (currentLabel) currentLabel.textContent = `${Math.abs(currentI).toFixed(2)} A`;
+            const forceOnWire = currentI * LORENTZ_CONSTANT * magnetPolarityMultiplier;
+            if (forceLabel) forceLabel.textContent = `${forceOnWire.toFixed(2)} mN`;
+            const deltaMassG = -forceOnWire / GRAVITY;
+            if (scaleLabel) scaleLabel.textContent = `${(baseWeight + deltaMassG).toFixed(2)} g`;
+            if (switchLabel) switchLabel.textContent = isSwitchClosed ? 'Closed' : 'Open';
+            if (polarityLabel) polarityLabel.textContent = formatPolarityLabel();
+            if (magnetLabel) magnetLabel.textContent = formatMagnetLabel();
+            const minCurrent = 0.1;
+            const maxCurrent = 10;
+            if (currentRangeInput) {
+                const normalized = (targetI - minCurrent) / (maxCurrent - minCurrent);
+                const clamped = Math.max(0, Math.min(1, normalized));
+                currentRangeInput.value = String(Math.round(clamped * 100));
+            }
+            if (switchButton) {
+                switchButton.textContent = isSwitchClosed ? 'Open Switch' : 'Turn Switch On';
+            }
+        }
+
+        function setTargetFromRange(percent) {
+            const minCurrent = 0.1;
+            const maxCurrent = 10;
+            targetI = percent <= 0 ? 0 : minCurrent + (maxCurrent - minCurrent) * (percent / 100);
+            updateSliderPositionFromValue();
+        }
+
+        function resetView() {
+            rotationTheta = Math.PI / 4;
+            rotationPhi = Math.PI / 6;
+            cameraRadius = 18;
+            updateCameraPosition();
+        }
+
         function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0xf5f5f5);
@@ -169,14 +1399,17 @@
                 startPrompt.textContent = 'Touch device: press and hold a component to toggle it.';
             }
 
-            camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const containerEl = document.getElementById('container');
+            const cW = containerEl.clientWidth || window.innerWidth;
+            const cH = containerEl.clientHeight || Math.round(window.innerHeight * 0.7);
+            camera = new THREE.PerspectiveCamera(40, cW / cH, 0.1, 1000);
             updateCameraPosition();
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setSize(cW, cH);
             renderer.shadowMap.enabled = true;
-            document.getElementById('container').appendChild(renderer.domElement);
+            containerEl.appendChild(renderer.domElement);
 
             const hLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
             scene.add(hLight);
@@ -412,7 +1645,13 @@
             scene.add(grid);
 
             // Interaction
-            const container = document.getElementById('container');
+            container = document.getElementById('container');
+            currentRangeInput = document.getElementById('currentRange');
+            switchButton = document.getElementById('switchBtn');
+            reverseCurrentButton = document.getElementById('reverseCurrentBtn');
+            reverseMagnetButton = document.getElementById('reverseMagnetBtn');
+            resetCameraBtn = document.getElementById('resetCameraBtn');
+
             container.addEventListener('mousedown', onPointerDown);
             window.addEventListener('mousemove', onPointerMove);
             window.addEventListener('mouseup', onPointerUp);
@@ -422,28 +1661,63 @@
             window.addEventListener('touchend', onTouchEnd);
             window.addEventListener('touchcancel', onTouchEnd);
 
-            document.getElementById('resetBtn').addEventListener('click', () => {
+            if (currentRangeInput) {
+                currentRangeInput.addEventListener('input', (event) => {
+                    const val = Number(event.target.value);
+                    setTargetFromRange(val);
+                    const minCurrent = 0.1, maxCurrent = 10;
+                    const current = val <= 0 ? 0 : minCurrent + (maxCurrent - minCurrent) * (val / 100);
+                    const rangeLabel = document.getElementById('rangeValue');
+                    if (rangeLabel) rangeLabel.textContent = current.toFixed(1) + ' A';
+                    if (isSwitchClosed) {
+                        act4Currents.add(Math.round(current));
+                        addLogEntry('Current slider → ' + current.toFixed(1) + 'A (switch ON)', physContext());
+                        if (act4Currents.size >= 2) awardMark(3);
+                    } else {
+                        addLogEntry('Current slider → ' + current.toFixed(1) + 'A', 'switch OFF — no force');
+                    }
+                });
+            }
+            if (switchButton) switchButton.addEventListener('click', toggleSwitch);
+            if (reverseCurrentButton) reverseCurrentButton.addEventListener('click', () => {
+                polarityMultiplier *= -1;
+                updateCurrentControls();
+                awardMark(1);
+                addLogEntry('Current direction reversed [' + formatPolarityLabel() + '] — force direction FLIPPED', physContext());
+            });
+            if (reverseMagnetButton) reverseMagnetButton.addEventListener('click', () => {
+                magnetPolarityMultiplier *= -1;
+                magnet.rotation.y = magnetPolarityMultiplier === 1 ? 0 : Math.PI;
+                updateCurrentControls();
+                awardMark(2);
+                addLogEntry('Magnet poles flipped [' + formatMagnetLabel() + '] — B field REVERSED', physContext());
+            });
+            if (resetCameraBtn) resetCameraBtn.addEventListener('click', resetView);
+
+            document.getElementById('resetBtn')?.addEventListener('click', () => {
                 targetI = 0; currentI = 0; isSwitchClosed = false; polarityMultiplier = 1;
                 magnetPolarityMultiplier = 1;
                 switchLever.rotation.z = 0;
                 batteryGroup.rotation.y = 0;
                 magnet.rotation.y = 0;
                 updateSliderPositionFromValue();
+                updateCurrentControls();
             });
 
             window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.aspect = container.clientWidth / container.clientHeight;
                 camera.updateProjectionMatrix();
                 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setSize(container.clientWidth, container.clientHeight);
             });
 
             animate();
         }
 
         function onPointerDown(e) {
-            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
             const sliderHits = raycaster.intersectObjects([rheostatSlider], true);
             if (sliderHits.length > 0) {
@@ -451,15 +1725,37 @@
                 container.style.cursor = 'grabbing';
                 return;
             }
+            const rheoBodyHits = raycaster.intersectObjects([rheoGroup], true);
+            if (rheoBodyHits.length > 0) {
+                const presets = [2.5, 5.0, 7.5, 10.0];
+                const idx = presets.findIndex(p => Math.abs(p - targetI) < 1.5);
+                targetI = presets[(idx + 1) % presets.length];
+                updateSliderPositionFromValue();
+                updateCurrentControls();
+                if (isSwitchClosed) {
+                    act4Currents.add(Math.round(targetI));
+                    addLogEntry('Rheostat clicked → ' + targetI.toFixed(1) + 'A (switch ON)', physContext());
+                    if (act4Currents.size >= 2) awardMark(3);
+                } else {
+                    addLogEntry('Rheostat clicked → ' + targetI.toFixed(1) + 'A', 'switch OFF — no force');
+                }
+                return;
+            }
             const batteryHits = raycaster.intersectObjects([batteryGroup], true);
             if (batteryHits.length > 0) {
                 polarityMultiplier *= -1;
+                updateCurrentControls();
+                awardMark(1);
+                addLogEntry('Battery clicked → polarity [' + formatPolarityLabel() + '] — force direction FLIPPED', physContext());
                 return;
             }
             const magnetHits = raycaster.intersectObjects([magnet], true);
             if (magnetHits.length > 0) {
                 magnetPolarityMultiplier *= -1;
                 magnet.rotation.y = magnetPolarityMultiplier === 1 ? 0 : Math.PI;
+                updateCurrentControls();
+                awardMark(2);
+                addLogEntry('Magnet clicked → poles [' + formatMagnetLabel() + '] — B field REVERSED', physContext());
                 return;
             }
             // Allow clicking anywhere on the switch base or lever to toggle
@@ -475,8 +1771,9 @@
 
         function onPointerMove(e) {
             if (isDraggingSlider) {
-                mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-                mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                const rect = renderer.domElement.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
                 const planeNormal = new THREE.Vector3(0, 0, 1).applyQuaternion(rheoGroup.quaternion);
                 const plane = new THREE.Plane(planeNormal, -rheoGroup.position.dot(planeNormal));
                 raycaster.setFromCamera(mouse, camera);
@@ -500,9 +1797,20 @@
         }
 
         function onPointerUp() {
+            const wasDragging = isDraggingSlider;
+            const draggedI = targetI;
             isRotatingScene = false;
             isDraggingSlider = false;
             document.getElementById('container').style.cursor = 'move';
+            if (wasDragging) {
+                if (isSwitchClosed) {
+                    act4Currents.add(Math.round(draggedI));
+                    addLogEntry('Rheostat dragged → ' + draggedI.toFixed(1) + 'A (switch ON)', physContext());
+                    if (act4Currents.size >= 2) awardMark(3);
+                } else {
+                    addLogEntry('Rheostat dragged → ' + draggedI.toFixed(1) + 'A', 'switch OFF — no force');
+                }
+            }
         }
 
         function onWheel(e) {
@@ -556,30 +1864,32 @@
         }
 
         function updateSliderPositionFromValue() {
-            // Inverse: leftmost = max current, rightmost = min current
             const minCurrent = 0.1;
             const maxCurrent = 10;
-            // Invert the formula to get sliderVal from targetI
-            const k = (maxCurrent / minCurrent) - 1;
-            // targetI = maxCurrent / (1 + k*norm) => norm = (maxCurrent/targetI - 1)/k
-            let norm = (maxCurrent / targetI - 1) / k;
+            if (!rheostatSlider) return;
+            let norm = 0;
+            if (targetI > 0) {
+                norm = (targetI - minCurrent) / (maxCurrent - minCurrent);
+            }
             norm = Math.max(0, Math.min(1, norm));
-            const sliderVal = norm * 10;
-            rheostatSlider.position.x = (sliderVal / 10) * 1.8 - 0.9;
+            rheostatSlider.position.x = (1 - norm) * 1.8 - 0.9;
         }
 
         function toggleSwitch() {
             isSwitchClosed = !isSwitchClosed;
-            // If closing from an all-zero state, set a small nonzero current target
-            // so the ammeter immediately begins to change.
             if (isSwitchClosed && targetI <= 0) {
                 targetI = 0.1;
                 updateSliderPositionFromValue();
             }
             switchLever.rotation.z = isSwitchClosed ? -Math.PI/2 : 0;
             const prompt = document.getElementById('startPrompt');
-            if (prompt) {
-                prompt.style.display = 'none';
+            if (prompt) prompt.style.display = 'none';
+            updateCurrentControls();
+            if (isSwitchClosed) {
+                awardMark(0);
+                addLogEntry('Switch turned ON — I=' + targetI.toFixed(1) + 'A', physContext());
+            } else {
+                addLogEntry('Switch turned OFF', 'circuit open | ' + physContext());
             }
         }
 
@@ -639,6 +1949,7 @@
             // Keep the horizontal conductor fixed in place.
             wire.position.y = WIRE_HEIGHT;
 
+            updateCurrentControls();
             renderer.render(scene, camera);
         }
         window.onload = init;
