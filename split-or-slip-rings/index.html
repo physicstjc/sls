@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Simple DC Motor Simulation</title>
+    <!-- Tailwind CSS for modern light-theme dashboard design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Three.js OrbitControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        canvas {
+            display: block;
+        }
+        /* Custom scrollbar for light theme */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(241, 245, 249, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.4);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.6);
+        }
+        /* Collapsible sidebar animation classes */
+        .sidebar-transition {
+            transition: width 350ms cubic-bezier(0.4, 0, 0.2, 1), 
+                        transform 350ms cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 300ms ease;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col md:flex-row overflow-hidden select-none bg-slate-50">
+
+    <!-- Sidebar Dashboard Container -->
+    <div id="sidebar" class="relative w-full md:w-[280px] h-2/5 md:h-full bg-white flex flex-col z-20 shadow-xl border-b md:border-b-0 md:border-r border-slate-200 sidebar-transition flex-shrink-0">
+        
+        <!-- Collapse/Expand Button (Floating tab on the right edge of sidebar) -->
+        <button id="btn-sidebar-toggle" class="absolute hidden md:flex top-1/2 -translate-y-1/2 -right-8 w-8 h-20 bg-white border-y border-r border-slate-200 rounded-r-xl shadow-md items-center justify-center hover:bg-slate-50 hover:text-indigo-600 transition-colors z-30 focus:outline-none" title="Toggle Sidebar">
+            <i data-lucide="chevron-left" id="toggle-icon-dir" class="w-5 h-5 text-slate-500 transition-transform"></i>
+        </button>
+
+        <!-- Sidebar Internal Wrapper (For hiding elements during collapse) -->
+        <div id="sidebar-content" class="flex flex-col h-full w-full overflow-y-auto opacity-100 transition-opacity duration-200">
+            <!-- Header -->
+            <div class="px-4 py-3 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div>
+                        <h1 class="text-base font-semibold tracking-tight text-slate-900">DC Motor Simulator</h1>
+                        <p class="text-xs text-slate-500">Controls</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control Panel -->
+            <div class="p-4 flex-1 space-y-4">
+                <!-- Visual Toggles -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Visuals</h4>
+                    
+                    <!-- Field Toggle -->
+                    <label class="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100/75 border border-slate-100 rounded-xl cursor-pointer transition">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
+                            <span class="text-sm font-medium text-slate-700">Show magnetic field</span>
+                        </div>
+                        <input type="checkbox" id="toggle-field" checked class="sr-only peer">
+                        <div class="relative w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+
+                    <!-- Current Toggle -->
+                    <label class="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100/75 border border-slate-100 rounded-xl cursor-pointer transition">
+                        <div class="flex items-center gap-3">
+                            <div id="current-toggle-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                            <span id="current-toggle-label" class="text-sm font-medium text-slate-700">Show current</span>
+                        </div>
+                        <input type="checkbox" id="toggle-current" checked class="sr-only peer">
+                        <div class="relative w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+
+                    <!-- Flow Mode Toggle -->
+                    <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div id="flow-mode-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                            <span class="text-sm font-medium text-slate-700">Flow Direction Mode</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1 rounded-lg bg-white p-1 border border-slate-200">
+                            <button id="btn-flow-conventional" class="px-2 py-1.5 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-700 transition" type="button">Conventional</button>
+                            <button id="btn-flow-electron" class="px-2 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-700 transition" type="button">Electron</button>
+                        </div>
+                    </div>
+
+                    <!-- Commutator Mode -->
+                    <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div id="commutator-mode-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                            <span class="text-sm font-medium text-slate-700">Commutator Type</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1 rounded-lg bg-white p-1 border border-slate-200">
+                            <button id="btn-commutator-split" class="px-2 py-1.5 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-700 transition" type="button">Split Ring</button>
+                            <button id="btn-commutator-slip" class="px-2 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-700 transition" type="button">Slip Rings</button>
+                        </div>
+                    </div>
+
+                    <!-- Force Toggle -->
+                    <label class="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100/75 border border-slate-100 rounded-xl cursor-pointer transition">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
+                            <span class="text-sm font-medium text-slate-700">Show magnet force</span>
+                        </div>
+                        <input type="checkbox" id="toggle-force" checked class="sr-only peer">
+                        <div class="relative w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Simulation Control Bar -->
+            <div class="p-4 border-t border-slate-100 bg-slate-50/50 space-y-4">
+                <!-- Speed Control -->
+                <div class="space-y-1.5">
+                    <div class="flex justify-between items-center text-xs font-semibold text-slate-500">
+                        <span>Rotation Speed</span>
+                        <span id="speed-val" class="font-mono text-indigo-600">Medium</span>
+                    </div>
+                    <input type="range" id="speed-slider" min="0" max="100" value="40" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                </div>
+
+                <!-- Playback controls -->
+                <div class="flex gap-2.5">
+                    <button id="btn-play-pause" class="flex items-center justify-center w-11 h-11 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-600/10 hover:shadow-indigo-600/20 transition-all" title="Pause Motor" aria-label="Pause Motor">
+                        <i data-lucide="pause" class="w-4 h-4" id="play-icon"></i>
+                    </button>
+                    <button id="btn-step" class="flex items-center justify-center w-11 h-11 bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl transition-all" title="Step rotation by 1.5°" aria-label="Step rotation by 1.5 degrees">
+                        <i data-lucide="skip-forward" class="w-4 h-4"></i>
+                    </button>
+                    <button id="btn-reset-cam" class="flex items-center justify-center w-11 h-11 bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-200 text-slate-600 rounded-xl transition-all" title="Reset View Angle" aria-label="Reset view angle">
+                        <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Expand Button (Mobile / when sidebar is fully collapsed) -->
+    <button id="btn-sidebar-expand-floating" class="absolute hidden left-4 top-4 bg-white border border-slate-200 text-slate-700 hover:text-indigo-600 p-3 rounded-xl shadow-lg z-30 transition-all items-center justify-center focus:outline-none" title="Expand Sidebar">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+    </button>
+
+    <!-- 3D Viewport Area -->
+    <div class="flex-1 relative h-3/5 md:h-full min-w-0">
+        <div id="canvas-container" class="w-full h-full"></div>
+
+        <!-- 3D Instructions Overlay -->
+        <div class="absolute bottom-4 right-4 bg-white/95 backdrop-blur border border-slate-200 rounded-xl px-4 py-3 flex gap-4 text-xs text-slate-500 pointer-events-none shadow-md">
+            <div class="flex items-center gap-1.5">
+                <i data-lucide="mouse-pointer" class="w-4 h-4 text-indigo-500"></i>
+                <span>Left-drag to <strong>Rotate</strong></span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <i data-lucide="mouse" class="w-4 h-4 text-indigo-500"></i>
+                <span>Right-drag to <strong>Pan</strong></span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <i data-lucide="zoom-in" class="w-4 h-4 text-indigo-500"></i>
+                <span>Scroll/Pinch to <strong>Zoom</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simulation Implementation Script -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Physics State Variables
+        let isPlaying = true;
+        let motorAngle = 0.0; // In radians (0 to 2*Math.PI)
+        let motorSpeed = 0.015; // User speed / torque input
+        let motorAngularVelocity = 0.0; // Angular velocity for slip-ring oscillation
+        const deadZoneRad = 0.08; // Angle region near vertical (90deg/270deg) where brushes hit the gap
+        const brushContactX = 1.16; // Keeps carbon brushes just outside the split-ring radius
+        const commutatorRightColor = 0xfde68a;
+        const commutatorLeftColor = 0xfde68a;
+
+        // Visibility Toggles
+        let showField = true;
+        let showCurrent = true;
+        let showForce = true;
+        let flowMode = 'conventional';
+        let commutatorMode = 'split'; // 'split' or 'slip'
+
+        // Three.js Global Elements
+        let scene, camera, renderer, controls;
+        let container = document.getElementById('canvas-container');
+
+        // Runtime meshes used for mode switching
+        let rightWireMesh, leftWireMesh;
+        let connectorLeft, connectorRight;
+        let batteryGroup, plusLabel, minusLabel;
+
+        const slipRingThickness = 0.6;
+        const slipRingRightZ = 2.8;
+        const slipRingLeftZ = 3.6;
+
+        function getBrushZ(side) {
+            if (commutatorMode === 'slip') {
+                return side === 'right' ? slipRingRightZ : slipRingLeftZ;
+            }
+            return 2.3;
+        }
+
+        function getCommutatorContactZ(side) {
+            if (commutatorMode === 'slip') {
+                const centerZ = side === 'right' ? slipRingRightZ : slipRingLeftZ;
+                return centerZ - slipRingThickness / 2; // inner face toward the coil
+            }
+            return 2.3;
+        }
+
+        function getBatteryZ() {
+            return commutatorMode === 'slip' ? 2.8 : 2.3;
+        }
+
+        function getStaticWirePoints(side) {
+            const sign = side === 'right' ? 1 : -1;
+            const batteryZ = getBatteryZ();
+            const brushZ = getBrushZ(side);
+
+            return [
+                new THREE.Vector3(sign * 0.9, -2.2, batteryZ),
+                new THREE.Vector3(sign * 1.8, -2.2, batteryZ),
+                new THREE.Vector3(sign * 1.8, 0, batteryZ),
+                new THREE.Vector3(sign * brushContactX, 0, brushZ)
+            ];
+        }
+
+        function getRotorConnectorPoints(side) {
+            const connectorZ = getCommutatorContactZ(side);
+            const startX = side === 'right' ? 0.8 : -0.8;
+
+            if (commutatorMode === 'slip' && side === 'left') {
+                return [
+                    new THREE.Vector3(startX, 0, 1.8),
+                    new THREE.Vector3(-0.62, 0, 2.2),
+                    new THREE.Vector3(-0.62, 0, connectorZ),
+                    new THREE.Vector3(startX, 0, connectorZ)
+                ];
+            }
+
+            return [
+                new THREE.Vector3(startX, 0, 1.8),
+                new THREE.Vector3(startX, 0, connectorZ)
+            ];
+        }
+
+        function updateWireGeometry(mesh, points) {
+            const curve = new THREE.CatmullRomCurve3(points);
+            const geometry = new THREE.TubeGeometry(curve, 32, 0.06, 8, false);
+            mesh.geometry.dispose();
+            mesh.geometry = geometry;
+        }
+
+        // Three.js Objects (to animate)
+        let rotorGroup; // Holds the rotating coil & split ring commutator
+        let commutatorLeft, commutatorRight;
+        let brushLeft, brushRight;
+        let fieldLinesGroup;
+        let currentArrowsGroup;
+        let forceArrowsGroup;
+
+        // Wire path geometry helpers
+        let electronParticles = [];
+        const conventionalCurrentColor = 0x10b981;
+        const electronFlowColor = 0x10b981;
+
+        // Setup the ThreeJS World
+        function init3D() {
+            // 1. Create Scene & Light-themed background
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf8fafc); // Soft white slate background
+            scene.fog = new THREE.FogExp2(0xf8fafc, 0.025);
+
+            // 2. Camera setup
+            container = container || document.getElementById('canvas-container');
+            if (!container) {
+                console.error('Canvas container not found.');
+                return;
+            }
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+            camera.position.set(6, 6, 8);
+
+            // 3. Renderer setup
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // 4. OrbitControls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2 + 0.1; // Limit looking fully upside down
+            controls.minDistance = 3;
+            controls.maxDistance = 25;
+
+            // 5. Lighting (Optimized for light background)
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+            scene.add(ambientLight);
+
+            const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.7);
+            dirLight1.position.set(10, 20, 10);
+            dirLight1.castShadow = true;
+            dirLight1.shadow.mapSize.width = 1024;
+            dirLight1.shadow.mapSize.height = 1024;
+            scene.add(dirLight1);
+
+            const dirLight2 = new THREE.DirectionalLight(0x6366f1, 0.15); // Soft indigo fill
+            dirLight2.position.set(-10, -5, -10);
+            scene.add(dirLight2);
+
+            // Build Scenic Objects
+            createGridAndFloor();
+            createMagnets();
+            createCircuitStatic();
+            createRotorAssembly();
+            createFieldLines();
+            createForceArrows();
+
+            // Setup electron paths
+            setupElectrons();
+        }
+
+        // Add standard ground grid
+        function createGridAndFloor() {
+            // Clean slate grid for light background
+            const gridHelper = new THREE.GridHelper(30, 30, 0xcbd5e1, 0xe2e8f0);
+            gridHelper.position.y = -3;
+            scene.add(gridHelper);
+        }
+
+        // Create North & South Magnets
+        function createMagnets() {
+            const magnetWidth = 2.0;
+            const magnetHeight = 3.5;
+            const magnetDepth = 4.0;
+            const magnetYPos = 0;
+
+            const boxGeom = new THREE.BoxGeometry(magnetWidth, magnetHeight, magnetDepth);
+
+            // Red North Magnet (Left, -x)
+            const nMaterial = new THREE.MeshStandardMaterial({
+                color: 0xef4444, // Red
+                roughness: 0.25,
+                metalness: 0.1
+            });
+            const nMagnet = new THREE.Mesh(boxGeom, nMaterial);
+            nMagnet.position.set(-4.5, magnetYPos, 0);
+            nMagnet.castShadow = true;
+            nMagnet.receiveShadow = true;
+            scene.add(nMagnet);
+
+            // North Label Texture (using canvas)
+            const textCanvasN = document.createElement('canvas');
+            textCanvasN.width = 128;
+            textCanvasN.height = 128;
+            const ctxN = textCanvasN.getContext('2d');
+            ctxN.fillStyle = '#ef4444';
+            ctxN.fillRect(0,0,128,128);
+            ctxN.fillStyle = '#ffffff';
+            ctxN.font = 'bold 90px sans-serif';
+            ctxN.textAlign = 'center';
+            ctxN.textBaseline = 'middle';
+            ctxN.fillText('N', 64, 64);
+            const texN = new THREE.CanvasTexture(textCanvasN);
+            
+            const nLabelMat = new THREE.MeshBasicMaterial({ map: texN });
+            const labelGeom = new THREE.PlaneGeometry(1.2, 1.2);
+            const nLabel = new THREE.Mesh(labelGeom, nLabelMat);
+            nLabel.position.set(-3.49, 0, 0);
+            nLabel.rotation.y = Math.PI / 2;
+            scene.add(nLabel);
+
+            // Blue South Magnet (Right, +x)
+            const sMaterial = new THREE.MeshStandardMaterial({
+                color: 0x3b82f6, // Blue
+                roughness: 0.25,
+                metalness: 0.1
+            });
+            const sMagnet = new THREE.Mesh(boxGeom, sMaterial);
+            sMagnet.position.set(4.5, magnetYPos, 0);
+            sMagnet.castShadow = true;
+            sMagnet.receiveShadow = true;
+            scene.add(sMagnet);
+
+            // South Label Texture
+            const textCanvasS = document.createElement('canvas');
+            textCanvasS.width = 128;
+            textCanvasS.height = 128;
+            const ctxS = textCanvasS.getContext('2d');
+            ctxS.fillStyle = '#3b82f6';
+            ctxS.fillRect(0,0,128,128);
+            ctxS.fillStyle = '#ffffff';
+            ctxS.font = 'bold 90px sans-serif';
+            ctxS.textAlign = 'center';
+            ctxS.textBaseline = 'middle';
+            ctxS.fillText('S', 64, 64);
+            const texS = new THREE.CanvasTexture(textCanvasS);
+            
+            const sLabelMat = new THREE.MeshBasicMaterial({ map: texS });
+            const sLabel = new THREE.Mesh(labelGeom, sLabelMat);
+            sLabel.position.set(3.49, 0, 0);
+            sLabel.rotation.y = -Math.PI / 2;
+            scene.add(sLabel);
+        }
+
+        // Static Circuit: Battery, Brushes & Wires
+        function createCircuitStatic() {
+            // 1. Carbon Brushes
+            const brushGeom = new THREE.BoxGeometry(0.5, 0.4, 0.8);
+            const brushMaterial = new THREE.MeshStandardMaterial({
+                color: 0x475569, // Charcoal slate
+                roughness: 0.7,
+                metalness: 0.2
+            });
+
+            // Positive Brush (Right side of commutator, x > 0)
+            brushRight = new THREE.Mesh(brushGeom, brushMaterial);
+            brushRight.position.set(brushContactX, 0, getBrushZ('right'));
+            brushRight.castShadow = true;
+            scene.add(brushRight);
+
+            // Negative Brush (Left side of commutator, x < 0)
+            brushLeft = new THREE.Mesh(brushGeom, brushMaterial);
+            brushLeft.position.set(-brushContactX, 0, getBrushZ('left'));
+            brushLeft.castShadow = true;
+            scene.add(brushLeft);
+
+            // 2. Battery
+            batteryGroup = new THREE.Group();
+            batteryGroup.position.set(0, -2.2, getBatteryZ());
+            
+            // Battery Body (cylinder)
+            const batBodyGeom = new THREE.CylinderGeometry(0.4, 0.4, 1.8, 16);
+            batBodyGeom.rotateZ(Math.PI / 2);
+            const batBodyMat = new THREE.MeshStandardMaterial({
+                color: 0x334155, // Slate grey
+                roughness: 0.3,
+                metalness: 0.7
+            });
+            const batBody = new THREE.Mesh(batBodyGeom, batBodyMat);
+            batteryGroup.add(batBody);
+
+            // Positive terminal sticker (brass end on right)
+            const brassGeom = new THREE.CylinderGeometry(0.41, 0.41, 0.5, 16);
+            brassGeom.rotateZ(Math.PI / 2);
+            const brassMat = new THREE.MeshStandardMaterial({
+                color: 0xd97706, // Gold / brass
+                metalness: 0.8,
+                roughness: 0.2
+            });
+            const brassTip = new THREE.Mesh(brassGeom, brassMat);
+            brassTip.position.x = 0.65;
+            batteryGroup.add(brassTip);
+
+            // Small tip nub
+            const nubGeom = new THREE.CylinderGeometry(0.15, 0.15, 0.15, 16);
+            nubGeom.rotateZ(Math.PI / 2);
+            const nub = new THREE.Mesh(nubGeom, brassMat);
+            nub.position.x = 0.95;
+            batteryGroup.add(nub);
+
+            scene.add(batteryGroup);
+
+            // Labels on Battery (+ and -)
+            const textCanvasPlus = document.createElement('canvas');
+            textCanvasPlus.width = 64;
+            textCanvasPlus.height = 64;
+            const ctxPlus = textCanvasPlus.getContext('2d');
+            ctxPlus.fillStyle = '#d97706';
+            ctxPlus.fillRect(0,0,64,64);
+            ctxPlus.fillStyle = '#ffffff';
+            ctxPlus.font = 'bold 50px Courier';
+            ctxPlus.textAlign = 'center';
+            ctxPlus.textBaseline = 'middle';
+            ctxPlus.fillText('+', 32, 32);
+            const texPlus = new THREE.CanvasTexture(textCanvasPlus);
+            plusLabel = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.3), new THREE.MeshBasicMaterial({map: texPlus}));
+            plusLabel.position.set(0.65, -1.7, getBatteryZ());
+            plusLabel.rotation.x = -Math.PI / 4;
+            scene.add(plusLabel);
+
+            const textCanvasMinus = document.createElement('canvas');
+            textCanvasMinus.width = 64;
+            textCanvasMinus.height = 64;
+            const ctxMinus = textCanvasMinus.getContext('2d');
+            ctxMinus.fillStyle = '#334155';
+            ctxMinus.fillRect(0,0,64,64);
+            ctxMinus.fillStyle = '#ffffff';
+            ctxMinus.font = 'bold 50px Courier';
+            ctxMinus.textAlign = 'center';
+            ctxMinus.textBaseline = 'middle';
+            ctxMinus.fillText('-', 32, 32);
+            const texMinus = new THREE.CanvasTexture(textCanvasMinus);
+            minusLabel = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.3), new THREE.MeshBasicMaterial({map: texMinus}));
+            minusLabel.position.set(-0.65, -1.7, getBatteryZ());
+            minusLabel.rotation.x = -Math.PI / 4;
+            scene.add(minusLabel);
+
+            // 3. Connection Wires (Static lines)
+            const rightWirePoints = getStaticWirePoints('right');
+            const leftWirePoints = getStaticWirePoints('left');
+
+            const wireMat = new THREE.MeshStandardMaterial({
+                color: 0xea580c, // Bright copper orange
+                metalness: 0.6,
+                roughness: 0.3
+            });
+
+            rightWireMesh = createWireFromPoints(rightWirePoints, wireMat);
+            leftWireMesh = createWireFromPoints(leftWirePoints, wireMat);
+        }
+
+        function createWireFromPoints(points, material) {
+            const curve = new THREE.CatmullRomCurve3(points);
+            const geom = new THREE.TubeGeometry(curve, 32, 0.06, 8, false);
+            const mesh = new THREE.Mesh(geom, material);
+            scene.add(mesh);
+            return mesh;
+        }
+
+        function rebuildCommutatorLayout() {
+            if (!scene) return;
+            if (rotorGroup) {
+                scene.remove(rotorGroup);
+            }
+            if (currentArrowsGroup) {
+                scene.remove(currentArrowsGroup);
+            }
+
+            if (brushRight) {
+                brushRight.position.set(brushContactX, 0, getBrushZ('right'));
+            }
+            if (brushLeft) {
+                brushLeft.position.set(-brushContactX, 0, getBrushZ('left'));
+            }
+
+            const batteryZ = getBatteryZ();
+            if (batteryGroup) {
+                batteryGroup.position.set(0, -2.2, batteryZ);
+            }
+            if (plusLabel) {
+                plusLabel.position.set(0.65, -1.7, batteryZ);
+            }
+            if (minusLabel) {
+                minusLabel.position.set(-0.65, -1.7, batteryZ);
+            }
+            if (rightWireMesh) {
+                updateWireGeometry(rightWireMesh, getStaticWirePoints('right'));
+            }
+            if (leftWireMesh) {
+                updateWireGeometry(leftWireMesh, getStaticWirePoints('left'));
+            }
+
+            createRotorAssembly();
+            setupElectrons();
+        }
+
+        function setCommutatorMode(mode) {
+            commutatorMode = mode;
+            const splitBtn = document.getElementById('btn-commutator-split');
+            const slipBtn = document.getElementById('btn-commutator-slip');
+            splitBtn.className = mode === 'split'
+                ? 'px-2 py-1.5 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-700 transition'
+                : 'px-2 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-700 transition';
+            slipBtn.className = mode === 'slip'
+                ? 'px-2 py-1.5 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-700 transition'
+                : 'px-2 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-700 transition';
+            rebuildCommutatorLayout();
+        }
+
+        // Rotating Part: Copper Loop and Commutator
+        function createRotorAssembly() {
+            rotorGroup = new THREE.Group();
+
+            // 1. Copper Wire Loop (Rectangular Coil)
+            const wireRadius = 0.085; // Slightly thickened wire
+            const loopMaterial = new THREE.MeshStandardMaterial({
+                color: 0xea580c, // Polished Copper
+                metalness: 0.9,
+                roughness: 0.1
+            });
+
+            // Constructing 4 sides of loop
+            // Left arm (parallel to Z at x = -1.6)
+            const leftArmGeom = new THREE.CylinderGeometry(wireRadius, wireRadius, 3.6, 16);
+            leftArmGeom.rotateX(Math.PI / 2);
+            const leftArm = new THREE.Mesh(leftArmGeom, loopMaterial);
+            leftArm.position.set(-1.6, 0, 0);
+            leftArm.name = "leftArm";
+            rotorGroup.add(leftArm);
+
+            // Right arm (parallel to Z at x = 1.6)
+            const rightArmGeom = new THREE.CylinderGeometry(wireRadius, wireRadius, 3.6, 16);
+            rightArmGeom.rotateX(Math.PI / 2);
+            const rightArm = new THREE.Mesh(rightArmGeom, loopMaterial);
+            rightArm.position.set(1.6, 0, 0);
+            rightArm.name = "rightArm";
+            rotorGroup.add(rightArm);
+
+            // Front side (parallel to X, near z = -1.8)
+            const frontSideGeom = new THREE.CylinderGeometry(wireRadius, wireRadius, 3.2, 16);
+            frontSideGeom.rotateZ(Math.PI / 2);
+            const frontSide = new THREE.Mesh(frontSideGeom, loopMaterial);
+            frontSide.position.set(0, 0, -1.8);
+            rotorGroup.add(frontSide);
+
+            // Back connections going to the commutator rings
+            const backLeftGeom = new THREE.CylinderGeometry(wireRadius, wireRadius, 0.8, 16);
+            backLeftGeom.rotateZ(Math.PI / 2);
+            const backLeft = new THREE.Mesh(backLeftGeom, loopMaterial);
+            backLeft.position.set(-1.2, 0, 1.8);
+            rotorGroup.add(backLeft);
+
+            const backRightGeom = new THREE.CylinderGeometry(wireRadius, wireRadius, 0.8, 16);
+            backRightGeom.rotateZ(Math.PI / 2);
+            const backRight = new THREE.Mesh(backRightGeom, loopMaterial);
+            backRight.position.set(1.2, 0, 1.8);
+            rotorGroup.add(backRight);
+
+            // Longitudinal connections from loop back corners to commutator
+            const connectorRightPoints = getRotorConnectorPoints('right');
+            const connectorLeftPoints = getRotorConnectorPoints('left');
+            const connectorRightCurve = new THREE.CatmullRomCurve3(connectorRightPoints);
+            const connectorLeftCurve = new THREE.CatmullRomCurve3(connectorLeftPoints);
+            const connectorGeomRight = new THREE.TubeGeometry(connectorRightCurve, 16, wireRadius, 8, false);
+            const connectorGeomLeft = new THREE.TubeGeometry(connectorLeftCurve, 24, wireRadius, 8, false);
+            connectorRight = new THREE.Mesh(connectorGeomRight, loopMaterial);
+            connectorLeft = new THREE.Mesh(connectorGeomLeft, loopMaterial);
+            rotorGroup.add(connectorRight);
+            rotorGroup.add(connectorLeft);
+
+            const ringOuterRadius = 0.88;
+            const ringDepth = 0.48;
+            const commutatorMountRotation = 0;
+            const commutatorMat = new THREE.MeshStandardMaterial({
+                color: commutatorRightColor,
+                metalness: 0.15,
+                roughness: 0.45,
+                side: THREE.DoubleSide
+            });
+
+            if (commutatorMode === 'split') {
+                const ringInnerRadius = 0.78;
+                const gapAngle = 0.28;  // Clearly visible split gap
+                const halfSegmentLength = Math.PI - gapAngle;
+
+                function createSplitRingSegmentGeometry(startAngle, endAngle) {
+                    const shape = new THREE.Shape();
+                    shape.absarc(0, 0, ringOuterRadius, startAngle, endAngle, false);
+                    shape.lineTo(
+                        ringInnerRadius * Math.cos(endAngle),
+                        ringInnerRadius * Math.sin(endAngle)
+                    );
+                    shape.absarc(0, 0, ringInnerRadius, endAngle, startAngle, true);
+                    shape.closePath();
+
+                    const geometry = new THREE.ExtrudeGeometry(shape, {
+                        depth: ringDepth,
+                        bevelEnabled: false,
+                        curveSegments: 48
+                    });
+                    geometry.translate(0, 0, -ringDepth / 2);
+                    return geometry;
+                }
+
+                const segAMat = commutatorMat.clone();
+                const segBMat = commutatorMat.clone();
+                segAMat.color.setHex(commutatorRightColor);
+                segBMat.color.setHex(commutatorLeftColor);
+
+                const geomA = createSplitRingSegmentGeometry(-halfSegmentLength / 2, halfSegmentLength / 2);
+                commutatorRight = new THREE.Mesh(geomA, segAMat);
+                commutatorRight.position.set(0, 0, 2.3);
+                commutatorRight.rotation.z = commutatorMountRotation;
+                rotorGroup.add(commutatorRight);
+
+                const geomB = createSplitRingSegmentGeometry(-halfSegmentLength / 2, halfSegmentLength / 2);
+                commutatorLeft = new THREE.Mesh(geomB, segBMat);
+                commutatorLeft.position.set(0, 0, 2.3);
+                commutatorLeft.rotation.z = commutatorMountRotation + Math.PI;
+                rotorGroup.add(commutatorLeft);
+            } else {
+                const ringThickness = 0.6;
+                const ringSegments = 64;
+                const ringWidth = 0.1;
+
+                const slipRightShape = new THREE.Shape();
+                slipRightShape.absarc(0, 0, ringOuterRadius, 0, Math.PI * 2, false);
+                const holePathRight = new THREE.Path();
+                holePathRight.absarc(0, 0, ringOuterRadius - ringWidth, 0, Math.PI * 2, true);
+                slipRightShape.holes.push(holePathRight);
+                const slipRightGeometry = new THREE.ExtrudeGeometry(slipRightShape, {
+                    depth: ringThickness,
+                    bevelEnabled: false,
+                    curveSegments: ringSegments
+                });
+                slipRightGeometry.translate(0, 0, -ringThickness / 2);
+
+                commutatorRight = new THREE.Mesh(slipRightGeometry, commutatorMat.clone());
+                commutatorRight.position.set(0, 0, slipRingRightZ);
+                rotorGroup.add(commutatorRight);
+
+                const slipLeftShape = new THREE.Shape();
+                slipLeftShape.absarc(0, 0, ringOuterRadius, 0, Math.PI * 2, false);
+                const holePathLeft = new THREE.Path();
+                holePathLeft.absarc(0, 0, ringOuterRadius - ringWidth, 0, Math.PI * 2, true);
+                slipLeftShape.holes.push(holePathLeft);
+                const slipLeftGeometry = new THREE.ExtrudeGeometry(slipLeftShape, {
+                    depth: ringThickness,
+                    bevelEnabled: false,
+                    curveSegments: ringSegments
+                });
+                slipLeftGeometry.translate(0, 0, -ringThickness / 2);
+
+                commutatorLeft = new THREE.Mesh(slipLeftGeometry, commutatorMat.clone());
+                commutatorLeft.material.color.setHex(commutatorLeftColor);
+                commutatorLeft.position.set(0, 0, slipRingLeftZ);
+                rotorGroup.add(commutatorLeft);
+            }
+
+            scene.add(rotorGroup);
+        }
+
+        // Create uniform magnetic field lines going left to right (N -> S)
+        function createFieldLines() {
+            fieldLinesGroup = new THREE.Group();
+
+            const startX = -3.5;
+            const endX = 3.5;
+            const countZ = 5;
+            const countY = 3;
+            const fieldLineZSpacing = 0.9;
+            const fieldLineYSpacing = 0.8;
+
+            // Indigo blue field lines with high visibility on light background
+            const lineMaterial = new THREE.LineBasicMaterial({
+                color: 0x3b82f6,
+                transparent: true,
+                opacity: 0.6
+            });
+
+            const arrowHeadMat = new THREE.MeshBasicMaterial({ color: 0x3b82f6 });
+
+            // Create a neat grid of uniform straight lines
+            for (let i = 0; i < countZ; i++) {
+                const z = -fieldLineZSpacing * (countZ - 1) / 2 + (i * fieldLineZSpacing);
+                for (let j = 0; j < countY; j++) {
+                    const y = -fieldLineYSpacing * (countY - 1) / 2 + (j * fieldLineYSpacing);
+
+                    // Skip lines that would collide badly with the central core/shaft
+                    if (Math.abs(y) < 0.2 && Math.abs(z) < 0.4) continue;
+
+                    // Grid line geometry
+                    const points = [new THREE.Vector3(startX, y, z), new THREE.Vector3(endX, y, z)];
+                    const lineGeom = new THREE.BufferGeometry().setFromPoints(points);
+                    const line = new THREE.Line(lineGeom, lineMaterial);
+                    fieldLinesGroup.add(line);
+
+                    // Tiny arrow heads to show direction of magnetic field (Left to Right, +x)
+                    const coneGeom = new THREE.ConeGeometry(0.045, 0.16, 6);
+                    coneGeom.rotateZ(-Math.PI / 2); // point along +x
+                    
+                    const cone1 = new THREE.Mesh(coneGeom, arrowHeadMat);
+                    cone1.position.set(-1.8, y, z);
+                    fieldLinesGroup.add(cone1);
+
+                    const cone2 = new THREE.Mesh(coneGeom, arrowHeadMat);
+                    cone2.position.set(1.8, y, z);
+                    fieldLinesGroup.add(cone2);
+                }
+            }
+
+            scene.add(fieldLinesGroup);
+        }
+
+        // Setup electrons (animated green spheres) along wire paths
+        function setupElectrons() {
+            electronParticles = [];
+            currentArrowsGroup = new THREE.Group();
+
+            // 1. Static loop circuit electrons (fixed wires)
+            const rightWirePoints = getStaticWirePoints('right');
+            const leftWirePoints = getStaticWirePoints('left');
+            createElectronFlow(
+                rightWirePoints,
+                5,
+                true // From battery to brush
+            );
+
+            createElectronFlow(
+                leftWirePoints.slice().reverse(),
+                5,
+                true // From brush back to battery
+            );
+
+            // 2. Active rotating loop electrons (attached directly to rotor group)
+            const rightConnectorPoints = getRotorConnectorPoints('right');
+            const leftConnectorPoints = getRotorConnectorPoints('left');
+            const pathPoints = [
+                ...rightConnectorPoints.slice().reverse(),
+                new THREE.Vector3(1.6, 0, 1.8),    // Corner Back-Right
+                new THREE.Vector3(1.6, 0, -1.8),   // Corner Front-Right
+                new THREE.Vector3(-1.6, 0, -1.8),  // Corner Front-Left
+                new THREE.Vector3(-1.6, 0, 1.8),   // Corner Back-Left
+                ...leftConnectorPoints
+            ];
+
+            const rotorCurve = new THREE.CatmullRomCurve3(pathPoints);
+            const particleCount = commutatorMode === 'slip' ? 16 : 10;
+            const pMaterial = new THREE.MeshBasicMaterial({ color: conventionalCurrentColor });
+            const pGeom = new THREE.SphereGeometry(0.075, 8, 8); // Slightly larger for better contrast on white
+
+            for (let i = 0; i < particleCount; i++) {
+                const mesh = new THREE.Mesh(pGeom, pMaterial);
+                const t = i / particleCount;
+                
+                electronParticles.push({
+                    mesh: mesh,
+                    t: t,
+                    curve: rotorCurve
+                });
+                rotorGroup.add(mesh); // Add directly to rotor group to rotate automatically!
+            }
+
+            scene.add(currentArrowsGroup);
+        }
+
+        function createArcPoints(radius, z, startAngle, endAngle, segments = 16) {
+            const points = [];
+            for (let i = 0; i <= segments; i++) {
+                const theta = startAngle + (i / segments) * (endAngle - startAngle);
+                points.push(new THREE.Vector3(Math.cos(theta) * radius, Math.sin(theta) * radius, z));
+            }
+            return points;
+        }
+
+        function createElectronFlow(points, count, forward, addToRotor = false, isStatic = true) {
+            const curve = new THREE.CatmullRomCurve3(points);
+            if (points.length > 1 && points[0].distanceTo(points[points.length - 1]) < 0.001) {
+                curve.closed = true;
+            }
+            const pGeom = new THREE.SphereGeometry(0.07, 8, 8);
+            const pMat = new THREE.MeshBasicMaterial({ color: conventionalCurrentColor });
+
+            for (let i = 0; i < count; i++) {
+                const mesh = new THREE.Mesh(pGeom, pMat);
+                if (addToRotor && rotorGroup) {
+                    rotorGroup.add(mesh);
+                } else {
+                    currentArrowsGroup.add(mesh);
+                }
+                const t = i / count;
+                electronParticles.push({
+                    mesh: mesh,
+                    t: t,
+                    curve: curve,
+                    isStatic: isStatic,
+                    forward: forward
+                });
+            }
+        }
+
+        // Visual Force Vectors (F = I * L x B)
+        function createForceArrows() {
+            forceArrowsGroup = new THREE.Group();
+
+            const makeArrow = (color) => {
+                const arrow = new THREE.Group();
+                const shaftGeom = new THREE.CylinderGeometry(0.08, 0.08, 0.9, 8);
+                const shaftMat = new THREE.MeshBasicMaterial({ color: color });
+                const shaft = new THREE.Mesh(shaftGeom, shaftMat);
+                arrow.add(shaft);
+
+                const headGeom = new THREE.ConeGeometry(0.2, 0.45, 8);
+                const head = new THREE.Mesh(headGeom, shaftMat);
+                head.position.y = 0.55; // Offset to tip
+                arrow.add(head);
+
+                return arrow;
+            };
+
+            const rightForceArrow = makeArrow(0xf59e0b); // Gold Amber
+            rightForceArrow.name = "rightForce";
+            rightForceArrow.position.set(1.6, 0, 0); // Positioned at center of right loop arm
+            rightForceArrow.rotation.x = Math.PI; // Point down
+            forceArrowsGroup.add(rightForceArrow);
+
+            const leftForceArrow = makeArrow(0xf59e0b);
+            leftForceArrow.name = "leftForce";
+            leftForceArrow.position.set(-1.6, 0, 0); // Positioned at center of left loop arm
+            // Point up (rotation 0)
+            forceArrowsGroup.add(leftForceArrow);
+
+            scene.add(forceArrowsGroup);
+        }
+
+        // Resize handler
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            container = container || document.getElementById('canvas-container');
+            if (!container || !camera || !renderer) return;
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        function recenterSimulationView() {
+            onWindowResize();
+            motorAngle = 0;
+            motorAngularVelocity = 0;
+            rotorGroup.rotation.z = -motorAngle;
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    camera.position.set(6, 6, 8);
+                    controls.target.set(0, 0, 0);
+                    camera.lookAt(controls.target);
+                    controls.update();
+                }, 50);
+            });
+        }
+
+        // Reset Camera Perspective
+        document.getElementById('btn-reset-cam').addEventListener('click', recenterSimulationView);
+
+
+        // Handle Physics state and interactive elements
+        function updatePhysics() {
+            // Calculate the current direction modifier relative to the physical coil
+            let currentMagnitude = 1.0;
+            let currentDir = 1; // 1 = clockwise, -1 = counter-clockwise, 0 = in gap
+
+            const deg = (motorAngle * 180 / Math.PI) % 360;
+
+            const inGap1 = Math.abs(deg - 90) < (deadZoneRad * 180 / Math.PI);
+            const inGap2 = Math.abs(deg - 270) < (deadZoneRad * 180 / Math.PI);
+
+            if (commutatorMode === 'slip') {
+                // Slip rings keep the coil current direction fixed; the selected
+                // flow mode is applied later via flowDirection for all charges.
+                currentDir = 1;
+            } else {
+                if (inGap1 || inGap2) {
+                    currentMagnitude = 0;
+                    currentDir = 0;
+                } else if (deg > 90 && deg < 270) {
+                    currentDir = -1; // Current reverses inside the physical coil windings!
+                } else {
+                    currentDir = 1; // Normal flow
+                }
+
+            }
+
+            if (isPlaying) {
+                if (commutatorMode === 'slip') {
+                    // In slip-ring mode the forces on the two coil sides stay fixed,
+                    // but the turning effect changes sign with the coil angle.
+                    const torque = motorSpeed * Math.cos(motorAngle);
+                    motorAngularVelocity += torque * 0.18;
+                    motorAngularVelocity *= 0.94; // damping
+                    if (Math.abs(motorAngularVelocity) < 0.0001) motorAngularVelocity = 0;
+                    motorAngle += motorAngularVelocity;
+                } else {
+                    motorAngle += motorSpeed;
+                }
+                if (motorAngle >= Math.PI * 2) motorAngle -= Math.PI * 2;
+                if (motorAngle < 0) motorAngle += Math.PI * 2;
+            }
+
+            // Apply rotation to the 3D Rotor Group (coil + commutator)
+            rotorGroup.rotation.z = -motorAngle; // negative sign for clockwise rotation when viewed from front
+
+            // Update Electrons speed/direction (Fine-tuned to be slightly faster and very clear)
+            const speedScale = isPlaying ? motorSpeed * 18 : 0;
+            const flowDirection = flowMode === 'conventional' ? 1 : -1;
+            electronParticles.forEach(p => {
+                p.mesh.visible = showCurrent;
+                if (p.isStatic) {
+                    // Static circuit loop electrons: always flow same way
+                    if (currentDir !== 0) {
+                        p.t += 0.008 * speedScale * flowDirection;
+                        if (p.t > 1) p.t = 0;
+                        if (p.t < 0) p.t = 1;
+                    }
+                } else {
+                    // Rotor winding electrons: direction reverses relative to the loop!
+                    if (currentDir !== 0) {
+                        p.t += 0.007 * speedScale * currentDir * flowDirection;
+                        if (p.t > 1) p.t = 0;
+                        if (p.t < 0) p.t = 1;
+                    }
+                }
+
+                // Place the electron on the path geometry
+                const pos = p.curve.getPointAt(p.t);
+                p.mesh.position.copy(pos);
+            });
+
+            // Update Force Arrows
+            if (showForce && currentMagnitude > 0) {
+                forceArrowsGroup.visible = true;
+                
+                const leftForce = forceArrowsGroup.getObjectByName("leftForce");
+                const rightForce = forceArrowsGroup.getObjectByName("rightForce");
+
+                const leftArm = rotorGroup.getObjectByName("leftArm");
+                const rightArm = rotorGroup.getObjectByName("rightArm");
+
+                const leftPos = new THREE.Vector3();
+                leftArm.getWorldPosition(leftPos);
+
+                const rightPos = new THREE.Vector3();
+                rightArm.getWorldPosition(rightPos);
+
+                // Update arrows positions in the global space
+                leftForce.position.copy(leftPos);
+                rightForce.position.copy(rightPos);
+
+                if (commutatorMode === 'split') {
+                    leftForce.rotation.x = currentDir < 0 ? Math.PI : 0;
+                    rightForce.rotation.x = currentDir < 0 ? 0 : Math.PI;
+                } else {
+                    leftForce.rotation.x = 0;
+                    rightForce.rotation.x = Math.PI;
+                }
+
+                leftForce.scale.set(currentMagnitude, currentMagnitude, currentMagnitude);
+                rightForce.scale.set(currentMagnitude, currentMagnitude, currentMagnitude);
+            } else {
+                forceArrowsGroup.visible = false;
+            }
+
+            // Set visibility of static toggles
+            fieldLinesGroup.visible = showField;
+        }
+
+        // Sidebar Collapsible Control
+        const btnSidebarToggle = document.getElementById('btn-sidebar-toggle');
+        const btnSidebarExpandFloating = document.getElementById('btn-sidebar-expand-floating');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarContent = document.getElementById('sidebar-content');
+        const toggleIconDir = document.getElementById('toggle-icon-dir');
+
+        let sidebarCollapsed = false;
+
+        function toggleSidebar() {
+            sidebarCollapsed = !sidebarCollapsed;
+            const isExpanding = !sidebarCollapsed;
+            if (sidebarCollapsed) {
+                // Collapse sidebar
+                sidebar.classList.remove('md:w-[280px]');
+                sidebar.classList.add('md:w-0');
+                sidebarContent.classList.add('opacity-0', 'pointer-events-none');
+                
+                // Toggle icon
+                toggleIconDir.classList.add('rotate-180');
+                
+                // Show floating absolute menu button
+                btnSidebarExpandFloating.classList.remove('hidden');
+                btnSidebarExpandFloating.classList.add('flex');
+            } else {
+                // Expand sidebar
+                sidebar.classList.add('md:w-[280px]');
+                sidebar.classList.remove('md:w-0');
+                sidebarContent.classList.remove('opacity-0', 'pointer-events-none');
+                
+                // Toggle icon
+                toggleIconDir.classList.remove('rotate-180');
+                
+                // Hide floating menu button
+                btnSidebarExpandFloating.classList.add('hidden');
+                btnSidebarExpandFloating.classList.remove('flex');
+            }
+
+            // Notify Three.js renderer of size changes smoothly
+            let resizeCount = 0;
+            const resizeInterval = setInterval(() => {
+                onWindowResize();
+                resizeCount++;
+                if (resizeCount > 35) clearInterval(resizeInterval); // cover the transition duration
+            }, 10);
+
+            if (isExpanding) {
+                const onTransitionEnd = (event) => {
+                    if (event.propertyName === 'width' || event.propertyName === 'max-width') {
+                        recenterSimulationView();
+                    }
+                };
+                sidebar.addEventListener('transitionend', onTransitionEnd, { once: true });
+                setTimeout(recenterSimulationView, 420);
+            }
+        }
+
+        btnSidebarToggle.addEventListener('click', toggleSidebar);
+        btnSidebarExpandFloating.addEventListener('click', toggleSidebar);
+
+        function setFlowMode(mode) {
+            flowMode = mode;
+            const isConventional = flowMode === 'conventional';
+            const flowColor = conventionalCurrentColor;
+
+            document.getElementById('current-toggle-label').innerText = isConventional ? 'Conventional Current' : 'Electron Flow';
+            document.getElementById('current-toggle-dot').className = 'w-2.5 h-2.5 rounded-full bg-emerald-500';
+            const legendCurrentLabel = document.getElementById('legend-current-label');
+            if (legendCurrentLabel) legendCurrentLabel.innerText = isConventional ? 'Conventional Current (I)' : 'Electron Flow';
+            const legendCurrentDot = document.getElementById('legend-current-dot');
+            if (legendCurrentDot) legendCurrentDot.className = 'w-3 h-3 bg-emerald-500 rounded-full';
+            document.getElementById('flow-mode-dot').className = 'w-2.5 h-2.5 rounded-full bg-emerald-500';
+
+            const conventionalBtn = document.getElementById('btn-flow-conventional');
+            const electronBtn = document.getElementById('btn-flow-electron');
+            conventionalBtn.className = isConventional
+                ? 'px-2 py-1.5 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-700 transition'
+                : 'px-2 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-700 transition';
+            electronBtn.className = isConventional
+                ? 'px-2 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-700 transition'
+                : 'px-2 py-1.5 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-700 transition';
+
+            electronParticles.forEach(p => {
+                p.mesh.material.color.setHex(flowColor);
+            });
+        }
+
+        // Toggles Handlers
+        document.getElementById('toggle-field').addEventListener('change', (e) => {
+            showField = e.target.checked;
+        });
+        document.getElementById('toggle-current').addEventListener('change', (e) => {
+            showCurrent = e.target.checked;
+        });
+        document.getElementById('toggle-force').addEventListener('change', (e) => {
+            showForce = e.target.checked;
+        });
+        document.getElementById('btn-flow-conventional').addEventListener('click', () => {
+            setFlowMode('conventional');
+        });
+        document.getElementById('btn-flow-electron').addEventListener('click', () => {
+            setFlowMode('electron');
+        });
+        document.getElementById('btn-commutator-split').addEventListener('click', () => {
+            setCommutatorMode('split');
+        });
+        document.getElementById('btn-commutator-slip').addEventListener('click', () => {
+            setCommutatorMode('slip');
+        });
+        setFlowMode(flowMode);
+
+        // Speed Slider Handler
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValText = document.getElementById('speed-val');
+        speedSlider.addEventListener('input', (e) => {
+            const pct = e.target.value;
+            motorSpeed = (pct / 100) * 0.045;
+            if (pct == 0) {
+                speedValText.innerText = "Stopped";
+            } else if (pct < 30) {
+                speedValText.innerText = "Slow";
+            } else if (pct < 70) {
+                speedValText.innerText = "Medium";
+            } else {
+                speedValText.innerText = "Fast";
+            }
+        });
+
+        // Play / Pause Button Handler
+        const playBtn = document.getElementById('btn-play-pause');
+        const playIcon = document.getElementById('play-icon');
+        
+        playBtn.addEventListener('click', togglePlayState);
+
+        function togglePlayState() {
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                playIcon.setAttribute('data-lucide', 'pause');
+                playBtn.className = "flex items-center justify-center w-11 h-11 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl shadow-lg transition-all";
+                playBtn.title = 'Pause Motor';
+                playBtn.setAttribute('aria-label', 'Pause Motor');
+            } else {
+                playIcon.setAttribute('data-lucide', 'play');
+                playBtn.className = "flex items-center justify-center w-11 h-11 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-xl shadow-lg transition-all";
+                playBtn.title = 'Start Motor';
+                playBtn.setAttribute('aria-label', 'Start Motor');
+            }
+            lucide.createIcons();
+        }
+
+        // Step Forward Frame Button Handler
+        document.getElementById('btn-step').addEventListener('click', () => {
+            isPlaying = false;
+            playIcon.setAttribute('data-lucide', 'play');
+            playBtn.className = "flex items-center justify-center w-11 h-11 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-xl shadow-lg transition-all";
+            playBtn.title = 'Start Motor';
+            playBtn.setAttribute('aria-label', 'Start Motor');
+            lucide.createIcons();
+
+            // Advance by exactly 1.5 degrees
+            motorAngle += (1.5 * Math.PI / 180);
+            if (motorAngle >= Math.PI * 2) {
+                motorAngle -= Math.PI * 2;
+            }
+        });
+
+        // Main Loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Update physical motor calculations
+            updatePhysics();
+
+            // Standard camera update
+            controls.update();
+
+            // Render Three.js scene
+            renderer.render(scene, camera);
+        }
+
+        // Start Everything on Load
+        window.onload = function() {
+            init3D();
+            animate();
+        };
+
+    </script>
+</body>
+</html>
