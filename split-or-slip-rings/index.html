@@ -192,6 +192,7 @@
         let motorAngle = 0.0; // In radians (0 to 2*Math.PI)
         let motorSpeed = 0.015; // User speed / torque input
         let motorAngularVelocity = 0.0; // Angular velocity for slip-ring oscillation
+        let pendingStepAngle = 0.0; // One-frame charge advance used by manual step mode
         const deadZoneRad = 0.08; // Angle region near vertical (90deg/270deg) where brushes hit the gap
         const brushContactX = 1.16; // Keeps carbon brushes just outside the split-ring radius
         const commutatorRightColor = 0xfde68a;
@@ -287,6 +288,7 @@
         let electronParticles = [];
         const conventionalCurrentColor = 0x10b981;
         const electronFlowColor = 0x10b981;
+        const electronRadius = 0.095;
 
         // Setup the ThreeJS World
         function init3D() {
@@ -835,7 +837,7 @@
             const rotorCurve = new THREE.CatmullRomCurve3(pathPoints);
             const particleCount = commutatorMode === 'slip' ? 16 : 10;
             const pMaterial = new THREE.MeshBasicMaterial({ color: conventionalCurrentColor });
-            const pGeom = new THREE.SphereGeometry(0.075, 8, 8); // Slightly larger for better contrast on white
+            const pGeom = new THREE.SphereGeometry(electronRadius, 8, 8);
 
             for (let i = 0; i < particleCount; i++) {
                 const mesh = new THREE.Mesh(pGeom, pMaterial);
@@ -866,7 +868,7 @@
             if (points.length > 1 && points[0].distanceTo(points[points.length - 1]) < 0.001) {
                 curve.closed = true;
             }
-            const pGeom = new THREE.SphereGeometry(0.07, 8, 8);
+            const pGeom = new THREE.SphereGeometry(electronRadius, 8, 8);
             const pMat = new THREE.MeshBasicMaterial({ color: conventionalCurrentColor });
 
             for (let i = 0; i < count; i++) {
@@ -996,22 +998,23 @@
             // Apply rotation to the 3D Rotor Group (coil + commutator)
             rotorGroup.rotation.z = -motorAngle; // negative sign for clockwise rotation when viewed from front
 
-            // Update Electrons speed/direction (Fine-tuned to be slightly faster and very clear)
-            const speedScale = isPlaying ? motorSpeed * 18 : 0;
+            // Update electron motion. Paused mode stays frozen unless a manual step
+            // queued a single angular increment for the charge animation too.
+            const chargeMotionAngle = isPlaying ? motorSpeed : pendingStepAngle;
             const flowDirection = flowMode === 'conventional' ? 1 : -1;
             electronParticles.forEach(p => {
                 p.mesh.visible = showCurrent;
                 if (p.isStatic) {
                     // Static circuit loop electrons: always flow same way
-                    if (currentDir !== 0) {
-                        p.t += 0.008 * speedScale * flowDirection;
+                    if (currentDir !== 0 && chargeMotionAngle > 0) {
+                        p.t += 0.144 * chargeMotionAngle * flowDirection;
                         if (p.t > 1) p.t = 0;
                         if (p.t < 0) p.t = 1;
                     }
                 } else {
                     // Rotor winding electrons: direction reverses relative to the loop!
-                    if (currentDir !== 0) {
-                        p.t += 0.007 * speedScale * currentDir * flowDirection;
+                    if (currentDir !== 0 && chargeMotionAngle > 0) {
+                        p.t += 0.126 * chargeMotionAngle * currentDir * flowDirection;
                         if (p.t > 1) p.t = 0;
                         if (p.t < 0) p.t = 1;
                     }
@@ -1021,6 +1024,7 @@
                 const pos = p.curve.getPointAt(p.t);
                 p.mesh.position.copy(pos);
             });
+            pendingStepAngle = 0;
 
             // Update Force Arrows
             if (showForce && currentMagnitude > 0) {
@@ -1212,6 +1216,8 @@
 
         // Step Forward Frame Button Handler
         document.getElementById('btn-step').addEventListener('click', () => {
+            const stepAngle = 1.5 * Math.PI / 180;
+            let appliedStepAngle = stepAngle;
             isPlaying = false;
             playIcon.setAttribute('data-lucide', 'play');
             playBtn.className = "flex items-center justify-center w-11 h-11 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-xl shadow-lg transition-all";
@@ -1220,7 +1226,13 @@
             lucide.createIcons();
 
             // Advance by exactly 1.5 degrees
-            motorAngle += (1.5 * Math.PI / 180);
+            if (commutatorMode === 'slip') {
+                const verticalAngle = Math.PI / 2;
+                appliedStepAngle = Math.max(0, Math.min(stepAngle, verticalAngle - motorAngle));
+            }
+
+            motorAngle += appliedStepAngle;
+            pendingStepAngle = appliedStepAngle;
             if (motorAngle >= Math.PI * 2) {
                 motorAngle -= Math.PI * 2;
             }
