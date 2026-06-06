@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>AC Generator Simulation</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+	<script src="https://unpkg.com/lucide@latest"></script>
+	<style>
+		body {
+			margin: 0;
+			overflow: hidden;
+			font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+			background-color: #f8fafc;
+			color: #0f172a;
+		}
+
+		canvas {
+			display: block;
+		}
+
+		::-webkit-scrollbar {
+			width: 6px;
+		}
+
+		::-webkit-scrollbar-track {
+			background: rgba(241, 245, 249, 0.5);
+		}
+
+		::-webkit-scrollbar-thumb {
+			background: rgba(148, 163, 184, 0.45);
+			border-radius: 999px;
+		}
+
+		.sidebar-transition {
+			transition: width 350ms cubic-bezier(0.4, 0, 0.2, 1),
+						transform 350ms cubic-bezier(0.4, 0, 0.2, 1),
+						opacity 250ms ease;
+		}
+
+		.logger-panel {
+			background: rgba(255, 255, 255, 0.94);
+			backdrop-filter: blur(10px);
+			box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+		}
+	</style>
+</head>
+<body class="h-screen w-screen flex flex-col md:flex-row overflow-hidden select-none bg-slate-50">
+	<div id="sidebar" class="relative w-full md:w-[310px] h-[44%] md:h-full bg-white flex flex-col z-20 shadow-xl border-b md:border-b-0 md:border-r border-slate-200 sidebar-transition flex-shrink-0">
+		<button id="btn-sidebar-toggle" class="absolute hidden md:flex top-1/2 -translate-y-1/2 -right-8 w-8 h-20 bg-white border-y border-r border-slate-200 rounded-r-xl shadow-md items-center justify-center hover:bg-slate-50 hover:text-indigo-600 transition-colors z-30 focus:outline-none" title="Toggle Sidebar">
+			<i data-lucide="chevron-left" id="toggle-icon-dir" class="w-5 h-5 text-slate-500 transition-transform"></i>
+		</button>
+
+		<div id="sidebar-content" class="flex flex-col h-full w-full overflow-y-auto opacity-100 transition-opacity duration-200">
+			<div class="px-4 py-3 border-b border-slate-100">
+				<div class="flex items-start justify-between gap-4">
+					<div>
+						<h1 class="text-base font-semibold tracking-tight text-slate-900">AC Generator Simulator</h1>
+						<p class="text-xs text-slate-500">Rotating coil in a magnetic field with live current logging</p>
+					</div>
+					<div class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold">Induced Current</div>
+				</div>
+			</div>
+
+			<div class="p-4 flex-1 space-y-4">
+
+				<div class="space-y-3">
+					<h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Visuals</h4>
+
+					<label class="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100/75 border border-slate-100 rounded-xl cursor-pointer transition">
+						<div class="flex items-center gap-3">
+							<div class="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
+							<span class="text-sm font-medium text-slate-700">Show magnetic field</span>
+						</div>
+						<input type="checkbox" id="toggle-field" checked class="sr-only peer">
+						<div class="relative w-9 h-5 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+					</label>
+
+					<label class="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100/75 border border-slate-100 rounded-xl cursor-pointer transition">
+						<div class="flex items-center gap-3">
+							<div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+							<span id="current-toggle-label" class="text-sm font-medium text-slate-700">Show conventional current</span>
+						</div>
+						<input type="checkbox" id="toggle-current" checked class="sr-only peer">
+						<div class="relative w-9 h-5 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+					</label>
+
+					<div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+						<div class="flex items-center gap-3 mb-2">
+							<div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+							<span class="text-sm font-medium text-slate-700">Flow Direction Mode</span>
+						</div>
+						<div class="grid grid-cols-2 gap-1 rounded-lg bg-white p-1 border border-slate-200">
+							<button id="btn-flow-conventional" class="px-2 py-1.5 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-700 transition" type="button">Conventional</button>
+							<button id="btn-flow-electron" class="px-2 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-700 transition" type="button">Electron</button>
+						</div>
+					</div>
+				</div>
+
+				<div class="space-y-3">
+					<h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Collector Rings</h4>
+
+					<div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+						<div class="grid grid-cols-2 gap-1 rounded-lg bg-white p-1 border border-slate-200">
+							<button id="btn-commutator-slip" class="px-2 py-1.5 rounded-md text-xs font-semibold bg-sky-100 text-sky-700 transition" type="button">Slip Rings</button>
+							<button id="btn-commutator-split" class="px-2 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-700 transition" type="button">Split Ring</button>
+						</div>
+						<p id="commutator-description" class="mt-3 text-xs leading-5 text-slate-500">Slip rings keep the terminals attached to the same coil ends, so the ammeter swings positive and negative with an AC output.</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="p-4 border-t border-slate-100 bg-slate-50/60 space-y-4">
+				<div class="space-y-1.5">
+					<div class="flex justify-between items-center text-xs font-semibold text-slate-500">
+						<span>Prime Mover Speed</span>
+						<span id="speed-val" class="font-mono text-indigo-600">Medium</span>
+					</div>
+					<input type="range" id="speed-slider" min="0" max="100" value="40" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+				</div>
+
+				<div class="flex gap-2.5">
+					<button id="btn-play-pause" class="flex items-center justify-center w-11 h-11 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-600/10 hover:shadow-indigo-600/20 transition-all" title="Pause Generator" aria-label="Pause Generator">
+						<i data-lucide="pause" class="w-4 h-4" id="play-icon"></i>
+					</button>
+					<button id="btn-step" class="flex items-center justify-center w-11 h-11 bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl transition-all" title="Step rotation by 6 degrees" aria-label="Step rotation by 6 degrees">
+						<i data-lucide="skip-forward" class="w-4 h-4"></i>
+					</button>
+					<button id="btn-reset-cam" class="flex items-center justify-center w-11 h-11 bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-200 text-slate-600 rounded-xl transition-all" title="Reset View Angle" aria-label="Reset view angle">
+						<i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<button id="btn-sidebar-expand-floating" class="absolute hidden left-4 top-4 bg-white border border-slate-200 text-slate-700 hover:text-indigo-600 p-3 rounded-xl shadow-lg z-30 transition-all items-center justify-center focus:outline-none" title="Expand Sidebar">
+		<i data-lucide="menu" class="w-5 h-5"></i>
+	</button>
+
+	<div class="flex-1 relative h-[56%] md:h-full min-w-0">
+		<div id="canvas-container" class="w-full h-full"></div>
+
+		<div class="absolute top-4 right-4 w-[300px] max-w-[calc(100%-2rem)] logger-panel border border-slate-200 rounded-2xl p-3 z-10 pointer-events-none">
+			<div class="flex items-start justify-between gap-4 mb-2">
+				<div>
+					<div class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Live Datalogger</div>
+					<div id="graph-mode" class="text-sm font-semibold text-slate-800">Current vs Time</div>
+				</div>
+				<div class="text-right">
+					<div id="graph-current-value" class="text-lg font-semibold text-slate-900">0.00 A</div>
+					<div id="graph-current-caption" class="text-[11px] text-slate-500">Center-zero trace</div>
+				</div>
+			</div>
+			<canvas id="logger-canvas" width="276" height="156" class="w-full h-[156px] rounded-xl bg-slate-950/95"></canvas>
+		</div>
+
+		<div class="absolute bottom-4 right-4 bg-white/95 backdrop-blur border border-slate-200 rounded-xl px-4 py-3 flex gap-4 text-xs text-slate-500 pointer-events-none shadow-md">
+			<div class="flex items-center gap-1.5">
+				<i data-lucide="mouse-pointer" class="w-4 h-4 text-indigo-500"></i>
+				<span>Left-drag to <strong>Rotate</strong></span>
+			</div>
+			<div class="flex items-center gap-1.5">
+				<i data-lucide="mouse" class="w-4 h-4 text-indigo-500"></i>
+				<span>Right-drag to <strong>Pan</strong></span>
+			</div>
+			<div class="flex items-center gap-1.5">
+				<i data-lucide="zoom-in" class="w-4 h-4 text-indigo-500"></i>
+				<span>Scroll/Pinch to <strong>Zoom</strong></span>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		lucide.createIcons();
+
+		let isPlaying = true;
+		let rotorAngle = 0;
+		let rotorSpeed = 0.024;
+		let pendingStepAngle = 0;
+		let showField = true;
+		let showCurrent = true;
+		let flowMode = 'conventional';
+		let commutatorMode = 'slip';
+		let displayedCurrent = 0;
+		let rawCoilCurrent = 0;
+		let sampleAccumulator = 0;
+
+		const maxRotorSpeed = 0.055;
+		const stepAngle = 6 * Math.PI / 180;
+		const slipRingThickness = 0.6;
+		const slipRingRightZ = 2.8;
+		const slipRingLeftZ = 3.6;
+		const brushContactX = 1.16;
+		const currentScaleAmps = 5;
+		const electronRadius = 0.09;
+		const currentColor = 0x10b981;
+
+		let scene;
+		let camera;
+		let renderer;
+		let controls;
+		let container = document.getElementById('canvas-container');
+		let rotorGroup;
+		let commutatorLeft;
+		let commutatorRight;
+		let brushLeft;
+		let brushRight;
+		let fieldLinesGroup;
+		let rightWireMesh;
+		let leftWireMesh;
+		let connectorLeft;
+		let connectorRight;
+		let ammeterGroup;
+		let ammeterNeedle;
+		let electronParticles = [];
+		let loggerCanvas;
+		let loggerCtx;
+		let graphSamples = Array.from({ length: 180 }, () => 0);
+
+		function getBrushZ(side) {
+			if (commutatorMode === 'slip') {
+				return side === 'right' ? slipRingRightZ : slipRingLeftZ;
+			}
+			return 2.3;
+		}
+
+		function getCollectorContactZ(side) {
+			if (commutatorMode === 'slip') {
+				const centerZ = side === 'right' ? slipRingRightZ : slipRingLeftZ;
+				return centerZ - slipRingThickness / 2;
+			}
+			return 2.3;
+		}
+
+		function getMeterZ() {
+			return commutatorMode === 'slip' ? 2.8 : 2.3;
+		}
+
+		function getStaticWirePoints(side) {
+			const z = getMeterZ();
+			if (side === 'right') {
+				return [
+					new THREE.Vector3(brushContactX, 0, getBrushZ('right')),
+					new THREE.Vector3(1.8, 0.1, z),
+					new THREE.Vector3(1.8, -2.2, z),
+					new THREE.Vector3(0.95, -2.2, z)
+				];
+			}
+			return [
+				new THREE.Vector3(-0.95, -2.2, z),
+				new THREE.Vector3(-1.8, -2.2, z),
+				new THREE.Vector3(-1.8, 0.1, z),
+				new THREE.Vector3(-brushContactX, 0, getBrushZ('left'))
+			];
+		}
+
+		function getRotorConnectorPoints(side) {
+			const connectorZ = getCollectorContactZ(side);
+			const startX = side === 'right' ? 0.8 : -0.8;
+
+			if (commutatorMode === 'slip' && side === 'left') {
+				return [
+					new THREE.Vector3(startX, 0, 1.8),
+					new THREE.Vector3(-0.62, 0, 2.2),
+					new THREE.Vector3(-0.62, 0, connectorZ),
+					new THREE.Vector3(startX, 0, connectorZ)
+				];
+			}
+
+			return [
+				new THREE.Vector3(startX, 0, 1.8),
+				new THREE.Vector3(startX, 0, connectorZ)
+			];
+		}
+
+		function createWireFromPoints(points, material) {
+			const curve = new THREE.CatmullRomCurve3(points);
+			const geom = new THREE.TubeGeometry(curve, 32, 0.06, 8, false);
+			const mesh = new THREE.Mesh(geom, material);
+			scene.add(mesh);
+			return mesh;
+		}
+
+		function updateWireGeometry(mesh, points) {
+			const curve = new THREE.CatmullRomCurve3(points);
+			const geometry = new THREE.TubeGeometry(curve, 32, 0.06, 8, false);
+			mesh.geometry.dispose();
+			mesh.geometry = geometry;
+		}
+
+		function init3D() {
+			scene = new THREE.Scene();
+			scene.background = new THREE.Color(0xf8fafc);
+			scene.fog = new THREE.FogExp2(0xf8fafc, 0.024);
+
+			container = document.getElementById('canvas-container');
+			camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+			camera.position.set(6, 6, 8);
+
+			renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer.setSize(container.clientWidth, container.clientHeight);
+			renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+			renderer.shadowMap.enabled = true;
+			renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+			container.appendChild(renderer.domElement);
+
+			controls = new THREE.OrbitControls(camera, renderer.domElement);
+			controls.enableDamping = true;
+			controls.dampingFactor = 0.05;
+			controls.maxPolarAngle = Math.PI / 2 + 0.12;
+			controls.minDistance = 3;
+			controls.maxDistance = 25;
+
+			const ambientLight = new THREE.AmbientLight(0xffffff, 0.68);
+			scene.add(ambientLight);
+
+			const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+			dirLight1.position.set(10, 20, 10);
+			dirLight1.castShadow = true;
+			dirLight1.shadow.mapSize.width = 1024;
+			dirLight1.shadow.mapSize.height = 1024;
+			scene.add(dirLight1);
+
+			const dirLight2 = new THREE.DirectionalLight(0x38bdf8, 0.16);
+			dirLight2.position.set(-10, -5, -10);
+			scene.add(dirLight2);
+
+			createGridAndFloor();
+			createMagnets();
+			createCircuitStatic();
+			createRotorAssembly();
+			createFieldLines();
+			setupCurrentParticles();
+
+			loggerCanvas = document.getElementById('logger-canvas');
+			loggerCtx = loggerCanvas.getContext('2d');
+			updateTelemetry();
+			drawLogger();
+		}
+
+		function createGridAndFloor() {
+			const gridHelper = new THREE.GridHelper(30, 30, 0xcbd5e1, 0xe2e8f0);
+			gridHelper.position.y = -3;
+			scene.add(gridHelper);
+		}
+
+		function createMagnets() {
+			const boxGeom = new THREE.BoxGeometry(2, 3.5, 4);
+
+			const nMagnet = new THREE.Mesh(boxGeom, new THREE.MeshStandardMaterial({
+				color: 0xef4444,
+				roughness: 0.24,
+				metalness: 0.1
+			}));
+			nMagnet.position.set(-4.5, 0, 0);
+			nMagnet.castShadow = true;
+			nMagnet.receiveShadow = true;
+			scene.add(nMagnet);
+
+			const sMagnet = new THREE.Mesh(boxGeom, new THREE.MeshStandardMaterial({
+				color: 0x3b82f6,
+				roughness: 0.24,
+				metalness: 0.1
+			}));
+			sMagnet.position.set(4.5, 0, 0);
+			sMagnet.castShadow = true;
+			sMagnet.receiveShadow = true;
+			scene.add(sMagnet);
+
+			scene.add(createPoleLabel('N', '#ef4444', new THREE.Vector3(-3.49, 0, 0), Math.PI / 2));
+			scene.add(createPoleLabel('S', '#3b82f6', new THREE.Vector3(3.49, 0, 0), -Math.PI / 2));
+		}
+
+		function createPoleLabel(text, color, position, rotationY) {
+			const canvas = document.createElement('canvas');
+			canvas.width = 128;
+			canvas.height = 128;
+			const ctx = canvas.getContext('2d');
+			ctx.fillStyle = color;
+			ctx.fillRect(0, 0, 128, 128);
+			ctx.fillStyle = '#ffffff';
+			ctx.font = 'bold 90px sans-serif';
+			ctx.textAlign = 'center';
+			ctx.textBaseline = 'middle';
+			ctx.fillText(text, 64, 64);
+			const mesh = new THREE.Mesh(
+				new THREE.PlaneGeometry(1.2, 1.2),
+				new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(canvas) })
+			);
+			mesh.position.copy(position);
+			mesh.rotation.y = rotationY;
+			return mesh;
+		}
+
+		function createCircuitStatic() {
+			const brushGeom = new THREE.BoxGeometry(0.5, 0.4, 0.8);
+			const brushMaterial = new THREE.MeshStandardMaterial({
+				color: 0x475569,
+				roughness: 0.72,
+				metalness: 0.2
+			});
+
+			brushRight = new THREE.Mesh(brushGeom, brushMaterial);
+			brushRight.position.set(brushContactX, 0, getBrushZ('right'));
+			brushRight.castShadow = true;
+			scene.add(brushRight);
+
+			brushLeft = new THREE.Mesh(brushGeom, brushMaterial);
+			brushLeft.position.set(-brushContactX, 0, getBrushZ('left'));
+			brushLeft.castShadow = true;
+			scene.add(brushLeft);
+
+			createAmmeter();
+
+			const wireMat = new THREE.MeshStandardMaterial({
+				color: 0xea580c,
+				metalness: 0.65,
+				roughness: 0.3
+			});
+
+			rightWireMesh = createWireFromPoints(getStaticWirePoints('right'), wireMat);
+			leftWireMesh = createWireFromPoints(getStaticWirePoints('left'), wireMat);
+		}
+
+		function createAmmeterFaceTexture() {
+			const canvas = document.createElement('canvas');
+			canvas.width = 512;
+			canvas.height = 256;
+			const ctx = canvas.getContext('2d');
+
+			ctx.fillStyle = '#f8fafc';
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+			ctx.strokeStyle = '#cbd5e1';
+			ctx.lineWidth = 8;
+			ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+
+			ctx.strokeStyle = '#0f172a';
+			ctx.lineWidth = 5;
+			ctx.beginPath();
+			ctx.arc(canvas.width / 2, 182, 118, Math.PI, 2 * Math.PI);
+			ctx.stroke();
+
+			for (let i = -5; i <= 5; i++) {
+				const ratio = (i + 5) / 10;
+				const angle = Math.PI + ratio * Math.PI;
+				const inner = 88;
+				const outer = 120;
+				const cx = canvas.width / 2;
+				const cy = 182;
+				ctx.lineWidth = i === 0 ? 5 : 3;
+				ctx.beginPath();
+				ctx.moveTo(cx + Math.cos(angle) * inner, cy + Math.sin(angle) * inner);
+				ctx.lineTo(cx + Math.cos(angle) * outer, cy + Math.sin(angle) * outer);
+				ctx.stroke();
+			}
+
+			ctx.fillStyle = '#0f172a';
+			ctx.font = 'bold 30px sans-serif';
+			ctx.textAlign = 'center';
+			ctx.fillText('A', canvas.width / 2, 76);
+			ctx.font = '600 20px sans-serif';
+			ctx.fillText('-5', 114, 196);
+			ctx.fillText('0', canvas.width / 2, 216);
+			ctx.fillText('+5', canvas.width - 114, 196);
+
+			return new THREE.CanvasTexture(canvas);
+		}
+
+		function createAmmeter() {
+			ammeterGroup = new THREE.Group();
+			ammeterGroup.position.set(0, -2.2, getMeterZ());
+
+			const caseMesh = new THREE.Mesh(
+				new THREE.BoxGeometry(2.3, 1.45, 0.7),
+				new THREE.MeshStandardMaterial({
+					color: 0xe2e8f0,
+					roughness: 0.45,
+					metalness: 0.25
+				})
+			);
+			caseMesh.castShadow = true;
+			caseMesh.receiveShadow = true;
+			ammeterGroup.add(caseMesh);
+
+			const bezel = new THREE.Mesh(
+				new THREE.BoxGeometry(2.02, 1.06, 0.08),
+				new THREE.MeshStandardMaterial({
+					color: 0x94a3b8,
+					roughness: 0.4,
+					metalness: 0.35
+				})
+			);
+			bezel.position.z = 0.36;
+			ammeterGroup.add(bezel);
+
+			const face = new THREE.Mesh(
+				new THREE.PlaneGeometry(1.88, 0.96),
+				new THREE.MeshBasicMaterial({ map: createAmmeterFaceTexture() })
+			);
+			face.position.z = 0.401;
+			ammeterGroup.add(face);
+
+			const pivot = new THREE.Group();
+			pivot.position.set(0, -0.08, 0.43);
+			const needle = new THREE.Mesh(
+				new THREE.BoxGeometry(0.06, 0.62, 0.03),
+				new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.32, metalness: 0.1 })
+			);
+			needle.position.y = 0.31;
+			pivot.add(needle);
+
+			const hub = new THREE.Mesh(
+				new THREE.CylinderGeometry(0.06, 0.06, 0.06, 20),
+				new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4, metalness: 0.2 })
+			);
+			hub.rotation.x = Math.PI / 2;
+			hub.position.z = 0.015;
+			pivot.add(hub);
+			ammeterNeedle = pivot;
+			ammeterGroup.add(pivot);
+
+			const terminalGeom = new THREE.CylinderGeometry(0.1, 0.1, 0.24, 16);
+			terminalGeom.rotateZ(Math.PI / 2);
+			const terminalMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.85, roughness: 0.18 });
+			const rightTerminal = new THREE.Mesh(terminalGeom, terminalMat);
+			rightTerminal.position.set(0.95, 0, 0.38);
+			ammeterGroup.add(rightTerminal);
+
+			const leftTerminal = new THREE.Mesh(terminalGeom, terminalMat);
+			leftTerminal.position.set(-0.95, 0, 0.38);
+			ammeterGroup.add(leftTerminal);
+
+			scene.add(ammeterGroup);
+		}
+
+		function createRotorAssembly() {
+			rotorGroup = new THREE.Group();
+
+			const wireRadius = 0.085;
+			const loopMaterial = new THREE.MeshStandardMaterial({
+				color: 0xea580c,
+				metalness: 0.9,
+				roughness: 0.12
+			});
+
+			const leftArmGeom = new THREE.CylinderGeometry(wireRadius, wireRadius, 3.6, 16);
+			leftArmGeom.rotateX(Math.PI / 2);
+			const leftArm = new THREE.Mesh(leftArmGeom, loopMaterial);
+			leftArm.position.set(-1.6, 0, 0);
+			leftArm.name = 'leftArm';
+			rotorGroup.add(leftArm);
+
+			const rightArmGeom = new THREE.CylinderGeometry(wireRadius, wireRadius, 3.6, 16);
+			rightArmGeom.rotateX(Math.PI / 2);
+			const rightArm = new THREE.Mesh(rightArmGeom, loopMaterial);
+			rightArm.position.set(1.6, 0, 0);
+			rightArm.name = 'rightArm';
+			rotorGroup.add(rightArm);
+
+			const frontSideGeom = new THREE.CylinderGeometry(wireRadius, wireRadius, 3.2, 16);
+			frontSideGeom.rotateZ(Math.PI / 2);
+			const frontSide = new THREE.Mesh(frontSideGeom, loopMaterial);
+			frontSide.position.set(0, 0, -1.8);
+			rotorGroup.add(frontSide);
+
+			const backLeftGeom = new THREE.CylinderGeometry(wireRadius, wireRadius, 0.8, 16);
+			backLeftGeom.rotateZ(Math.PI / 2);
+			const backLeft = new THREE.Mesh(backLeftGeom, loopMaterial);
+			backLeft.position.set(-1.2, 0, 1.8);
+			rotorGroup.add(backLeft);
+
+			const backRightGeom = new THREE.CylinderGeometry(wireRadius, wireRadius, 0.8, 16);
+			backRightGeom.rotateZ(Math.PI / 2);
+			const backRight = new THREE.Mesh(backRightGeom, loopMaterial);
+			backRight.position.set(1.2, 0, 1.8);
+			rotorGroup.add(backRight);
+
+			const connectorRightPoints = getRotorConnectorPoints('right');
+			const connectorLeftPoints = getRotorConnectorPoints('left');
+			const connectorRightCurve = new THREE.CatmullRomCurve3(connectorRightPoints);
+			const connectorLeftCurve = new THREE.CatmullRomCurve3(connectorLeftPoints);
+			connectorRight = new THREE.Mesh(new THREE.TubeGeometry(connectorRightCurve, 16, wireRadius, 8, false), loopMaterial);
+			connectorLeft = new THREE.Mesh(new THREE.TubeGeometry(connectorLeftCurve, 24, wireRadius, 8, false), loopMaterial);
+			rotorGroup.add(connectorRight);
+			rotorGroup.add(connectorLeft);
+
+			const ringOuterRadius = 0.88;
+			const ringDepth = 0.48;
+			const collectorMaterial = new THREE.MeshStandardMaterial({
+				color: 0xfde68a,
+				metalness: 0.18,
+				roughness: 0.42,
+				side: THREE.DoubleSide
+			});
+
+			if (commutatorMode === 'split') {
+				const ringInnerRadius = 0.78;
+				const gapAngle = 0.28;
+				const halfSegmentLength = Math.PI - gapAngle;
+
+				function createSegment(startAngle, endAngle) {
+					const shape = new THREE.Shape();
+					shape.absarc(0, 0, ringOuterRadius, startAngle, endAngle, false);
+					shape.lineTo(ringInnerRadius * Math.cos(endAngle), ringInnerRadius * Math.sin(endAngle));
+					shape.absarc(0, 0, ringInnerRadius, endAngle, startAngle, true);
+					shape.closePath();
+					const geometry = new THREE.ExtrudeGeometry(shape, {
+						depth: ringDepth,
+						bevelEnabled: false,
+						curveSegments: 48
+					});
+					geometry.translate(0, 0, -ringDepth / 2);
+					return geometry;
+				}
+
+				commutatorRight = new THREE.Mesh(createSegment(-halfSegmentLength / 2, halfSegmentLength / 2), collectorMaterial.clone());
+				commutatorRight.position.set(0, 0, 2.3);
+				rotorGroup.add(commutatorRight);
+
+				commutatorLeft = new THREE.Mesh(createSegment(-halfSegmentLength / 2, halfSegmentLength / 2), collectorMaterial.clone());
+				commutatorLeft.position.set(0, 0, 2.3);
+				commutatorLeft.rotation.z = Math.PI;
+				rotorGroup.add(commutatorLeft);
+			} else {
+				const ringWidth = 0.1;
+
+				function createSlipRingGeometry() {
+					const shape = new THREE.Shape();
+					shape.absarc(0, 0, ringOuterRadius, 0, Math.PI * 2, false);
+					const hole = new THREE.Path();
+					hole.absarc(0, 0, ringOuterRadius - ringWidth, 0, Math.PI * 2, true);
+					shape.holes.push(hole);
+					const geometry = new THREE.ExtrudeGeometry(shape, {
+						depth: slipRingThickness,
+						bevelEnabled: false,
+						curveSegments: 64
+					});
+					geometry.translate(0, 0, -slipRingThickness / 2);
+					return geometry;
+				}
+
+				commutatorRight = new THREE.Mesh(createSlipRingGeometry(), collectorMaterial.clone());
+				commutatorRight.position.set(0, 0, slipRingRightZ);
+				rotorGroup.add(commutatorRight);
+
+				commutatorLeft = new THREE.Mesh(createSlipRingGeometry(), collectorMaterial.clone());
+				commutatorLeft.position.set(0, 0, slipRingLeftZ);
+				rotorGroup.add(commutatorLeft);
+			}
+
+			scene.add(rotorGroup);
+		}
+
+		function createFieldLines() {
+			fieldLinesGroup = new THREE.Group();
+			const lineMaterial = new THREE.LineBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.6 });
+			const arrowHeadMat = new THREE.MeshBasicMaterial({ color: 0x3b82f6 });
+			const startX = -3.5;
+			const endX = 3.5;
+
+			for (let i = 0; i < 5; i++) {
+				const z = -0.9 * 2 + i * 0.9;
+				for (let j = 0; j < 3; j++) {
+					const y = -0.8 + j * 0.8;
+					if (Math.abs(y) < 0.2 && Math.abs(z) < 0.4) continue;
+
+					const points = [new THREE.Vector3(startX, y, z), new THREE.Vector3(endX, y, z)];
+					const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), lineMaterial);
+					fieldLinesGroup.add(line);
+
+					const coneGeom = new THREE.ConeGeometry(0.045, 0.16, 6);
+					coneGeom.rotateZ(-Math.PI / 2);
+					const cone1 = new THREE.Mesh(coneGeom, arrowHeadMat);
+					cone1.position.set(-1.8, y, z);
+					fieldLinesGroup.add(cone1);
+					const cone2 = new THREE.Mesh(coneGeom, arrowHeadMat);
+					cone2.position.set(1.8, y, z);
+					fieldLinesGroup.add(cone2);
+				}
+			}
+
+			scene.add(fieldLinesGroup);
+		}
+
+		function setupCurrentParticles() {
+			electronParticles.forEach((particle) => {
+				if (particle.mesh.parent) {
+					particle.mesh.parent.remove(particle.mesh);
+				}
+			});
+			electronParticles = [];
+
+			createElectronFlow(getStaticWirePoints('right'), 6, 'external');
+			createElectronFlow(getStaticWirePoints('left'), 6, 'external');
+
+			const rightConnectorPoints = getRotorConnectorPoints('right');
+			const leftConnectorPoints = getRotorConnectorPoints('left');
+			const pathPoints = [
+				...rightConnectorPoints.slice().reverse(),
+				new THREE.Vector3(1.6, 0, 1.8),
+				new THREE.Vector3(1.6, 0, -1.8),
+				new THREE.Vector3(-1.6, 0, -1.8),
+				new THREE.Vector3(-1.6, 0, 1.8),
+				...leftConnectorPoints
+			];
+
+			const rotorCurve = new THREE.CatmullRomCurve3(pathPoints);
+			const rotorParticleCount = commutatorMode === 'slip' ? 16 : 12;
+			const particleGeom = new THREE.SphereGeometry(electronRadius, 8, 8);
+			const particleMat = new THREE.MeshBasicMaterial({ color: currentColor });
+
+			for (let i = 0; i < rotorParticleCount; i++) {
+				const mesh = new THREE.Mesh(particleGeom, particleMat.clone());
+				mesh.userData.isParticle = true;
+				electronParticles.push({
+					mesh,
+					curve: rotorCurve,
+					t: i / rotorParticleCount,
+					segment: 'rotor'
+				});
+				rotorGroup.add(mesh);
+			}
+		}
+
+		function createElectronFlow(points, count, segment) {
+			const curve = new THREE.CatmullRomCurve3(points);
+			const particleGeom = new THREE.SphereGeometry(electronRadius, 8, 8);
+			for (let i = 0; i < count; i++) {
+				const mesh = new THREE.Mesh(particleGeom, new THREE.MeshBasicMaterial({ color: currentColor }));
+				mesh.userData.isParticle = true;
+				scene.add(mesh);
+				electronParticles.push({
+					mesh,
+					curve,
+					t: i / count,
+					segment
+				});
+			}
+		}
+
+		function rebuildCollectorLayout() {
+			if (!scene) return;
+			if (rotorGroup) scene.remove(rotorGroup);
+			if (ammeterGroup) scene.remove(ammeterGroup);
+
+			brushRight.position.set(brushContactX, 0, getBrushZ('right'));
+			brushLeft.position.set(-brushContactX, 0, getBrushZ('left'));
+
+			createAmmeter();
+			updateWireGeometry(rightWireMesh, getStaticWirePoints('right'));
+			updateWireGeometry(leftWireMesh, getStaticWirePoints('left'));
+			createRotorAssembly();
+			setupCurrentParticles();
+		}
+
+		function setCommutatorMode(mode) {
+			commutatorMode = mode;
+			document.getElementById('btn-commutator-slip').className = mode === 'slip'
+				? 'px-2 py-1.5 rounded-md text-xs font-semibold bg-sky-100 text-sky-700 transition'
+				: 'px-2 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-700 transition';
+			document.getElementById('btn-commutator-split').className = mode === 'split'
+				? 'px-2 py-1.5 rounded-md text-xs font-semibold bg-sky-100 text-sky-700 transition'
+				: 'px-2 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-700 transition';
+
+			if (mode === 'slip') {
+				document.getElementById('commutator-description').textContent = 'Slip rings keep the terminals attached to the same coil ends, so the ammeter swings positive and negative with an AC output.';
+				document.getElementById('graph-current-caption').textContent = 'Center-zero trace';
+			} else {
+				document.getElementById('commutator-description').textContent = 'The split-ring commutator flips the coil connections every half turn, rectifying the induced current into a one-direction but fluctuating DC output.';
+				document.getElementById('graph-current-caption').textContent = 'Rectified output trace';
+			}
+
+			rebuildCollectorLayout();
+			updateTelemetry();
+		}
+
+		function setFlowMode(mode) {
+			flowMode = mode;
+			const conventional = mode === 'conventional';
+			document.getElementById('current-toggle-label').textContent = conventional ? 'Show conventional current' : 'Show electron flow';
+			document.getElementById('btn-flow-conventional').className = conventional
+				? 'px-2 py-1.5 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-700 transition'
+				: 'px-2 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-700 transition';
+			document.getElementById('btn-flow-electron').className = conventional
+				? 'px-2 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-700 transition'
+				: 'px-2 py-1.5 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-700 transition';
+		}
+
+		function updatePhysics(deltaSeconds) {
+			if (isPlaying) {
+				rotorAngle += rotorSpeed;
+				if (rotorAngle >= Math.PI * 2) rotorAngle -= Math.PI * 2;
+			}
+
+			rotorGroup.rotation.z = -rotorAngle;
+
+			const motionFactor = isPlaying ? rotorSpeed / maxRotorSpeed : Math.min(1, pendingStepAngle / stepAngle);
+			// Match the induced-current phase to the rendered coil pose.
+			rawCoilCurrent = motionFactor * Math.cos(rotorAngle);
+			displayedCurrent = commutatorMode === 'slip' ? rawCoilCurrent : Math.abs(rawCoilCurrent);
+
+			const rotorDirection = Math.abs(rawCoilCurrent) < 0.0001 ? 0 : Math.sign(rawCoilCurrent);
+			const externalDirection = Math.abs(displayedCurrent) < 0.0001 ? 0 : (commutatorMode === 'slip' ? Math.sign(displayedCurrent) : 1);
+			const flowDirection = flowMode === 'conventional' ? 1 : -1;
+			const particleSpeed = 0.42 * Math.max(motionFactor, 0.08);
+
+			electronParticles.forEach((particle) => {
+				particle.mesh.visible = showCurrent;
+				let direction = particle.segment === 'rotor' ? rotorDirection : externalDirection;
+				if (direction !== 0 && showCurrent) {
+					particle.t += particleSpeed * deltaSeconds * direction * flowDirection;
+					if (particle.t > 1) particle.t -= 1;
+					if (particle.t < 0) particle.t += 1;
+				}
+				particle.mesh.position.copy(particle.curve.getPointAt(particle.t));
+			});
+
+			fieldLinesGroup.visible = showField;
+
+			if (ammeterNeedle) {
+				const needleLimit = Math.PI * 0.46;
+				ammeterNeedle.rotation.z = THREE.MathUtils.clamp(displayedCurrent, -1, 1) * -needleLimit;
+			}
+
+			sampleAccumulator += deltaSeconds;
+			if (sampleAccumulator >= 1 / 30) {
+				graphSamples.push(displayedCurrent);
+				if (graphSamples.length > 180) graphSamples.shift();
+				sampleAccumulator = 0;
+			}
+
+			pendingStepAngle = 0;
+			updateTelemetry();
+		}
+
+		function updateTelemetry() {
+			const amps = displayedCurrent * currentScaleAmps;
+			const angleDeg = ((rotorAngle * 180 / Math.PI) % 360 + 360) % 360;
+			const rpm = Math.round((rotorSpeed / maxRotorSpeed) * 60);
+			const formattedCurrent = `${amps >= 0 ? '' : '-'}${Math.abs(amps).toFixed(2)} A`;
+
+			document.getElementById('graph-current-value').textContent = formattedCurrent;
+			document.getElementById('graph-mode').textContent = commutatorMode === 'slip' ? 'Current vs Time (AC)' : 'Current vs Time (Rectified DC)';
+		}
+
+		function drawLogger() {
+			const width = loggerCanvas.width;
+			const height = loggerCanvas.height;
+			loggerCtx.clearRect(0, 0, width, height);
+
+			loggerCtx.fillStyle = '#020617';
+			loggerCtx.fillRect(0, 0, width, height);
+
+			loggerCtx.strokeStyle = 'rgba(148, 163, 184, 0.18)';
+			loggerCtx.lineWidth = 1;
+			for (let i = 0; i <= 6; i++) {
+				const y = 12 + ((height - 24) / 6) * i;
+				loggerCtx.beginPath();
+				loggerCtx.moveTo(12, y);
+				loggerCtx.lineTo(width - 12, y);
+				loggerCtx.stroke();
+			}
+
+			const zeroY = height / 2;
+			loggerCtx.strokeStyle = commutatorMode === 'slip' ? 'rgba(56, 189, 248, 0.85)' : 'rgba(251, 191, 36, 0.85)';
+			loggerCtx.lineWidth = 1.4;
+			loggerCtx.beginPath();
+			loggerCtx.moveTo(12, zeroY);
+			loggerCtx.lineTo(width - 12, zeroY);
+			loggerCtx.stroke();
+
+			loggerCtx.strokeStyle = commutatorMode === 'slip' ? '#38bdf8' : '#fbbf24';
+			loggerCtx.lineWidth = 2.4;
+			loggerCtx.beginPath();
+			graphSamples.forEach((sample, index) => {
+				const x = 12 + (index / (graphSamples.length - 1)) * (width - 24);
+				const y = zeroY - sample * (height * 0.34);
+				if (index === 0) loggerCtx.moveTo(x, y);
+				else loggerCtx.lineTo(x, y);
+			});
+			loggerCtx.stroke();
+
+			const latestY = zeroY - graphSamples[graphSamples.length - 1] * (height * 0.34);
+			loggerCtx.fillStyle = commutatorMode === 'slip' ? '#38bdf8' : '#fbbf24';
+			loggerCtx.beginPath();
+			loggerCtx.arc(width - 12, latestY, 4, 0, Math.PI * 2);
+			loggerCtx.fill();
+
+			loggerCtx.fillStyle = 'rgba(226, 232, 240, 0.9)';
+			loggerCtx.font = '12px sans-serif';
+			loggerCtx.fillText('+5 A', 12, 14);
+			loggerCtx.fillText('0 A', 12, zeroY - 6);
+			loggerCtx.fillText('-5 A', 12, height - 8);
+			loggerCtx.fillText('time', width - 38, height - 8);
+		}
+
+		function onWindowResize() {
+			if (!container || !camera || !renderer) return;
+			camera.aspect = container.clientWidth / container.clientHeight;
+			camera.updateProjectionMatrix();
+			renderer.setSize(container.clientWidth, container.clientHeight);
+		}
+
+		function recenterSimulationView() {
+			onWindowResize();
+			camera.position.set(6, 6, 8);
+			controls.target.set(0, 0, 0);
+			camera.lookAt(controls.target);
+			controls.update();
+		}
+
+		function togglePlayState() {
+			isPlaying = !isPlaying;
+			const playBtn = document.getElementById('btn-play-pause');
+			const playIcon = document.getElementById('play-icon');
+			if (isPlaying) {
+				playIcon.setAttribute('data-lucide', 'pause');
+				playBtn.className = 'flex items-center justify-center w-11 h-11 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-600/10 hover:shadow-indigo-600/20 transition-all';
+				playBtn.title = 'Pause Generator';
+				playBtn.setAttribute('aria-label', 'Pause Generator');
+			} else {
+				playIcon.setAttribute('data-lucide', 'play');
+				playBtn.className = 'flex items-center justify-center w-11 h-11 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-xl shadow-lg transition-all';
+				playBtn.title = 'Start Generator';
+				playBtn.setAttribute('aria-label', 'Start Generator');
+			}
+			lucide.createIcons();
+		}
+
+		function animate(timestamp = 0) {
+			if (!animate.lastTimestamp) animate.lastTimestamp = timestamp;
+			const deltaSeconds = Math.min(0.05, (timestamp - animate.lastTimestamp) / 1000 || 0.016);
+			animate.lastTimestamp = timestamp;
+
+			requestAnimationFrame(animate);
+			updatePhysics(deltaSeconds);
+			drawLogger();
+			controls.update();
+			renderer.render(scene, camera);
+		}
+
+		window.addEventListener('resize', onWindowResize, false);
+
+		document.getElementById('toggle-field').addEventListener('change', (event) => {
+			showField = event.target.checked;
+		});
+		document.getElementById('toggle-current').addEventListener('change', (event) => {
+			showCurrent = event.target.checked;
+		});
+		document.getElementById('btn-flow-conventional').addEventListener('click', () => setFlowMode('conventional'));
+		document.getElementById('btn-flow-electron').addEventListener('click', () => setFlowMode('electron'));
+		document.getElementById('btn-commutator-slip').addEventListener('click', () => setCommutatorMode('slip'));
+		document.getElementById('btn-commutator-split').addEventListener('click', () => setCommutatorMode('split'));
+		document.getElementById('btn-play-pause').addEventListener('click', togglePlayState);
+		document.getElementById('btn-step').addEventListener('click', () => {
+			isPlaying = false;
+			rotorAngle += stepAngle;
+			if (rotorAngle >= Math.PI * 2) rotorAngle -= Math.PI * 2;
+			pendingStepAngle = stepAngle;
+			const playBtn = document.getElementById('btn-play-pause');
+			const playIcon = document.getElementById('play-icon');
+			playIcon.setAttribute('data-lucide', 'play');
+			playBtn.className = 'flex items-center justify-center w-11 h-11 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-xl shadow-lg transition-all';
+			playBtn.title = 'Start Generator';
+			playBtn.setAttribute('aria-label', 'Start Generator');
+			lucide.createIcons();
+			updateTelemetry();
+		});
+		document.getElementById('btn-reset-cam').addEventListener('click', recenterSimulationView);
+
+		const speedSlider = document.getElementById('speed-slider');
+		const speedValText = document.getElementById('speed-val');
+		speedSlider.addEventListener('input', (event) => {
+			const pct = Number(event.target.value);
+			rotorSpeed = (pct / 100) * maxRotorSpeed;
+			if (pct === 0) speedValText.textContent = 'Stopped';
+			else if (pct < 30) speedValText.textContent = 'Slow';
+			else if (pct < 70) speedValText.textContent = 'Medium';
+			else speedValText.textContent = 'Fast';
+			updateTelemetry();
+		});
+
+		const btnSidebarToggle = document.getElementById('btn-sidebar-toggle');
+		const btnSidebarExpandFloating = document.getElementById('btn-sidebar-expand-floating');
+		const sidebar = document.getElementById('sidebar');
+		const sidebarContent = document.getElementById('sidebar-content');
+		const toggleIconDir = document.getElementById('toggle-icon-dir');
+		let sidebarCollapsed = false;
+
+		function toggleSidebar() {
+			sidebarCollapsed = !sidebarCollapsed;
+			if (sidebarCollapsed) {
+				sidebar.classList.remove('md:w-[310px]');
+				sidebar.classList.add('md:w-0');
+				sidebarContent.classList.add('opacity-0', 'pointer-events-none');
+				toggleIconDir.classList.add('rotate-180');
+				btnSidebarExpandFloating.classList.remove('hidden');
+				btnSidebarExpandFloating.classList.add('flex');
+			} else {
+				sidebar.classList.add('md:w-[310px]');
+				sidebar.classList.remove('md:w-0');
+				sidebarContent.classList.remove('opacity-0', 'pointer-events-none');
+				toggleIconDir.classList.remove('rotate-180');
+				btnSidebarExpandFloating.classList.add('hidden');
+				btnSidebarExpandFloating.classList.remove('flex');
+			}
+
+			let resizeCount = 0;
+			const resizeInterval = setInterval(() => {
+				onWindowResize();
+				resizeCount += 1;
+				if (resizeCount > 35) clearInterval(resizeInterval);
+			}, 10);
+		}
+
+		btnSidebarToggle.addEventListener('click', toggleSidebar);
+		btnSidebarExpandFloating.addEventListener('click', toggleSidebar);
+
+		setFlowMode(flowMode);
+		setCommutatorMode(commutatorMode);
+
+		window.onload = function() {
+			init3D();
+			recenterSimulationView();
+			animate();
+		};
+	</script>
+</body>
+</html>
