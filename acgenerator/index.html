@@ -804,7 +804,8 @@
 			displayedCurrent = commutatorMode === 'slip' ? rawCoilCurrent : Math.abs(rawCoilCurrent);
 
 			const rotorDirection = Math.abs(rawCoilCurrent) < 0.0001 ? 0 : Math.sign(rawCoilCurrent);
-			const externalDirection = Math.abs(displayedCurrent) < 0.0001 ? 0 : (commutatorMode === 'slip' ? Math.sign(displayedCurrent) : 1);
+			// External curves are authored opposite to rotor-loop traversal in both collector modes.
+			const externalDirection = Math.abs(displayedCurrent) < 0.0001 ? 0 : -Math.sign(displayedCurrent);
 			const flowDirection = flowMode === 'conventional' ? 1 : -1;
 			const particleSpeed = 0.42 * Math.max(motionFactor, 0.08);
 
