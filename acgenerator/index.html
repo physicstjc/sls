@@ -197,6 +197,8 @@
 		const currentScaleAmps = 5;
 		const electronRadius = 0.09;
 		const currentColor = 0x10b981;
+		const chargeDriftVisualScale = 0.18;
+		const animationTimeScale = 0.6;
 
 		let scene;
 		let camera;
@@ -792,7 +794,7 @@
 
 		function updatePhysics(deltaSeconds) {
 			if (isPlaying) {
-				rotorAngle += rotorSpeed;
+				rotorAngle += rotorSpeed * animationTimeScale;
 				if (rotorAngle >= Math.PI * 2) rotorAngle -= Math.PI * 2;
 			}
 
@@ -800,14 +802,15 @@
 
 			const motionFactor = isPlaying ? rotorSpeed / maxRotorSpeed : Math.min(1, pendingStepAngle / stepAngle);
 			// Match the induced-current phase to the rendered coil pose.
-			rawCoilCurrent = motionFactor * Math.cos(rotorAngle);
+			// Polarity follows Fleming's right-hand rule for this rotation and field orientation.
+			rawCoilCurrent = -motionFactor * Math.cos(rotorAngle);
 			displayedCurrent = commutatorMode === 'slip' ? rawCoilCurrent : Math.abs(rawCoilCurrent);
 
 			const rotorDirection = Math.abs(rawCoilCurrent) < 0.0001 ? 0 : Math.sign(rawCoilCurrent);
 			// External curves are authored opposite to rotor-loop traversal in both collector modes.
-			const externalDirection = Math.abs(displayedCurrent) < 0.0001 ? 0 : -Math.sign(displayedCurrent);
+			const externalDirection = Math.abs(displayedCurrent) < 0.0001 ? 0 : (commutatorMode === 'slip' ? -Math.sign(displayedCurrent) : 1);
 			const flowDirection = flowMode === 'conventional' ? 1 : -1;
-			const particleSpeed = 0.42 * Math.max(motionFactor, 0.08);
+			const particleSpeed = chargeDriftVisualScale * Math.max(motionFactor, 0.08) * animationTimeScale;
 
 			electronParticles.forEach((particle) => {
 				particle.mesh.visible = showCurrent;
