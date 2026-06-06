@@ -115,6 +115,13 @@
         const WIRE_HEIGHT = 1.6; 
         const BLOCK_X = 4.5;
 
+        function getTargetCurrentFromSliderX(localX) {
+            const minCurrent = 0.1;
+            const maxCurrent = 10;
+            const sliderVal = ((localX + 0.9) / 1.8) * 10;
+            return minCurrent + (maxCurrent - minCurrent) * (1 - sliderVal / 10);
+        }
+
 
         function updateScaleScreen(text) {
             if (!scaleScreenCtx || !scaleScreenTexture) return;
@@ -341,6 +348,7 @@
             rheoGroup.position.set(4, -0.1, 4);
             rheoGroup.rotation.y = Math.PI / 2; 
             scene.add(rheoGroup);
+            targetI = getTargetCurrentFromSliderX(rheostatSlider.position.x);
 
             // Static Circuit Wires
             // Shorten negative terminal wire to only reach from battery (x=0) to switch (x=-4)
@@ -410,11 +418,13 @@
             window.addEventListener('touchend', onPointerUp);
 
             document.getElementById('resetBtn').addEventListener('click', () => {
-                targetI = 0; currentI = 0; isSwitchClosed = false; polarityMultiplier = 1;
+                currentI = 0; isSwitchClosed = false; polarityMultiplier = 1;
                 magnetPolarityMultiplier = 1;
                 switchLever.rotation.z = 0;
                 batteryGroup.rotation.y = 0;
                 magnet.rotation.y = 0;
+                rheostatSlider.position.x = 0;
+                targetI = getTargetCurrentFromSliderX(rheostatSlider.position.x);
                 updateSliderPositionFromValue();
             });
 
@@ -469,11 +479,7 @@
                 const localPoint = rheoGroup.worldToLocal(intersectPoint);
                 let localX = Math.max(-0.9, Math.min(0.9, localPoint.x));
                 rheostatSlider.position.x = localX;
-                // Enforce min current logic here too
-                const minCurrent = 0.1;
-                const maxCurrent = 10;
-                const sliderVal = ((localX + 0.9) / 1.8) * 10;
-                targetI = minCurrent + (maxCurrent - minCurrent) * (1 - sliderVal / 10);
+                targetI = getTargetCurrentFromSliderX(localX);
             } else if (isRotatingScene) {
                 rotationTheta -= (e.clientX - previousMouseX) * 0.01;
                 rotationPhi = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, rotationPhi + (e.clientY - previousMouseY) * 0.01));
