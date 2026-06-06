@@ -793,6 +793,8 @@
 		}
 
 		function updatePhysics(deltaSeconds) {
+			const isStepping = pendingStepAngle > 0;
+
 			if (isPlaying) {
 				rotorAngle += rotorSpeed * animationTimeScale;
 				if (rotorAngle >= Math.PI * 2) rotorAngle -= Math.PI * 2;
@@ -800,22 +802,26 @@
 
 			rotorGroup.rotation.z = -rotorAngle;
 
-			const motionFactor = isPlaying ? rotorSpeed / maxRotorSpeed : Math.min(1, pendingStepAngle / stepAngle);
-			// Match the induced-current phase to the rendered coil pose.
-			// Polarity follows Fleming's right-hand rule for this rotation and field orientation.
-			rawCoilCurrent = -motionFactor * Math.cos(rotorAngle);
-			displayedCurrent = commutatorMode === 'slip' ? rawCoilCurrent : Math.abs(rawCoilCurrent);
+			const motionFactor = isPlaying ? rotorSpeed / maxRotorSpeed : (isStepping ? 1 : 0);
+			if (isPlaying || isStepping) {
+				// Match the induced-current phase to the rendered coil pose.
+				// Polarity follows Fleming's right-hand rule for this rotation and field orientation.
+				rawCoilCurrent = -motionFactor * Math.cos(rotorAngle);
+				displayedCurrent = commutatorMode === 'slip' ? rawCoilCurrent : Math.abs(rawCoilCurrent);
+			}
 
 			const rotorDirection = Math.abs(rawCoilCurrent) < 0.0001 ? 0 : Math.sign(rawCoilCurrent);
 			// External curves are authored opposite to rotor-loop traversal in both collector modes.
 			const externalDirection = Math.abs(displayedCurrent) < 0.0001 ? 0 : (commutatorMode === 'slip' ? -Math.sign(displayedCurrent) : 1);
 			const flowDirection = flowMode === 'conventional' ? 1 : -1;
-			const particleSpeed = chargeDriftVisualScale * Math.max(motionFactor, 0.08) * animationTimeScale;
+			const particleSpeed = motionFactor > 0
+				? chargeDriftVisualScale * Math.max(motionFactor, 0.08) * animationTimeScale
+				: 0;
 
 			electronParticles.forEach((particle) => {
 				particle.mesh.visible = showCurrent;
 				let direction = particle.segment === 'rotor' ? rotorDirection : externalDirection;
-				if (direction !== 0 && showCurrent) {
+				if (direction !== 0 && showCurrent && particleSpeed > 0) {
 					particle.t += particleSpeed * deltaSeconds * direction * flowDirection;
 					if (particle.t > 1) particle.t -= 1;
 					if (particle.t < 0) particle.t += 1;
@@ -830,11 +836,13 @@
 				ammeterNeedle.rotation.z = THREE.MathUtils.clamp(displayedCurrent, -1, 1) * -needleLimit;
 			}
 
-			sampleAccumulator += deltaSeconds;
-			if (sampleAccumulator >= 1 / 30) {
-				graphSamples.push(displayedCurrent);
-				if (graphSamples.length > 180) graphSamples.shift();
-				sampleAccumulator = 0;
+			if (isPlaying || isStepping) {
+				sampleAccumulator += deltaSeconds;
+				if (sampleAccumulator >= 1 / 30 || isStepping) {
+					graphSamples.push(displayedCurrent);
+					if (graphSamples.length > 180) graphSamples.shift();
+					sampleAccumulator = 0;
+				}
 			}
 
 			pendingStepAngle = 0;
