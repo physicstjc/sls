@@ -36,6 +36,7 @@
 
 		.sidebar-transition {
 			transition: width 350ms cubic-bezier(0.4, 0, 0.2, 1),
+						height 350ms cubic-bezier(0.4, 0, 0.2, 1),
 						transform 350ms cubic-bezier(0.4, 0, 0.2, 1),
 						opacity 250ms ease;
 		}
@@ -44,6 +45,18 @@
 			background: rgba(255, 255, 255, 0.94);
 			backdrop-filter: blur(10px);
 			box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+		}
+
+		@media (max-width: 767px) {
+			body.controls-collapsed #sidebar {
+				height: 0;
+				border-bottom-width: 0;
+				box-shadow: none;
+			}
+
+			body.controls-collapsed #viewport-panel {
+				height: 100%;
+			}
 		}
 	</style>
 </head>
@@ -60,7 +73,10 @@
 						<h1 class="text-base font-semibold tracking-tight text-slate-900">AC Generator Simulator</h1>
 						<p class="text-xs text-slate-500">Rotating coil in a magnetic field with live current logging</p>
 					</div>
-					<div class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold">Induced Current</div>
+					<button id="btn-mobile-sidebar-toggle" class="md:hidden flex items-center justify-center w-10 h-10 bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl transition-all shrink-0" title="Collapse controls" aria-label="Collapse controls" type="button">
+						<i data-lucide="chevron-up" class="w-5 h-5"></i>
+					</button>
+					<div class="hidden sm:block px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold">Induced Current</div>
 				</div>
 			</div>
 
@@ -140,7 +156,7 @@
 		<i data-lucide="menu" class="w-5 h-5"></i>
 	</button>
 
-	<div class="flex-1 relative h-[56%] md:h-full min-w-0 flex flex-col md:block">
+	<div id="viewport-panel" class="flex-1 relative h-[56%] md:h-full min-w-0 flex flex-col md:block">
 		<div id="canvas-container" class="w-full flex-1 min-h-0 md:h-full"></div>
 
 		<div class="relative md:absolute md:top-4 md:right-4 w-full md:w-[300px] max-w-none md:max-w-[calc(100%-2rem)] logger-panel border-y md:border border-slate-200 rounded-none md:rounded-2xl p-3 z-10 pointer-events-none shrink-0">
@@ -154,7 +170,7 @@
 					<div id="graph-current-caption" class="text-[11px] text-slate-500">Center-zero trace</div>
 				</div>
 			</div>
-			<canvas id="logger-canvas" width="276" height="156" class="w-full h-[156px] rounded-xl bg-slate-950/95"></canvas>
+			<canvas id="logger-canvas" width="276" height="156" class="w-full aspect-[23/13] h-auto rounded-xl bg-slate-950/95"></canvas>
 		</div>
 
 		<div class="absolute bottom-4 right-4 bg-white/95 backdrop-blur border border-slate-200 rounded-xl px-4 py-3 hidden md:flex gap-4 text-xs text-slate-500 pointer-events-none shadow-md">
@@ -998,6 +1014,7 @@
 
 		const btnSidebarToggle = document.getElementById('btn-sidebar-toggle');
 		const btnSidebarExpandFloating = document.getElementById('btn-sidebar-expand-floating');
+		const btnMobileSidebarToggle = document.getElementById('btn-mobile-sidebar-toggle');
 		const sidebar = document.getElementById('sidebar');
 		const sidebarContent = document.getElementById('sidebar-content');
 		const toggleIconDir = document.getElementById('toggle-icon-dir');
@@ -1006,6 +1023,7 @@
 		function toggleSidebar() {
 			sidebarCollapsed = !sidebarCollapsed;
 			if (sidebarCollapsed) {
+				document.body.classList.add('controls-collapsed');
 				sidebar.classList.remove('md:w-[310px]');
 				sidebar.classList.add('md:w-0');
 				sidebarContent.classList.add('opacity-0', 'pointer-events-none');
@@ -1013,6 +1031,7 @@
 				btnSidebarExpandFloating.classList.remove('hidden');
 				btnSidebarExpandFloating.classList.add('flex');
 			} else {
+				document.body.classList.remove('controls-collapsed');
 				sidebar.classList.add('md:w-[310px]');
 				sidebar.classList.remove('md:w-0');
 				sidebarContent.classList.remove('opacity-0', 'pointer-events-none');
@@ -1031,6 +1050,7 @@
 
 		btnSidebarToggle.addEventListener('click', toggleSidebar);
 		btnSidebarExpandFloating.addEventListener('click', toggleSidebar);
+		btnMobileSidebarToggle.addEventListener('click', toggleSidebar);
 
 		setFlowMode(flowMode);
 		setCommutatorMode(commutatorMode);
