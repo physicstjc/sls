@@ -52,13 +52,22 @@
                 box-shadow: none;
             }
 
+            body.controls-collapsed #sidebar-content {
+                opacity: 0;
+                pointer-events: none;
+            }
+
             body.controls-collapsed #viewport-panel {
                 height: 100%;
+            }
+
+            body.controls-collapsed #btn-sidebar-expand-floating {
+                display: flex;
             }
         }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col md:flex-row overflow-hidden select-none bg-slate-50">
+<body class="h-screen w-screen flex flex-col md:flex-row overflow-hidden select-none bg-slate-50 controls-collapsed">
 
     <!-- Sidebar Dashboard Container -->
     <div id="sidebar" class="relative w-full md:w-[280px] h-2/5 md:h-full bg-white flex flex-col z-20 shadow-xl border-b md:border-b-0 md:border-r border-slate-200 sidebar-transition flex-shrink-0">
@@ -1088,10 +1097,10 @@
         const sidebarContent = document.getElementById('sidebar-content');
         const toggleIconDir = document.getElementById('toggle-icon-dir');
 
-        let sidebarCollapsed = false;
+        const mobileControlsQuery = window.matchMedia('(max-width: 767px)');
+        let sidebarCollapsed = mobileControlsQuery.matches;
 
-        function toggleSidebar() {
-            sidebarCollapsed = !sidebarCollapsed;
+        function applySidebarState() {
             const isExpanding = !sidebarCollapsed;
             if (sidebarCollapsed) {
                 // Collapse sidebar
@@ -1129,7 +1138,7 @@
                 if (resizeCount > 35) clearInterval(resizeInterval); // cover the transition duration
             }, 10);
 
-            if (isExpanding) {
+            if (isExpanding && camera && controls) {
                 const onTransitionEnd = (event) => {
                     if (event.propertyName === 'width' || event.propertyName === 'max-width') {
                         recenterSimulationView();
@@ -1140,9 +1149,19 @@
             }
         }
 
+        function toggleSidebar() {
+            sidebarCollapsed = !sidebarCollapsed;
+            applySidebarState();
+        }
+
         btnSidebarToggle.addEventListener('click', toggleSidebar);
         btnSidebarExpandFloating.addEventListener('click', toggleSidebar);
         btnMobileSidebarToggle.addEventListener('click', toggleSidebar);
+        applySidebarState();
+        mobileControlsQuery.addEventListener('change', (event) => {
+            sidebarCollapsed = event.matches;
+            applySidebarState();
+        });
 
         function setFlowMode(mode) {
             flowMode = mode;
