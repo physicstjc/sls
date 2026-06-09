@@ -54,13 +54,22 @@
 				box-shadow: none;
 			}
 
+			body.controls-collapsed #sidebar-content {
+				opacity: 0;
+				pointer-events: none;
+			}
+
 			body.controls-collapsed #viewport-panel {
 				height: 100%;
+			}
+
+			body.controls-collapsed #btn-sidebar-expand-floating {
+				display: flex;
 			}
 		}
 	</style>
 </head>
-<body class="h-screen w-screen flex flex-col md:flex-row overflow-hidden select-none bg-slate-50">
+<body class="h-screen w-screen flex flex-col md:flex-row overflow-hidden select-none bg-slate-50 controls-collapsed">
 	<div id="sidebar" class="relative w-full md:w-[310px] h-[44%] md:h-full bg-white flex flex-col z-20 shadow-xl border-b md:border-b-0 md:border-r border-slate-200 sidebar-transition flex-shrink-0">
 		<button id="btn-sidebar-toggle" class="absolute hidden md:flex top-1/2 -translate-y-1/2 -right-8 w-8 h-20 bg-white border-y border-r border-slate-200 rounded-r-xl shadow-md items-center justify-center hover:bg-slate-50 hover:text-indigo-600 transition-colors z-30 focus:outline-none" title="Toggle Sidebar">
 			<i data-lucide="chevron-left" id="toggle-icon-dir" class="w-5 h-5 text-slate-500 transition-transform"></i>
@@ -1018,10 +1027,10 @@
 		const sidebar = document.getElementById('sidebar');
 		const sidebarContent = document.getElementById('sidebar-content');
 		const toggleIconDir = document.getElementById('toggle-icon-dir');
-		let sidebarCollapsed = false;
+		const mobileControlsQuery = window.matchMedia('(max-width: 767px)');
+		let sidebarCollapsed = mobileControlsQuery.matches;
 
-		function toggleSidebar() {
-			sidebarCollapsed = !sidebarCollapsed;
+		function applySidebarState() {
 			if (sidebarCollapsed) {
 				document.body.classList.add('controls-collapsed');
 				sidebar.classList.remove('md:w-[310px]');
@@ -1048,9 +1057,19 @@
 			}, 10);
 		}
 
+		function toggleSidebar() {
+			sidebarCollapsed = !sidebarCollapsed;
+			applySidebarState();
+		}
+
 		btnSidebarToggle.addEventListener('click', toggleSidebar);
 		btnSidebarExpandFloating.addEventListener('click', toggleSidebar);
 		btnMobileSidebarToggle.addEventListener('click', toggleSidebar);
+		applySidebarState();
+		mobileControlsQuery.addEventListener('change', (event) => {
+			sidebarCollapsed = event.matches;
+			applySidebarState();
+		});
 
 		setFlowMode(flowMode);
 		setCommutatorMode(commutatorMode);
