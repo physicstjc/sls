@@ -14,149 +14,151 @@
 	<meta name="twitter:card" content="summary_large_image">
 	<meta name="twitter:title" content="Barometer Simulation">
 	<meta name="twitter:description" content="Explore how barometer pressure readings change with fluid type, altitude, and planet.">
-	<script src="https://cdn.tailwindcss.com"></script>
-
 	<style>
 		:root {
-			--ink: #111111;
-			--paper: #fffdf7;
-			--bg: #ffe06b;
+			--ink: #172033;
+			--muted: #667085;
+			--paper: #ffffff;
+			--bg: #f5f7fb;
 			--panel: #ffffff;
-			--teal: #39d2c0;
-			--orange: #ff8f3f;
-			--pink: #ff5ca8;
-			--blue: #4a8dff;
-			--accent: #ffb347;
-			--border: 2px solid var(--ink);
-			--space-1: 4px;
-			--space-2: 6px;
-			--space-3: 8px;
-			--scale: 1;
-		}
-
-		@media (min-width: 800px) {
-			:root {
-				--scale: 1.15;
-			}
-		}
-
-		@media (min-width: 1000px) {
-			:root {
-				--scale: 1.35;
-			}
-		}
-
-		@media (min-width: 1400px) {
-			:root {
-				--scale: 1.6;
-			}
+			--line: #dde3ee;
+			--line-strong: #b9c3d2;
+			--accent: #2563eb;
+			--surface: #eef5fb;
+			--radius: 8px;
+			--space: clamp(10px, 2vw, 18px);
 		}
 
 		* {
 			box-sizing: border-box;
 		}
 
+		html {
+			min-height: 100%;
+			background: var(--bg);
+		}
+
 		body {
-			background:
-				linear-gradient(135deg, rgba(255, 255, 255, 0.18) 25%, transparent 25%) -14px 0/28px 28px,
-				linear-gradient(225deg, rgba(255, 255, 255, 0.18) 25%, transparent 25%) -14px 0/28px 28px,
-				linear-gradient(315deg, rgba(255, 255, 255, 0.18) 25%, transparent 25%) 0 0/28px 28px,
-				linear-gradient(45deg, rgba(255, 255, 255, 0.18) 25%, transparent 25%) 0 0/28px 28px,
-				var(--bg);
-			font-family: "Trebuchet MS", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+			background: var(--bg);
+			font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 			color: var(--ink);
-			line-height: 1.4;
+			line-height: 1.5;
 			margin: 0;
-			padding: 0 10px 10px;
+			min-height: 100vh;
+			padding: var(--space);
 		}
 
 		.main-container {
-			max-width: calc(100vw - 20px);
-			width: 640px;
+			width: min(1180px, 100%);
 			margin: 0 auto;
-			background: var(--paper);
-			padding: var(--space-2);
-			border-radius: 0;
-			border: 3px solid var(--ink);
-			box-shadow: 6px 6px 0 var(--ink);
-			height: 480px;
+			min-height: calc(100vh - (var(--space) * 2));
 			display: flex;
 			flex-direction: column;
-			overflow: hidden;
-			transform: scale(var(--scale));
-			transform-origin: top center;
+			gap: 14px;
 		}
 
 		#topTitleBar {
-			position: static;
-			background: var(--accent);
-			border-bottom: 1px solid var(--ink);
-			border-radius: 0;
-			padding: 2px 8px;
-			z-index: 3;
-			margin-bottom: var(--space-2);
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
 			flex: 0 0 auto;
 		}
 
 		#topTitleBar h1 {
 			margin: 0;
 			color: var(--ink);
-			font-size: clamp(0.88rem, 1.3vw, 1.05rem);
-			line-height: 1.05;
-			font-weight: 700;
+			font-size: clamp(1.25rem, 3vw, 2rem);
+			line-height: 1.1;
+			font-weight: 760;
+			letter-spacing: 0;
 		}
 
 		.sim-layout {
 			display: grid;
-			grid-template-columns: 136px minmax(0, 1fr);
-			gap: var(--space-2);
+			grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+			gap: 14px;
 			align-items: stretch;
 			flex: 1 1 auto;
 			min-height: 0;
 		}
 
 		.info-box {
-			background-color: #fff4db;
-			border: 2px solid var(--ink);
-			padding: var(--space-2);
-			font-size: 0.86rem;
+			background-color: var(--panel);
+			border: 1px solid var(--line);
+			border-radius: var(--radius);
+			padding: 14px;
+			font-size: 0.9rem;
 			color: var(--ink);
-			box-shadow: 2px 2px 0 var(--ink);
 			height: 100%;
 			overflow: auto;
 			display: flex;
 			flex-direction: column;
+			gap: 12px;
+			box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+		}
+
+		.controls-toggle {
+			display: none;
+			align-items: center;
+			justify-content: space-between;
+			gap: 10px;
+			width: 100%;
+			background: var(--panel);
+			border: 1px solid var(--line);
+			border-radius: var(--radius);
+			color: var(--ink);
+			font: inherit;
+			font-weight: 680;
+			padding: 10px 12px;
+		}
+
+		.controls-toggle::after {
+			content: "";
+			width: 8px;
+			height: 8px;
+			border-bottom: 2px solid currentColor;
+			border-right: 2px solid currentColor;
+			transform: rotate(45deg);
+			transition: transform 0.18s ease;
+		}
+
+		.info-box.controls-open .controls-toggle::after {
+			transform: rotate(225deg);
+		}
+
+		.controls-content {
+			display: contents;
 		}
 
 		.control-group {
 			background: var(--panel);
-			border: 2px solid var(--ink);
-			border-radius: 0;
-			padding: var(--space-2);
-			margin-bottom: var(--space-2);
-			box-shadow: 2px 2px 0 var(--ink);
+			border: 1px solid var(--line);
+			border-radius: var(--radius);
+			padding: 12px;
 		}
 
-		.control-group:last-child {
-			margin-bottom: 0;
+		.control-group:focus-within {
+			border-color: var(--accent);
+			box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 		}
 
 		.control-label {
-			font-weight: 700;
+			font-weight: 680;
 			color: var(--ink);
 			font-size: 0.76rem;
-			margin-bottom: var(--space-1);
+			margin-bottom: 8px;
 			display: block;
 			text-transform: uppercase;
-			letter-spacing: 0.3px;
+			letter-spacing: 0.08em;
 		}
 
 		.tiny-help {
-			font-size: 0.68rem;
-			color: #444;
-			margin-top: var(--space-1);
+			font-size: 0.76rem;
+			color: var(--muted);
+			margin-top: 8px;
 			display: block;
-			line-height: 1.2;
+			line-height: 1.35;
 		}
 
 		select,
@@ -165,52 +167,66 @@
 		}
 
 		select {
-			border: 2px solid var(--ink);
-			padding: 3px 4px;
-			background: white;
-			font-weight: 600;
-			font-size: 0.78rem;
+			appearance: none;
+			border: 1px solid var(--line-strong);
+			border-radius: 6px;
+			padding: 9px 34px 9px 10px;
+			background:
+				linear-gradient(45deg, transparent 50%, var(--muted) 50%) right 15px center / 6px 6px no-repeat,
+				linear-gradient(135deg, var(--muted) 50%, transparent 50%) right 10px center / 6px 6px no-repeat,
+				white;
+			color: var(--ink);
+			font-weight: 580;
+			font-size: 0.94rem;
 			line-height: 1.2;
 		}
 
 		select:focus,
 		input[type=range]:focus {
-			outline: 2px solid #111;
-			outline-offset: 1px;
+			outline: 2px solid var(--accent);
+			outline-offset: 2px;
 		}
 
 		input[type=range] {
 			-webkit-appearance: none;
 			appearance: none;
 			background: transparent;
+			min-height: 30px;
 		}
 
 		input[type=range]::-webkit-slider-runnable-track {
-			height: 7px;
+			height: 4px;
 			cursor: pointer;
-			background: var(--teal);
-			border: 2px solid var(--ink);
+			background: var(--line-strong);
+			border-radius: 999px;
 		}
 
 		input[type=range]::-webkit-slider-thumb {
-			height: 16px;
-			width: 16px;
-			background: var(--pink);
+			height: 20px;
+			width: 20px;
+			background: var(--accent);
 			cursor: pointer;
 			-webkit-appearance: none;
-			margin-top: -6px;
-			border: 2px solid var(--ink);
-			box-shadow: 2px 2px 0 var(--ink);
+			margin-top: -8px;
+			border: 3px solid #ffffff;
+			border-radius: 999px;
+			box-shadow: 0 1px 4px rgba(16, 24, 40, 0.25);
 		}
 
 		.value-row {
-			margin-top: var(--space-1);
-			font-size: 0.72rem;
+			margin-top: 8px;
+			font-size: 0.84rem;
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
-			gap: 4px;
-			color: #303030;
+			gap: 10px;
+			color: var(--muted);
+		}
+
+		.value-row strong {
+			color: var(--ink);
+			font-weight: 680;
+			text-align: right;
 		}
 
 		.canvas-wrap {
@@ -222,40 +238,17 @@
 			height: 100%;
 			min-height: 0;
 			overflow: hidden;
-			padding: 1px;
-		}
-
-		.calc-overlay {
-			position: absolute;
-			top: 10px;
-			left: 50%;
-			transform: translateX(-50%);
-			width: min(92%, 660px);
-			background: rgba(255, 255, 255, 0.94);
-			border: 3px solid var(--ink);
-			box-shadow: 4px 4px 0 var(--ink);
-			padding: 8px 12px;
-			z-index: 2;
-			text-align: center;
-			pointer-events: none;
-		}
-
-		.calc-formula {
-			font-size: 0.82rem;
-			color: #1a1a1a;
-			line-height: 1.3;
-			font-weight: 700;
-		}
-
-		.calc-depth {
-			margin-top: 4px;
-			font-size: 0.76rem;
-			color: #444;
+			padding: 12px;
+			background: var(--panel);
+			border: 1px solid var(--line);
+			border-radius: var(--radius);
+			box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
 		}
 
 		canvas {
-			background-color: #f6fbff;
-			border: 3px solid var(--ink);
+			background-color: var(--surface);
+			border: 1px solid var(--line);
+			border-radius: 6px;
 			cursor: crosshair;
 			width: auto;
 			height: auto;
@@ -263,45 +256,84 @@
 			max-height: 100%;
 			display: block;
 			margin: 0 auto;
-			box-shadow: 3px 3px 0 var(--ink);
 			touch-action: none;
 		}
 
 		.btn-reset {
-			background-color: var(--blue);
-			color: var(--ink);
-			padding: 4px 8px;
-			border-radius: 0;
-			font-weight: 700;
-			text-transform: uppercase;
-			letter-spacing: 0.4px;
-			font-size: 0.74rem;
-			border: 2px solid var(--ink);
-			box-shadow: 2px 2px 0 var(--ink);
+			background-color: var(--ink);
+			color: #ffffff;
+			padding: 10px 12px;
+			border-radius: 6px;
+			font-weight: 680;
+			font-size: 0.88rem;
+			border: 1px solid var(--ink);
 			width: 100%;
-			margin-top: var(--space-1);
-			transition: all 0.2s;
+			margin-top: 10px;
+			transition: background-color 0.2s, border-color 0.2s;
 		}
 
 		.btn-reset:hover {
-			background-color: var(--orange);
-			transform: translate(2px, 2px);
-			box-shadow: 2px 2px 0 var(--ink);
+			background-color: var(--accent);
+			border-color: var(--accent);
 		}
 
-		@media (max-width: 640px) {
-			.sim-layout {
-				grid-template-columns: 1fr;
-				grid-template-rows: minmax(138px, 32%) minmax(0, 1fr);
-				gap: var(--space-2);
+		@media (max-width: 760px) {
+			body {
+				padding: 10px;
 			}
 
-			#topTitleBar {
-				margin-bottom: var(--space-2);
+			.main-container {
+				min-height: calc(100vh - 20px);
+				gap: 10px;
+			}
+
+			.sim-layout {
+				grid-template-columns: 1fr;
+				grid-template-rows: auto minmax(0, 1fr);
+				gap: 10px;
+			}
+
+			.info-box {
+				display: grid;
+				grid-template-columns: 1fr;
+				gap: 10px;
+				height: auto;
+				max-height: 44vh;
+				padding: 10px;
 			}
 
 			.canvas-wrap {
-				min-height: 0;
+				min-height: 360px;
+				padding: 8px;
+			}
+		}
+
+		@media (min-width: 520px) and (max-width: 760px) {
+			.info-box {
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+				max-height: none;
+				overflow: visible;
+			}
+		}
+
+		@media (max-width: 480px) {
+			.info-box {
+				max-height: none;
+				overflow: visible;
+			}
+
+			.controls-toggle {
+				display: flex;
+			}
+
+			.info-box:not(.controls-open) .controls-content {
+				display: none;
+			}
+		}
+
+		@media (min-width: 1180px) {
+			.sim-layout {
+				grid-template-columns: 300px minmax(0, 1fr);
 			}
 		}
 	</style>
@@ -314,37 +346,40 @@
 
 		<div class="sim-layout">
 			<aside class="info-box" aria-label="Controls panel">
-				<div class="control-group">
-					<span class="control-label">Barometer Liquid</span>
-					<select id="liquidSelect" aria-label="Choose barometer liquid"></select>
-					<div class="value-row">
-						<span>Density</span>
-						<strong id="densityLabel">-</strong>
+				<button id="controlsToggle" class="controls-toggle" type="button" aria-expanded="false" aria-controls="controlsContent">Controls</button>
+				<div id="controlsContent" class="controls-content">
+					<div class="control-group">
+						<span class="control-label">Barometer Liquid</span>
+						<select id="liquidSelect" aria-label="Choose barometer liquid"></select>
+						<div class="value-row">
+							<span>Density</span>
+							<strong id="densityLabel">-</strong>
+						</div>
+						<span class="tiny-help">Different fluid densities change how quickly pressure rises with depth.</span>
 					</div>
-					<span class="tiny-help">Different fluid densities change how quickly pressure rises with depth.</span>
-				</div>
 
-				<div class="control-group">
-					<span class="control-label">Planet</span>
-					<select id="planetSelect" aria-label="Choose planet"></select>
-					<div class="value-row">
-						<span>Gravity</span>
-						<strong id="gravityLabel">-</strong>
+					<div class="control-group">
+						<span class="control-label">Planet</span>
+						<select id="planetSelect" aria-label="Choose planet"></select>
+						<div class="value-row">
+							<span>Gravity</span>
+							<strong id="gravityLabel">-</strong>
+						</div>
+						<div class="value-row">
+							<span>P<sub>atm</sub></span>
+							<strong id="atmLabel">-</strong>
+						</div>
 					</div>
-					<div class="value-row">
-						<span>P<sub>atm</sub></span>
-						<strong id="atmLabel">-</strong>
-					</div>
-				</div>
 
-				<div class="control-group">
-					<span class="control-label">Altitude (m)</span>
-					<input id="altitudeSlider" type="range" min="0" max="10000" step="100" value="0" aria-label="Set altitude">
-					<div class="value-row">
-						<span>Current altitude</span>
-						<strong id="altitudeLabel">0 m</strong>
+					<div class="control-group">
+						<span class="control-label">Altitude (m)</span>
+						<input id="altitudeSlider" type="range" min="0" max="10000" step="100" value="0" aria-label="Set altitude">
+						<div class="value-row">
+							<span>Current altitude</span>
+							<strong id="altitudeLabel">0 m</strong>
+						</div>
+						<button id="resetBtn" class="btn-reset">Reset View</button>
 					</div>
-					<button id="resetBtn" class="btn-reset">Reset View</button>
 				</div>
 			</aside>
 
@@ -377,6 +412,8 @@
 		const planetSelect = document.getElementById("planetSelect");
 		const altitudeSlider = document.getElementById("altitudeSlider");
 		const resetBtn = document.getElementById("resetBtn");
+		const controlsPanel = document.querySelector(".info-box");
+		const controlsToggle = document.getElementById("controlsToggle");
 
 		const densityLabel = document.getElementById("densityLabel");
 		const gravityLabel = document.getElementById("gravityLabel");
@@ -396,6 +433,8 @@
 			width: 90,
 			height: 400
 		};
+		const BASE_CANVAS_WIDTH = 760;
+		const BASE_CANVAS_HEIGHT = 520;
 		const DEFAULT_TUBE_Y = 10;
 		const SCALE_HEIGHT_PX = FLASK.y - DEFAULT_TUBE_Y;
         const TUBE_WALL_PX = 2;
@@ -577,14 +616,6 @@
 			return pAir + liquid.density * planet.gravity * depthM;
 		}
 
-		function paToMmhg(pa) {
-			return pa / 133.322368;
-		}
-
-		function paToMmH2O(pa) {
-			return pa / 9.80665;
-		}
-
 		function paToMmOfCurrentLiquid(pa) {
 			const liquid = getLiquid();
 			const planet = getPlanet();
@@ -611,10 +642,11 @@
 		}
 
 		function drawBackground() {
+			ctx.setTransform(1, 0, 0, 1, 0, 0);
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
-			sky.addColorStop(0, "#d7f4ff");
-			sky.addColorStop(1, "#f8fcff");
+			sky.addColorStop(0, "#f5f9ff");
+			sky.addColorStop(1, "#eef4f8");
 			ctx.fillStyle = sky;
 			ctx.fillRect(0, 0, canvas.width, canvas.height);
 		}
@@ -626,8 +658,8 @@
 
 			ctx.fillStyle = "#ffffff";
 			ctx.fillRect(TUBE.x, TUBE.y, TUBE.width, TUBE.height);
-			ctx.strokeStyle = "#111";
-			ctx.lineWidth = 3;
+			ctx.strokeStyle = "#172033";
+			ctx.lineWidth = 2;
 			ctx.strokeRect(TUBE.x, TUBE.y, TUBE.width, TUBE.height);
 
 			ctx.fillStyle = liquid.color;
@@ -635,8 +667,8 @@
 
 			ctx.fillStyle = liquid.color;
 			ctx.fillRect(FLASK.x, surfaceY, FLASK.width, FLASK.y + FLASK.height - surfaceY);
-			ctx.strokeStyle = "#111";
-			ctx.lineWidth = 3;
+			ctx.strokeStyle = "#172033";
+			ctx.lineWidth = 2;
 			ctx.beginPath();
 			ctx.moveTo(FLASK.x, FLASK.y);
 			ctx.lineTo(FLASK.x, FLASK.y + FLASK.height);
@@ -645,8 +677,8 @@
 			ctx.stroke();
 
 			// Redraw the tube edges over the reservoir so the column container remains visible below the surface.
-			ctx.strokeStyle = "#111";
-			ctx.lineWidth = 3;
+			ctx.strokeStyle = "#172033";
+			ctx.lineWidth = 2;
 			ctx.beginPath();
 			ctx.moveTo(TUBE.x, surfaceY);
 			ctx.lineTo(TUBE.x, TUBE.y + TUBE.height);
@@ -654,18 +686,18 @@
 			ctx.lineTo(TUBE.x + TUBE.width, TUBE.y + TUBE.height);
 			ctx.stroke();
 
-			ctx.fillStyle = "#111";
-			ctx.font = "700 17px Trebuchet MS";
+			ctx.fillStyle = "#172033";
+			ctx.font = "650 16px system-ui, sans-serif";
 			ctx.fillText("Vacuum", TUBE.x + TUBE.width + 16, TUBE.y + 26);
 			ctx.beginPath();
 			ctx.moveTo(TUBE.x + TUBE.width + 10, TUBE.y + 20);
 			ctx.lineTo(TUBE.x + TUBE.width - 4, TUBE.y + 20);
-			ctx.strokeStyle = "#111";
+			ctx.strokeStyle = "#172033";
 			ctx.lineWidth = 2;
 			ctx.stroke();
 
-			ctx.fillStyle = "#111";
-			ctx.font = "700 17px Trebuchet MS";
+			ctx.fillStyle = "#172033";
+			ctx.font = "650 16px system-ui, sans-serif";
 			ctx.fillText("Liquid column", TUBE.x + TUBE.width + 16, topY + 20);
 			ctx.beginPath();
 			ctx.moveTo(TUBE.x + TUBE.width + 10, topY + 15);
@@ -678,7 +710,7 @@
 			const top = surface - SCALE_HEIGHT_PX;
 			const maxM = scaleMaxM();
 
-			ctx.strokeStyle = "#111";
+			ctx.strokeStyle = "#172033";
 			ctx.lineWidth = 2;
 			ctx.beginPath();
 			ctx.moveTo(TUBE.x - 26, top);
@@ -695,24 +727,24 @@
 
 				const mAtTick = ((10 - i) / 10) * maxM;
 				if (i % 2 === 0) {
-					ctx.fillStyle = "#111";
-					ctx.font = "700 15px Trebuchet MS";
+					ctx.fillStyle = "#172033";
+					ctx.font = "650 14px system-ui, sans-serif";
 					const digits = maxM < 10 ? 1 : 0;
 					ctx.fillText(`${fmt(mAtTick, digits)} m`, TUBE.x - 66, y + 4);
 				}
 			}
 
 			const colTop = liquidTopY();
-			ctx.strokeStyle = "#ff5ca8";
-			ctx.lineWidth = 3;
+			ctx.strokeStyle = "#ef4b7d";
+			ctx.lineWidth = 2;
 			ctx.beginPath();
 			ctx.moveTo(TUBE.x - 30, colTop);
 			ctx.lineTo(TUBE.x + TUBE.width + 4, colTop);
 			ctx.stroke();
 
-			ctx.fillStyle = "#111";
-			ctx.font = "700 16px Trebuchet MS";
-			const columnLabelY = clamp(TUBE.y + TUBE.height + 22, 18, canvas.height - 10);
+			ctx.fillStyle = "#172033";
+			ctx.font = "650 15px system-ui, sans-serif";
+			const columnLabelY = clamp(TUBE.y + TUBE.height + 22, 18, BASE_CANVAS_HEIGHT - 10);
 			ctx.fillText(`Column height: ${fmt(colHeightM, 2)} m`, TUBE.x - 20, columnLabelY);
 		}
 
@@ -727,60 +759,41 @@
 			ctx.arc(x, y, PROBE_RADIUS + 5, 0, Math.PI * 2);
 			ctx.fill();
 
-			ctx.fillStyle = "#ff2b9a";
-			ctx.strokeStyle = "#111";
-			ctx.lineWidth = 3;
+			ctx.fillStyle = "#ef4b7d";
+			ctx.strokeStyle = "#172033";
+			ctx.lineWidth = 2;
 			ctx.beginPath();
 			ctx.arc(x, y, PROBE_RADIUS, 0, Math.PI * 2);
 			ctx.fill();
 			ctx.stroke();
 
-			ctx.fillStyle = "#111";
-			ctx.font = "700 16px Trebuchet MS";
+			ctx.fillStyle = "#172033";
+			ctx.font = "650 15px system-ui, sans-serif";
 			ctx.fillText("Probe", x + 15, y - 12);
 
 			ctx.fillStyle = "rgba(255,255,255,0.95)";
-			ctx.strokeStyle = "#111";
+			ctx.strokeStyle = "#172033";
 			ctx.lineWidth = 2;
 			const labelW = 220;
 			const labelH = 56;
-			const labelX = clamp(x + 16, 8, canvas.width - labelW - 8);
-			const labelY = clamp(y + 10, 8, canvas.height - labelH - 8);
+			const labelX = clamp(x + 16, 8, BASE_CANVAS_WIDTH - labelW - 8);
+			const labelY = clamp(y + 10, 8, BASE_CANVAS_HEIGHT - labelH - 8);
 			ctx.fillRect(labelX, labelY, labelW, labelH);
 			ctx.strokeRect(labelX, labelY, labelW, labelH);
 
-			ctx.fillStyle = "#111";
-			ctx.font = "700 15px Trebuchet MS";
+			ctx.fillStyle = "#172033";
+			ctx.font = "650 14px system-ui, sans-serif";
 			ctx.fillText(`P = ${fmt(pa, 0)} Pa`, labelX + 8, labelY + 20);
 			ctx.fillText(`${fmt(paToMmOfCurrentLiquid(pa), 1)} mm ${getLiquid().name}`, labelX + 8, labelY + 40);
 		}
 
-		function drawLegend() {
-			const pAir = atmosphericPressurePa();
-			const planet = getPlanet();
-			const liquid = getLiquid();
-
-			ctx.fillStyle = "rgba(255,255,255,0.94)";
-			ctx.strokeStyle = "#111";
-			ctx.lineWidth = 2;
-			ctx.fillRect(12, 12, 228, 56);
-			ctx.strokeRect(12, 12, 228, 56);
-
-			ctx.fillStyle = "#111";
-			ctx.font = "700 14px Trebuchet MS";
-			ctx.fillText(`Planet: ${planet.name}`, 18, 31);
-
-			const legendX = 18;
-			const legendY = 49;
-			ctx.fillText("P", legendX, legendY);
-			const pWidth = ctx.measureText("P").width;
-
-			ctx.font = "700 10px Trebuchet MS";
-			ctx.fillText("atm", legendX + pWidth + 1, legendY + 3);
-			const atmWidth = ctx.measureText("atm").width;
-
-			ctx.font = "700 14px Trebuchet MS";
-			ctx.fillText(`=${fmt(pAir, 0)} Pa`, legendX + pWidth + atmWidth + 4, legendY);
+		function sceneViewport() {
+			const scale = Math.min(canvas.width / BASE_CANVAS_WIDTH, canvas.height / BASE_CANVAS_HEIGHT);
+			return {
+				scale,
+				offsetX: (canvas.width - BASE_CANVAS_WIDTH * scale) / 2,
+				offsetY: (canvas.height - BASE_CANVAS_HEIGHT * scale) / 2
+			};
 		}
 
 		function updateLabels() {
@@ -795,21 +808,36 @@
 
 		function render() {
 			drawBackground();
+			const viewport = sceneViewport();
+			ctx.save();
+			ctx.translate(viewport.offsetX, viewport.offsetY);
+			ctx.scale(viewport.scale, viewport.scale);
 			drawBarometer();
 			drawScale();
 			drawProbe();
+			ctx.restore();
 			updateLabels();
 		}
 
 		function getPointerPos(event) {
 			const rect = canvas.getBoundingClientRect();
+			const viewport = sceneViewport();
+			const canvasX = (event.clientX - rect.left) * (canvas.width / rect.width);
+			const canvasY = (event.clientY - rect.top) * (canvas.height / rect.height);
 			return {
-				x: (event.clientX - rect.left) * (canvas.width / rect.width),
-				y: (event.clientY - rect.top) * (canvas.height / rect.height)
+				x: (canvasX - viewport.offsetX) / viewport.scale,
+				y: (canvasY - viewport.offsetY) / viewport.scale
 			};
 		}
 
 		function bindEvents() {
+			controlsToggle.addEventListener("click", () => {
+				const isOpen = controlsPanel.classList.toggle("controls-open");
+				controlsToggle.setAttribute("aria-expanded", String(isOpen));
+				controlsToggle.textContent = isOpen ? "Hide controls" : "Controls";
+				resizeCanvas();
+			});
+
 			liquidSelect.addEventListener("change", (event) => {
 				state.liquidKey = event.target.value;
 				render();
@@ -862,8 +890,8 @@
 				const pointer = getPointerPos(event);
 
 				if (state.isDraggingProbe) {
-					state.probe.x = clamp(pointer.x, 8, canvas.width - 8);
-					state.probe.y = clamp(pointer.y, 8, canvas.height - 8);
+					state.probe.x = clamp(pointer.x, 8, BASE_CANVAS_WIDTH - 8);
+					state.probe.y = clamp(pointer.y, 8, BASE_CANVAS_HEIGHT - 8);
 					render();
 					return;
 				}
@@ -890,31 +918,27 @@
 		}
 
 		function resizeCanvas() {
-			const parentWidth = canvas.parentElement.clientWidth;
-			const parentHeight = canvas.parentElement.clientHeight;
-			const baseWidth = 760;
-			const baseHeight = 520;
+			const parent = canvas.parentElement;
+			const parentStyles = window.getComputedStyle(parent);
+			const horizontalPadding = parseFloat(parentStyles.paddingLeft) + parseFloat(parentStyles.paddingRight);
+			const verticalPadding = parseFloat(parentStyles.paddingTop) + parseFloat(parentStyles.paddingBottom);
+			const parentWidth = Math.max(1, parent.clientWidth - horizontalPadding);
+			const parentHeight = Math.max(1, parent.clientHeight - verticalPadding);
+			const pixelRatio = window.devicePixelRatio || 1;
 
-			let scale = Math.min(parentWidth / baseWidth, parentHeight / baseHeight);
-			const minScale = Math.max(280 / baseWidth, 420 / baseHeight);
-			scale = Math.max(minScale, scale);
+			// Fill the wrapper while drawing the simulation with a uniform internal scale.
+			canvas.width = Math.round(parentWidth * pixelRatio);
+			canvas.height = Math.round(parentHeight * pixelRatio);
+			canvas.style.width = `${Math.round(parentWidth)}px`;
+			canvas.style.height = `${Math.round(parentHeight)}px`;
 
-			const drawWidth = baseWidth * scale;
-			const drawHeight = baseHeight * scale;
-
-			// Keep a fixed internal coordinate system so geometry stays fully visible.
-			canvas.width = 760;
-			canvas.height = 520;
-			canvas.style.width = `${Math.round(drawWidth)}px`;
-			canvas.style.height = `${Math.round(drawHeight)}px`;
-
-			const centerTube = canvas.width / 2;
+			const centerTube = BASE_CANVAS_WIDTH / 2;
 			TUBE.x = centerTube - TUBE.width / 2;
 			TUBE.y = clampTubeY(TUBE.y);
 			FLASK.x = centerTube - FLASK.width / 2;
 
-			state.probe.x = clamp(state.probe.x, 8, canvas.width - 8);
-			state.probe.y = clamp(state.probe.y, 8, canvas.height - 8);
+			state.probe.x = clamp(state.probe.x, 8, BASE_CANVAS_WIDTH - 8);
+			state.probe.y = clamp(state.probe.y, 8, BASE_CANVAS_HEIGHT - 8);
 			render();
 		}
 
