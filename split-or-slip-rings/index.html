@@ -40,8 +40,21 @@
         /* Collapsible sidebar animation classes */
         .sidebar-transition {
             transition: width 350ms cubic-bezier(0.4, 0, 0.2, 1), 
+                        height 350ms cubic-bezier(0.4, 0, 0.2, 1),
                         transform 350ms cubic-bezier(0.4, 0, 0.2, 1),
                         opacity 300ms ease;
+        }
+
+        @media (max-width: 767px) {
+            body.controls-collapsed #sidebar {
+                height: 0;
+                border-bottom-width: 0;
+                box-shadow: none;
+            }
+
+            body.controls-collapsed #viewport-panel {
+                height: 100%;
+            }
         }
     </style>
 </head>
@@ -59,11 +72,14 @@
         <div id="sidebar-content" class="flex flex-col h-full w-full overflow-y-auto opacity-100 transition-opacity duration-200">
             <!-- Header -->
             <div class="px-4 py-3 border-b border-slate-100">
-                <div class="flex items-center gap-3">
+                <div class="flex items-center justify-between gap-3">
                     <div>
                         <h1 class="text-base font-semibold tracking-tight text-slate-900">DC Motor Simulator</h1>
                         <p class="text-xs text-slate-500">Controls</p>
                     </div>
+                    <button id="btn-mobile-sidebar-toggle" class="md:hidden flex items-center justify-center w-10 h-10 bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl transition-all shrink-0" title="Collapse controls" aria-label="Collapse controls" type="button">
+                        <i data-lucide="chevron-up" class="w-5 h-5"></i>
+                    </button>
                 </div>
             </div>
 
@@ -162,7 +178,7 @@
     </button>
 
     <!-- 3D Viewport Area -->
-    <div class="flex-1 relative h-3/5 md:h-full min-w-0">
+    <div id="viewport-panel" class="flex-1 relative h-3/5 md:h-full min-w-0">
         <div id="canvas-container" class="w-full h-full"></div>
 
         <!-- 3D Instructions Overlay -->
@@ -1067,6 +1083,7 @@
         // Sidebar Collapsible Control
         const btnSidebarToggle = document.getElementById('btn-sidebar-toggle');
         const btnSidebarExpandFloating = document.getElementById('btn-sidebar-expand-floating');
+        const btnMobileSidebarToggle = document.getElementById('btn-mobile-sidebar-toggle');
         const sidebar = document.getElementById('sidebar');
         const sidebarContent = document.getElementById('sidebar-content');
         const toggleIconDir = document.getElementById('toggle-icon-dir');
@@ -1078,6 +1095,7 @@
             const isExpanding = !sidebarCollapsed;
             if (sidebarCollapsed) {
                 // Collapse sidebar
+                document.body.classList.add('controls-collapsed');
                 sidebar.classList.remove('md:w-[280px]');
                 sidebar.classList.add('md:w-0');
                 sidebarContent.classList.add('opacity-0', 'pointer-events-none');
@@ -1090,6 +1108,7 @@
                 btnSidebarExpandFloating.classList.add('flex');
             } else {
                 // Expand sidebar
+                document.body.classList.remove('controls-collapsed');
                 sidebar.classList.add('md:w-[280px]');
                 sidebar.classList.remove('md:w-0');
                 sidebarContent.classList.remove('opacity-0', 'pointer-events-none');
@@ -1123,6 +1142,7 @@
 
         btnSidebarToggle.addEventListener('click', toggleSidebar);
         btnSidebarExpandFloating.addEventListener('click', toggleSidebar);
+        btnMobileSidebarToggle.addEventListener('click', toggleSidebar);
 
         function setFlowMode(mode) {
             flowMode = mode;
