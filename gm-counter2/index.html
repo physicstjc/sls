@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geiger Muller Counter Simulation</title>
+    <!-- Lucide Icons for clean symbols -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap');
+        
+        /* Reset and Basics */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .digital-font {
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff; /* White background */
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Align vertically to the top */
+            padding: 16px;
+        }
+
+        /* Enforced 480px Height Container */
+        .app-container {
+            max-width: 1024px;
+            width: 100%;
+            height: 480px;
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Header Layout */
+        .app-header {
+            background-color: #f8fafc;
+            border-b: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-shrink: 0;
+            z-index: 20;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-icon {
+            padding: 6px;
+            background-color: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+            border-radius: 8px;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand-text h1 {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.025em;
+            color: #0f172a;
+            line-height: 1.25;
+        }
+
+        .brand-text p {
+            font-size: 10px;
+            color: #64748b;
+            line-height: 1;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Badge Styling */
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .status-badge.standby {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: #b45309;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .status-badge.stopped {
+            background-color: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .status-badge.stable {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #047857;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .ping-dot {
+            position: relative;
+            display: flex;
+            height: 6px;
+            width: 6px;
+        }
+
+        .ping-dot .pulse {
+            animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+            position: absolute;
+            display: inline-flex;
+            height: 100%;
+            width: 100%;
+            border-radius: 9999px;
+            opacity: 0.75;
+        }
+
+        .ping-dot .dot {
+            position: relative;
+            display: inline-flex;
+            border-radius: 9999px;
+            height: 6px;
+            width: 6px;
+        }
+
+        @keyframes ping {
+            75%, 100% {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        /* Sound Controls */
+        .sound-adjuster {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background-color: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .sound-adjuster button {
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+        }
+
+        .sound-adjuster button:hover {
+            color: #0f172a;
+        }
+
+        .sound-adjuster input[type="range"] {
+            width: 48px;
+            height: 4px;
+            accent-color: #475569;
+            cursor: pointer;
+        }
+
+        /* Toggle Button for mobile graph */
+        .toggle-graph-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background-color: #2563eb;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .toggle-graph-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        /* Main Dashboard Core Grid (Split 50/50 on desktop) */
+        .main-dashboard {
+            flex: 1;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: 1fr;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+            .main-dashboard {
+                grid-template-columns: 1fr 1fr;
+            }
+            .toggle-graph-btn {
+                display: none !important; /* Hide button on desktop */
+            }
+        }
+
+        /* Left side control and readouts panel */
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 12px;
+            min-height: 0;
+            background-color: #ffffff;
+            border-right: 1px solid #f1f5f9;
+        }
+
+        /* High-contrast retro LCD scientific style readouts */
+        .lcd-screen {
+            background-color: #dcfce7;
+            border: 2px solid #94a3b8;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 155px;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .lcd-screen-reflection {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 50%);
+            pointer-events: none;
+        }
+
+        .lcd-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .lcd-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: #475569;
+            text-transform: uppercase;
+        }
+
+        .lcd-tube-badge {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background-color: rgba(255, 255, 255, 0.6);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+            font-size: 8px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .lcd-tube-badge .pulse-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 9999px;
+            background-color: #dc2626;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+
+        .lcd-readout-container {
+            margin: auto 0;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .lcd-readout-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+        }
+
+        .lcd-readout-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .lcd-extrapolate-indicator {
+            font-size: 9px;
+            color: #b45309;
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .lcd-rate {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            margin-top: -4px;
+        }
+
+        .lcd-rate-val {
+            font-size: 44px;
+            font-weight: 700;
+            letter-spacing: -0.05em;
+            color: #14532d;
+            text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.5);
+        }
+
+        .lcd-rate-unit {
+            font-size: 16px;
+            font-weight: 600;
+            color: #14532d;
+        }
+
+        .progress-bar-container {
+            margin-top: 6px;
+            width: 100%;
+            background-color: rgba(148, 163, 184, 0.3);
+            border-radius: 9999px;
+            height: 4px;
+            overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .progress-bar {
+            background-color: #059669;
+            height: 100%;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+
+        .lcd-footer {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            border-top: 1px solid rgba(148, 163, 184, 0.3);
+            padding-top: 6px;
+            z-index: 10;
+            color: #14532d;
+        }
+
+        .lcd-stat-label {
+            font-size: 8px;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: block;
+        }
+
+        .lcd-stat-val {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        /* Controls Block below LCD screen */
+        .controls-panel {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 12px;
+            flex-1: 1 1 0%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 8px;
+            min-height: 0;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .control-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .control-select {
+            width: 100%;
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+            font-size: 12px;
+            border-radius: 8px;
+            padding: 6px 8px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .control-select:focus {
+            border-color: #94a3b8;
+        }
+
+        /* Action Buttons */
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-start {
+            background-color: #059669;
+            color: #ffffff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .btn-start:hover {
+            background-color: #047857;
+        }
+
+        .btn-stop {
+            background-color: #e2e8f0;
+            color: #94a3b8;
+            cursor: not-allowed;
+            border: 1px solid rgba(226, 232, 240, 0.4);
+        }
+
+        .btn-stop.active {
+            background-color: #dc2626;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        .btn-stop.active:hover {
+            background-color: #b91c1c;
+        }
+
+        /* Sliding drawer elements for small screen graphs */
+        .drawer-backdrop {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background-color: rgba(15, 23, 42, 0.3);
+            backdrop-filter: blur(4px);
+            z-index: 30;
+            transition: opacity 0.3s ease;
+        }
+
+        .drawer-backdrop.visible {
+            display: block !important;
+        }
+
+        /* Graph side-panel */
+        .graph-panel {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            width: 80%;
+            background-color: #f8fafc;
+            border-left: 1px solid #e2e8f0;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            z-index: 40;
+            transform: translateX(101%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @media (min-width: 768px) {
+            .graph-panel {
+                position: relative !important;
+                width: auto !important;
+                transform: translateX(0) !important;
+                background-color: #ffffff !important;
+                z-index: 10 !important;
+                border-left: 1px solid #e2e8f0;
+            }
+            .drawer-backdrop {
+                display: none !important;
+            }
+        }
+
+        .graph-panel.open {
+            transform: translateX(0);
+        }
+
+        .graph-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .graph-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .graph-indicator-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 9999px;
+            background-color: #10b981;
+        }
+
+        .graph-indicator-dot.pulsing {
+            animation: graph-ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes graph-ping {
+            75%, 100% { transform: scale(2); opacity: 0; }
+        }
+
+        .graph-header h2 {
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .graph-subtext {
+            font-size: 10px;
+            color: #64748b;
+        }
+
+        /* Plot Canvas Container */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            border: 1px solid #e2e8f0;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            opacity: 0.03;
+            background-image: linear-gradient(to right, #000000 1px, transparent 1px), linear-gradient(to bottom, #000000 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            flex: 1;
+        }
+
+        .flash-screen {
+            position: absolute;
+            inset: 0;
+            background-color: rgba(239, 68, 68, 0);
+            transition: background-color 0.075s;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            position: relative;
+            z-index: 10;
+        }
+
+        .graph-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 10px;
+            color: #64748b;
+        }
+
+        .graph-footer-label {
+            text-align: center;
+            font-weight: 600;
+            color: #94a3b8;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Footer Info */
+        .app-footer {
+            background-color: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 6px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            text-size-adjust: 100%;
+            font-size: 10px;
+            color: #64748b;
+            z-index: 20;
+        }
+
+        .footer-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #64748b;
+        }
+
+        .footer-info i {
+            color: #3b82f6;
+            flex-shrink: 0;
+        }
+
+        .footer-meta {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 9px;
+        }
+
+        .footer-divider {
+            width: 4px;
+            height: 4px;
+            border-radius: 9999px;
+            background-color: #cbd5e1;
+        }
+
+        .opacity-50 {
+            opacity: 0.5;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-start items-center p-2 md:p-6">
+
+    <!-- Enforced 480px Height Container aligned to top of screen -->
+    <div class="app-container">
+        
+        <!-- Compact Header Banner -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="brand-icon">
+                    <i data-lucide="radiation" style="width: 20px; height: 20px;"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>Geiger Muller Counter Simulation</h1>
+                    <p>Digital Survey Analysis Meter</p>
+                </div>
+            </div>
+            
+            <!-- Dynamic Calibration Status & Mobile Graph Toggle -->
+            <div class="header-controls">
+                <div id="calcBadge" class="status-badge standby">
+                    <span class="ping-dot">
+                        <span class="pulse bg-amber-500"></span>
+                        <span id="calcIndicatorDot" class="dot bg-amber-600"></span>
+                    </span>
+                    <span id="calcStatusText">STANDBY</span>
+                </div>
+                
+                <!-- Sound Adjuster -->
+                <div class="sound-adjuster">
+                    <button id="muteBtn">
+                        <i data-lucide="volume-2" id="volumeIcon" style="width: 14px; height: 14px;"></i>
+                    </button>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="50">
+                </div>
+
+                <!-- Collapsible Graph Sliding Button (Mobile/Tablet only) -->
+                <button id="toggleGraphBtn" class="toggle-graph-btn">
+                    <i data-lucide="line-chart" style="width: 14px; height: 14px;"></i>
+                    <span id="toggleBtnText">View Graph</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Display Dashboard (Split 50/50 on Desktop) -->
+        <main class="main-dashboard">
+            
+            <!-- Left Side Panel: Controls and Readouts -->
+            <section class="left-panel">
+                
+                <!-- Geiger Meter LCD Face -->
+                <div class="lcd-screen">
+                    <div class="lcd-screen-reflection"></div>
+                    <div class="lcd-header">
+                        <span class="lcd-label">Detector Readout</span>
+                        <div class="lcd-tube-badge">
+                            <span class="pulse-dot"></span>
+                            GM TUBE ACTIVE
+                        </div>
+                    </div>
+
+                    <!-- Readout Stats -->
+                    <div class="lcd-readout-container">
+                        <div class="lcd-readout-header">
+                            <span class="lcd-readout-title">Count Rate</span>
+                            <span id="extrapolatedLabel" class="lcd-extrapolate-indicator hidden">Extrapolating...</span>
+                        </div>
+                        <div class="lcd-rate">
+                            <span id="cpmDisplay" class="lcd-rate-val digital-font">0</span>
+                            <span class="lcd-rate-unit digital-font">CPM</span>
+                        </div>
+                        
+                        <!-- Mini progress bar to stable reading -->
+                        <div id="stableProgressBarContainer" class="progress-bar-container hidden">
+                            <div id="stableProgressBar" class="progress-bar"></div>
+                        </div>
+                    </div>
+
+                    <!-- Secondary Stats Bar -->
+                    <div class="lcd-footer">
+                        <div>
+                            <span class="lcd-stat-label">Total Counts</span>
+                            <span id="totalCount" class="lcd-stat-val digital-font">0</span>
+                        </div>
+                        <div>
+                            <span class="lcd-stat-label">Elapsed Time</span>
+                            <div>
+                                <span id="timeDisplay" class="lcd-stat-val digital-font">0</span>
+                                <span style="font-size: 10px; font-weight: 600;">s</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Source & View Controls -->
+                <div class="controls-panel">
+                    <!-- Radioactive Source Selector with explicit isotope mentions -->
+                    <div class="control-group">
+                        <label class="control-label">
+                            <i data-lucide="radioactive" style="width: 14px; height: 14px; color: #d97706;"></i>
+                            Source Specimen
+                        </label>
+                        <select id="sourceSelect" class="control-select">
+                            <option value="background">Background Radiation (~20 CPM)</option>
+                            <option value="banana">Banana (Potassium-40 / ⁴⁰K) (~45 CPM)</option>
+                            <option value="granite">Granite Benchtop (Uranium-238 & Thorium-232) (~110 CPM)</option>
+                            <option value="fiestaware">Fiestaware Glaze (Uranium-238 / ²³⁸U) (~450 CPM)</option>
+                            <option value="radium">Vintage Radium Watch (Radium-226 / ²²⁶Ra) (~1,500 CPM)</option>
+                        </select>
+                    </div>
+
+                    <!-- View Plot Type -->
+                    <div class="control-group">
+                        <label class="control-label">
+                            <i data-lucide="line-chart" style="width: 14px; height: 14px; color: #2563eb;"></i>
+                            Oscilloscope View
+                        </label>
+                        <select id="viewSelect" class="control-select">
+                            <option value="cumulative">Cumulative Pulse Progression</option>
+                            <option value="rate" selected>Count Rate (CPM vs Time)</option>
+                            <option value="histogram">Interval Distribution (Poisson)</option>
+                        </select>
+                    </div>
+
+                    <!-- Start & Stop Buttons -->
+                    <div class="button-group">
+                        <button id="startBtn" class="btn btn-start">
+                            <i data-lucide="play" style="width: 14px; height: 14px; fill: currentColor;"></i>
+                            Start
+                        </button>
+                        <button id="stopBtn" disabled class="btn btn-stop">
+                            <i data-lucide="square" style="width: 14px; height: 14px; fill: currentColor;"></i>
+                            Stop
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mobile Drawer Overlay Backdrop -->
+            <div id="drawerBackdrop" class="drawer-backdrop"></div>
+
+            <!-- Right Side Panel: High Resolution Graph/Oscilloscope -->
+            <section id="graphPanel" class="graph-panel">
+                <div class="graph-header">
+                    <div class="graph-title">
+                        <span id="graphPing" class="graph-indicator-dot"></span>
+                        <h2>Real-Time Pulse Plotter</h2>
+                    </div>
+                    <span id="chartSubtext" class="graph-subtext">Rate Progression (Counts per Minute)</span>
+                </div>
+
+                <div class="canvas-container">
+                    <!-- Grid-line pattern simulation -->
+                    <div class="grid-overlay"></div>
+                    
+                    <div class="canvas-wrapper">
+                        <!-- Simulated tube discharge flash -->
+                        <div id="flashScreen" class="flash-screen"></div>
+                        <canvas id="chartCanvas" class="chart-canvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart Footer Metadata -->
+                <div class="graph-footer">
+                    <span>0s</span>
+                    <span class="graph-footer-label">Time (seconds elapsed)</span>
+                    <span id="timeAxisMax">60s</span>
+                </div>
+            </section>
+        </main>
+
+        <!-- Compact Info Footer -->
+        <footer class="app-footer">
+            <div class="footer-info">
+                <i data-lucide="info" style="width: 14px; height: 14px;"></i>
+                <p>
+                    <strong>Adaptive CPM:</strong> Dynamic extrapolation during first 60s, rolling integration after.
+                </p>
+            </div>
+            <div class="footer-meta">
+                <span>Poisson λ Active</span>
+                <span class="footer-divider"></span>
+                <span>V2.5.1</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Script Block containing logical implementation -->
+    <script>
+        class GeigerCounterApp {
+            constructor() {
+                this.isRunning = false;
+                this.startTime = 0;
+                this.totalCounts = 0;
+                this.currentCPM = 0;
+                this.volume = 0.5;
+                this.audioContext = null;
+                
+                // Data storage
+                this.countData = [];
+                this.rateData = [];
+                this.timePoints = [];
+                this.maxTime = 60; // seconds
+                
+                // Realistic radioactive sources
+                this.sourceTypes = {
+                    background: { rate: 20, label: 'Background Radiation' },
+                    banana: { rate: 45, label: 'Banana (K-40)' },
+                    granite: { rate: 110, label: 'Granite Countertop' },
+                    fiestaware: { rate: 450, label: 'Fiestaware Glaze' },
+                    radium: { rate: 1500, label: 'Vintage Radium Watch' }
+                };
+                this.currentSource = 'background';
+                this.currentRate = this.sourceTypes.background.rate;
+                
+                // Visual, Drawer & Chart Components
+                this.canvas = document.getElementById('chartCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.currentView = 'rate'; // Count Rate as default
+                this.isGraphVisible = false;
+                
+                this.initializeAudio();
+                this.bindEvents();
+                this.resizeCanvas();
+                this.drawChart();
+                this.updateDisplay();
+                
+                // Handle Window Resize dynamically
+                window.addEventListener('resize', () => {
+                    this.resizeCanvas();
+                    this.drawChart();
+                });
+            }
+
+            initializeAudio() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.warn('Audio synthesis not supported on this browser.');
+                }
+            }
+
+            bindEvents() {
+                document.getElementById('startBtn').addEventListener('click', () => this.start());
+                document.getElementById('stopBtn').addEventListener('click', () => this.stop());
+                document.getElementById('sourceSelect').addEventListener('change', (e) => this.setSource(e.target.value));
+                document.getElementById('viewSelect').addEventListener('change', (e) => this.setView(e.target.value));
+                
+                const slider = document.getElementById('volumeSlider');
+                slider.addEventListener('input', (e) => this.setVolume(e.target.value));
+                
+                const muteBtn = document.getElementById('muteBtn');
+                muteBtn.addEventListener('click', () => {
+                    if (slider.value > 0) {
+                        this.lastVol = slider.value;
+                        slider.value = 0;
+                    } else {
+                        slider.value = this.lastVol || 50;
+                    }
+                    this.setVolume(slider.value);
+                });
+
+                // Collapsible sliding drawer buttons logic
+                const toggleGraphBtn = document.getElementById('toggleGraphBtn');
+                const backdrop = document.getElementById('drawerBackdrop');
+                
+                const toggleAction = () => {
+                    this.isGraphVisible = !this.isGraphVisible;
+                    this.updateGraphDrawer();
+                };
+
+                toggleGraphBtn.addEventListener('click', toggleAction);
+                backdrop.addEventListener('click', toggleAction);
+            }
+
+            updateGraphDrawer() {
+                const panel = document.getElementById('graphPanel');
+                const backdrop = document.getElementById('drawerBackdrop');
+                const btnText = document.getElementById('toggleBtnText');
+                const toggleBtn = document.getElementById('toggleGraphBtn');
+
+                if (this.isGraphVisible) {
+                    panel.classList.add('open');
+                    backdrop.classList.add('visible');
+                    btnText.textContent = "Hide Graph";
+                    toggleBtn.style.backgroundColor = '#475569';
+                    
+                    // Trigger canvas resize and redraw when sliding in
+                    setTimeout(() => {
+                        this.resizeCanvas();
+                        this.drawChart();
+                    }, 350);
+                } else {
+                    panel.classList.remove('open');
+                    backdrop.classList.remove('visible');
+                    btnText.textContent = "View Graph";
+                    toggleBtn.style.backgroundColor = '#2563eb';
+                }
+            }
+
+            resizeCanvas() {
+                const rect = this.canvas.getBoundingClientRect();
+                this.canvas.width = rect.width * window.devicePixelRatio;
+                this.canvas.height = rect.height * window.devicePixelRatio;
+                this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            }
+
+            setSource(sourceType) {
+                this.currentSource = sourceType;
+                this.currentRate = this.sourceTypes[sourceType].rate;
+            }
+
+            setView(viewType) {
+                this.currentView = viewType;
+                const subtext = document.getElementById('chartSubtext');
+                
+                if (viewType === 'cumulative') {
+                    subtext.textContent = "Cumulative Pulse Count (Discrete)";
+                } else if (viewType === 'rate') {
+                    subtext.textContent = "Rate Progression (Counts per Minute)";
+                } else if (viewType === 'histogram') {
+                    subtext.textContent = "Decay Interval Distribution (s)";
+                }
+                
+                this.drawChart();
+            }
+
+            setVolume(value) {
+                this.volume = value / 100;
+                const volumeIcon = document.getElementById('volumeIcon');
+                
+                if (this.volume === 0) {
+                    volumeIcon.setAttribute('data-lucide', 'volume-x');
+                } else if (this.volume < 0.4) {
+                    volumeIcon.setAttribute('data-lucide', 'volume-1');
+                } else {
+                    volumeIcon.setAttribute('data-lucide', 'volume-2');
+                }
+                lucide.createIcons();
+            }
+
+            generateClickSound() {
+                if (!this.audioContext || this.volume === 0) return;
+
+                if (this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                }
+
+                const osc = this.audioContext.createOscillator();
+                const noiseNode = this.audioContext.createBufferSource();
+                const gainNode = this.audioContext.createGain();
+                
+                const bufferSize = this.audioContext.sampleRate * 0.02; 
+                const noiseBuffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                noiseNode.buffer = noiseBuffer;
+
+                osc.connect(gainNode);
+                noiseNode.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                osc.frequency.setValueAtTime(1600, this.audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, this.audioContext.currentTime + 0.012);
+                
+                gainNode.gain.setValueAtTime(this.volume * 0.4, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.015);
+                
+                osc.start(this.audioContext.currentTime);
+                noiseNode.start(this.audioContext.currentTime);
+                
+                osc.stop(this.audioContext.currentTime + 0.02);
+                noiseNode.stop(this.audioContext.currentTime + 0.02);
+            }
+
+            calculateCPM(currentTime) {
+                if (currentTime <= 0.2) {
+                    return 0;
+                }
+
+                if (currentTime < 60) {
+                    // EXTRAPOLATION MODE (First 60s)
+                    return (this.totalCounts / currentTime) * 60;
+                } else {
+                    // STABLE SLIDING WINDOW INTEGRATION (After 60s)
+                    const oneMinuteAgo = currentTime - 60;
+                    return this.timePoints.filter(t => t > oneMinuteAgo).length;
+                }
+            }
+
+            detectRadiation() {
+                this.totalCounts++;
+                this.generateClickSound();
+                this.triggerFlashEffect();
+                
+                const currentTime = (Date.now() - this.startTime) / 1000;
+                this.timePoints.push(currentTime);
+                this.countData.push(this.totalCounts);
+                
+                this.currentCPM = this.calculateCPM(currentTime);
+                this.rateData.push(this.currentCPM);
+                
+                if (this.timePoints.length > 2500) {
+                    this.timePoints.shift();
+                    this.countData.shift();
+                    this.rateData.shift();
+                }
+                
+                this.updateDisplay();
+                this.drawChart();
+            }
+
+            triggerFlashEffect() {
+                const flash = document.getElementById('flashScreen');
+                const graphPing = document.getElementById('graphPing');
+                
+                flash.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                if (graphPing) {
+                    graphPing.classList.add('pulsing');
+                }
+                
+                setTimeout(() => {
+                    flash.style.backgroundColor = 'rgba(239, 68, 68, 0)';
+                    if (graphPing) {
+                        graphPing.classList.remove('pulsing');
+                    }
+                }, 40);
+            }
+
+            getNextDetectionInterval() {
+                const lambda = this.currentRate / 60; 
+                return -Math.log(1 - Math.random()) / lambda * 1000; 
+            }
+
+            scheduleNextDetection() {
+                if (!this.isRunning) return;
+                
+                const interval = this.getNextDetectionInterval();
+                this.timerTimeout = setTimeout(() => {
+                    if (this.isRunning) {
+                        this.detectRadiation();
+                        this.scheduleNextDetection();
+                    }
+                }, interval);
+            }
+
+            start() {
+                this.initializeAudio();
+                
+                this.totalCounts = 0;
+                this.currentCPM = 0;
+                this.countData = [];
+                this.rateData = [];
+                this.timePoints = [];
+                this.maxTime = 60;
+                
+                this.isRunning = true;
+                this.startTime = Date.now();
+                
+                const startBtn = document.getElementById('startBtn');
+                const stopBtn = document.getElementById('stopBtn');
+                
+                startBtn.disabled = true;
+                startBtn.classList.add('opacity-50');
+                startBtn.style.cursor = 'not-allowed';
+                
+                stopBtn.disabled = false;
+                stopBtn.classList.add('active');
+                
+                document.getElementById('timeAxisMax').textContent = this.maxTime + 's';
+                document.getElementById('stableProgressBarContainer').classList.remove('hidden');
+                document.getElementById('extrapolatedLabel').classList.remove('hidden');
+                
+                this.updateDisplay();
+                this.drawChart();
+                this.scheduleNextDetection();
+                this.updateTimer();
+            }
+
+            stop() {
+                this.isRunning = false;
+                clearTimeout(this.timerTimeout);
+                
+                const startBtn = document.getElementById('startBtn');
+                const stopBtn = document.getElementById('stopBtn');
+                
+                startBtn.disabled = false;
+                startBtn.classList.remove('opacity-50');
+                startBtn.style.cursor = 'pointer';
+                
+                stopBtn.disabled = true;
+                stopBtn.classList.remove('active');
+                
+                const badge = document.getElementById('calcBadge');
+                const text = document.getElementById('calcStatusText');
+                badge.className = "status-badge stopped";
+                text.textContent = "STOPPED";
+            }
+
+            updateTimer() {
+                if (!this.isRunning) return;
+                
+                const elapsed = (Date.now() - this.startTime) / 1000;
+                document.getElementById('timeDisplay').textContent = Math.floor(elapsed);
+                
+                this.currentCPM = this.calculateCPM(elapsed);
+                this.updateDisplay();
+                
+                const progressPct = Math.min((elapsed / 60) * 100, 100);
+                document.getElementById('stableProgressBar').style.width = progressPct + '%';
+                
+                const badge = document.getElementById('calcBadge');
+                const dot = document.getElementById('calcIndicatorDot');
+                const text = document.getElementById('calcStatusText');
+                const label = document.getElementById('extrapolatedLabel');
+                
+                if (elapsed < 60) {
+                    badge.className = "status-badge standby";
+                    dot.className = "dot bg-amber-600";
+                    text.textContent = `ESTIMATING (${Math.floor(elapsed)}s)`;
+                    label.classList.remove('hidden');
+                } else {
+                    badge.className = "status-badge stable";
+                    dot.className = "dot bg-emerald-600";
+                    text.textContent = "STABLE READING";
+                    label.classList.add('hidden');
+                }
+                
+                if (elapsed > this.maxTime) {
+                    this.maxTime = Math.ceil(elapsed / 10) * 10;
+                    document.getElementById('timeAxisMax').textContent = this.maxTime + 's';
+                }
+                
+                setTimeout(() => this.updateTimer(), 100);
+            }
+
+            updateDisplay() {
+                document.getElementById('totalCount').textContent = this.totalCounts;
+                document.getElementById('cpmDisplay').textContent = Math.round(this.currentCPM);
+            }
+
+            drawChart() {
+                const canvas = this.canvas;
+                const ctx = this.ctx;
+                
+                const dpr = window.devicePixelRatio || 1;
+                const width = canvas.width / dpr;
+                const height = canvas.height / dpr;
+                
+                ctx.clearRect(0, 0, width, height);
+                
+                if (this.currentView === 'histogram') {
+                    this.drawHistogram(width, height);
+                    return;
+                }
+                
+                if (this.timePoints.length < 2) {
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = '11px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Click "Start" to visualize radioactive pulses...', width / 2, height / 2);
+                    return;
+                }
+                
+                let dataPoints, strokeStyle, fillStyle;
+                let maxVal = 10;
+                
+                if (this.currentView === 'cumulative') {
+                    dataPoints = this.countData;
+                    maxVal = Math.max(...dataPoints, 10) * 1.1;
+                    strokeStyle = '#2563eb'; // Deep Blue
+                    fillStyle = 'rgba(37, 99, 235, 0.04)';
+                } else {
+                    dataPoints = this.rateData;
+                    maxVal = Math.max(...dataPoints, this.currentRate * 1.8);
+                    strokeStyle = '#16a34a'; // Deep Green
+                    fillStyle = 'rgba(22, 163, 74, 0.04)';
+                }
+                
+                // Draw filled area
+                ctx.beginPath();
+                ctx.moveTo(0, height);
+                for (let i = 0; i < this.timePoints.length; i++) {
+                    const x = (this.timePoints[i] / this.maxTime) * width;
+                    const y = height - (dataPoints[i] / maxVal) * (height - 20) - 10;
+                    ctx.lineTo(x, y);
+                }
+                ctx.lineTo((this.timePoints[this.timePoints.length - 1] / this.maxTime) * width, height);
+                ctx.closePath();
+                ctx.fillStyle = fillStyle;
+                ctx.fill();
+                
+                // Draw main line
+                ctx.beginPath();
+                for (let i = 0; i < this.timePoints.length; i++) {
+                    const x = (this.timePoints[i] / this.maxTime) * width;
+                    const y = height - (dataPoints[i] / maxVal) * (height - 20) - 10;
+                    
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.strokeStyle = strokeStyle;
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+                
+                // Draw dot markers
+                ctx.fillStyle = strokeStyle;
+                for (let i = 0; i < this.timePoints.length; i++) {
+                    if (this.timePoints.length > 100 && i % 4 !== 0 && i !== this.timePoints.length - 1) continue;
+                    
+                    const x = (this.timePoints[i] / this.maxTime) * width;
+                    const y = height - (dataPoints[i] / maxVal) * (height - 20) - 10;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            drawHistogram(width, height) {
+                const ctx = this.ctx;
+                if (this.timePoints.length < 3) {
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = '11px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Awaiting events to construct Poisson curve...', width / 2, height / 2);
+                    return;
+                }
+                
+                const intervals = [];
+                for (let i = 1; i < this.timePoints.length; i++) {
+                    intervals.push(this.timePoints[i] - this.timePoints[i-1]);
+                }
+                
+                const binSize = 0.15; 
+                const maxIntervalValue = 4.5; 
+                const binsCount = Math.ceil(maxIntervalValue / binSize);
+                const bins = Array(binsCount).fill(0);
+                
+                intervals.forEach(val => {
+                    const idx = Math.floor(val / binSize);
+                    if (idx < binsCount) {
+                        bins[idx]++;
+                    }
+                });
+                
+                const maxBin = Math.max(...bins, 1);
+                const colWidth = width / binsCount;
+                
+                ctx.fillStyle = '#d97706'; // Amber bar charts
+                bins.forEach((cnt, idx) => {
+                    const barHeight = (cnt / maxBin) * (height - 30);
+                    const x = idx * colWidth;
+                    const y = height - barHeight - 5;
+                    
+                    ctx.beginPath();
+                    ctx.rect(x + 1, y, colWidth - 2, barHeight);
+                    ctx.fill();
+                    
+                    if (cnt > 0 && binsCount < 30) {
+                        ctx.fillStyle = '#64748b';
+                        ctx.font = '8px Share Tech Mono';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(cnt, x + colWidth/2, y - 3);
+                    }
+                });
+                
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '9px Inter';
+                ctx.textAlign = 'left';
+                ctx.fillText('High Event Rate', 10, 15);
+                ctx.textAlign = 'right';
+                ctx.fillText('Low Event Rate', width - 10, 15);
+            }
+        }
+
+        // Initialize App on Document Load
+        window.addEventListener('load', () => {
+            new GeigerCounterApp();
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
