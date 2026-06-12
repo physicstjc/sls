@@ -245,7 +245,12 @@
             color: #1e293b;
             transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
-            max-height: 400px;
+            max-height: 440px;
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            user-select: none;
+            touch-action: none; /* Prevents screen scrolling while dragging panel on mobile */
         }
 
         .sim-control-panel.collapsed {
@@ -258,8 +263,13 @@
             align-items: center;
             border-bottom: 1px solid #cbd5e1;
             padding-bottom: 6px;
-            cursor: pointer;
+            cursor: grab;
             user-select: none;
+            touch-action: none;
+        }
+
+        .sim-control-header:active {
+            cursor: grabbing;
         }
 
         .sim-control-title {
@@ -268,6 +278,7 @@
             letter-spacing: 0.05em;
             text-transform: uppercase;
             color: #475569;
+            pointer-events: none;
         }
 
         .collapse-arrow-icon {
@@ -275,8 +286,10 @@
             transition: transform 0.3s;
             display: flex;
             align-items: center;
+            pointer-events: none;
         }
 
+        /* Rotate chevron icon when collapsed */
         .sim-control-panel.collapsed .collapse-arrow-icon {
             transform: rotate(-180deg);
         }
@@ -558,10 +571,6 @@
                 <!-- Three.js Canvas mounting viewport -->
                 <div id="threejsViewport" class="threejs-viewport"></div>
                 
-                <!-- 3D Hint -->
-                <div class="hint-overlay">
-                    Drag blue specimen holder on rail to observe inverse square law in real-time.
-                </div>
 
                 <!-- Graph panel state indicator -->
                 <div class="canvas-graph-switch-indicator">
@@ -572,7 +581,7 @@
                 <!-- HUD Overlay layers -->
                 <div class="hud-overlay">
                     
-                    <!-- Left Corner: Translucent Simulation Control panel -->
+                    <!-- Left Corner: Translucent Simulation Control panel (Now absolute and draggable) -->
                     <div id="simControlPanel" class="sim-control-panel hud-interactive">
                         <div class="sim-control-header" id="simControlHeader">
                             <span class="sim-control-title">Simulation Settings</span>
@@ -601,6 +610,18 @@
                                         <option value="caesium">Caesium-137 (Beta/Gamma - Mid Range)</option>
                                         <option value="cobalt">Cobalt-60 (Gamma - High Intensity)</option>
                                         <option value="americium">Americium-241 (Alpha/Gamma - Short Range)</option>
+                                    </select>
+                                </div>
+
+                                <div class="slider-control-group">
+                                    <div class="slider-label-row">
+                                        <span>Shielding Material:</span>
+                                    </div>
+                                    <select id="shieldSelect" class="specimen-select">
+                                        <option value="none" selected>No Shield</option>
+                                        <option value="paper">Paper Sheet (Absorbs Alpha)</option>
+                                        <option value="aluminum">Aluminum Foil (Absorbs Beta)</option>
+                                        <option value="lead">Lead Plate (Absorbs Gamma)</option>
                                     </select>
                                 </div>
 
@@ -691,6 +712,7 @@
                 // Physics metrics
                 this.distance = 50.0; // cm
                 this.isDraggingSample = false;
+                this.currentShield = 'none'; // active shield type
 
                 // Bench Ruler Boundaries for Holder Dragging
                 this.minPos = new THREE.Vector3(-14.0, -5.9, -2.0); // 100 cm position (farthest left)
@@ -705,6 +727,24 @@
                     cobalt: { rate: 1800, label: 'Cobalt-60 (Gamma)', color: 0xf59e0b },
                     americium: { rate: 300, label: 'Americium-241 (Alpha/Gamma)', color: 0x10b981 }
                 };
+                
+                // Attenuation properties of shield materials for alpha, beta, and gamma radiation
+                this.shieldEffects = {
+                    none: { alpha: 1.0, beta: 1.0, gamma: 1.0 },
+                    paper: { alpha: 0.0, beta: 0.95, gamma: 1.0 },
+                    aluminum: { alpha: 0.0, beta: 0.02, gamma: 0.85 },
+                    lead: { alpha: 0.0, beta: 0.00, gamma: 0.10 }
+                };
+
+                // Approximate composition of radiation emitted by each active source
+                this.sourceEmissions = {
+                    background: { alpha: 0.0, beta: 0.0, gamma: 1.0 },
+                    strontium: { alpha: 0.0, beta: 1.0, gamma: 0.0 }, // pure beta
+                    caesium: { alpha: 0.0, beta: 0.4, gamma: 0.6 },   // beta and gamma
+                    cobalt: { alpha: 0.0, beta: 0.0, gamma: 1.0 },    // pure gamma
+                    americium: { alpha: 0.8, beta: 0.0, gamma: 0.2 }  // mostly alpha, some gamma
+                };
+
                 this.currentSource = 'background';
                 
                 // Physics data-logging arrays for plots
@@ -727,8 +767,10 @@
                 this.initializeAudio();
                 this.setup3DScene();
                 this.bindEvents();
+                this.setupDraggablePanel(); // Set up dragging and toggle logic for HUD panel
                 this.recalculatePhysics();
                 this.updateSpecimenColor(); // Configure initial empty state
+                this.updateShieldMaterial(); // Configure initial shield state
                 
                 // Handle dimensions gracefully
                 setTimeout(() => {
@@ -792,10 +834,12 @@
                 this.scene = new THREE.Scene();
                 this.scene.background = new THREE.Color(0xf1f5f9);
 
-                // --- ADJUSTED FOR DIRECT FRONT-FACING Persp ---
+                // --- CAMERA SHIFTED DOWNWARDS EVEN FURTHER ---
+                // By raising camera's initial height to Y = 8.5 and lookAt target's height to Y = -0.5,
+                // the scene shifts further downward in the screen frame, completely preventing overlapping.
                 this.camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 1000);
-                this.camera.position.set(-3.5, 5, 30);
-                this.camera.lookAt(-3.5, -4.5, -2);
+                this.camera.position.set(-3.5, 8.5, 30);
+                this.camera.lookAt(-3.5, -0.5, -2);
 
                 this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
                 this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -812,6 +856,7 @@
                 this.createPhysicalScalerUnit();
                 this.createDimensionLine();
                 this.createSampleStorageRack(); // Inventory rack on table side
+                this.createShieldAssembly(); // Custom slotted stand + dynamic shield models
 
                 // Invisible dragging guide plane matching ruler height table level
                 const dragPlaneGeo = new THREE.PlaneGeometry(100, 100);
@@ -837,7 +882,7 @@
                 this.controls.maxDistance = 65;
                 
                 // Align the controls pivot strictly to the center of the track for perfect panning/orbiting
-                this.controls.target.set(-3.5, -4.5, -2);
+                this.controls.target.set(-3.5, -0.5, -2);
 
                 // --- RE-ENGINEERED SUPERIOR LIGHTING SYSTEM ---
                 // Even ambient base fill
@@ -964,6 +1009,7 @@
                 this.dragHandleMesh = new THREE.Mesh(handleGeo, handleMat);
                 this.dragHandleMesh.position.set(0, 0.45, 1.1);
                 this.dragHandleMesh.castShadow = true;
+                this.dragHandleMesh.name = "drag_handle";
                 this.holderGroup.add(this.dragHandleMesh);
 
                 // Upright support post
@@ -1231,6 +1277,120 @@
                 });
             }
 
+            // Create a physical slotted holder stand for shielding materials sits directly in front of detector window face
+            createShieldAssembly() {
+                this.shieldStand = new THREE.Group();
+                this.shieldStand.position.set(8.8, -5.9, -2.0); // Placed stably at world Z alignment
+                this.scene.add(this.shieldStand);
+
+                // Base block - stretched slightly wider to hold a physically wider plate
+                const baseGeo = new THREE.BoxGeometry(0.8, 0.3, 4.4);
+                const baseMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 });
+                const base = new THREE.Mesh(baseGeo, baseMat);
+                base.castShadow = true;
+                base.receiveShadow = true;
+                this.shieldStand.add(base);
+
+                // Guide lips creating a physically visible slotted bracket cradle
+                const lipGeo = new THREE.BoxGeometry(0.08, 0.5, 4.4);
+                const leftLip = new THREE.Mesh(lipGeo, baseMat);
+                leftLip.position.set(-0.25, 0.3, 0);
+                const rightLip = new THREE.Mesh(lipGeo, baseMat);
+                rightLip.position.set(0.25, 0.3, 0);
+                this.shieldStand.add(leftLip);
+                this.shieldStand.add(rightLip);
+
+                // Shield materials definitions
+                this.shieldMaterials = {
+                    paper: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, side: THREE.DoubleSide }),
+                    aluminum: new THREE.MeshStandardMaterial({ color: 0xbac8cc, metalness: 0.9, roughness: 0.2, side: THREE.DoubleSide }),
+                    lead: new THREE.MeshStandardMaterial({ color: 0x51565c, metalness: 0.6, roughness: 0.5, side: THREE.DoubleSide })
+                };
+
+                // Attenuation plate geometry - increased height to 4.5 and width to 3.6 to completely shield the 2.4-diameter housing
+                const shieldPlateGeo = new THREE.BoxGeometry(0.08, 4.5, 3.6);
+                this.shieldMesh = new THREE.Mesh(shieldPlateGeo, this.shieldMaterials.paper);
+                this.shieldMesh.position.set(0, 2.25, 0); // elevated centered to intersect radiation beam pathway fully
+                this.shieldMesh.castShadow = true;
+                this.shieldMesh.visible = false; // Hidden on start
+                this.shieldStand.add(this.shieldMesh);
+            }
+
+            updateShieldMaterial() {
+                if (!this.shieldMesh) return;
+                if (this.currentShield === 'none') {
+                    this.shieldMesh.visible = false;
+                } else {
+                    this.shieldMesh.visible = true;
+                    this.shieldMesh.material = this.shieldMaterials[this.currentShield];
+                }
+            }
+
+            // Draggable panel pointer event implementation (moveable & collapsible)
+            setupDraggablePanel() {
+                const panel = document.getElementById('simControlPanel');
+                const header = document.getElementById('simControlHeader');
+                let isDragging = false;
+                let startX, startY, initialLeft, initialTop;
+
+                header.addEventListener('pointerdown', (e) => {
+                    // Ignore clicks on inner dropdowns or custom selection actions
+                    if (e.target.closest('select') || e.target.closest('button')) return;
+                    
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    
+                    // Track boundary rects relative to viewport frame container
+                    const rect = panel.getBoundingClientRect();
+                    const containerRect = panel.parentElement.getBoundingClientRect();
+                    
+                    initialLeft = rect.left - containerRect.left;
+                    initialTop = rect.top - containerRect.top;
+                    
+                    // Force absolute layout properties so it moves reliably on absolute positions
+                    panel.style.position = 'absolute';
+                    panel.style.margin = '0';
+                    panel.style.left = `${initialLeft}px`;
+                    panel.style.top = `${initialTop}px`;
+                    
+                    header.setPointerCapture(e.pointerId);
+                });
+
+                header.addEventListener('pointermove', (e) => {
+                    if (!isDragging) return;
+                    
+                    const dx = e.clientX - startX;
+                    const dy = e.clientY - startY;
+                    
+                    const containerRect = panel.parentElement.getBoundingClientRect();
+                    const panelRect = panel.getBoundingClientRect();
+                    
+                    let newLeft = initialLeft + dx;
+                    let newTop = initialTop + dy;
+                    
+                    // Clamp bounds so the controller remains fully visible in viewport margins
+                    newLeft = Math.max(0, Math.min(newLeft, containerRect.width - panelRect.width));
+                    newTop = Math.max(0, Math.min(newTop, containerRect.height - panelRect.height));
+                    
+                    panel.style.left = `${newLeft}px`;
+                    panel.style.top = `${newTop}px`;
+                });
+
+                header.addEventListener('pointerup', (e) => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    header.releasePointerCapture(e.pointerId);
+                    
+                    // If the user barely moved the cursor, assume a simple click/tap action was intended
+                    const totalDeltaX = Math.abs(e.clientX - startX);
+                    const totalDeltaY = Math.abs(e.clientY - startY);
+                    if (totalDeltaX < 4 && totalDeltaY < 4) {
+                        panel.classList.toggle('collapsed');
+                    }
+                });
+            }
+
             // Quick Canvas utility helper to draw clean rounded background badges
             drawRoundRect(ctx, x, y, width, height, radius) {
                 ctx.beginPath();
@@ -1256,11 +1416,11 @@
 
                 ctx.fillStyle = "#22c55e";
                 ctx.font = 'bold 28px "Share Tech Mono", monospace';
-                ctx.fillText(`RATE: ${Math.round(this.displayedCPM)} CPM`, 12, 45);
+                ctx.fillText(`RATE: ${Math.round(this.displayedCPM)} CPM`, 16, 50);
 
                 ctx.font = '22px "Share Tech Mono", monospace';
-                ctx.fillText(`TIME: ${this.elapsedTime.toFixed(1)} s`, 12, 85);
-                ctx.fillText(`CTS : ${this.totalCounts}`, 12, 115);
+                ctx.fillText(`TIME: ${this.elapsedTime.toFixed(1)} s`, 16, 92);
+                ctx.fillText(`CTS : ${this.totalCounts}`, 16, 115);
 
                 // Active LIVE Blinker Dot
                 ctx.fillStyle = "#ef4444";
@@ -1272,6 +1432,12 @@
                 ctx.fillText("LIVE", 215, 42);
 
                 this.displayTexture.needsUpdate = true;
+            }
+
+            updateDisplay() {
+                document.getElementById('timeHudDisplay').innerHTML = `Time: <strong>${Math.floor(this.elapsedTime)}</strong>s`;
+                document.getElementById('totalCountsHud').innerHTML = `Counts: <strong>${this.totalCounts}</strong>`;
+                document.getElementById('rateHud').innerHTML = `Rate: <strong>${Math.round(this.displayedCPM)}</strong> CPM`;
             }
 
             bindEvents() {
@@ -1293,17 +1459,18 @@
                     }
                 });
 
-                const header = document.getElementById('simControlHeader');
-                const panel = document.getElementById('simControlPanel');
-                header.addEventListener('click', () => {
-                    panel.classList.toggle('collapsed');
-                });
-
                 document.getElementById('sampleSelect').addEventListener('change', (e) => {
                     view.currentSource = e.target.value;
                     view.updateSpecimenColor();
                     view.recalculatePhysics();
                     // Force an immediate display rate update on sample swap so the interface reacts instantly
+                    view.forceImmediateRateUpdate();
+                });
+
+                document.getElementById('shieldSelect').addEventListener('change', (e) => {
+                    view.currentShield = e.target.value;
+                    view.updateShieldMaterial();
+                    view.recalculatePhysics();
                     view.forceImmediateRateUpdate();
                 });
 
@@ -1398,12 +1565,20 @@
                 const sourceBaseCPM = this.sourceTypes[this.currentSource].rate;
                 const backgroundCPM = this.sourceTypes['background'].rate;
 
-                // --- PURE INVERSE SQUARE LAW MATHEMATICS ---
+                // --- PURE INVERSE SQUARE LAW MATHEMATICS WITH ATTENUATION MODIFIERS ---
                 // CPM is inversely proportional to the square of the distance (I = k / d^2)
                 const k = sourceBaseCPM * 100;
                 const inverseSquareComponent = k / (this.distance * this.distance);
 
-                this.currentCPM = backgroundCPM + inverseSquareComponent;
+                // Compute overall shield factor based on isotopic emission proportions
+                const emission = this.sourceEmissions[this.currentSource];
+                const shield = this.shieldEffects[this.currentShield];
+
+                const shieldFactor = (emission.alpha * shield.alpha) + 
+                                     (emission.beta * shield.beta) + 
+                                     (emission.gamma * shield.gamma);
+
+                this.currentCPM = backgroundCPM + (inverseSquareComponent * shieldFactor);
 
                 // Dynamic measurement window: High rates gather statistics quickly (responsive), 
                 // while low rates integrate over a longer window to remain stable.
@@ -1428,7 +1603,8 @@
                 }
                 
                 // Blend Poisson statistics with theoretical curve dynamically
-                // High activity limits visual fluctuations; background is allowed to dance wildly
+                // Low CPM -> high relative fluctuation (beta ~ 0.01)
+                // High CPM -> low fluctuation (beta ~ 0.85)
                 const beta = Math.min(0.85, this.currentCPM / 2000);
                 this.displayedCPM = (beta * this.currentCPM) + ((1 - beta) * rawPoissonCPM);
 
@@ -1756,12 +1932,6 @@
                 ctx.font = '8px sans-serif';
                 ctx.fillText("Short Intervals", padding.left + 5, padding.top + plotHeight + 12);
                 ctx.fillText("Long Intervals", padding.left + plotWidth - 70, padding.top + plotHeight + 12);
-            }
-
-            updateDisplay() {
-                document.getElementById('timeHudDisplay').innerHTML = `Time: <strong>${Math.floor(this.elapsedTime)}</strong>s`;
-                document.getElementById('totalCountsHud').innerHTML = `Counts: <strong>${this.totalCounts}</strong>`;
-                document.getElementById('rateHud').innerHTML = `Rate: <strong>${Math.round(this.displayedCPM)}</strong> CPM`;
             }
 
             animate3D() {
