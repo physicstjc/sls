@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geiger Muller Counter Simulation</title>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Three.js for 3D Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls -->
+    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .digital-font {
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        /* Enforced Height Applet Container */
+        .app-container {
+            max-width: 1024px;
+            width: 100%;
+            height: 600px;
+            background-color: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                height: 700px;
+            }
+        }
+
+        /* Header Layout matching clean SLS Applet style */
+        .app-header {
+            background-color: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-shrink: 0;
+            z-index: 20;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-icon {
+            padding: 6px;
+            background-color: rgba(37, 99, 235, 0.08);
+            color: #2563eb;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand-text h1 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+
+        .brand-text p {
+            font-size: 9px;
+            color: #64748b;
+            line-height: 1;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Live state badge */
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 700;
+            border: 1px solid #cbd5e1;
+        }
+
+        .status-badge.live {
+            background-color: #f0fdf4;
+            color: #166534;
+            border-color: #bbf7d0;
+        }
+
+        .ping-dot {
+            position: relative;
+            display: flex;
+            height: 6px;
+            width: 6px;
+        }
+
+        .ping-dot .pulse {
+            animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+            position: absolute;
+            display: inline-flex;
+            height: 100%;
+            width: 100%;
+            border-radius: 9999px;
+            opacity: 0.75;
+        }
+
+        .ping-dot .dot {
+            position: relative;
+            display: inline-flex;
+            border-radius: 9999px;
+            height: 6px;
+            width: 6px;
+        }
+
+        @keyframes ping {
+            75%, 100% {
+                transform: scale(2.2);
+                opacity: 0;
+            }
+        }
+
+        /* Sound Control bar */
+        .sound-adjuster {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background-color: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+        }
+
+        .sound-adjuster button {
+            background: none;
+            border: none;
+            color: #475569;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .sound-adjuster input[type="range"] {
+            width: 50px;
+            height: 3px;
+            accent-color: #2563eb;
+            cursor: pointer;
+        }
+
+        /* Main Dashboard Layout */
+        .main-dashboard {
+            flex: 1;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: 1fr;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 3D Viewport container */
+        .viewport-3d-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-color: #eaeef3;
+        }
+
+        .threejs-viewport {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .threejs-viewport canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            touch-action: none;
+        }
+
+        /* HUD overlay */
+        .hud-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 12px;
+            z-index: 10;
+        }
+
+        .hud-interactive {
+            pointer-events: auto;
+        }
+
+        /* Floating translucent menu */
+        .sim-control-panel {
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            width: 280px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            color: #1e293b;
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            max-height: 400px;
+        }
+
+        .sim-control-panel.collapsed {
+            max-height: 38px;
+        }
+
+        .sim-control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sim-control-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #475569;
+        }
+
+        .collapse-arrow-icon {
+            color: #64748b;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+        }
+
+        .sim-control-panel.collapsed .collapse-arrow-icon {
+            transform: rotate(-180deg);
+        }
+
+        .tab-content {
+            font-size: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .slider-control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .slider-label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #475569;
+            font-weight: 600;
+        }
+
+        .specimen-select {
+            background: #ffffff;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            padding: 4px;
+            font-size: 10px;
+            width: 100%;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Graph status indicator */
+        .canvas-graph-switch-indicator {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 1px solid #cbd5e1;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            pointer-events: none;
+        }
+
+        /* Collapsible Drawer on Right Side */
+        .sls-drawer {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            width: 320px;
+            background-color: #ffffff;
+            border-left: 1.5px solid #cbd5e1;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            z-index: 40;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: -4px 0 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .sls-drawer.open {
+            transform: translateX(0);
+        }
+
+        /* The collapsible handle tab */
+        .sls-drawer-tab {
+            position: absolute;
+            top: 50%;
+            left: -32px;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 120px;
+            background-color: #2563eb;
+            color: #ffffff;
+            border-radius: 6px 0 0 6px;
+            border: 1.5px solid #2563eb;
+            border-right: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            box-shadow: -3px 0 10px rgba(0,0,0,0.06);
+            transition: background-color 0.2s;
+        }
+
+        .sls-drawer-tab:hover {
+            background-color: #1d4ed8;
+        }
+
+        .graph-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 6px;
+        }
+
+        .graph-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .graph-indicator-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 9999px;
+            background-color: #10b981;
+        }
+
+        .graph-indicator-dot.pulsing {
+            animation: graph-ping 0.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes graph-ping {
+            75%, 100% { transform: scale(2.2); opacity: 0; }
+        }
+
+        .graph-header h2 {
+            font-size: 11px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        /* Plot Canvas Container */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            border: 1px solid #e2e8f0;
+            background-color: #fafafa;
+            border-radius: 6px;
+            overflow: hidden;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            opacity: 0.05;
+            background-image: linear-gradient(to right, #000000 1px, transparent 1px), linear-gradient(to bottom, #000000 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            flex: 1;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            position: relative;
+            z-index: 10;
+        }
+
+        .graph-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+            font-size: 9px;
+            color: #64748b;
+        }
+
+        /* Footer Info Bar */
+        .app-footer {
+            background-color: #f8fafc;
+            border-top: 1px solid #cbd5e1;
+            padding: 6px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            font-size: 10px;
+            color: #64748b;
+            z-index: 20;
+        }
+
+        .footer-info {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #64748b;
+        }
+
+        .footer-info i {
+            color: #2563eb;
+            flex-shrink: 0;
+        }
+        
+        .hint-overlay {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(15, 23, 42, 0.85);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 9px;
+            text-transform: uppercase;
+            pointer-events: none;
+            letter-spacing: 0.05em;
+            line-height: 1.4;
+            max-width: 260px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Enforced app container -->
+    <div class="app-container">
+        
+        <!-- Compact Header Banner -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="brand-icon">
+                    <i data-lucide="radiation" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>Geiger Muller Counter Simulation</h1>
+                    <p>Physics Laboratory Experiment</p>
+                </div>
+            </div>
+            
+            <!-- Live status & sound option -->
+            <div class="header-controls">
+                <div id="calcBadge" class="status-badge live">
+                    <span class="ping-dot">
+                        <span class="pulse bg-emerald-500"></span>
+                        <span id="calcIndicatorDot" class="dot bg-emerald-600"></span>
+                    </span>
+                    <span id="calcStatusText">LIVE MONITORING</span>
+                </div>
+                
+                <!-- Quick Volume adjust -->
+                <div class="sound-adjuster">
+                    <button id="muteBtn">
+                        <i data-lucide="volume-2" id="volumeIcon" style="width: 12px; height: 12px;"></i>
+                    </button>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="50">
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Display Dashboard (Interactive ThreeJS & HUD Overlay) -->
+        <main class="main-dashboard">
+            
+            <div class="viewport-3d-container">
+                <!-- Three.js Canvas mounting viewport -->
+                <div id="threejsViewport" class="threejs-viewport"></div>
+                
+                <!-- 3D Hint -->
+                <div class="hint-overlay">
+                    Drag blue specimen holder on rail to observe inverse square law in real-time.
+                </div>
+
+                <!-- Graph panel state indicator -->
+                <div class="canvas-graph-switch-indicator">
+                    <i data-lucide="line-chart" style="width: 12px; height: 12px; color: #2563eb;"></i>
+                    <span>ANALYSIS PANEL: <strong id="graphPanelStatusText">CLOSED</strong></span>
+                </div>
+
+                <!-- HUD Overlay layers -->
+                <div class="hud-overlay">
+                    
+                    <!-- Left Corner: Translucent Simulation Control panel -->
+                    <div id="simControlPanel" class="sim-control-panel hud-interactive">
+                        <div class="sim-control-header" id="simControlHeader">
+                            <span class="sim-control-title">Simulation Settings</span>
+                            <span class="collapse-arrow-icon">
+                                <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>
+                            </span>
+                        </div>
+                        
+                        <!-- Dynamic Tab Content -->
+                        <div id="tabContentArea" class="tab-content">
+                            <div id="panelAnalysis" class="tab-panel">
+                                <div class="slider-control-group">
+                                    <div class="slider-label-row" style="margin-bottom: 2px;">
+                                        <span>Current Distance:</span>
+                                        <span id="distanceValPanel" style="color: #2563eb; font-weight: 700; font-size: 11px;">50.0 cm</span>
+                                    </div>
+                                </div>
+
+                                <div class="slider-control-group">
+                                    <div class="slider-label-row">
+                                        <span>Sample Source:</span>
+                                    </div>
+                                    <select id="sampleSelect" class="specimen-select">
+                                        <option value="background" selected>No Sample (Background Only)</option>
+                                        <option value="strontium">Strontium-90 (Beta - High Range)</option>
+                                        <option value="caesium">Caesium-137 (Beta/Gamma - Mid Range)</option>
+                                        <option value="cobalt">Cobalt-60 (Gamma - High Intensity)</option>
+                                        <option value="americium">Americium-241 (Alpha/Gamma - Short Range)</option>
+                                    </select>
+                                </div>
+
+                                <div class="slider-control-group" style="margin-top: 4px;">
+                                    <div class="slider-label-row">
+                                        <span>Plotting Variable:</span>
+                                    </div>
+                                    <select id="viewSelect" class="specimen-select">
+                                        <option value="rate" selected>Count Rate (CPM vs Time)</option>
+                                        <option value="cumulative">Cumulative Pulse Progression</option>
+                                        <option value="histogram">Interval Distribution (Poisson Check)</option>
+                                    </select>
+                                </div>
+
+                                <div class="slider-control-group" style="margin-top: 8px;">
+                                    <button id="hudResetBtn" class="specimen-select" style="background-color: #dc2626; color: white; font-weight: 700; border: none; text-align: center; padding: 6px; border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em;">
+                                        Reset Counter
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Collapsible Drawer -->
+            <section id="graphPanel" class="sls-drawer">
+                <!-- Vertical sliding handle tab sticking out -->
+                <div id="drawerTab" class="sls-drawer-tab">📊 ANALYSIS</div>
+
+                <div class="graph-header">
+                    <div class="graph-title">
+                        <span id="graphPing" class="graph-indicator-dot"></span>
+                        <h2 id="chartTitle">Real-Time Pulse Plotter</h2>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <div class="grid-overlay"></div>
+                    <div class="canvas-wrapper">
+                        <canvas id="chartCanvas" class="chart-canvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Graph footer stats -->
+                <div class="graph-footer">
+                    <span id="timeAxisMin">0s</span>
+                    <span id="chartSubtext" class="graph-subtext">Rate Progression (Counts per Minute)</span>
+                    <span id="timeAxisMax">60s</span>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Compact Info Footer -->
+        <footer class="app-footer">
+            <div class="footer-info">
+                <i data-lucide="info" style="width: 13px; height: 13px;"></i>
+                <p>
+                    <strong>Metrics:</strong> Distance: <span id="distValHud" style="font-weight:700;">50.0</span> cm | Continuous Avalanche Ionization Active
+                </p>
+            </div>
+            <div>
+                <span id="timeHudDisplay">Time: <strong>0</strong>s</span>
+                <span style="margin: 0 4px; color: #cbd5e1;">|</span>
+                <span id="totalCountsHud">Counts: <strong>0</strong></span>
+                <span style="margin: 0 4px; color: #cbd5e1;">|</span>
+                <span id="rateHud">Rate: <strong>0</strong> CPM</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Application Script Logic -->
+    <script>
+        class GeigerCounterApp {
+            constructor() {
+                this.isRunning = true;
+                this.startTime = performance.now();
+                this.elapsedTime = 0;
+                this.totalCounts = 0;
+                this.currentCPM = 0; // Theoretical set CPM based on distance
+                this.displayedCPM = 0; // Statistical fluctuating CPM shown on display
+                this.volume = 0.5;
+                this.isMuted = false;
+                this.audioContext = null;
+                
+                // Physics metrics
+                this.distance = 50.0; // cm
+                this.isDraggingSample = false;
+
+                // Bench Ruler Boundaries for Holder Dragging
+                this.minPos = new THREE.Vector3(-14.0, -5.9, -2.0); // 100 cm position (farthest left)
+                this.maxPos = new THREE.Vector3(7.0, -5.9, -2.0);   // 10 cm position (closest to tube)
+                this.tubeApertureX = 12.0;                          // x coordinate of the GM sensor face
+                
+                // Isotopes specifications and peak relative yields (at close-up 10cm)
+                this.sourceTypes = {
+                    background: { rate: 25, label: 'Background Only', color: 0x94a3b8 },
+                    strontium: { rate: 1200, label: 'Strontium-90 (Beta)', color: 0xef4444 },
+                    caesium: { rate: 650, label: 'Caesium-137 (Beta/Gamma)', color: 0x3b82f6 },
+                    cobalt: { rate: 1800, label: 'Cobalt-60 (Gamma)', color: 0xf59e0b },
+                    americium: { rate: 300, label: 'Americium-241 (Alpha/Gamma)', color: 0x10b981 }
+                };
+                this.currentSource = 'background';
+                
+                // Physics data-logging arrays for plots
+                this.timePoints = [];
+                this.rateData = [];          // Instantaneous calculated rates (smoothed CPM)
+                this.cumulativeData = [];    // Total count values recorded over time
+                this.intervalHistory = [];   // Recorded intervals between success clicks
+                this.lastClickTime = performance.now();
+                
+                // History of actual pulse timestamps (in ms) to dynamically calculate a fluctuating display rate
+                this.pulseTimestampHistory = [];
+                this.measurementWindowMs = 12000; // Sliding interval for ratemeter estimation
+                this.lastRateUpdateTime = 0;      // Tracks gate time for rate reading updates
+                
+                this.canvas = document.getElementById('chartCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.currentView = 'rate';
+                this.isGraphVisible = false;
+                
+                this.initializeAudio();
+                this.setup3DScene();
+                this.bindEvents();
+                this.recalculatePhysics();
+                this.updateSpecimenColor(); // Configure initial empty state
+                
+                // Handle dimensions gracefully
+                setTimeout(() => {
+                    this.resizeCanvas();
+                    this.drawChart();
+                }, 200);
+                
+                this.updateDisplay();
+                this.animate3D();
+            }
+
+            initializeAudio() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.warn('Audio synthesis context blocked or unsupported.');
+                }
+            }
+
+            playClickSound() {
+                if (this.isMuted || this.volume <= 0.05) return;
+                
+                if (this.audioContext && this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                }
+                
+                if (!this.audioContext) return;
+
+                const now = this.audioContext.currentTime;
+                
+                // Create transient click synthesis sound structure
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1400, now);
+                filter.Q.setValueAtTime(6.0, now);
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(320, now);
+                osc.frequency.exponentialRampToValueAtTime(120, now + 0.015);
+
+                gain.gain.setValueAtTime(this.volume * 0.8, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.audioContext.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.02);
+            }
+
+            // Assembly of interactive laboratory model setup
+            setup3DScene() {
+                const container = document.getElementById('threejsViewport');
+                let width = container.clientWidth || 640;
+                let height = container.clientHeight || 360;
+
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0xf1f5f9);
+
+                // --- ADJUSTED FOR DIRECT FRONT-FACING Persp ---
+                this.camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 1000);
+                this.camera.position.set(-3.5, 5, 30);
+                this.camera.lookAt(-3.5, -4.5, -2);
+
+                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                this.renderer.setPixelRatio(window.devicePixelRatio);
+                this.renderer.setSize(width, height);
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                container.appendChild(this.renderer.domElement);
+
+                // Build physical objects
+                this.createLabTable();
+                this.createRulerBench();
+                this.createGeigerTubeAssembly();
+                this.createSampleHolderAssembly();
+                this.createPhysicalScalerUnit();
+                this.createDimensionLine();
+                this.createSampleStorageRack(); // Inventory rack on table side
+
+                // Invisible dragging guide plane matching ruler height table level
+                const dragPlaneGeo = new THREE.PlaneGeometry(100, 100);
+                dragPlaneGeo.rotateX(-Math.PI / 2);
+                const dragPlaneMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0 });
+                this.dragPlane = new THREE.Mesh(dragPlaneGeo, dragPlaneMat);
+                this.dragPlane.position.y = -5.9;
+                this.scene.add(this.dragPlane);
+
+                // Setup unified pointer events directly on canvas to seamlessly handle mouse and touch inputs
+                const dom = this.renderer.domElement;
+                dom.style.touchAction = 'none'; // Critical: Prevents mobile page scrolling/panning on the canvas
+                dom.addEventListener('pointerdown', (e) => this.onPointerDown(e), false);
+                dom.addEventListener('pointermove', (e) => this.onPointerMove(e), false);
+                window.addEventListener('pointerup', (e) => this.onPointerUp(e), false);
+
+                // Create OrbitControls *after* custom bindings so custom handlers execute first
+                this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
+                this.controls.dampingFactor = 0.05;
+                this.controls.maxPolarAngle = Math.PI / 2.15;
+                this.controls.minDistance = 12;
+                this.controls.maxDistance = 65;
+                
+                // Align the controls pivot strictly to the center of the track for perfect panning/orbiting
+                this.controls.target.set(-3.5, -4.5, -2);
+
+                // --- RE-ENGINEERED SUPERIOR LIGHTING SYSTEM ---
+                // Even ambient base fill
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+                this.scene.add(ambientLight);
+
+                // Primary sunlight-like Directional Source illuminating the entire experimental track
+                const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                mainLight.position.set(-10, 30, 20);
+                mainLight.castShadow = true;
+                mainLight.shadow.mapSize.width = 2048; // Crisp shadow resolution
+                mainLight.shadow.mapSize.height = 2048;
+                mainLight.shadow.bias = -0.0001;
+                this.scene.add(mainLight);
+
+                // Secondary soft Fill Light from opposite side to ease dark, high-contrast shadows
+                const fillLight = new THREE.DirectionalLight(0xffffff, 0.35);
+                fillLight.position.set(20, 15, -10);
+                this.scene.add(fillLight);
+
+                // Mouse interaction support
+                this.raycaster = new THREE.Raycaster();
+                this.mouse = new THREE.Vector2();
+            }
+
+            createLabTable() {
+                const tableGeo = new THREE.BoxGeometry(60, 1, 35);
+                const tableMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.6 });
+                const table = new THREE.Mesh(tableGeo, tableMat);
+                table.position.y = -6.5;
+                table.receiveShadow = true;
+                this.scene.add(table);
+
+                const wallGeo = new THREE.PlaneGeometry(120, 60);
+                const wallMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.95 });
+                const wall = new THREE.Mesh(wallGeo, wallMat);
+                wall.position.set(0, 10, -16);
+                this.scene.add(wall);
+            }
+
+            createRulerBench() {
+                const trackGeo = new THREE.BoxGeometry(26, 0.4, 3.2);
+                const trackMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.8 });
+                const track = new THREE.Mesh(trackGeo, trackMat);
+                track.position.set(-4.5, -5.8, -2);
+                track.castShadow = true;
+                track.receiveShadow = true;
+                this.scene.add(track);
+
+                const rulerGeo = new THREE.BoxGeometry(25, 0.05, 1.2);
+                const rulerMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
+                const ruler = new THREE.Mesh(rulerGeo, rulerMat);
+                ruler.position.set(-4.5, -5.58, -2.4);
+                this.scene.add(ruler);
+
+                const marksCount = 20;
+                for (let i = 0; i <= marksCount; i++) {
+                    const tickX = -17.0 + (i * 1.15);
+                    const tickGeo = new THREE.BoxGeometry(0.08, 0.01, 0.4);
+                    const tickMat = new THREE.MeshBasicMaterial({ color: 0x1e293b });
+                    const tick = new THREE.Mesh(tickGeo, tickMat);
+                    tick.position.set(tickX, -5.55, -2.1);
+                    this.scene.add(tick);
+                }
+            }
+
+            createGeigerTubeAssembly() {
+                this.tubeGroup = new THREE.Group();
+                this.tubeGroup.position.set(this.tubeApertureX, -5.6, -2);
+                this.scene.add(this.tubeGroup);
+
+                const baseGeo = new THREE.BoxGeometry(4.0, 0.6, 4.0);
+                const baseMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85 });
+                const mainBase = new THREE.Mesh(baseGeo, baseMat);
+                mainBase.position.y = 0.1;
+                mainBase.castShadow = true;
+                this.tubeGroup.add(mainBase);
+
+                const rodGeo = new THREE.CylinderGeometry(0.3, 0.3, 2.5, 12);
+                const rodMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85 });
+                const rod = new THREE.Mesh(rodGeo, rodMat);
+                rod.position.set(0, 1.5, 0);
+                rod.castShadow = true;
+                this.tubeGroup.add(rod);
+
+                const housingGeo = new THREE.CylinderGeometry(1.2, 1.2, 4.2, 24);
+                const housingMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.9, roughness: 0.2 });
+                const housing = new THREE.Mesh(housingGeo, housingMat);
+                housing.rotation.z = Math.PI / 2;
+                housing.position.set(0, 2.8, 0);
+                housing.castShadow = true;
+                this.tubeGroup.add(housing);
+
+                const apertureGeo = new THREE.CylinderGeometry(1.0, 1.0, 0.1, 16);
+                const apertureMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
+                this.apertureMesh = new THREE.Mesh(apertureGeo, apertureMat);
+                this.apertureMesh.rotation.z = Math.PI / 2;
+                this.apertureMesh.position.set(-2.1, 2.8, 0);
+                this.tubeGroup.add(this.apertureMesh);
+
+                const connectorGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.8, 8);
+                const connector = new THREE.Mesh(connectorGeo, rodMat);
+                connector.rotation.z = Math.PI / 2;
+                connector.position.set(2.2, 2.8, 0);
+                this.tubeGroup.add(connector);
+            }
+
+            createSampleHolderAssembly() {
+                this.holderGroup = new THREE.Group();
+                this.holderGroup.position.copy(this.minPos).lerp(this.maxPos, 0.6);
+                this.scene.add(this.holderGroup);
+
+                // Slide chassis sled base
+                const sledGeo = new THREE.BoxGeometry(3.6, 0.3, 3.4);
+                const sledMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.6 });
+                const sled = new THREE.Mesh(sledGeo, sledMat);
+                sled.position.y = 0.2;
+                sled.castShadow = true;
+                this.holderGroup.add(sled);
+
+                // High-visibility blue grab handle
+                const handleGeo = new THREE.BoxGeometry(0.8, 0.8, 1.6);
+                const handleMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, metalness: 0.2 });
+                this.dragHandleMesh = new THREE.Mesh(handleGeo, handleMat);
+                this.dragHandleMesh.position.set(0, 0.45, 1.1);
+                this.dragHandleMesh.castShadow = true;
+                this.holderGroup.add(this.dragHandleMesh);
+
+                // Upright support post
+                const uprightGeo = new THREE.CylinderGeometry(0.2, 0.2, 2.8, 12);
+                const uprightMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.7 });
+                const upright = new THREE.Mesh(uprightGeo, uprightMat);
+                upright.position.set(0, 1.5, 0);
+                upright.castShadow = true;
+                this.holderGroup.add(upright);
+
+                // Sliding specimen holding shelf
+                const shelfGeo = new THREE.BoxGeometry(2.4, 0.15, 2.4);
+                const shelfMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 });
+                this.trayShelf = new THREE.Mesh(shelfGeo, shelfMat);
+                this.trayShelf.position.set(-0.3, 2.8, 0);
+                this.trayShelf.castShadow = true;
+                this.holderGroup.add(this.trayShelf);
+
+                // V-shaped slotted holder to cradle the disk vertically
+                const vHolderMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
+                const vHolderGroup = new THREE.Group();
+                vHolderGroup.position.set(-0.3, 2.8, 0); // situated on top of the tray shelf
+                this.holderGroup.add(vHolderGroup);
+
+                // TRUE Upward-Opening V-shape wings (Left flares out to negative Z, Right flares out to positive Z)
+                const wingGeo = new THREE.BoxGeometry(0.5, 1.1, 0.15);
+                const leftWing = new THREE.Mesh(wingGeo, vHolderMat);
+                leftWing.position.set(0, 0.55, -0.45);
+                leftWing.rotation.x = -Math.PI / 6; // Flare OUTWARD to form a cradle
+                leftWing.castShadow = true;
+                vHolderGroup.add(leftWing);
+
+                const rightWing = new THREE.Mesh(wingGeo, vHolderMat);
+                rightWing.position.set(0, 0.55, 0.45);
+                rightWing.rotation.x = Math.PI / 6; // Flare OUTWARD to form a cradle
+                rightWing.castShadow = true;
+                vHolderGroup.add(rightWing);
+
+                // Low-profile front/back slot retaining plates to stop the disk falling out while leaving it highly exposed!
+                const slotPlateGeo = new THREE.BoxGeometry(0.08, 0.28, 0.5);
+                const frontSlotPlate = new THREE.Mesh(slotPlateGeo, vHolderMat);
+                frontSlotPlate.position.set(0.14, 0.14, 0);
+                frontSlotPlate.castShadow = true;
+                vHolderGroup.add(frontSlotPlate);
+
+                const backSlotPlate = new THREE.Mesh(slotPlateGeo, vHolderMat);
+                backSlotPlate.position.set(-0.14, 0.14, 0);
+                backSlotPlate.castShadow = true;
+                vHolderGroup.add(backSlotPlate);
+
+                // Standing specimen disk, flat surface facing GM tube (X-axis facing)
+                const diskGeo = new THREE.CylinderGeometry(0.8, 0.8, 0.22, 16);
+                diskGeo.rotateZ(Math.PI / 2);
+                
+                this.diskMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.5 });
+                this.specimenDisk = new THREE.Mesh(diskGeo, this.diskMat);
+                this.specimenDisk.position.set(-0.3, 3.5, 0); // Nestled perfectly in the bottom of the open V-holder
+                this.specimenDisk.castShadow = true;
+                this.holderGroup.add(this.specimenDisk);
+
+                // Generous invisible hitbox around slider stand to make dragging extremely reliable
+                const grabBoxGeo = new THREE.BoxGeometry(4.6, 5.0, 4.6);
+                const grabBoxMat = new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0 });
+                const grabBox = new THREE.Mesh(grabBoxGeo, grabBoxMat);
+                grabBox.position.set(0, 2.2, 0);
+                grabBox.name = "drag_hitbox";
+                this.holderGroup.add(grabBox);
+            }
+
+            createPhysicalScalerUnit() {
+                this.scalerGroup = new THREE.Group();
+                this.scalerGroup.position.set(-10, -4.3, -10);
+                this.scene.add(this.scalerGroup);
+
+                const boxGeo = new THREE.BoxGeometry(11, 4.5, 8);
+                const boxMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5 });
+                const box = new THREE.Mesh(boxGeo, boxMat);
+                box.castShadow = true;
+                box.receiveShadow = true;
+                this.scalerGroup.add(box);
+
+                const panelGeo = new THREE.BoxGeometry(10.2, 3.8, 0.15);
+                const panelMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, metalness: 0.8, roughness: 0.25 });
+                const panel = new THREE.Mesh(panelGeo, panelMat);
+                panel.position.set(0, 0.1, 4.05);
+                this.scalerGroup.add(panel);
+
+                // Screen Layout
+                const scrGeo = new THREE.BoxGeometry(5.2, 2.4, 0.1);
+                const scrMat = new THREE.MeshBasicMaterial({ color: 0x030712 });
+                const screen = new THREE.Mesh(scrGeo, scrMat);
+                screen.position.set(-1.0, 0.2, 4.15);
+                this.scalerGroup.add(screen);
+
+                this.displayCanvas = document.createElement('canvas');
+                this.displayCanvas.width = 256;
+                this.displayCanvas.height = 128;
+                this.displayTexture = new THREE.CanvasTexture(this.displayCanvas);
+                const dynamicScrGeo = new THREE.PlaneGeometry(4.8, 2.2);
+                const dynamicScrMat = new THREE.MeshBasicMaterial({ map: this.displayTexture, transparent: true });
+                this.dynamicScreenMesh = new THREE.Mesh(dynamicScrGeo, dynamicScrMat);
+                this.dynamicScreenMesh.position.set(-1.0, 0.2, 4.22);
+                this.scalerGroup.add(this.dynamicScreenMesh);
+
+                // --- INTEGRATED TACTILE RESET BUTTON ---
+                const rstBtnGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.4, 12);
+                rstBtnGeo.rotateX(Math.PI / 2);
+                const rstBtnMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.2, metalness: 0.1 });
+                this.pBtnReset = new THREE.Mesh(rstBtnGeo, rstBtnMat);
+                this.pBtnReset.position.set(2.8, -0.8, 4.15);
+                this.pBtnReset.name = "reset_button";
+                this.scalerGroup.add(this.pBtnReset);
+
+                // Printed "RESET" Text label above the physical button
+                const resetLblGeo = new THREE.PlaneGeometry(1.6, 0.5);
+                const resetLblCanvas = document.createElement('canvas');
+                resetLblCanvas.width = 64;
+                resetLblCanvas.height = 24;
+                const rlCtx = resetLblCanvas.getContext('2d');
+                rlCtx.fillStyle = '#ef4444'; // Red text label
+                rlCtx.font = 'bold 15px sans-serif';
+                rlCtx.textAlign = 'center';
+                rlCtx.fillText("RESET", 32, 16);
+                const rlTex = new THREE.CanvasTexture(resetLblCanvas);
+                const rlMat = new THREE.MeshBasicMaterial({ map: rlTex, transparent: true });
+                const resetLabel = new THREE.Mesh(resetLblGeo, rlMat);
+                resetLabel.position.set(2.8, -0.3, 4.18);
+                this.scalerGroup.add(resetLabel);
+
+                // Decorative chassis labels
+                const txtGeo = new THREE.PlaneGeometry(5.0, 0.6);
+                const txtCanvas = document.createElement('canvas');
+                txtCanvas.width = 160;
+                txtCanvas.height = 32;
+                const txtCtx = txtCanvas.getContext('2d');
+                txtCtx.fillStyle = '#1e293b';
+                txtCtx.font = 'bold 18px sans-serif';
+                txtCtx.fillText("DIGITAL MONITOR", 0, 24);
+                const labelTex = new THREE.CanvasTexture(txtCanvas);
+                const labelMat = new THREE.MeshBasicMaterial({ map: labelTex, transparent: true });
+                const mainLabel = new THREE.Mesh(txtGeo, labelMat);
+                mainLabel.position.set(-1.0, -1.2, 4.2);
+                this.scalerGroup.add(mainLabel);
+
+                this.updateScalerDisplayTexture();
+            }
+
+            // Create a physical distance dimension line on the table top surface
+            createDimensionLine() {
+                this.dimensionGroup = new THREE.Group();
+                this.scene.add(this.dimensionGroup);
+
+                // Main blue dimension horizontal track line
+                const lineGeo = new THREE.BoxGeometry(1, 0.04, 0.04);
+                const lineMat = new THREE.MeshBasicMaterial({ color: 0x2563eb });
+                this.dimensionLineMesh = new THREE.Mesh(lineGeo, lineMat);
+                this.dimensionGroup.add(this.dimensionLineMesh);
+
+                // Tick marks defining boundaries at both ends of the dimension line
+                const tickGeo = new THREE.BoxGeometry(0.04, 0.2, 0.2);
+                this.startTick = new THREE.Mesh(tickGeo, lineMat);
+                this.endTick = new THREE.Mesh(tickGeo, lineMat);
+                this.dimensionGroup.add(this.startTick);
+                this.dimensionGroup.add(this.endTick);
+
+                // Dynamic Canvas-textured Label Plane displaying "{distance} cm" directly on the tabletop
+                this.dimCanvas = document.createElement('canvas');
+                this.dimCanvas.width = 128;
+                this.dimCanvas.height = 48;
+                this.dimTexture = new THREE.CanvasTexture(this.dimCanvas);
+                
+                const labelGeo = new THREE.PlaneGeometry(3.0, 1.1);
+                const labelMat = new THREE.MeshBasicMaterial({ 
+                    map: this.dimTexture, 
+                    transparent: true,
+                    side: THREE.DoubleSide
+                });
+                this.dimLabelMesh = new THREE.Mesh(labelGeo, labelMat);
+                // Tilt label mesh by 60 deg around X-axis for pleasant viewing perspective
+                this.dimLabelMesh.rotation.x = -Math.PI / 3;
+                this.dimensionGroup.add(this.dimLabelMesh);
+            }
+
+            updateDimensionLine() {
+                if (!this.dimensionGroup) return;
+
+                const startX = this.holderGroup.position.x;
+                const endX = this.tubeApertureX - 2.1; // 9.9
+                const length = Math.max(0.1, endX - startX);
+                const centerX = (startX + endX) / 2;
+
+                // Stretch the line mesh across the center
+                this.dimensionLineMesh.position.set(centerX, -5.94, 0.5);
+                this.dimensionLineMesh.scale.set(length, 1, 1);
+
+                // Offset the endticks to start and finish coordinates
+                this.startTick.position.set(startX, -5.94, 0.5);
+                this.endTick.position.set(endX, -5.94, 0.5);
+
+                // Place the floating distance badge slightly above and in front of the line
+                this.dimLabelMesh.position.set(centerX, -5.3, 0.8);
+
+                // Redraw distance text label
+                const canvas = this.dimCanvas;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Translucent blue backing badge
+                ctx.fillStyle = "rgba(37, 99, 235, 0.95)";
+                this.drawRoundRect(ctx, 4, 4, canvas.width - 8, canvas.height - 8, 8);
+                ctx.fill();
+
+                // High-contrast distance text
+                ctx.fillStyle = "#ffffff";
+                ctx.font = 'bold 18px "Inter", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`${this.distance.toFixed(1)} cm`, canvas.width / 2, canvas.height / 2);
+
+                this.dimTexture.needsUpdate = true;
+            }
+
+            // Create side inventory storage rack on tabletop containing unused sample disks
+            createSampleStorageRack() {
+                this.rackGroup = new THREE.Group();
+                this.rackGroup.position.set(1.5, -5.9, -7.5); // Placed visibly next to ruler track
+                this.scene.add(this.rackGroup);
+
+                // Plastic organizer tray
+                const rackBaseGeo = new THREE.BoxGeometry(8.5, 0.5, 2.2);
+                const rackBaseMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.7 });
+                const rackBase = new THREE.Mesh(rackBaseGeo, rackBaseMat);
+                rackBase.castShadow = true;
+                rackBase.receiveShadow = true;
+                rackBase.userData = { isRackBase: true }; // Label so clicking the base returns active disk
+                this.rackGroup.add(rackBase);
+
+                this.rackDisks = {};
+                const keys = ['strontium', 'caesium', 'cobalt', 'americium'];
+
+                keys.forEach((key, index) => {
+                    const src = this.sourceTypes[key];
+                    const xOffset = -3.0 + (index * 2.0);
+
+                    // Physical vertical slot visual representation (inset slot lines)
+                    const slotGeo = new THREE.BoxGeometry(0.32, 0.35, 1.4);
+                    const slotMat = new THREE.MeshBasicMaterial({ color: 0x090d16 });
+                    const slot = new THREE.Mesh(slotGeo, slotMat);
+                    slot.position.set(xOffset, 0.15, 0);
+                    slot.userData = { isRackSlot: true }; // Label slot
+                    this.rackGroup.add(slot);
+
+                    // Replicated standing inventory disc sitting upright on the slot
+                    const diskGeo = new THREE.CylinderGeometry(0.7, 0.7, 0.18, 16);
+                    diskGeo.rotateZ(Math.PI / 2); // Stands disk upright
+                    const diskMat = new THREE.MeshStandardMaterial({ color: src.color, roughness: 0.5 });
+                    const storageDisk = new THREE.Mesh(diskGeo, diskMat);
+                    storageDisk.position.set(xOffset, 0.52, 0);
+                    storageDisk.castShadow = true;
+                    storageDisk.userData = { isSampleDisk: true, key: key }; // Mark as sample disk with key
+                    this.rackGroup.add(storageDisk);
+
+                    // Track disks individually to toggle visibility dynamically
+                    this.rackDisks[key] = storageDisk;
+                });
+            }
+
+            // Quick Canvas utility helper to draw clean rounded background badges
+            drawRoundRect(ctx, x, y, width, height, radius) {
+                ctx.beginPath();
+                ctx.moveTo(x + radius, y);
+                ctx.lineTo(x + width - radius, y);
+                ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                ctx.lineTo(x + width, y + height - radius);
+                ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                ctx.lineTo(x + radius, y + height);
+                ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                ctx.lineTo(x, y + radius);
+                ctx.quadraticCurveTo(x, y, x + radius, y);
+                ctx.closePath();
+            }
+
+            updateScalerDisplayTexture() {
+                const canvas = this.displayCanvas;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = "#090d16";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = "#22c55e";
+                ctx.font = 'bold 28px "Share Tech Mono", monospace';
+                ctx.fillText(`RATE: ${Math.round(this.displayedCPM)} CPM`, 12, 45);
+
+                ctx.font = '22px "Share Tech Mono", monospace';
+                ctx.fillText(`TIME: ${this.elapsedTime.toFixed(1)} s`, 12, 85);
+                ctx.fillText(`CTS : ${this.totalCounts}`, 12, 115);
+
+                // Active LIVE Blinker Dot
+                ctx.fillStyle = "#ef4444";
+                ctx.beginPath();
+                ctx.arc(230, 24, 7, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = "#ffffff";
+                ctx.font = 'bold 10px sans-serif';
+                ctx.fillText("LIVE", 215, 42);
+
+                this.displayTexture.needsUpdate = true;
+            }
+
+            bindEvents() {
+                const view = this;
+                
+                const drawer = document.getElementById('graphPanel');
+                const drawerTab = document.getElementById('drawerTab');
+                const graphStatusText = document.getElementById('graphPanelStatusText');
+
+                drawerTab.addEventListener('click', () => {
+                    drawer.classList.toggle('open');
+                    view.isGraphVisible = drawer.classList.contains('open');
+                    graphStatusText.textContent = view.isGraphVisible ? "ACTIVE" : "CLOSED";
+                    if (view.isGraphVisible) {
+                        setTimeout(() => {
+                            view.resizeCanvas();
+                            view.drawChart();
+                        }, 300);
+                    }
+                });
+
+                const header = document.getElementById('simControlHeader');
+                const panel = document.getElementById('simControlPanel');
+                header.addEventListener('click', () => {
+                    panel.classList.toggle('collapsed');
+                });
+
+                document.getElementById('sampleSelect').addEventListener('change', (e) => {
+                    view.currentSource = e.target.value;
+                    view.updateSpecimenColor();
+                    view.recalculatePhysics();
+                    // Force an immediate display rate update on sample swap so the interface reacts instantly
+                    view.forceImmediateRateUpdate();
+                });
+
+                document.getElementById('viewSelect').addEventListener('change', (e) => {
+                    view.currentView = e.target.value;
+                    const chartTitleEl = document.getElementById('chartTitle');
+                    const chartSubTextEl = document.getElementById('chartSubtext');
+
+                    switch (view.currentView) {
+                        case 'rate':
+                            chartTitleEl.textContent = "Rate Progression Chart";
+                            chartSubTextEl.textContent = "Real-Time Counts Per Minute (CPM) vs Time elapsed";
+                            break;
+                        case 'cumulative':
+                            chartTitleEl.textContent = "Cumulative Count Curves";
+                            chartSubTextEl.textContent = "Total cumulative ionized pulses accumulated over duration";
+                            break;
+                        case 'histogram':
+                            chartTitleEl.textContent = "Pulse Interval Histogram";
+                            chartSubTextEl.textContent = "Recorded time between adjacent pulses (Poisson stat distribution)";
+                            break;
+                    }
+                    view.drawChart();
+                });
+
+                const volSlider = document.getElementById('volumeSlider');
+                const muteBtn = document.getElementById('muteBtn');
+
+                volSlider.addEventListener('input', (e) => {
+                    view.volume = parseFloat(e.target.value) / 100;
+                    view.isMuted = view.volume <= 0.05;
+                    view.updateSoundIcon();
+                });
+
+                muteBtn.addEventListener('click', () => {
+                    view.isMuted = !view.isMuted;
+                    view.updateSoundIcon();
+                });
+
+                // HUD Reset Button click handler
+                document.getElementById('hudResetBtn').addEventListener('click', () => {
+                    view.resetTracker();
+                    view.triggerPhysicalPressAnimation(view.pBtnReset);
+                });
+
+                window.addEventListener('resize', () => {
+                    view.resizeViewport3D();
+                    view.resizeCanvas();
+                    view.drawChart();
+                });
+            }
+
+            updateSoundIcon() {
+                const volIcon = document.getElementById('volumeIcon');
+                if (this.isMuted) {
+                    volIcon.setAttribute('data-lucide', 'volume-x');
+                } else if (this.volume < 0.4) {
+                    volIcon.setAttribute('data-lucide', 'volume-1');
+                } else {
+                    volIcon.setAttribute('data-lucide', 'volume-2');
+                }
+                lucide.createIcons();
+            }
+
+            updateSpecimenColor() {
+                // If background/no sample: Hide active disk on track holder.
+                if (this.currentSource === 'background') {
+                    this.specimenDisk.visible = false;
+                } else {
+                    this.specimenDisk.visible = true;
+                    const src = this.sourceTypes[this.currentSource];
+                    this.diskMat.color.setHex(src.color);
+                }
+
+                // Sync storage rack discs: Hide the active sample from rack inventory (because it is on track!)
+                const keys = ['strontium', 'caesium', 'cobalt', 'americium'];
+                keys.forEach(key => {
+                    if (this.rackDisks && this.rackDisks[key]) {
+                        this.rackDisks[key].visible = (this.currentSource !== key);
+                    }
+                });
+            }
+
+            recalculatePhysics() {
+                const totalTrackLength = Math.abs(this.maxPos.x - this.minPos.x);
+                const currentRelTrackX = Math.min(Math.max(this.holderGroup.position.x, this.minPos.x), this.maxPos.x);
+                const percentAlongTrack = (currentRelTrackX - this.minPos.x) / totalTrackLength;
+                
+                // Mapped physical distance: 10cm (closest) to 100cm (farthest)
+                this.distance = 100.0 - (percentAlongTrack * 90.0);
+
+                const sourceBaseCPM = this.sourceTypes[this.currentSource].rate;
+                const backgroundCPM = this.sourceTypes['background'].rate;
+
+                // --- PURE INVERSE SQUARE LAW MATHEMATICS ---
+                // CPM is inversely proportional to the square of the distance (I = k / d^2)
+                const k = sourceBaseCPM * 100;
+                const inverseSquareComponent = k / (this.distance * this.distance);
+
+                this.currentCPM = backgroundCPM + inverseSquareComponent;
+
+                // Dynamic measurement window: High rates gather statistics quickly (responsive), 
+                // while low rates integrate over a longer window to remain stable.
+                this.measurementWindowMs = Math.max(3000, Math.min(15000, 300000 / this.currentCPM));
+
+                // Sync HUD and settings panel distance labels
+                document.getElementById('distValHud').textContent = this.distance.toFixed(1);
+                document.getElementById('distanceValPanel').textContent = `${this.distance.toFixed(1)} cm`;
+
+                // Update physical tabletop dimension line
+                this.updateDimensionLine();
+            }
+
+            // Immediately updates rates during interactive actions (e.g., sample changes, dragging) to maintain responsiveness
+            forceImmediateRateUpdate() {
+                const now = performance.now();
+                const activeWindowMs = Math.min(this.measurementWindowMs, now - this.startTime);
+                let rawPoissonCPM = this.currentCPM;
+                if (activeWindowMs > 1000) {
+                    const pulsesCount = this.pulseTimestampHistory.length;
+                    rawPoissonCPM = pulsesCount * (60000 / activeWindowMs);
+                }
+                
+                // Blend Poisson statistics with theoretical curve dynamically
+                // High activity limits visual fluctuations; background is allowed to dance wildly
+                const beta = Math.min(0.85, this.currentCPM / 2000);
+                this.displayedCPM = (beta * this.currentCPM) + ((1 - beta) * rawPoissonCPM);
+
+                this.updateDisplay();
+                this.updateScalerDisplayTexture();
+            }
+
+            // Flushes and restarts all experimental stats
+            resetTracker() {
+                this.startTime = performance.now();
+                this.elapsedTime = 0;
+                this.totalCounts = 0;
+                this.pulseTimestampHistory = [];
+                this.intervalHistory = [];
+                this.timePoints = [];
+                this.rateData = [];
+                this.cumulativeData = [];
+                this.lastClickTime = performance.now();
+                this.lastRateUpdateTime = 0;
+                this.displayedCPM = this.currentCPM; // instant default alignment
+                
+                this.recalculatePhysics();
+                this.updateDisplay();
+                this.updateScalerDisplayTexture();
+                this.drawChart();
+            }
+
+            // Physical spring press animation of 3D panel button
+            triggerPhysicalPressAnimation(mesh) {
+                if (!mesh) return;
+                const initZ = mesh.position.z;
+                mesh.position.z = initZ - 0.15; // push inward
+                setTimeout(() => {
+                    mesh.position.z = initZ; // spring backward
+                }, 100);
+            }
+
+            onPointerDown(event) {
+                const rect = this.renderer.domElement.getBoundingClientRect();
+                this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+                this.raycaster.setFromCamera(this.mouse, this.camera);
+                
+                // 1. Raycast the Scaler Unit first to check for physical RESET button clicks
+                const intersectsScaler = this.raycaster.intersectObjects(this.scalerGroup.children, true);
+                if (intersectsScaler.length > 0) {
+                    const hitObj = intersectsScaler.find(i => i.object.name === "reset_button" || (i.object.parent && i.object.parent.name === "reset_button"));
+                    if (hitObj) {
+                        this.resetTracker();
+                        this.triggerPhysicalPressAnimation(this.pBtnReset);
+                        
+                        event.preventDefault();
+                        event.stopPropagation();
+                        event.stopImmediatePropagation();
+                        return;
+                    }
+                }
+
+                // 2. Raycast the Storage Rack to check if we clicked on standing discs or slot/base areas
+                const intersectsRack = this.raycaster.intersectObjects(this.rackGroup.children, true);
+                if (intersectsRack.length > 0) {
+                    const hitDisk = intersectsRack.find(i => i.object.userData && i.object.userData.isSampleDisk);
+                    const hitEmptySlot = intersectsRack.find(i => i.object.userData && (i.object.userData.isRackBase || i.object.userData.isRackSlot));
+                    
+                    if (hitDisk && hitDisk.object.visible) {
+                        // Clicked an available standing disk: Load it!
+                        const key = hitDisk.object.userData.key;
+                        document.getElementById('sampleSelect').value = key;
+                        this.currentSource = key;
+                        this.updateSpecimenColor();
+                        this.recalculatePhysics();
+                        this.forceImmediateRateUpdate();
+                        
+                        event.preventDefault();
+                        event.stopPropagation();
+                        event.stopImmediatePropagation();
+                        return;
+                    } else if (hitEmptySlot && this.currentSource !== 'background') {
+                        // Clicked empty slot in the tray: Return currently loaded specimen!
+                        document.getElementById('sampleSelect').value = 'background';
+                        this.currentSource = 'background';
+                        this.updateSpecimenColor();
+                        this.recalculatePhysics();
+                        this.forceImmediateRateUpdate();
+                        
+                        event.preventDefault();
+                        event.stopPropagation();
+                        event.stopImmediatePropagation();
+                        return;
+                    }
+                }
+
+                // 3. Raycast Slider Holder standing children for sliding actions
+                const intersectsHolder = this.raycaster.intersectObjects(this.holderGroup.children, true);
+                if (intersectsHolder.length > 0) {
+                    this.isDraggingSample = true;
+                    this.controls.enabled = false; // Disable orbit controls immediately so they don't fight dragging
+                    
+                    event.preventDefault();
+                    event.stopPropagation();
+                    event.stopImmediatePropagation(); // Crucial: Stop OrbitControls from capturing the click
+                }
+            }
+
+            onPointerMove(event) {
+                const rect = this.renderer.domElement.getBoundingClientRect();
+                this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+                if (this.isDraggingSample) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    this.raycaster.setFromCamera(this.mouse, this.camera);
+                    // Intersect with the invisible, dedicated horizontal slider plane Mesh
+                    const intersects = this.raycaster.intersectObject(this.dragPlane);
+                    if (intersects.length > 0) {
+                        let targetX = intersects[0].point.x;
+                        if (targetX < this.minPos.x) targetX = this.minPos.x;
+                        if (targetX > this.maxPos.x) targetX = this.maxPos.x;
+
+                        this.holderGroup.position.x = targetX;
+                        this.recalculatePhysics();
+                        // Dragging triggers instant rate interpolation so the user gets real-time tactile feedback
+                        // The elevated base blending factor keeps this movement smooth
+                        this.forceImmediateRateUpdate();
+                    }
+                }
+            }
+
+            onPointerUp(event) {
+                if (this.isDraggingSample) {
+                    this.isDraggingSample = false;
+                    this.controls.enabled = true; // Re-enable camera rotation
+                }
+            }
+
+            resizeViewport3D() {
+                const container = document.getElementById('threejsViewport');
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(width, height);
+            }
+
+            resizeCanvas() {
+                const rect = this.canvas.parentElement.getBoundingClientRect();
+                this.canvas.width = rect.width * window.devicePixelRatio;
+                this.canvas.height = rect.height * window.devicePixelRatio;
+                this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            }
+
+            drawChart() {
+                const width = this.canvas.width / window.devicePixelRatio;
+                const height = this.canvas.height / window.devicePixelRatio;
+                const ctx = this.ctx;
+
+                ctx.clearRect(0, 0, width, height);
+                if (width <= 0 || height <= 0) return;
+
+                const padding = { top: 15, right: 15, bottom: 25, left: 35 };
+                const plotWidth = width - padding.left - padding.right;
+                const plotHeight = height - padding.top - padding.bottom;
+
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(padding.left, padding.top, plotWidth, plotHeight);
+
+                if (this.currentView === 'rate') {
+                    this.drawRateChart(ctx, padding, plotWidth, plotHeight);
+                } else if (this.currentView === 'cumulative') {
+                    this.drawCumulativeChart(ctx, padding, plotWidth, plotHeight);
+                } else if (this.currentView === 'histogram') {
+                    this.drawPoissonHistogram(ctx, padding, plotWidth, plotHeight);
+                }
+            }
+
+            drawRateChart(ctx, padding, plotWidth, plotHeight) {
+                const minT = Math.max(0, this.elapsedTime - 60);
+                const maxT = Math.max(60, this.elapsedTime);
+                
+                document.getElementById('timeAxisMin').textContent = `${Math.floor(minT)}s`;
+                document.getElementById('timeAxisMax').textContent = `${Math.floor(maxT)}s`;
+                
+                let maxRate = 500;
+                if (this.rateData.length > 0) {
+                    const peak = Math.max(...this.rateData);
+                    if (peak > maxRate) maxRate = peak * 1.15;
+                }
+
+                ctx.strokeStyle = '#f1f5f9';
+                for (let i = 1; i < 5; i++) {
+                    const y = padding.top + (plotHeight * (i / 5));
+                    ctx.beginPath();
+                    ctx.moveTo(padding.left, y);
+                    ctx.lineTo(padding.left + plotWidth, y);
+                    ctx.stroke();
+
+                    const gridVal = Math.round(maxRate * (1 - (i / 5)));
+                    ctx.fillStyle = '#64748b';
+                    ctx.font = '8px sans-serif';
+                    ctx.fillText(gridVal, padding.left - 28, y + 3);
+                }
+
+                if (this.timePoints.length > 1) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#2563eb';
+                    ctx.lineWidth = 2;
+
+                    for (let i = 0; i < this.timePoints.length; i++) {
+                        const tx = this.timePoints[i];
+                        const r = this.rateData[i];
+
+                        const px = padding.left + ((tx - minT) / (maxT - minT)) * plotWidth;
+                        const py = padding.top + plotHeight - (r / maxRate) * plotHeight;
+
+                        if (i === 0) {
+                            ctx.moveTo(px, py);
+                        } else {
+                            ctx.lineTo(px, py);
+                        }
+                    }
+                    ctx.stroke();
+                }
+            }
+
+            drawCumulativeChart(ctx, padding, plotWidth, plotHeight) {
+                const minT = Math.max(0, this.elapsedTime - 60);
+                const maxT = Math.max(60, this.elapsedTime);
+
+                document.getElementById('timeAxisMin').textContent = `${Math.floor(minT)}s`;
+                document.getElementById('timeAxisMax').textContent = `${Math.floor(maxT)}s`;
+
+                let maxCount = 200;
+                if (this.cumulativeData.length > 0) {
+                    const peak = Math.max(...this.cumulativeData);
+                    if (peak > maxCount) maxCount = peak * 1.15;
+                }
+
+                ctx.strokeStyle = '#f1f5f9';
+                for (let i = 1; i < 5; i++) {
+                    const y = padding.top + (plotHeight * (i / 5));
+                    ctx.beginPath();
+                    ctx.moveTo(padding.left, y);
+                    ctx.lineTo(padding.left + plotWidth, y);
+                    ctx.stroke();
+
+                    const gridVal = Math.round(maxCount * (1 - (i / 5)));
+                    ctx.fillStyle = '#64748b';
+                    ctx.font = '8px sans-serif';
+                    ctx.fillText(gridVal, padding.left - 28, y + 3);
+                }
+
+                if (this.timePoints.length > 1) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#10b981';
+                    ctx.lineWidth = 2;
+
+                    for (let i = 0; i < this.timePoints.length; i++) {
+                        const tx = this.timePoints[i];
+                        const c = this.cumulativeData[i];
+
+                        const px = padding.left + ((tx - minT) / (maxT - minT)) * plotWidth;
+                        const py = padding.top + plotHeight - (c / maxCount) * plotHeight;
+
+                        if (i === 0) {
+                            ctx.moveTo(px, py);
+                        } else {
+                            ctx.lineTo(px, py);
+                        }
+                    }
+                    ctx.stroke();
+                }
+            }
+
+            drawPoissonHistogram(ctx, padding, plotWidth, plotHeight) {
+                document.getElementById('timeAxisMin').textContent = "Short";
+                document.getElementById('timeAxisMax').textContent = "Long";
+                
+                const bucketCount = 15;
+                const bucketWidthMs = 120;
+                const buckets = new Array(bucketCount).fill(0);
+
+                this.intervalHistory.forEach(val => {
+                    const index = Math.floor(val / bucketWidthMs);
+                    if (index >= 0 && index < bucketCount) {
+                        buckets[index]++;
+                    }
+                });
+
+                const maxBucketCount = Math.max(...buckets, 5);
+
+                ctx.strokeStyle = '#f1f5f9';
+                for (let i = 1; i < 5; i++) {
+                    const y = padding.top + (plotHeight * (i / 5));
+                    ctx.beginPath();
+                    ctx.moveTo(padding.left, y);
+                    ctx.lineTo(padding.left + plotWidth, y);
+                    ctx.stroke();
+
+                    const val = Math.round(maxBucketCount * (1 - (i / 5)));
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillText(val, padding.left - 24, y + 3);
+                }
+
+                const barSpacing = 2;
+                const barWidth = (plotWidth / bucketCount) - barSpacing;
+
+                for (let i = 0; i < bucketCount; i++) {
+                    const count = buckets[i];
+                    const barHeight = (count / maxBucketCount) * plotHeight;
+
+                    const bx = padding.left + (i * (barWidth + barSpacing)) + (barSpacing / 2);
+                    const by = padding.top + plotHeight - barHeight;
+
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.fillRect(bx, by, barWidth, barHeight);
+                    ctx.strokeStyle = '#d97706';
+                    ctx.strokeRect(bx, by, barWidth, barHeight);
+                }
+
+                ctx.fillStyle = '#64748b';
+                ctx.font = '8px sans-serif';
+                ctx.fillText("Short Intervals", padding.left + 5, padding.top + plotHeight + 12);
+                ctx.fillText("Long Intervals", padding.left + plotWidth - 70, padding.top + plotHeight + 12);
+            }
+
+            updateDisplay() {
+                document.getElementById('timeHudDisplay').innerHTML = `Time: <strong>${Math.floor(this.elapsedTime)}</strong>s`;
+                document.getElementById('totalCountsHud').innerHTML = `Counts: <strong>${this.totalCounts}</strong>`;
+                document.getElementById('rateHud').innerHTML = `Rate: <strong>${Math.round(this.displayedCPM)}</strong> CPM`;
+            }
+
+            animate3D() {
+                requestAnimationFrame(() => this.animate3D());
+                
+                const now = performance.now();
+                if (this.isRunning) {
+                    const prevSec = Math.floor(this.elapsedTime);
+                    this.elapsedTime = (now - this.startTime) / 1000;
+                    const nextSec = Math.floor(this.elapsedTime);
+
+                    // Continuous background probability checks for ticks
+                    const probabilityPerFrame = (this.currentCPM / 60.0) / 60.0;
+                    if (Math.random() < probabilityPerFrame) {
+                        this.totalCounts++;
+                        this.playClickSound();
+
+                        // Track temporal interval differences between ticks for Poisson check
+                        const timeSinceLastClick = now - this.lastClickTime;
+                        this.lastClickTime = now;
+                        this.intervalHistory.push(timeSinceLastClick);
+                        if (this.intervalHistory.length > 500) this.intervalHistory.shift();
+
+                        // Log actual click time in our history array for estimating real-time CPM
+                        this.pulseTimestampHistory.push(now);
+                    }
+
+                    // Slide the sliding click timestamp window to retain only the last 12 seconds
+                    const cutOffTimeMs = now - this.measurementWindowMs;
+                    while (this.pulseTimestampHistory.length > 0 && this.pulseTimestampHistory[0] < cutOffTimeMs) {
+                        this.pulseTimestampHistory.shift();
+                    }
+
+                    // Calculate and update displayed CPM ONLY once every 1 second (1000ms) of real-time
+                    if (now - this.lastRateUpdateTime >= 1000) {
+                        this.lastRateUpdateTime = now;
+
+                        const activeWindowMs = Math.min(this.measurementWindowMs, now - this.startTime);
+                        let rawPoissonCPM = this.currentCPM;
+                        if (activeWindowMs > 1000) {
+                            const pulsesCount = this.pulseTimestampHistory.length;
+                            rawPoissonCPM = pulsesCount * (60000 / activeWindowMs);
+                        }
+
+                        // Blend Poisson statistics with theoretical curve dynamically
+                        // Low CPM -> high relative fluctuation (beta ~ 0.01)
+                        // High CPM -> low fluctuation (beta ~ 0.85)
+                        const beta = Math.min(0.85, this.currentCPM / 2000);
+                        this.displayedCPM = (beta * this.currentCPM) + ((1 - beta) * rawPoissonCPM);
+
+                        this.updateDisplay();
+                    }
+
+                    // Periodic logging updates (runs once every elapsed simulation second)
+                    if (nextSec > prevSec) {
+                        this.timePoints.push(this.elapsedTime);
+                        this.rateData.push(this.displayedCPM);
+                        this.cumulativeData.push(this.totalCounts);
+
+                        // If elapsed time exceeds 60s, slide the historical rolling arrays to look like a live feed
+                        if (this.elapsedTime > 60) {
+                            const cutoff = this.elapsedTime - 60;
+                            while (this.timePoints.length > 0 && this.timePoints[0] < cutoff) {
+                                this.timePoints.shift();
+                                this.rateData.shift();
+                                this.cumulativeData.shift();
+                            }
+                        }
+
+                        this.drawChart();
+                    }
+                }
+
+                this.controls.update();
+                this.updateScalerDisplayTexture();
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            const app = new GeigerCounterApp();
+        });
+    </script>
+</body>
+</html>
