@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newton's Nightmare - Lenz's Law 3D Simulation</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Chart.js for live plotting -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- KaTeX for LaTeX rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <style>
+        body {
+            overflow-x: hidden;
+            background-color: #ffffff;
+            color: #1e293b;
+        }
+        /* Custom scrollbars for light sidebar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        #sidebarPanel {
+            flex-shrink: 0;
+            transition: width 240ms ease, height 240ms ease, border-color 240ms ease;
+        }
+        #mainPanel {
+            transition: width 240ms ease;
+        }
+        body.sidebar-collapsed #sidebarPanel {
+            overflow: hidden;
+        }
+        @media (min-width: 768px) {
+            body.sidebar-collapsed #sidebarPanel {
+                width: 0 !important;
+                border-right-width: 0;
+            }
+        }
+        @media (max-width: 767px) {
+            body.sidebar-collapsed #sidebarPanel {
+                height: 0 !important;
+                border-bottom-width: 0;
+            }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col md:flex-row font-sans">
+
+    <!-- Sidebar Panel (Controls, Stats, Theory) - Light Theme -->
+    <div id="sidebarPanel" class="w-full md:w-1/3 lg:w-1/4 bg-slate-50 border-b md:border-b-0 md:border-r border-slate-200 flex flex-col h-1/2 md:h-full z-10 overflow-y-auto">
+        
+        <!-- Header -->
+        <div class="p-6 border-b border-slate-200 bg-white">
+            <h1 class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-indigo-600">
+                Newton's Nightmare
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">Lenz's Law & Eddy Currents 3D Simulator</p>
+        </div>
+
+        <!-- Controls Section -->
+        <div class="p-6 space-y-6 flex-1">
+            
+            <!-- Core Simulation Controls -->
+            <div class="space-y-3">
+                <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Simulation Controls</h2>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="btnDrop" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-medium rounded-lg shadow-md transition duration-150 flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 13l-7 7-7-7m14-6l-7 7-7-7"></path></svg>
+                        Drop
+                    </button>
+                    <button id="btnReset" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 font-medium rounded-lg shadow-sm transition duration-150 flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.228 5H18"></path></svg>
+                        Reset
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <button id="btnPlayPause" class="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-medium rounded-lg shadow-md transition duration-150 flex items-center justify-center gap-2">
+                        <span id="playPauseText">Pause</span>
+                    </button>
+                </div>
+                <div class="space-y-1 pt-1">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-500">Animation Rate</span>
+                        <span id="valAnimationRate" class="text-indigo-600 font-mono font-bold">1.0x</span>
+                    </div>
+                    <input type="range" id="sliderAnimationRate" min="0.25" max="3" step="0.25" value="1" class="w-full accent-indigo-600 bg-slate-200 h-1.5 rounded-lg appearance-none cursor-pointer">
+                </div>
+            </div>
+
+            <!-- Material Selection -->
+            <div class="space-y-3">
+                <label class="text-sm font-semibold text-slate-500 uppercase tracking-wider block">Tube Material</label>
+                <select id="selectMaterial" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="copper">Copper (Low Resistivity - Slowest)</option>
+                    <option value="aluminum">Aluminum (Low Resistivity - Slow)</option>
+                    <option value="brass">Brass (Medium Resistivity - Medium)</option>
+                    <option value="steel">Steel (Ferromagnetic - Sticks)</option>
+                    <option value="pvc">PVC / Glass (High Resistivity - Fast)</option>
+                </select>
+                <div id="materialInfo" class="text-xs text-slate-600 bg-white p-2.5 rounded-md border border-slate-200 shadow-sm">
+                    <!-- Dynamic material details -->
+                </div>
+            </div>
+
+            <!-- Visualization Toggles -->
+            <div class="space-y-3">
+                <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Visualizers</h2>
+                <div class="space-y-2">
+                    <label class="flex items-center space-x-3 text-sm text-slate-700 cursor-pointer">
+                        <input type="checkbox" id="chkPrimaryField" checked class="w-4 h-4 rounded text-indigo-600 bg-white border-slate-300 focus:ring-indigo-500">
+                        <span>Magnetic Field Lines (with Direction)</span>
+                    </label>
+                    <label class="flex items-center space-x-3 text-sm text-slate-700 cursor-pointer">
+                        <input type="checkbox" id="chkEddyCurrents" checked class="w-4 h-4 rounded text-indigo-600 bg-white border-slate-300 focus:ring-indigo-500">
+                        <span>Eddy Currents (I)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Theory Summary -->
+            <div class="space-y-2 pt-2 border-t border-slate-200">
+                <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">The Physics</h2>
+                <div class="text-xs text-slate-600 space-y-2">
+                    <p>
+                        <strong class="text-slate-800">Faraday's Law:</strong> A moving magnet creates a changing magnetic flux through the metal tube, inducing circular currents called <span class="text-indigo-600 font-semibold">Eddy Currents</span>.
+                    </p>
+                    <p>
+                        <strong class="text-slate-800">Lenz's Law:</strong> The induced currents generate their own magnetic field that <span class="text-amber-600 font-semibold">opposes</span> the change that created them.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer / Technical Specs -->
+        <div class="p-4 border-t border-slate-200 bg-slate-100 text-center text-[10px] text-slate-500">
+            Newton's Nightmare 3D Sim &copy; 2026
+        </div>
+    </div>
+
+    <!-- Main Viewport and Telemetry Plots -->
+    <div id="mainPanel" class="flex-1 flex flex-col h-1/2 md:h-full relative bg-white">
+        <button id="btnToggleSidebar" title="Toggle sidebar" aria-label="Toggle sidebar" class="absolute top-3 left-3 z-20 w-9 h-9 rounded-md border border-slate-200 bg-white/90 hover:bg-slate-100 text-slate-700 shadow-sm flex items-center justify-center transition">
+            <svg id="sidebarToggleIcon" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </button>
+        
+        <!-- ThreeJS Container (White/Light Background) -->
+        <div id="canvas-container" class="flex-1 w-full bg-white"></div>
+
+        <!-- Plots / Graphic Overlay -->
+        <div class="h-44 bg-slate-50 border-t border-slate-200 p-3 flex flex-row gap-4 items-center overflow-hidden">
+            <div class="text-xs text-slate-500 w-32 flex flex-col justify-center border-r border-slate-200 pr-3">
+                <span class="font-bold text-slate-700">Plot of velocity vs time</span>
+                <span class="text-[10px] mt-1 text-slate-500">Real-time recording of kinematic values as the magnet descends.</span>
+            </div>
+            <div class="flex-1 h-full relative">
+                <canvas id="chartTelemetry"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Simulator Application -->
+    <script>
+        // --- PHYSICAL PARAMETERS ---
+        const tubeLength = 10; // meters (scale in three.js)
+        const tubeRadius = 1.0; 
+        const magnetMass = 0.5; // kg
+        
+        const materials = {
+            copper: {
+                name: "Copper",
+                resistivity: 1.68e-8, // ohm meter
+                color: 0xd97706, // Copper-orange
+                roughness: 0.6,
+                metalness: 0.1,
+                dampingFactor: 4.5, // custom scaled coupling coefficient
+                desc: "Low resistivity ($\\rho \\approx 1.68 \\times 10^{-8}\\ \\Omega\\cdot m$). Extremely strong eddy currents are induced, creating a massive opposing field. The magnet glides down slowly."
+            },
+            aluminum: {
+                name: "Aluminum",
+                resistivity: 2.65e-8, // ohm meter
+                color: 0x94a3b8, // Silver-slate
+                roughness: 0.6,
+                metalness: 0.1,
+                dampingFactor: 2.8,
+                desc: "Low resistivity ($\\rho \\approx 2.65 \\times 10^{-8}\\ \\Omega\\cdot m$). Induces notable eddy currents. Magnet falls slower than free fall, but noticeably faster than in Copper."
+            },
+            brass: {
+                name: "Brass",
+                resistivity: 6.25e-8, // ohm meter
+                color: 0xeab308, // Brass-yellow
+                roughness: 0.6,
+                metalness: 0.1,
+                dampingFactor: 1.2,
+                desc: "Medium resistivity ($\\rho \\approx 6.25 \\times 10^{-8}\\ \\Omega\\cdot m$). Damping is present but weak. The magnet drops at a moderate speed."
+            },
+            steel: {
+                name: "Steel",
+                resistivity: 1.43e-7, // ohm meter, representative carbon steel scale
+                color: 0x475569, // Dark steel slate
+                roughness: 0.45,
+                metalness: 0.65,
+                dampingFactor: 0.0,
+                isFerromagnetic: true,
+                desc: "Ferromagnetic steel strongly attracts the magnet. Instead of dropping through the tube, the magnet sticks directly to the steel wall."
+            },
+            pvc: {
+                name: "PVC / Glass",
+                resistivity: 1e14, // ohm meter, representative insulator scale
+                color: 0x0284c7, // Glassy-blue transparency
+                roughness: 0.6,
+                metalness: 0.05,
+                dampingFactor: 0.0,
+                desc: "High resistivity ($\\rho \\approx 10^{14}\\ \\Omega\\cdot m$). No eddy currents can form. The magnet falls freely under gravity, exactly as in a vacuum."
+            }
+        };
+
+        // Current state
+        let currentMaterial = 'copper';
+        let isRunning = true;
+        let isDropped = false;
+        let isStuckToTube = false;
+
+        // Dynamics variables
+        let posY = tubeLength / 2 - 0.5; // Starts near the top of the tube
+        let velocity = 0;
+        let accel = 0;
+        let simTime = 0;
+        let currentFlowPhase = 0;
+        let timeData = [];
+        let velData = [];
+        const magnetStartY = tubeLength / 2 - 0.4;
+
+        // UI Sliders / State selectors
+        let gravity = 9.8;
+        let magnetStrength = 1.5;
+        let animationRate = 1;
+
+        // Three.js Objects
+        let scene, camera, renderer, controls;
+        let tube, magnet;
+        let eddyCurrentRings = [];
+        let primaryFieldGroup;
+        const eddyDirectionColors = {
+            below: new THREE.Color(0x16a34a),
+            above: new THREE.Color(0x9333ea)
+        };
+
+        // Visual options flags
+        let showPrimaryField = true;
+        let showEddyCurrents = true;
+
+        // HTML elements
+        const selectMaterial = document.getElementById('selectMaterial');
+        const materialInfo = document.getElementById('materialInfo');
+        const btnDrop = document.getElementById('btnDrop');
+        const btnReset = document.getElementById('btnReset');
+        const btnPlayPause = document.getElementById('btnPlayPause');
+        const btnToggleSidebar = document.getElementById('btnToggleSidebar');
+        const sidebarToggleIcon = document.getElementById('sidebarToggleIcon');
+        const playPauseText = document.getElementById('playPauseText');
+        const sliderAnimationRate = document.getElementById('sliderAnimationRate');
+        const valAnimationRate = document.getElementById('valAnimationRate');
+
+        const chkPrimaryField = document.getElementById('chkPrimaryField');
+        const chkEddyCurrents = document.getElementById('chkEddyCurrents');
+
+        // ChartJS Setup
+        let telemetryChart;
+
+        // Initialize 3D Engine & Physics
+        function init() {
+            initThree();
+            initChart();
+            updateMaterialDetails();
+            resetSimulation();
+            setupEventListeners();
+            animate();
+        }
+
+        // Setup 3D Scene (White/Light Background)
+        function initThree() {
+            const container = document.getElementById('canvas-container');
+            
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+            camera.position.set(0, 0.5, 15);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            // Orbit Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.target.set(0, 0, 0);
+            controls.maxPolarAngle = Math.PI / 2 + 0.1; // Limit going too far below floor
+            controls.minDistance = 2;
+            controls.maxDistance = 35;
+
+            // Lights (Balanced for light scene background)
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight1.position.set(10, 15, 10);
+            scene.add(dirLight1);
+
+            const dirLight2 = new THREE.DirectionalLight(0x38bdf8, 0.3);
+            dirLight2.position.set(-10, -5, -10);
+            scene.add(dirLight2);
+
+            // Floor Grid (Light grey lines)
+            const gridHelper = new THREE.GridHelper(40, 40, 0xe2e8f0, 0xf1f5f9);
+            gridHelper.position.y = -tubeLength / 2 - 1;
+            scene.add(gridHelper);
+
+            // Create Magnet & Tube Elements
+            createTube();
+            createMagnet();
+            createVisualizers();
+
+            // Track window resize
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        // Build the physical experiment tube as a fully continuous (closed) cylinder
+        function createTube() {
+            if (tube) scene.remove(tube);
+
+            tube = new THREE.Group();
+
+            const matProp = materials[currentMaterial];
+            
+            const tubeGeo = new THREE.CylinderGeometry(
+                tubeRadius, tubeRadius, tubeLength, 
+                64, 40, 
+                true // open ended (keeps the inside hollow/open at top and bottom limits)
+            );
+
+            // 1. Back Wall Material (inside surface visible behind inner objects)
+            const tubeMatBack = new THREE.MeshStandardMaterial({
+                color: matProp.color,
+                transparent: true,
+                opacity: currentMaterial === 'pvc' ? 0.1 : 0.16,
+                roughness: matProp.roughness,
+                metalness: matProp.metalness,
+                side: THREE.BackSide,
+                depthWrite: false // Crucial: Disable depth write to prevent sorting / overlapping artifacts
+            });
+            const tubeBack = new THREE.Mesh(tubeGeo, tubeMatBack);
+            tubeBack.renderOrder = 1; // Render first in transparent passes
+            tube.add(tubeBack);
+
+            // 2. Front Wall Material (outside surface visible in front of inner objects)
+            const tubeMatFront = new THREE.MeshStandardMaterial({
+                color: matProp.color,
+                transparent: true,
+                opacity: currentMaterial === 'pvc' ? 0.15 : 0.25,
+                roughness: matProp.roughness,
+                metalness: matProp.metalness,
+                side: THREE.FrontSide,
+                depthWrite: false // Crucial: Disable depth write to prevent sorting / overlapping artifacts
+            });
+            const tubeFront = new THREE.Mesh(tubeGeo, tubeMatFront);
+            tubeFront.renderOrder = 4; // Render last in transparent passes to overlap correctly
+            tube.add(tubeFront);
+
+            scene.add(tube);
+
+            // Helper outer metallic rings/supports at the top and bottom only
+            const supportGeo = new THREE.CylinderGeometry(tubeRadius + 0.05, tubeRadius + 0.05, 0.1, 32, 1, true);
+            const supportColor = new THREE.Color(matProp.color).multiplyScalar(0.45);
+            const supportMat = new THREE.MeshStandardMaterial({ color: supportColor, metalness: 0.35, roughness: 0.35 });
+            
+            // Placed only at top and bottom limits
+            for (let yOffset of [-tubeLength/2, tubeLength/2]) {
+                const support = new THREE.Mesh(supportGeo, supportMat);
+                support.position.y = yOffset;
+                tube.add(support);
+            }
+        }
+
+        // Build the Neodymium Cylindrical Magnet
+        function createMagnet() {
+            if (magnet) scene.remove(magnet);
+
+            magnet = new THREE.Group();
+
+            // Magnet height & radius
+            const magR = tubeRadius * 0.75; // Fits snugly inside
+            const magH = 0.8;
+
+            // North Pole (Bright Red) - Top Half
+            const northGeo = new THREE.CylinderGeometry(magR, magR, magH / 2, 32);
+            const northMat = new THREE.MeshStandardMaterial({
+                color: 0xff1a1a, // High-vibrancy Red
+                roughness: 0.2,  // Calibrated smooth finish
+                metalness: 0.1   // Lower metalness to prevent high-key white reflections
+            });
+            const northMesh = new THREE.Mesh(northGeo, northMat);
+            northMesh.position.y = magH / 4;
+            northMesh.castShadow = true;
+            magnet.add(northMesh);
+
+            // South Pole (Bright Blue) - Bottom Half
+            const southGeo = new THREE.CylinderGeometry(magR, magR, magH / 2, 32);
+            const southMat = new THREE.MeshStandardMaterial({
+                color: 0x1a75ff, // High-vibrancy Blue
+                roughness: 0.2,  // Calibrated smooth finish
+                metalness: 0.1   // Lower metalness to prevent high-key white reflections
+            });
+            const southMesh = new THREE.Mesh(southGeo, southMat);
+            southMesh.position.y = -magH / 4;
+            southMesh.castShadow = true;
+            magnet.add(southMesh);
+
+            const northLabel = createMagnetPoleLabel('N', '#ffffff');
+            northLabel.position.set(0, magH / 4, magR + 0.012);
+            magnet.add(northLabel);
+
+            const southLabel = createMagnetPoleLabel('S', '#ffffff');
+            southLabel.position.set(0, -magH / 4, magR + 0.012);
+            magnet.add(southLabel);
+
+            // Magnet dynamic point light for inner-tube illumination
+            const magnetLight = new THREE.PointLight(0xffffff, 0.6, 3);
+            magnetLight.position.set(0, 0, 0);
+            magnet.add(magnetLight);
+
+            scene.add(magnet);
+        }
+
+        function createMagnetPoleLabel(letter, color) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = color;
+            ctx.font = 'bold 170px Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(letter, canvas.width / 2, canvas.height / 2 + 8);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            const material = new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                depthTest: true,
+                depthWrite: false,
+                side: THREE.DoubleSide
+            });
+            const label = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), material);
+            label.renderOrder = 6;
+            return label;
+        }
+
+        // Create secondary visualizations (Fields & Currents)
+        function createVisualizers() {
+            // Remove previous instances
+            if (primaryFieldGroup) scene.remove(primaryFieldGroup);
+            
+            eddyCurrentRings.forEach(r => scene.remove(r.mesh));
+            eddyCurrentRings = [];
+
+            // 1. MAGNET PRIMARY FIELD
+            // We draw exactly 8 beautifully spaced lines of force loops with clear directions
+            primaryFieldGroup = new THREE.Group();
+            const numLoops = 8; // Spatially simplified count (exactly 8 loops)
+            const ptsPerLoop = 50;
+            const loopScale = 2.0;
+
+            for (let i = 0; i < numLoops; i++) {
+                const angle = (i / numLoops) * Math.PI * 2;
+                const points = [];
+                
+                // Parametric dipole representation: from North (top, theta -> 0.1) to South (bottom, theta -> PI - 0.1)
+                for (let theta = 0.1; theta < Math.PI - 0.1; theta += Math.PI / ptsPerLoop) {
+                    const r = loopScale * Math.sin(theta) * Math.sin(theta);
+                    const x = r * Math.sin(theta) * Math.cos(angle);
+                    const y = r * Math.cos(theta);
+                    const z = r * Math.sin(theta) * Math.sin(angle);
+                    points.push(new THREE.Vector3(x, y, z));
+                }
+
+                const curve = new THREE.CatmullRomCurve3(points);
+                
+                // TubeGeometry gives the lines clear volumetric thickness (0.035 radius)
+                const geometry = new THREE.TubeGeometry(curve, 36, 0.035, 8, false);
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0xe11d48, // Crimson-Rose
+                    roughness: 0.3,
+                    metalness: 0.1,
+                    transparent: true,
+                    opacity: 0.65,
+                    side: THREE.DoubleSide,
+                    depthWrite: false
+                });
+                
+                const lineMesh = new THREE.Mesh(geometry, material);
+                lineMesh.renderOrder = 2; // Renders on top of tube back, but behind tube front
+                primaryFieldGroup.add(lineMesh);
+
+                // --- DIRECTIONAL INDICATOR ---
+                const midPoint = curve.getPointAt(0.5);
+                const tangent = curve.getTangentAt(0.5);
+
+                // Create directional arrowhead cone using flat MeshBasicMaterial so it won't wash out to white
+                const arrowGeo = new THREE.ConeGeometry(0.12, 0.3, 8);
+                const arrowMat = new THREE.MeshBasicMaterial({
+                    color: 0xbe123c // Rich Crimson
+                });
+                const arrowMesh = new THREE.Mesh(arrowGeo, arrowMat);
+                arrowMesh.position.copy(midPoint);
+                arrowMesh.renderOrder = 2;
+
+                // Align cone's standard tip direction (+Y) with the tangent vector
+                const upVector = new THREE.Vector3(0, 1, 0);
+                arrowMesh.quaternion.setFromUnitVectors(upVector, tangent.normalize());
+
+                primaryFieldGroup.add(arrowMesh);
+            }
+            magnet.add(primaryFieldGroup); // Connect to magnet group so they move seamlessly together
+
+            // 2. TUBE EDDY CURRENTS (Stationary bands spaced along tube length)
+            const numRings = 24;
+            const stepY = tubeLength / (numRings - 1);
+            
+            for (let i = 0; i < numRings; i++) {
+                const ringY = -tubeLength / 2 + i * stepY;
+                const ringColor = eddyDirectionColors.below.clone();
+                
+                // Form a short cylinder band offset OUTSIDE of the tube body (radius 1.08)
+                const ringGeo = new THREE.CylinderGeometry(
+                    tubeRadius + 0.08, // Top radius
+                    tubeRadius + 0.08, // Bottom radius
+                    0.045,              // Height (width of current band along cylinder wall)
+                    32,                 // Radial segments
+                    1,
+                    true                // Open-ended hollow shell
+                );
+                
+                // Styled as a high-contrast electric indigo current band
+                const ringMat = new THREE.MeshBasicMaterial({
+                    color: ringColor,
+                    side: THREE.DoubleSide,
+                    transparent: false,
+                    opacity: 1.0,
+                    depthWrite: false
+                });
+                
+                const mesh = new THREE.Mesh(ringGeo, ringMat);
+                mesh.position.y = ringY;
+                mesh.renderOrder = 3; // Rendered right before the outer front tube wall
+                mesh.visible = false;
+                scene.add(mesh);
+
+                // Add arrowheads pointing along the direction of the current on this specific ring
+                const arrows = [];
+                const arrowCount = 6;
+                for (let a = 0; a < arrowCount; a++) {
+                    const arrowGeo = new THREE.BufferGeometry();
+                    arrowGeo.setAttribute('position', new THREE.Float32BufferAttribute([
+                         0.22,  0.00, 0.00,
+                        -0.14,  0.07, 0.00,
+                        -0.14, -0.07, 0.00
+                    ], 3));
+                    arrowGeo.setIndex([0, 1, 2]);
+                    arrowGeo.computeVertexNormals();
+                    
+                    // Same color as the current band so the flow reads as one continuous visual.
+                    const arrowMat = new THREE.MeshBasicMaterial({ 
+                        color: ringColor,
+                        side: THREE.DoubleSide,
+                        transparent: false,
+                        opacity: 1.0,
+                        depthTest: true,
+                        depthWrite: false
+                    });
+                    const arrow = new THREE.Mesh(arrowGeo, arrowMat);
+                    arrow.renderOrder = 5;
+                    arrow.visible = false;
+                    mesh.add(arrow);
+                    arrows.push(arrow);
+                }
+
+                eddyCurrentRings.push({
+                    y: ringY,
+                    mesh: mesh,
+                    material: ringMat,
+                    arrows: arrows
+                });
+            }
+        }
+
+        function clearEddyCurrentRing(ring) {
+            ring.mesh.visible = false;
+            ring.material.opacity = 0;
+            ring.arrows.forEach(arrow => {
+                arrow.visible = false;
+                arrow.material.opacity = 0;
+            });
+        }
+
+        function renderLatex(element) {
+            if (typeof renderMathInElement !== 'function') return;
+
+            renderMathInElement(element, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false },
+                    { left: '\\(', right: '\\)', display: false },
+                    { left: '\\[', right: '\\]', display: true }
+                ],
+                throwOnError: false
+            });
+        }
+
+        // Live stats & explanation setup
+        function updateMaterialDetails() {
+            const mat = materials[currentMaterial];
+            materialInfo.innerHTML = `
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="w-3 h-3 rounded-full" style="background-color: #${mat.color.toString(16)}"></span>
+                    <strong class="text-slate-800">${mat.name}</strong>
+                </div>
+                <p class="leading-relaxed text-[11px] text-slate-600">${mat.desc}</p>
+                <div class="mt-2 text-[10px] text-indigo-600 font-mono font-semibold">
+                    Resistivity: ${(mat.resistivity).toExponential(2)} Ω·m
+                </div>
+            `;
+            renderLatex(materialInfo);
+
+            // Redraw tube for new material properties
+            createTube();
+            calculateTheoreticalTerminalSpeed();
+        }
+
+        // Calculate theoretical terminal velocity (approximate scale)
+        function calculateTheoreticalTerminalSpeed() {
+            // Calculated internally for telemetry scaling purposes
+        }
+
+        function stickMagnetToTube() {
+            const magR = tubeRadius * 0.75;
+            posY = magnetStartY;
+            velocity = 0;
+            accel = 0;
+            isStuckToTube = true;
+
+            magnet.position.set(tubeRadius - magR + 0.03, posY, 0);
+            magnet.rotation.set(0, 0, Math.PI / 2);
+            eddyCurrentRings.forEach(r => clearEddyCurrentRing(r));
+        }
+
+        // Reset positions & kinematics
+        function resetSimulation() {
+            posY = magnetStartY;
+            velocity = 0;
+            accel = 0;
+            simTime = 0;
+            currentFlowPhase = 0;
+            isDropped = false;
+            isStuckToTube = false;
+            
+            // Reset Chart telemetry
+            timeData = [0];
+            velData = [0];
+            updateChart();
+
+            // Reset magnet mesh position
+            magnet.position.set(0, posY, 0);
+            magnet.rotation.set(0, 0, 0);
+
+            // Clear active eddy current rings and arrows
+            eddyCurrentRings.forEach(r => {
+                clearEddyCurrentRing(r);
+            });
+
+            // Ensure rendering state updates instantly
+            updateSceneElements();
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            selectMaterial.addEventListener('change', (e) => {
+                currentMaterial = e.target.value;
+                updateMaterialDetails();
+                resetSimulation();
+            });
+
+            btnDrop.addEventListener('click', () => {
+                if (!isDropped) {
+                    isDropped = true;
+                    if (materials[currentMaterial].isFerromagnetic) {
+                        stickMagnetToTube();
+                    }
+                } else {
+                    resetSimulation();
+                    isDropped = true;
+                    if (materials[currentMaterial].isFerromagnetic) {
+                        stickMagnetToTube();
+                    }
+                }
+            });
+
+            btnReset.addEventListener('click', () => {
+                resetSimulation();
+            });
+
+            btnPlayPause.addEventListener('click', () => {
+                isRunning = !isRunning;
+                playPauseText.innerText = isRunning ? "Pause" : "Resume";
+                btnPlayPause.className = isRunning 
+                    ? "w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-medium rounded-lg shadow-md transition duration-150 flex items-center justify-center gap-2"
+                    : "w-full px-4 py-2 bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-white font-medium rounded-lg shadow-md transition duration-150 flex items-center justify-center gap-2";
+            });
+
+            btnToggleSidebar.addEventListener('click', () => {
+                const isCollapsed = document.body.classList.toggle('sidebar-collapsed');
+                sidebarToggleIcon.style.transform = isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
+                window.setTimeout(onWindowResize, 260);
+            });
+
+            sliderAnimationRate.addEventListener('input', (e) => {
+                animationRate = parseFloat(e.target.value);
+                valAnimationRate.innerText = `${animationRate.toFixed(2).replace(/\.?0+$/, '')}x`;
+            });
+
+            // Toggles
+            chkPrimaryField.addEventListener('change', (e) => showPrimaryField = e.target.checked);
+            chkEddyCurrents.addEventListener('change', (e) => showEddyCurrents = e.target.checked);
+        }
+
+        // Resize callback
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        // Initialize ChartJS (Refactored to focus exclusively on Velocity)
+        function initChart() {
+            const ctx = document.getElementById('chartTelemetry').getContext('2d');
+            telemetryChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timeData,
+                    datasets: [
+                        {
+                            label: 'Velocity (m/s)',
+                            data: velData,
+                            borderColor: '#059669', // Strong emerald
+                            backgroundColor: 'rgba(5, 150, 105, 0.05)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.1,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#475569', // Slate-600
+                                boxWidth: 12,
+                                font: { size: 10 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: '#e2e8f0' }, // Soft grey grid
+                            title: { display: true, text: 'Time (s)', color: '#475569', font: { size: 9 } },
+                            ticks: { color: '#475569', font: { size: 8 } }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            grid: { color: '#e2e8f0' },
+                            title: { display: true, text: 'Velocity (m/s)', color: '#059669', font: { size: 9 } },
+                            ticks: { color: '#059669', font: { size: 8 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Push data points to real-time graph
+        function updateChart() {
+            telemetryChart.data.labels = timeData;
+            telemetryChart.data.datasets[0].data = velData;
+            telemetryChart.update('none'); // Update without full animation lag
+        }
+
+        // --- CORE MATH SIMULATION TICK ---
+        const dt = 0.016; // Fix timestamp step (simulates 60 FPS)
+
+        // Euler integration mechanics
+        function updatePhysics() {
+            if (!isDropped || isStuckToTube) return;
+            const simDt = dt * animationRate;
+
+            // Stop at physical floor of tube (with basic buffer offset)
+            const bottomLimit = -tubeLength / 2 + 0.4;
+            if (posY <= bottomLimit) {
+                posY = bottomLimit;
+                velocity = 0;
+                accel = 0;
+                return;
+            }
+
+            const mat = materials[currentMaterial];
+            
+            // F_g = m * g (Acting Downward)
+            const F_g = magnetMass * gravity;
+            
+            // F_drag = k * σ * B^2 * v (Acting Upward)
+            const dampingFactor = mat.dampingFactor * magnetStrength * magnetStrength;
+            const F_drag = dampingFactor * velocity;
+
+            // F_net = F_g - F_drag
+            const F_net = F_g - F_drag;
+            
+            // Acceleration (a = F / m)
+            accel = F_net / magnetMass;
+
+            // Euler integration
+            velocity += accel * simDt;
+            posY -= velocity * simDt; // Moving down in 3D scene coordinate space
+            currentFlowPhase += simDt * 3.2;
+
+            // Update telemetry
+            simTime += simDt;
+            
+            // Limit telemetry logs to avoid UI bottlenecking
+            if (timeData.length < 150) {
+                timeData.push(simTime.toFixed(2));
+                velData.push(velocity);
+                updateChart();
+            }
+        }
+
+        // Render loop update for ThreeJS assets
+        function updateSceneElements() {
+            // 1. Move Magnet Group
+            if (isStuckToTube) {
+                const magR = tubeRadius * 0.75;
+                magnet.position.set(tubeRadius - magR + 0.03, posY, 0);
+                magnet.rotation.set(0, 0, Math.PI / 2);
+            } else {
+                magnet.position.set(0, posY, 0);
+                magnet.rotation.set(0, 0, 0);
+            }
+
+            // Toggle visibility for primary field
+            primaryFieldGroup.visible = showPrimaryField;
+
+            // 2. Eddy Currents Activation and Dynamic 4-Line Arrowhead Allocation
+            const mat = materials[currentMaterial];
+            
+            // Eddy current intensity depends on the metal's coupling coefficient and falling speed.
+            // Keep this independent of pause state so currents remain visible while time is stopped.
+            const currentStrength = (mat.dampingFactor > 0) ? Math.min(1.0, velocity / 1.5) : 0;
+
+            eddyCurrentRings.forEach((ring) => {
+                const distance = Math.abs(ring.y - posY);
+                const maxRange = 1.8; 
+
+                if (!isStuckToTube && showEddyCurrents && isDropped && posY > -tubeLength/2 + 0.4 && currentStrength > 0.01) {
+                    if (distance < maxRange) {
+                        // Solid high-visibility band activation.
+                        ring.mesh.visible = true;
+                        ring.material.opacity = 1.0;
+
+                        const isBelow = ring.y <= posY;
+                        const direction = isBelow ? 1 : -1;
+                        const currentColor = isBelow ? eddyDirectionColors.below : eddyDirectionColors.above;
+                        ring.material.color.copy(currentColor);
+
+                        // Animate arrows directly on the current ring surface.
+                        const ringR = tubeRadius + 0.08; 
+                        const t = currentFlowPhase * direction;
+
+                        ring.arrows.forEach((arrow, idx) => {
+                            arrow.visible = true;
+                            arrow.material.opacity = 1.0;
+                            arrow.material.color.copy(currentColor);
+                            const localAngle = t + (idx / ring.arrows.length) * Math.PI * 2;
+                            
+                            arrow.position.set(
+                                Math.cos(localAngle) * ringR,
+                                0,
+                                Math.sin(localAngle) * ringR
+                            );
+
+                            const tangent = new THREE.Vector3(-Math.sin(localAngle) * direction, 0, Math.cos(localAngle) * direction);
+                            const vertical = new THREE.Vector3(0, 1, 0);
+                            const surfaceNormal = new THREE.Vector3().crossVectors(tangent, vertical).normalize();
+                            const wallAligned = new THREE.Matrix4().makeBasis(tangent, vertical, surfaceNormal);
+                            arrow.quaternion.setFromRotationMatrix(wallAligned);
+                        });
+                    } else {
+                        clearEddyCurrentRing(ring);
+                    }
+                } else {
+                    clearEddyCurrentRing(ring);
+                }
+            });
+        }
+
+        // Animation Frame loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (isRunning) {
+                updatePhysics();
+            }
+            // Always update scene elements so visual states (like pausing/stopping current) react instantly
+            updateSceneElements();
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Run application on load
+        window.onload = init;
+    </script>
+</body>
+</html>
