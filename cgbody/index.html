@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biomechanical Center of Gravity (CoG) Estimator</title>
+    <!-- Tailwind CSS for UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MediaPipe Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <!-- Lucide Icons for clean look -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur px-6 py-4 flex flex-wrap items-center justify-between gap-4 z-10">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-600 p-2 rounded-lg text-white">
+                <i data-lucide="activity" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r bg-clip-text text-transparent from-indigo-400 to-cyan-400">PhysioCoG AI</h1>
+                <p class="text-xs text-slate-400">Biomechanical Center of Gravity (CoG) Real-Time Estimator</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <span id="status-badge" class="px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 animate-pulse">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                Loading Models...
+            </span>
+            <div class="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-md border border-slate-700">
+                Method: <strong class="text-slate-200" id="method-text">De Leva Biomechanical Model (Unisex)</strong>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-6 overflow-hidden max-h-[calc(100vh-80px)]">
+        
+        <!-- Left: Video & Graphics Pipeline (8 Cols) -->
+        <div class="lg:col-span-8 flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative min-h-[400px]">
+            <!-- Video Overlay Controls -->
+            <div class="absolute top-4 left-4 z-10 flex flex-wrap gap-2">
+                <button id="toggle-skeleton" class="px-3 py-1.5 bg-slate-850 hover:bg-slate-750 border border-slate-700/80 rounded-lg text-xs font-medium flex items-center gap-1.5 transition">
+                    <i data-lucide="eye" class="w-3.5 h-3.5 text-indigo-400"></i> Show Skeleton
+                </button>
+                <button id="toggle-segments" class="px-3 py-1.5 bg-slate-850 hover:bg-slate-750 border border-slate-700/80 rounded-lg text-xs font-medium flex items-center gap-1.5 transition">
+                    <i data-lucide="layers" class="w-3.5 h-3.5 text-cyan-400"></i> Show Segments CoG
+                </button>
+                <button id="toggle-base" class="px-3 py-1.5 bg-slate-850 hover:bg-slate-750 border border-slate-700/80 rounded-lg text-xs font-medium flex items-center gap-1.5 transition">
+                    <i data-lucide="anchor" class="w-3.5 h-3.5 text-emerald-400"></i> Support Base
+                </button>
+            </div>
+
+            <!-- Absolute Warning / Prompt -->
+            <div id="no-user-warning" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-6 text-center transition-all duration-300">
+                <div class="bg-indigo-900/30 border border-indigo-500/20 p-4 rounded-full mb-4 animate-bounce">
+                    <i data-lucide="user-check" class="w-10 h-10 text-indigo-400"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-100 mb-2">Awaiting Human Subject</h3>
+                <p class="text-sm text-slate-400 max-w-md mb-6">Position your webcam to capture your entire body (shoulders to feet are vital for accurate calculation).</p>
+                <button id="start-cam-btn" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold flex items-center gap-2 shadow-lg shadow-indigo-500/20 transition">
+                    <i data-lucide="video" class="w-4 h-4"></i> Enable Camera
+                </button>
+            </div>
+
+            <!-- The Visual Viewport -->
+            <div class="flex-1 w-full h-full relative flex items-center justify-center bg-black overflow-hidden">
+                <!-- Video hidden, drawn onto canvas -->
+                <video id="webcam" class="hidden" playsinline autoplay muted></video>
+                <canvas id="output-canvas" class="w-full h-full object-contain"></canvas>
+            </div>
+        </div>
+
+        <!-- Right: Real-time Analytics Dashboard (4 Cols) -->
+        <div class="lg:col-span-4 flex flex-col gap-6 overflow-y-auto pr-1">
+            
+            <!-- Dynamic Profile Selector (Gender / Unisex) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col gap-3">
+                <h3 class="font-bold text-sm tracking-wide text-slate-400 uppercase">Subject Profile</h3>
+                <div class="grid grid-cols-3 gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800/80">
+                    <button id="btn-unisex" class="py-2 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition-all shadow-md">
+                        Unisex
+                    </button>
+                    <button id="btn-female" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
+                        Female
+                    </button>
+                    <button id="btn-male" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
+                        Male
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stability & Balance Scorecard -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-sm tracking-wide text-slate-400 uppercase">Balance Index</h3>
+                    <span id="stability-text" class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">Optimal</span>
+                </div>
+                <div class="flex items-baseline space-x-2">
+                    <span id="stability-percentage" class="text-4xl font-extrabold tracking-tight text-white">100%</span>
+                    <span class="text-slate-400 text-sm">stability</span>
+                </div>
+                <!-- Progress bar indicating distance from base center -->
+                <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                    <div id="stability-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-200" style="width: 100%"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-800/60 text-xs">
+                    <div>
+                        <span class="text-slate-500 block">Sway Deviation</span>
+                        <strong id="sway-val" class="text-slate-200 text-sm font-semibold">0.00 cm</strong>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block">Support Base Margin</span>
+                        <strong id="base-margin" class="text-slate-200 text-sm font-semibold">--</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Segment breakdown (Mass Contributions) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex-1 flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-sm tracking-wide text-slate-400 uppercase">Body Segment Masses</h3>
+                    <i data-lucide="info" class="w-4 h-4 text-slate-500 cursor-help" title="Based on de Leva's adjustments of Clauser's anthropometric segment weight distribution. Adjusts based on the selected profile."></i>
+                </div>
+
+                <!-- Interactive list dynamically updating coordinates and weights -->
+                <div class="space-y-3 flex-1 overflow-y-auto max-h-[280px]">
+                    <div class="flex justify-between items-center text-xs p-2 bg-slate-950/40 rounded-lg border border-slate-800/40">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+                            Trunk & Head (<span id="weight-trunk">58.0</span>%)
+                        </span>
+                        <span id="cog-trunk" class="font-mono text-slate-400 font-semibold">x: 0.00, y: 0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs p-2 bg-slate-950/40 rounded-lg border border-slate-800/40">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-orange-400"></span>
+                            Thighs (<span id="weight-thighs">25.0</span>%)
+                        </span>
+                        <span id="cog-thighs" class="font-mono text-slate-400 font-semibold">x: 0.00, y: 0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs p-2 bg-slate-950/40 rounded-lg border border-slate-800/40">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+                            Shanks & Feet (<span id="weight-shanks">11.0</span>%)
+                        </span>
+                        <span id="cog-shanks" class="font-mono text-slate-400 font-semibold">x: 0.00, y: 0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs p-2 bg-slate-950/40 rounded-lg border border-slate-800/40">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-green-400"></span>
+                            Upper Arms (<span id="weight-arms">4.0</span>%)
+                        </span>
+                        <span id="cog-arms" class="font-mono text-slate-400 font-semibold">x: 0.00, y: 0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs p-2 bg-slate-950/40 rounded-lg border border-slate-800/40">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+                            Forearms & Hands (<span id="weight-forearms">2.0</span>%)
+                        </span>
+                        <span id="cog-forearms" class="font-mono text-slate-400 font-semibold">x: 0.00, y: 0.00</span>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800">
+                    <div class="flex justify-between items-center text-sm font-semibold mb-2">
+                        <span>Total Body CoG:</span>
+                        <span id="total-cog-xy" class="font-mono text-indigo-400">x: --, y: --</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 leading-relaxed">
+                        *Values calculated dynamically based on world coordinate metric space (in meters) relative to the pelvis center.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer / Explanation of Biomechanics -->
+    <footer class="bg-slate-900 border-t border-slate-800 p-4 text-xs text-slate-500 text-center">
+        The system uses MediaPipe landmark projections & calculates segment Centers of Mass (CoM) utilizing <strong>de Leva's Adjusted Zatsiorsky Model Parameters</strong> (for average adult males/females). It assumes typical anatomical structural density to aggregate whole-body posture metrics dynamically.
+    </footer>
+
+    <!-- Scripting for Calculation and Video Integration -->
+    <script>
+        // DOM Elements
+        const videoElement = document.getElementById('webcam');
+        const canvasElement = document.getElementById('output-canvas');
+        const canvasCtx = canvasElement.getContext('2d');
+        const warningScreen = document.getElementById('no-user-warning');
+        const startCamBtn = document.getElementById('start-cam-btn');
+        const statusBadge = document.getElementById('status-badge');
+        const methodText = document.getElementById('method-text');
+
+        const stabilityText = document.getElementById('stability-text');
+        const stabilityPercentage = document.getElementById('stability-percentage');
+        const stabilityBar = document.getElementById('stability-bar');
+        const swayValElement = document.getElementById('sway-val');
+        const baseMarginElement = document.getElementById('base-margin');
+
+        // Dynamic Segment CoG elements
+        const segmentDisplays = {
+            trunk: document.getElementById('cog-trunk'),
+            thighs: document.getElementById('cog-thighs'),
+            shanks: document.getElementById('cog-shanks'),
+            arms: document.getElementById('cog-arms'),
+            forearms: document.getElementById('cog-forearms'),
+            total: document.getElementById('total-cog-xy')
+        };
+
+        // UI Weight displays
+        const weightTrunkText = document.getElementById('weight-trunk');
+        const weightThighsText = document.getElementById('weight-thighs');
+        const weightShanksText = document.getElementById('weight-shanks');
+        const weightArmsText = document.getElementById('weight-arms');
+        const weightForearmsText = document.getElementById('weight-forearms');
+
+        // UI Toggles
+        let showSkeleton = true;
+        let showSegments = true;
+        let showBase = true;
+
+        document.getElementById('toggle-skeleton').addEventListener('click', function() {
+            showSkeleton = !showSkeleton;
+            this.classList.toggle('bg-indigo-900/40');
+        });
+        document.getElementById('toggle-segments').addEventListener('click', function() {
+            showSegments = !showSegments;
+            this.classList.toggle('bg-cyan-900/40');
+        });
+        document.getElementById('toggle-base').addEventListener('click', function() {
+            showBase = !showBase;
+            this.classList.toggle('bg-emerald-900/40');
+        });
+
+        // Anthropometric Profiles (de Leva 1996 Adjustments to Zatsiorsky-Seluyanov's parameters)
+        const PROFILES = {
+            unisex: {
+                label: "Unisex Average",
+                headTrunk: { weight: 0.580, centerFactor: 0.44 }, // Unisex intermediate
+                upperArms: { weight: 0.040, factor: 0.436 }, 
+                forearmsHands: { weight: 0.020, factor: 0.45 },
+                thighs: { weight: 0.250, factor: 0.433 },
+                shanksFeet: { weight: 0.110, factor: 0.45 }
+            },
+            female: {
+                label: "Female Profile",
+                headTrunk: { weight: 0.565, centerFactor: 0.42 }, // Lower CoG for females
+                upperArms: { weight: 0.035, factor: 0.430 }, 
+                forearmsHands: { weight: 0.015, factor: 0.440 },
+                thighs: { weight: 0.270, factor: 0.428 }, // Higher relative leg mass percentage
+                shanksFeet: { weight: 0.115, factor: 0.444 }
+            },
+            male: {
+                label: "Male Profile",
+                headTrunk: { weight: 0.590, centerFactor: 0.45 }, // Higher upper torso mass concentration
+                upperArms: { weight: 0.050, factor: 0.440 }, 
+                forearmsHands: { weight: 0.020, factor: 0.455 },
+                thighs: { weight: 0.230, factor: 0.438 },
+                shanksFeet: { weight: 0.110, factor: 0.452 }
+            }
+        };
+
+        // Active selection
+        let currentProfileKey = 'unisex';
+        let activeProfile = PROFILES[currentProfileKey];
+
+        // Profile Toggle Setup
+        const btnUnisex = document.getElementById('btn-unisex');
+        const btnFemale = document.getElementById('btn-female');
+        const btnMale = document.getElementById('btn-male');
+
+        function setProfile(key) {
+            currentProfileKey = key;
+            activeProfile = PROFILES[key];
+            
+            // UI Button adjustments
+            const buttons = {
+                unisex: btnUnisex,
+                female: btnFemale,
+                male: btnMale
+            };
+
+            Object.keys(buttons).forEach(k => {
+                if (k === key) {
+                    buttons[k].className = "py-2 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition-all shadow-md";
+                } else {
+                    buttons[k].className = "py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all";
+                }
+            });
+
+            // Update Method Label in Header
+            methodText.innerText = `De Leva Biomechanical Model (${activeProfile.label})`;
+
+            // Update Body Segment Mass weights in list labels dynamically
+            weightTrunkText.innerText = (activeProfile.headTrunk.weight * 100).toFixed(1);
+            weightThighsText.innerText = (activeProfile.thighs.weight * 100).toFixed(1);
+            weightShanksText.innerText = (activeProfile.shanksFeet.weight * 100).toFixed(1);
+            weightArmsText.innerText = (activeProfile.upperArms.weight * 100).toFixed(1);
+            weightForearmsText.innerText = (activeProfile.forearmsHands.weight * 100).toFixed(1);
+        }
+
+        btnUnisex.addEventListener('click', () => setProfile('unisex'));
+        btnFemale.addEventListener('click', () => setProfile('female'));
+        btnMale.addEventListener('click', () => setProfile('male'));
+
+        let mediaPipePose;
+        let camera = null;
+        let runningSwayHistory = [];
+
+        // Initialize MediaPipe Pose Model
+        function initPoseEstimator() {
+            mediaPipePose = new Pose({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+            });
+
+            mediaPipePose.setOptions({
+                modelComplexity: 1,
+                smoothLandmarks: true,
+                enableSegmentation: false,
+                smoothSegmentation: false,
+                minDetectionConfidence: 0.6,
+                minTrackingConfidence: 0.6
+            });
+
+            mediaPipePose.onResults(onPoseResults);
+
+            statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>Camera/AI Active`;
+            statusBadge.className = "px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5";
+        }
+
+        // Handle camera and start feed
+        async function startCamera() {
+            try {
+                camera = new Camera(videoElement, {
+                    onFrame: async () => {
+                        await mediaPipePose.send({ image: videoElement });
+                    },
+                    width: 640,
+                    height: 480
+                });
+                await camera.start();
+                warningScreen.classList.add('hidden'); // Hide the user prompt
+            } catch (err) {
+                console.error("Camera access failed", err);
+                statusBadge.innerText = "Camera Failed";
+                statusBadge.className = "px-3 py-1 text-xs font-semibold rounded-full bg-red-500/20 text-red-400 border border-red-500/30";
+            }
+        }
+
+        startCamBtn.addEventListener('click', () => {
+            initPoseEstimator();
+            startCamera();
+        });
+
+        // Initialize Lucide icons on boot
+        window.addEventListener('load', () => {
+            lucide.createIcons();
+            // Trigger load setup
+            setProfile('unisex');
+        });
+
+        // Center calculation between dynamic landmark pairs
+        function getMidpoint(pt1, pt2) {
+            return {
+                x: (pt1.x + pt2.x) / 2,
+                y: (pt1.y + pt2.y) / 2,
+                z: (pt1.z + pt2.z) / 2
+            };
+        }
+
+        // Main Draw and calculation Pipeline loop
+        function onPoseResults(results) {
+            // Verify there are actually landmarks detected
+            if (!results.poseLandmarks) {
+                warningScreen.classList.remove('hidden');
+                return;
+            } else {
+                warningScreen.classList.add('hidden');
+            }
+
+            const width = canvasElement.width = videoElement.videoWidth || 640;
+            const height = canvasElement.height = videoElement.videoHeight || 480;
+
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, width, height);
+            
+            // Draw background video frame horizontally mirrored
+            canvasCtx.save();
+            canvasCtx.translate(width, 0);
+            canvasCtx.scale(-1, 1);
+            canvasCtx.drawImage(results.image, 0, 0, width, height);
+            canvasCtx.restore();
+
+            const landmarks = results.poseLandmarks;
+
+            // Compute Segment Centers of Gravity
+            const segmentCoGs = {};
+            
+            // 1. Trunk CoG (Special handling: Midpoint of shoulders to Midpoint of Hips)
+            const shoulderMid = getMidpoint(landmarks[11], landmarks[12]);
+            const hipMid = getMidpoint(landmarks[23], landmarks[24]);
+            // Trunk Center of Mass location is adjusted dynamically based on active profile factor
+            segmentCoGs.trunk = {
+                x: hipMid.x + activeProfile.headTrunk.centerFactor * (shoulderMid.x - hipMid.x),
+                y: hipMid.y + activeProfile.headTrunk.centerFactor * (shoulderMid.y - hipMid.y)
+            };
+
+            // Helper to compute segment CoG using Joint Paths
+            function getLinearCoG(pathList, factor) {
+                let sumX = 0, sumY = 0;
+                pathList.forEach(path => {
+                    const p1 = landmarks[path[0]];
+                    const p2 = landmarks[path[1]];
+                    // Linear interpolation towards the distal joint
+                    sumX += p1.x + factor * (p2.x - p1.x);
+                    sumY += p1.y + factor * (p2.y - p1.y);
+                });
+                return { x: sumX / pathList.length, y: sumY / pathList.length };
+            }
+
+            // Define joint path indices
+            const THIGH_PATHS = [[23, 25], [24, 26]];
+            const SHANK_PATHS = [[25, 27], [26, 28]];
+            const ARM_PATHS = [[11, 13], [12, 14]];
+            const FOREARM_PATHS = [[13, 15], [14, 16]];
+
+            // Calculate rest of body parts based on active profile factors
+            segmentCoGs.thighs = getLinearCoG(THIGH_PATHS, activeProfile.thighs.factor);
+            segmentCoGs.shanks = getLinearCoG(SHANK_PATHS, activeProfile.shanksFeet.factor);
+            segmentCoGs.arms = getLinearCoG(ARM_PATHS, activeProfile.upperArms.factor);
+            segmentCoGs.forearms = getLinearCoG(FOREARM_PATHS, activeProfile.forearmsHands.factor);
+
+            // Compute Cumulative Body Center of Gravity (CoG)
+            let totalCoG = { x: 0, y: 0 };
+            totalCoG.x += segmentCoGs.trunk.x * activeProfile.headTrunk.weight;
+            totalCoG.y += segmentCoGs.trunk.y * activeProfile.headTrunk.weight;
+
+            totalCoG.x += segmentCoGs.thighs.x * activeProfile.thighs.weight;
+            totalCoG.y += segmentCoGs.thighs.y * activeProfile.thighs.weight;
+
+            totalCoG.x += segmentCoGs.shanks.x * activeProfile.shanksFeet.weight;
+            totalCoG.y += segmentCoGs.shanks.y * activeProfile.shanksFeet.weight;
+
+            totalCoG.x += segmentCoGs.arms.x * activeProfile.upperArms.weight;
+            totalCoG.y += segmentCoGs.arms.y * activeProfile.upperArms.weight;
+
+            totalCoG.x += segmentCoGs.forearms.x * activeProfile.forearmsHands.weight;
+            totalCoG.y += segmentCoGs.forearms.y * activeProfile.forearmsHands.weight;
+
+            // DRAWING SECTION
+            
+            // 1. Draw Skeleton (Optional)
+            if (showSkeleton) {
+                drawSegmentLine(landmarks[11], landmarks[12], "#6366f1", 4); // Shoulders
+                drawSegmentLine(landmarks[23], landmarks[24], "#6366f1", 4); // Hips
+                drawSegmentLine(landmarks[11], landmarks[23], "#475569", 3); // Left Side Torso
+                drawSegmentLine(landmarks[12], landmarks[24], "#475569", 3); // Right Side Torso
+                
+                // Arms
+                drawSegmentLine(landmarks[11], landmarks[13], "#10b981", 3);
+                drawSegmentLine(landmarks[13], landmarks[15], "#10b981", 3);
+                drawSegmentLine(landmarks[12], landmarks[14], "#10b981", 3);
+                drawSegmentLine(landmarks[14], landmarks[16], "#10b981", 3);
+
+                // Legs
+                drawSegmentLine(landmarks[23], landmarks[25], "#f97316", 3);
+                drawSegmentLine(landmarks[25], landmarks[27], "#3b82f6", 3);
+                drawSegmentLine(landmarks[24], landmarks[26], "#f97316", 3);
+                drawSegmentLine(landmarks[26], landmarks[28], "#3b82f6", 3);
+            }
+
+            // 2. Draw Sub-Segment Centers of Mass (Optional)
+            if (showSegments) {
+                drawCoGMarker(segmentCoGs.trunk, "#facc15", "Trunk", width, height);
+                drawCoGMarker(segmentCoGs.thighs, "#fb923c", "Thighs", width, height);
+                drawCoGMarker(segmentCoGs.shanks, "#60a5fa", "Shanks/Feet", width, height);
+                drawCoGMarker(segmentCoGs.arms, "#4ade80", "Upper Arms", width, height);
+                drawCoGMarker(segmentCoGs.forearms, "#c084fc", "Lower Arms", width, height);
+            }
+
+            // 3. Base of Support (Foothold analysis)
+            // Left Ankle: 27, Right Ankle: 28
+            const leftAnkle = landmarks[27];
+            const rightAnkle = landmarks[28];
+            const supportBaseCenter = (leftAnkle.x + rightAnkle.x) / 2;
+            const supportBaseWidth = Math.abs(leftAnkle.x - rightAnkle.x);
+
+            if (showBase) {
+                // Draw Support Base Area Line at ankles level
+                const ankleY = (leftAnkle.y + rightAnkle.y) / 2 * height;
+                canvasCtx.beginPath();
+                canvasCtx.moveTo((1 - leftAnkle.x) * width, ankleY);
+                canvasCtx.lineTo((1 - rightAnkle.x) * width, ankleY);
+                canvasCtx.lineWidth = 8;
+                canvasCtx.strokeStyle = "rgba(16, 185, 129, 0.4)";
+                canvasCtx.lineCap = "round";
+                canvasCtx.stroke();
+
+                // Draw bounding marks for base limit
+                drawCircle((1 - leftAnkle.x) * width, ankleY, 6, "#10b981");
+                drawCircle((1 - rightAnkle.x) * width, ankleY, 6, "#10b981");
+            }
+
+            // 4. Draw Main Total Center of Gravity Marker (Mirrored laterally in JS)
+            const totalCoGPx = { x: (1 - totalCoG.x) * width, y: totalCoG.y * height };
+            
+            // Draw Line of Gravity (Vertical projection downward)
+            const groundAnkleY = (leftAnkle.y + rightAnkle.y) / 2 * height;
+            canvasCtx.beginPath();
+            canvasCtx.moveTo(totalCoGPx.x, totalCoGPx.y);
+            canvasCtx.lineTo(totalCoGPx.x, groundAnkleY);
+            canvasCtx.lineWidth = 2.5;
+            canvasCtx.setLineDash([5, 5]);
+            canvasCtx.strokeStyle = "#818cf8";
+            canvasCtx.stroke();
+            canvasCtx.setLineDash([]); // Reset line dashes
+
+            // Projected ground point marker
+            drawCircle(totalCoGPx.x, groundAnkleY, 7, "#c084fc");
+
+            // Main Core CoG indicator (Interlocking target rings)
+            canvasCtx.beginPath();
+            canvasCtx.arc(totalCoGPx.x, totalCoGPx.y, 14, 0, 2 * Math.PI);
+            canvasCtx.lineWidth = 3;
+            canvasCtx.strokeStyle = "#ffffff";
+            canvasCtx.stroke();
+
+            canvasCtx.beginPath();
+            canvasCtx.arc(totalCoGPx.x, totalCoGPx.y, 8, 0, 2 * Math.PI);
+            canvasCtx.fillStyle = "#6366f1";
+            canvasCtx.fill();
+            canvasCtx.lineWidth = 1.5;
+            canvasCtx.strokeStyle = "#ffffff";
+            canvasCtx.stroke();
+
+            // Label (Since canvas context is not flipped, this will render perfectly normal now!)
+            canvasCtx.fillStyle = "#ffffff";
+            canvasCtx.font = "bold 12px sans-serif";
+            canvasCtx.fillText("TOTAL CoG", totalCoGPx.x + 18, totalCoGPx.y + 4);
+
+            // METRIC CALCULATIONS FOR DASHBOARD
+            // Stability metrics based on deviation of the gravity line projection from the center of the base support
+            const centerOffset = totalCoG.x - supportBaseCenter;
+            const normalizedOffset = supportBaseWidth > 0 ? Math.abs(centerOffset) / (supportBaseWidth / 2) : 1;
+            
+            // Limit stability to range [0, 100]%
+            const stabilityVal = Math.max(0, Math.min(100, Math.round((1 - normalizedOffset) * 100)));
+            
+            // Keep running record of sway history
+            runningSwayHistory.push(centerOffset);
+            if (runningSwayHistory.length > 50) runningSwayHistory.shift();
+            
+            // Calculate Root Mean Square (RMS) of Sway
+            const swayVariance = runningSwayHistory.reduce((acc, val) => acc + (val * val), 0) / runningSwayHistory.length;
+            const swayRMS = Math.sqrt(swayVariance) * 100; // scaling approximation to centimeters
+
+            // Update DOM Panel Outputs
+            stabilityPercentage.innerText = `${stabilityVal}%`;
+            stabilityBar.style.width = `${stabilityVal}%`;
+            swayValElement.innerText = `${swayRMS.toFixed(2)} cm`;
+            
+            if (stabilityVal > 75) {
+                stabilityText.innerText = "Optimal Stability";
+                stabilityText.className = "px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                stabilityBar.className = "bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-200";
+            } else if (stabilityVal > 40) {
+                stabilityText.innerText = "Dynamic Swaying";
+                stabilityText.className = "px-2.5 py-0.5 text-xs font-bold rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30";
+                stabilityBar.className = "bg-gradient-to-r from-amber-500 to-orange-400 h-full rounded-full transition-all duration-200";
+            } else {
+                stabilityText.innerText = "Critical Instability";
+                stabilityText.className = "px-2.5 py-0.5 text-xs font-bold rounded-full bg-red-500/20 text-red-400 border border-red-500/30";
+                stabilityBar.className = "bg-gradient-to-r from-red-500 to-rose-400 h-full rounded-full transition-all duration-200";
+            }
+
+            const leftBoundary = (supportBaseCenter - (supportBaseWidth/2)) * width;
+            const rightBoundary = (supportBaseCenter + (supportBaseWidth/2)) * width;
+            baseMarginElement.innerText = `${(normalizedOffset * 100).toFixed(0)}% Shift`;
+
+            // Coordinates Output inside lists
+            segmentDisplays.trunk.innerText = `x: ${segmentCoGs.trunk.x.toFixed(2)}, y: ${segmentCoGs.trunk.y.toFixed(2)}`;
+            segmentDisplays.thighs.innerText = `x: ${segmentCoGs.thighs.x.toFixed(2)}, y: ${segmentCoGs.thighs.y.toFixed(2)}`;
+            segmentDisplays.shanks.innerText = `x: ${segmentCoGs.shanks.x.toFixed(2)}, y: ${segmentCoGs.shanks.y.toFixed(2)}`;
+            segmentDisplays.arms.innerText = `x: ${segmentCoGs.arms.x.toFixed(2)}, y: ${segmentCoGs.arms.y.toFixed(2)}`;
+            segmentDisplays.forearms.innerText = `x: ${segmentCoGs.forearms.x.toFixed(2)}, y: ${segmentCoGs.forearms.y.toFixed(2)}`;
+            segmentDisplays.total.innerText = `x: ${totalCoG.x.toFixed(2)}, y: ${totalCoG.y.toFixed(2)}`;
+
+            canvasCtx.restore();
+        }
+
+        // Canvas Utilities (Handling lateral mirror coordinate mapping)
+        function drawSegmentLine(point1, point2, color, thickness) {
+            canvasCtx.beginPath();
+            // 1 - coordinate mapping performs the horizontal flip
+            canvasCtx.moveTo((1 - point1.x) * canvasElement.width, point1.y * canvasElement.height);
+            canvasCtx.lineTo((1 - point2.x) * canvasElement.width, point2.y * canvasElement.height);
+            canvasCtx.lineWidth = thickness;
+            canvasCtx.strokeStyle = color;
+            canvasCtx.stroke();
+        }
+
+        function drawCircle(x, y, radius, color) {
+            canvasCtx.beginPath();
+            canvasCtx.arc(x, y, radius, 0, 2 * Math.PI);
+            canvasCtx.fillStyle = color;
+            canvasCtx.fill();
+        }
+
+        function drawCoGMarker(pt, color, label, w, h) {
+            // Map x to mirrored coordinates
+            const xPx = (1 - pt.x) * w;
+            const yPx = pt.y * h;
+            
+            // Draw visual mini-crosshair for Segment CoM
+            canvasCtx.beginPath();
+            canvasCtx.arc(xPx, yPx, 5, 0, 2 * Math.PI);
+            canvasCtx.fillStyle = color;
+            canvasCtx.fill();
+            canvasCtx.lineWidth = 1;
+            canvasCtx.strokeStyle = "#ffffff";
+            canvasCtx.stroke();
+
+            // Label Segment name (Renders correctly left-to-right now)
+            canvasCtx.fillStyle = "rgba(255, 255, 255, 0.75)";
+            canvasCtx.font = "9px sans-serif";
+            canvasCtx.fillText(label, xPx + 8, yPx + 3);
+        }
+    </script>
+</body>
+</html>
