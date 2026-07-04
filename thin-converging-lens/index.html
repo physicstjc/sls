@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Interactive 3D converging lens physics simulation exploring real and virtual image formation with live calculations and ray tracing." />
+    <title>Converging Lens 3D Physics Simulation</title>
+    <!-- Google Fonts: Outfit for futuristic look, Fira Code for formula values -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome for clean icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- KaTeX for formula rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
+    <!-- Custom stylesheet -->
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="app-container">
+      <!-- 3D Canvas container -->
+      <div id="canvas-container"></div>
+      <!-- Combined Controls, Legend, and Physics Panel -->
+      <button id="toggle-sidebar" class="panel-toggle-btn" aria-label="Toggle Control Panel">
+        <i class="fa-solid fa-angle-up"></i>
+      </button>
+      <aside class="control-panel glass-panel">
+        <div class="panel-topbar">
+          <header class="app-header">
+            <div class="logo">
+              <i class="fa-solid fa-microscope"></i>
+              <h1>PhysicsLens.com</h1>
+            </div>
+            <div class="subtitle">Thin Converging Lens Simulation</div>
+          </header>
+          <div class="panel-pagination" role="tablist" aria-label="Panel pages">
+            <button class="panel-page-btn active" type="button" data-panel-page="parameters">Parameters</button>
+            <button class="panel-page-btn" type="button" data-panel-page="modes">Modes</button>
+            <button class="panel-page-btn" type="button" data-panel-page="presets">Presets</button>
+            <button class="panel-page-btn" type="button" data-panel-page="legend">Legend</button>
+            <button class="panel-page-btn" type="button" data-panel-page="physics">Physics</button>
+          </div>
+        </div>
+
+        <div class="panel-page active" data-panel-page-content="parameters">
+          <div class="panel-section">
+            <h2><i class="fa-solid fa-sliders"></i> Adjust Parameters</h2>
+            
+            <!-- Focal Length Slider -->
+            <div class="control-group">
+              <div class="control-label">
+                <span>Focal Length (f)</span>
+                <span class="value-display"><span id="f-val">30</span> cm</span>
+              </div>
+              <input type="range" id="focal-slider" min="15" max="45" step="1" value="30" aria-label="Focal Length">
+            </div>
+            <!-- Object Distance Slider -->
+            <div class="control-group">
+              <div class="control-label">
+                <span>Object Distance (d<sub>o</sub>)</span>
+                <span class="value-display"><span id="do-val">60</span> cm</span>
+              </div>
+              <input type="range" id="do-slider" min="5" max="100" step="1" value="60" aria-label="Object Distance">
+            </div>
+            <!-- Object Height Slider -->
+            <div class="control-group">
+              <div class="control-label">
+                <span>Object Height (h<sub>o</sub>)</span>
+                <span class="value-display"><span id="ho-val">15</span> cm</span>
+              </div>
+              <input type="range" id="ho-slider" min="5" max="25" step="0.5" value="15" aria-label="Object Height">
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-page" data-panel-page-content="modes">
+          <div class="panel-section">
+            <h2><i class="fa-solid fa-layer-group"></i> Modes</h2>
+            <!-- Object Type Control -->
+            <div class="control-group">
+              <label for="object-type-select" class="control-label">
+                <span>Object Type</span>
+              </label>
+              <select id="object-type-select" class="custom-select">
+                <option value="candle">Candle</option>
+                <option value="slide" selected>Projection Slide</option>
+              </select>
+            </div>
+            <!-- Screen Mode Control -->
+            <div class="control-group">
+              <label for="screen-mode-select" class="control-label">
+                <span>Screen Distance Mode</span>
+              </label>
+              <select id="screen-mode-select" class="custom-select">
+                <option value="auto">Auto-focus (Snap to Image Plane)</option>
+                <option value="manual">Manual (Drag to find Focus)</option>
+              </select>
+            </div>
+            <!-- Screen Distance Slider (Manual Mode Only) -->
+            <div class="control-group" id="screen-dist-group" style="display: none;">
+              <div class="control-label">
+                <span>Screen Position (d<sub>s</sub>)</span>
+                <span class="value-display"><span id="ds-val">60</span> cm</span>
+              </div>
+              <input type="range" id="ds-slider" min="10" max="150" step="1" value="60" aria-label="Screen Distance">
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-page" data-panel-page-content="presets">
+          <!-- Presets Section -->
+          <div class="panel-section">
+            <h2><i class="fa-solid fa-bookmark"></i> Optics Presets</h2>
+            <div class="presets-grid">
+              <button class="btn-preset active" data-preset="diminished" title="Object beyond 2F: Real, inverted, diminished image">
+                <span class="preset-name">d<sub>o</sub> &gt; 2f</span>
+                <span class="preset-desc">Diminished</span>
+              </button>
+              <button class="btn-preset" data-preset="samesize" title="Object at 2F: Real, inverted, same size image">
+                <span class="preset-name">d<sub>o</sub> = 2f</span>
+                <span class="preset-desc">Same Size</span>
+              </button>
+              <button class="btn-preset" data-preset="magnified" title="Object between F and 2F: Real, inverted, magnified image">
+                <span class="preset-name">f &lt; d<sub>o</sub> &lt; 2f</span>
+                <span class="preset-desc">Magnified</span>
+              </button>
+              <button class="btn-preset" data-preset="infinity" title="Object at F: Rays parallel, no image formed">
+                <span class="preset-name">d<sub>o</sub> = f</span>
+                <span class="preset-desc">Infinity Focus</span>
+              </button>
+              <button class="btn-preset" data-preset="virtual" title="Object inside F: Virtual, upright, magnified image">
+                <span class="preset-name">d<sub>o</sub> &lt; f</span>
+                <span class="preset-desc">Virtual Image</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-page" data-panel-page-content="legend">
+          <div id="ray-legend">
+            <div class="legend-title">Principal Rays</div>
+            <div class="legend-item">
+              <span class="legend-color parallel-ray"></span>
+              <span class="legend-text">Parallel Ray (Refracts through Focal Point F)</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-color central-ray"></span>
+              <span class="legend-text">Central Ray (Passes straight through Optical Center)</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-color focal-ray"></span>
+              <span class="legend-text">Focal Ray (real image only)</span>
+            </div>
+            <div class="legend-item virtual-ray-item" style="display: none;">
+              <span class="legend-color virtual-ray"></span>
+              <span class="legend-text">Dashed Extensions (Project back to Virtual Image)</span>
+            </div>
+          </div>
+          <!-- Visual Settings -->
+          <div class="panel-section">
+            <h2><i class="fa-solid fa-eye"></i> Visual Settings</h2>
+            <div class="toggle-group">
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-rays" checked>
+                <span class="slider-toggle"></span>
+                <span class="toggle-label">Show Light Rays</span>
+              </label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-labels" checked>
+                <span class="slider-toggle"></span>
+                <span class="toggle-label">Show Optical Labels</span>
+              </label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-auto-rotate">
+                <span class="slider-toggle"></span>
+                <span class="toggle-label">Auto-Orbit Camera</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div id="dashboard" class="panel-page" data-panel-page-content="physics">
+          <div class="dashboard-grid">
+            <!-- Live Math & Equations -->
+            <div class="dash-block equations-block">
+              <h3><i class="fa-solid fa-square-root-variable"></i> Thin Lens Equation</h3>
+              <div id="math-lens-eqn" class="math-formula"></div>
+              <div id="math-lens-calc" class="math-result-latex"></div>
+            </div>
+            <!-- Magnification Dashboard -->
+            <div class="dash-block magnification-block">
+              <h3><i class="fa-solid fa-magnifying-glass-plus"></i> Magnification</h3>
+              <div id="math-mag-eqn" class="math-formula"></div>
+              <div id="math-mag-calc" class="math-result-latex"></div>
+            </div>
+            <!-- Image Properties & Status -->
+            <div class="dash-block status-block">
+              <h3><i class="fa-solid fa-circle-info"></i> Image Characteristics</h3>
+              <div class="status-indicators">
+                <div class="status-indicator">
+                  <span class="indicator-label">Image Type:</span>
+                  <span id="img-type" class="indicator-value type-real">REAL IMAGE</span>
+                </div>
+                <div class="status-indicator">
+                  <span class="indicator-label">Orientation:</span>
+                  <span id="img-orient" class="indicator-value">INVERTED</span>
+                </div>
+                <div class="status-indicator">
+                  <span class="indicator-label">Scale:</span>
+                  <span id="img-scale" class="indicator-value">SAME SIZE</span>
+                </div>
+              </div>
+              <div id="screen-status-note" class="status-note">
+                <i class="fa-solid fa-circle-exclamation"></i> Screen is aligned! Image is sharp.
+              </div>
+            </div>
+          </div>
+          <!-- Educational Explanation Block -->
+          <div id="explanation-container">
+            <div class="explanation-title">Physics Context</div>
+            <p id="explanation-text">
+              When the object distance is greater than twice the focal length (d<sub>o</sub> > 2f), the refracted rays converge to form a <strong>real, inverted, and diminished</strong> image on the other side of the lens, located between f and 2f. The screen captures this image clearly.
+            </p>
+          </div>
+        </div>
+      </aside>
+      <!-- Interaction Tip overlay -->
+      <div id="interaction-tip">
+        <span class="interaction-tip-text">
+          <i class="fa-solid fa-hand-pointer"></i> Drag the object to observe changes in its image.
+        </span>
+        <button id="dismiss-interaction-tip" class="tip-dismiss-btn" type="button" aria-label="Dismiss interaction tip">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
