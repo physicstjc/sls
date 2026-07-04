@@ -227,10 +227,13 @@ function createSlideLetterMesh(color = '#1d4ed8', dotted = false) {
   texture.generateMipmaps = false;
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
+  texture.premultiplyAlpha = true;
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     transparent: true,
     opacity: dotted ? 0.75 : 1,
+    alphaTest: 0.15,
+    depthWrite: false,
     side: THREE.DoubleSide
   });
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material);
@@ -431,9 +434,7 @@ function getScreenLayout(optics) {
   const imageHeight = Math.abs(optics.hi);
   const boardHeight = Math.min(Math.max(imageHeight * 1.8 + 24, 72), 130);
   const scale = boardHeight / 30;
-  const centerY = optics.hi < 0
-    ? boardHeight / 2 + optics.hi - 4
-    : optics.hi - boardHeight / 2 + 4;
+  const centerY = 0;
   const pixelsPerCm = screenCanvas.height / boardHeight;
 
   return { scale, centerY, boardHeight, pixelsPerCm };
