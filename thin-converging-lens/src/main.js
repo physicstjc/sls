@@ -244,8 +244,26 @@ function createSlideSurfaceTexture() {
   canvas.width = 256;
   canvas.height = 512;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = 'rgba(248, 250, 252, 0.94)';
+
+  const baseGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  baseGradient.addColorStop(0, 'rgba(219, 234, 254, 0.52)');
+  baseGradient.addColorStop(0.55, 'rgba(191, 219, 254, 0.3)');
+  baseGradient.addColorStop(1, 'rgba(147, 197, 253, 0.44)');
+  ctx.fillStyle = baseGradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const stripeGradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+  stripeGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+  stripeGradient.addColorStop(0.48, 'rgba(255, 255, 255, 0.22)');
+  stripeGradient.addColorStop(0.58, 'rgba(255, 255, 255, 0.04)');
+  stripeGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = stripeGradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = 'rgba(30, 64, 175, 0.5)';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(3, 3, canvas.width - 6, canvas.height - 6);
+
   const texture = new THREE.CanvasTexture(canvas);
   texture.generateMipmaps = false;
   texture.minFilter = THREE.LinearFilter;
@@ -555,14 +573,14 @@ function buildCandle() {
   candleGroup.add(labelSprite);
 
   const slideMat = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
+    color: 0xbcdcf7,
     map: createSlideSurfaceTexture(),
-    emissive: 0xffffff,
-    emissiveIntensity: 0.08,
-    roughness: 0.24,
+    emissive: 0x1d4ed8,
+    emissiveIntensity: 0.12,
+    roughness: 0.18,
     metalness: 0.02,
     transparent: true,
-    opacity: 1,
+    opacity: 0.72,
     side: THREE.DoubleSide
   });
   const slidePanel = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1, 14), slideMat);
@@ -742,10 +760,14 @@ function buildVirtualCandle() {
   virtualCandleGroup.add(flame);
 
   const slideMat = applyLensStencil(new THREE.MeshStandardMaterial({
-    color: 0xf8fafc,
+    color: 0xbcdcf7,
     map: createSlideSurfaceTexture(),
-    roughness: 0.35,
+    emissive: 0x1d4ed8,
+    emissiveIntensity: 0.08,
+    roughness: 0.22,
     metalness: 0.02,
+    transparent: true,
+    opacity: 0.68,
     side: THREE.DoubleSide
   }));
   const slidePanel = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1, 14), slideMat);
@@ -1235,7 +1257,7 @@ function updateScreenTexture(optics) {
         ctx.fill();
       };
 
-      ctx.fillStyle = 'rgba(248, 250, 252, 1)';
+      ctx.fillStyle = 'rgba(191, 219, 254, 0.58)';
       ctx.strokeStyle = '#2563eb';
       ctx.lineWidth = Math.max(3 * pM, 2);
       ctx.fillRect(cx - slideWidth / 2, slideTop, slideWidth, slideHeight);
