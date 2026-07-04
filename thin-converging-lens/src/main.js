@@ -284,6 +284,17 @@ function applyLensStencil(material) {
   return material;
 }
 
+function excludeFromLensStencil(material) {
+  material.stencilWrite = true;
+  material.stencilRef = 1;
+  material.stencilFunc = THREE.NotEqualStencilFunc;
+  material.stencilFail = THREE.KeepStencilOp;
+  material.stencilZFail = THREE.KeepStencilOp;
+  material.stencilZPass = THREE.KeepStencilOp;
+  material.needsUpdate = true;
+  return material;
+}
+
 function createDashedOutline(geometry, color) {
   const material = applyLensStencil(new THREE.LineDashedMaterial({
     color,
@@ -348,6 +359,13 @@ function buildBench() {
   rod.position.set(-72, -23.5, 0);
   rod.castShadow = true;
   benchGroup.add(rod);
+
+  // Hide the bench inside the lens portal so front views do not show incorrect sizing.
+  benchGroup.traverse((child) => {
+    if (!child.material) return;
+    const materials = Array.isArray(child.material) ? child.material : [child.material];
+    materials.forEach((material) => excludeFromLensStencil(material));
+  });
 }
 
 function setMaterialLensExclusion(material, shouldExcludeLens) {
@@ -1195,7 +1213,7 @@ function updateRays(optics) {
       
       drawThickRay([pCenter, pEndCenter], colCentral, false, rayRadius);
       drawThickRay([pStart, pCenter], colCentral, false, rayRadius);
-      drawThickRay([pImgVirtual, pStart], colVirtual, true, rayRadius);
+      drawThickRay([pImgVirtual, pCenter], colVirtual, true, rayRadius);
     }
   }
   // Draw Focal Ray
