@@ -22,28 +22,43 @@
 
     .wrap {
       max-width: 1100px;
-      margin: 14px auto;
-      padding: 12px;
+      margin: clamp(8px, 2vw, 16px) auto;
+      padding: clamp(8px, 1.8vw, 14px);
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      min-width: 0;
     }
 
     .title {
       margin: 0;
-      font-size: 26px;
+      font-size: clamp(14px, 2vw, 18px);
       font-weight: 700;
-      text-align: center;
+      line-height: 1.1;
+      white-space: nowrap;
+      flex: 0 0 auto;
     }
 
     .subtitle {
-      margin: 6px 0 12px;
-      font-size: 14px;
-      text-align: center;
+      margin: 0;
+      font-size: clamp(11px, 1.5vw, 13px);
       color: #334155;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1 1 auto;
+      min-width: 0;
     }
 
     .top-controls {
       display: flex;
-      justify-content: center;
-      margin: 0 0 10px;
+      justify-content: flex-end;
+      margin: 0;
+      flex: 0 0 auto;
     }
 
     .toggle-btn {
@@ -51,10 +66,11 @@
       border-radius: 8px;
       background: #f8fbff;
       color: #0f172a;
-      padding: 7px 12px;
-      font-size: 13px;
+      padding: 5px 9px;
+      font-size: clamp(11px, 1.4vw, 12px);
       font-weight: 600;
       cursor: pointer;
+      line-height: 1.2;
     }
 
     .toggle-btn:hover {
@@ -64,7 +80,7 @@
 
     .viewer {
       position: relative;
-      min-height: 640px;
+      height: clamp(420px, 74vh, 760px);
       border: 1px solid var(--line);
       border-radius: 12px;
       background: linear-gradient(180deg, #f8fbff 0%, #e8eff9 100%);
@@ -74,7 +90,7 @@
     .label {
       position: absolute;
       transform: translate(-50%, -50%);
-      font-size: 12px;
+      font-size: clamp(10px, 1.5vw, 12px);
       font-weight: 600;
       color: #dbe4f3;
       text-shadow: 0 1px 2px rgba(15, 23, 42, 0.8);
@@ -85,17 +101,40 @@
     }
 
     @media (max-width: 900px) {
-      .viewer { min-height: 560px; }
+      .viewer { height: clamp(390px, 70vh, 680px); }
+    }
+
+    @media (max-width: 640px) {
+      .wrap {
+        margin: 6px auto;
+        padding: 8px;
+      }
+
+      .header-row {
+        gap: 6px;
+        margin-bottom: 6px;
+      }
+
+      .viewer {
+        height: clamp(380px, 68vh, 620px);
+        border-radius: 10px;
+      }
+
+      .label {
+        white-space: normal;
+        max-width: 120px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1 class="title">Three-Bulb 3D Blindbox</h1>
-    <p class="subtitle">Click bulbs to remove or restore them, then infer the hidden arrangement from the readings.</p>
-
-    <div class="top-controls">
-      <button id="toggle-values" class="toggle-btn" type="button">Show Current/Voltage Values</button>
+    <div class="header-row">
+      <h1 class="title">Three-Bulb 3D Blindbox</h1>
+      <p class="subtitle">Click bulbs to remove or restore them, then infer the hidden arrangement from the readings.</p>
+      <div class="top-controls">
+        <button id="toggle-values" class="toggle-btn" type="button">Show Current/Voltage Values</button>
+      </div>
     </div>
 
     <div id="viewer" class="viewer">
@@ -144,10 +183,29 @@
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
+    controls.enablePan = false;
     controls.target.set(0, 1.8, 0);
     controls.minDistance = 8;
     controls.maxDistance = 20;
     controls.maxPolarAngle = Math.PI * 0.48;
+
+    function applyResponsiveView() {
+      const width = viewer.clientWidth;
+      if (width <= 640) {
+        camera.fov = 54;
+        controls.minDistance = 9;
+        controls.maxDistance = 24;
+      } else if (width <= 900) {
+        camera.fov = 49;
+        controls.minDistance = 8;
+        controls.maxDistance = 22;
+      } else {
+        camera.fov = 45;
+        controls.minDistance = 8;
+        controls.maxDistance = 20;
+      }
+      camera.updateProjectionMatrix();
+    }
 
     const hemi = new THREE.HemisphereLight(0xffffff, 0x7f8ea8, 0.75);
     scene.add(hemi);
@@ -200,6 +258,32 @@
 
     const bulbs = [];
     const pickTargets = [];
+    const removedTransforms = [
+      {
+        offset: new THREE.Vector3(-0.95, 0.2, -0.55),
+        rotation: new THREE.Euler(
+          THREE.MathUtils.degToRad(22),
+          THREE.MathUtils.degToRad(-28),
+          THREE.MathUtils.degToRad(16)
+        )
+      },
+      {
+        offset: new THREE.Vector3(0.0, 0.2, -1.05),
+        rotation: new THREE.Euler(
+          THREE.MathUtils.degToRad(24),
+          THREE.MathUtils.degToRad(0),
+          THREE.MathUtils.degToRad(0)
+        )
+      },
+      {
+        offset: new THREE.Vector3(0.95, 0.2, -0.55),
+        rotation: new THREE.Euler(
+          THREE.MathUtils.degToRad(22),
+          THREE.MathUtils.degToRad(28),
+          THREE.MathUtils.degToRad(-16)
+        )
+      }
+    ];
 
     function createBulb(index, position) {
       const group = new THREE.Group();
@@ -336,11 +420,10 @@
         const state = bulbGlowFromVoltage(Vs[i]);
 
         if (!present[i]) {
+          const removed = removedTransforms[i];
           bulb.base.visible = true;
-          bulb.assembly.position.copy(bulb.assemblyHome).add(new THREE.Vector3(0.95, 0.18, -0.5));
-          bulb.assembly.rotation.x = THREE.MathUtils.degToRad(24);
-          bulb.assembly.rotation.y = THREE.MathUtils.degToRad(30);
-          bulb.assembly.rotation.z = THREE.MathUtils.degToRad(-14);
+          bulb.assembly.position.copy(bulb.assemblyHome).add(removed.offset);
+          bulb.assembly.rotation.copy(removed.rotation);
           bulb.globe.material.color.setHex(0xdfe6f3);
           bulb.globe.material.emissive.setHex(0x000000);
           bulb.globe.material.emissiveIntensity = 0;
@@ -412,6 +495,7 @@
     }
 
     function onResize() {
+      applyResponsiveView();
       camera.aspect = viewer.clientWidth / viewer.clientHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(viewer.clientWidth, viewer.clientHeight);
@@ -428,6 +512,8 @@
     }
 
     updateVisuals();
+    applyResponsiveView();
+    onResize();
     tick();
   </script>
 </body>
