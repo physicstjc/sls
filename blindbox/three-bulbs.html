@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Three-Bulb 3D Blindbox</title>
+  <style>
+    :root {
+      --bg: #eef3fb;
+      --ink: #0f172a;
+      --line: #c7d1e0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at 20% 0%, #ffffff 0%, #eef3fb 60%, #e0e8f5 100%);
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 14px auto;
+      padding: 12px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .subtitle {
+      margin: 6px 0 12px;
+      font-size: 14px;
+      text-align: center;
+      color: #334155;
+    }
+
+    .top-controls {
+      display: flex;
+      justify-content: center;
+      margin: 0 0 10px;
+    }
+
+    .toggle-btn {
+      border: 1px solid #c7d1e0;
+      border-radius: 8px;
+      background: #f8fbff;
+      color: #0f172a;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .toggle-btn:hover {
+      border-color: #9fb2d8;
+      background: #eef4ff;
+    }
+
+    .viewer {
+      position: relative;
+      min-height: 640px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: linear-gradient(180deg, #f8fbff 0%, #e8eff9 100%);
+      overflow: hidden;
+    }
+
+    .label {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      font-size: 12px;
+      font-weight: 600;
+      color: #dbe4f3;
+      text-shadow: 0 1px 2px rgba(15, 23, 42, 0.8);
+      pointer-events: none;
+      white-space: nowrap;
+      text-align: center;
+      line-height: 1.25;
+    }
+
+    @media (max-width: 900px) {
+      .viewer { min-height: 560px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="title">Three-Bulb 3D Blindbox</h1>
+    <p class="subtitle">Click bulbs to remove or restore them, then infer the hidden arrangement from the readings.</p>
+
+    <div class="top-controls">
+      <button id="toggle-values" class="toggle-btn" type="button">Show Current/Voltage Values</button>
+    </div>
+
+    <div id="viewer" class="viewer">
+      <div class="label" id="label-0">Bulb 1</div>
+      <div class="label" id="label-1">Bulb 2</div>
+      <div class="label" id="label-2">Bulb 3</div>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.166.1/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.166.1/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const EMF = 12;
+    const R = [2, 2, 2];
+    const present = [true, true, true];
+    const bulbNames = ['Bulb 1', 'Bulb 2', 'Bulb 3'];
+    let showValues = false;
+
+    const viewer = document.getElementById('viewer');
+    const labels = [0, 1, 2].map(i => document.getElementById('label-' + i));
+    const toggleValuesBtn = document.getElementById('toggle-values');
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xeef3fb);
+
+    const camera = new THREE.PerspectiveCamera(45, viewer.clientWidth / viewer.clientHeight, 0.1, 100);
+    camera.position.set(0, 8, 12);
+    camera.lookAt(0, 1.8, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(viewer.clientWidth, viewer.clientHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    viewer.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.target.set(0, 1.8, 0);
+    controls.minDistance = 8;
+    controls.maxDistance = 20;
+    controls.maxPolarAngle = Math.PI * 0.48;
+
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x7f8ea8, 0.75);
+    scene.add(hemi);
+
+    const key = new THREE.DirectionalLight(0xffffff, 0.8);
+    key.position.set(5, 9, 6);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048);
+    scene.add(key);
+
+    const fill = new THREE.DirectionalLight(0xc7d6f5, 0.45);
+    fill.position.set(-6, 5, -4);
+    scene.add(fill);
+
+    const floor = new THREE.Mesh(
+      new THREE.CircleGeometry(11, 64),
+      new THREE.MeshStandardMaterial({ color: 0xc4cfdf, roughness: 0.85, metalness: 0.05 })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.01;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const boxGroup = new THREE.Group();
+    scene.add(boxGroup);
+
+    const boxBody = new THREE.Mesh(
+      new THREE.BoxGeometry(8.8, 1.1, 5.6),
+      new THREE.MeshStandardMaterial({ color: 0x7d8798, roughness: 0.55, metalness: 0.15 })
+    );
+    boxBody.position.y = 0.55;
+    boxBody.castShadow = true;
+    boxBody.receiveShadow = true;
+    boxGroup.add(boxBody);
+
+    const topPlate = new THREE.Mesh(
+      new THREE.BoxGeometry(9.0, 0.14, 5.8),
+      new THREE.MeshStandardMaterial({ color: 0xaeb8c8, roughness: 0.4, metalness: 0.2 })
+    );
+    topPlate.position.y = 1.13;
+    topPlate.castShadow = true;
+    topPlate.receiveShadow = true;
+    boxGroup.add(topPlate);
+
+    const bulbSlots = [
+      new THREE.Vector3(-2.0, 1.14, 0),
+      new THREE.Vector3( 0.0, 1.14, 0),
+      new THREE.Vector3( 2.0, 1.14, 0)
+    ];
+
+    const bulbs = [];
+    const pickTargets = [];
+
+    function createBulb(index, position) {
+      const group = new THREE.Group();
+      group.position.copy(position);
+
+      const holder = new THREE.Group();
+      group.add(holder);
+
+      const assembly = new THREE.Group();
+      group.add(assembly);
+
+      const socketShadow = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.68, 0.76, 0.08, 30),
+        new THREE.MeshStandardMaterial({ color: 0x364152, roughness: 0.9, metalness: 0.05 })
+      );
+      socketShadow.position.y = 0.02;
+      socketShadow.castShadow = true;
+      holder.add(socketShadow);
+
+      const socketMetal = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.54, 0.58, 0.23, 30),
+        new THREE.MeshStandardMaterial({ color: 0x9ea7b8, roughness: 0.35, metalness: 0.75 })
+      );
+      socketMetal.position.y = 0.16;
+      socketMetal.castShadow = true;
+      holder.add(socketMetal);
+
+      const base = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.34, 0.36, 0.46, 24),
+        new THREE.MeshStandardMaterial({ color: 0xb5bfce, roughness: 0.34, metalness: 0.62 })
+      );
+      base.position.y = 0.46;
+      base.visible = false;
+      base.castShadow = true;
+      assembly.add(base);
+
+      const bulbMat = new THREE.MeshPhysicalMaterial({
+        color: 0xfff4bf,
+        emissive: 0x000000,
+        emissiveIntensity: 0,
+        roughness: 0.14,
+        metalness: 0,
+        transmission: 0.72,
+        thickness: 0.65,
+        ior: 1.35,
+        clearcoat: 0.4,
+        clearcoatRoughness: 0.12
+      });
+      const globe = new THREE.Mesh(new THREE.SphereGeometry(0.58, 36, 28), bulbMat);
+      globe.position.y = 0.98;
+      globe.castShadow = true;
+      assembly.add(globe);
+
+      const glow = new THREE.PointLight(0xffd56a, 0, 5.8, 1.35);
+      glow.position.y = 0.95;
+      assembly.add(glow);
+
+      const pick = new THREE.Mesh(
+        new THREE.SphereGeometry(0.65, 20, 16),
+        new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 })
+      );
+      pick.position.y = 0.98;
+      pick.userData.index = index;
+      assembly.add(pick);
+      pickTargets.push(pick);
+
+      scene.add(group);
+
+      return {
+        group,
+        holder,
+        assembly,
+        base,
+        globe,
+        glow,
+        home: group.position.clone(),
+        assemblyHome: assembly.position.clone()
+      };
+    }
+
+    bulbSlots.forEach((pos, i) => bulbs.push(createBulb(i, pos)));
+
+    function parallelEqBulb1Bulb2() {
+      const p1 = present[0];
+      const p2 = present[1];
+      if (!p1 && !p2) return Infinity;
+      if (p1 && !p2) return R[0];
+      if (!p1 && p2) return R[1];
+      return (R[0] * R[1]) / (R[0] + R[1]);
+    }
+
+    function solve() {
+      const rParallel = parallelEqBulb1Bulb2();
+      const r3 = present[2] ? R[2] : Infinity;
+      const rTotal = (rParallel === Infinity || r3 === Infinity) ? Infinity : rParallel + r3;
+      const iTotal = rTotal === Infinity ? 0 : EMF / rTotal;
+
+      const vParallel = rTotal === Infinity ? 0 : iTotal * rParallel;
+      const v3 = rTotal === Infinity ? 0 : iTotal * r3;
+
+      const Vs = [vParallel, vParallel, v3];
+      const Is = [0, 0, 0];
+
+      if (present[0]) Is[0] = vParallel / R[0];
+      if (present[1]) Is[1] = vParallel / R[1];
+      if (present[2]) Is[2] = iTotal;
+
+      return { Vs, Is };
+    }
+
+    function sig2(x) {
+      if (!isFinite(x)) return '0';
+      const s = Number(x).toPrecision(2);
+      return s.replace(/\.0+$/, '').replace(/(\..*?)0+$/, '$1');
+    }
+
+    function bulbGlowFromVoltage(v) {
+      if (v < 2) return { color: 0xf2f7ff, emissive: 0x000000, power: 0, emissiveIntensity: 0 };
+      if (v < 5) return { color: 0xffefaa, emissive: 0x4a2a00, power: 1.2, emissiveIntensity: 0.45 };
+      if (v < 7) return { color: 0xffd164, emissive: 0x7c3d00, power: 2.8, emissiveIntensity: 0.9 };
+      return { color: 0xffb233, emissive: 0xbf5a00, power: 5.6, emissiveIntensity: 1.5 };
+    }
+
+    function toggleBulb(i) {
+      present[i] = !present[i];
+      updateVisuals();
+    }
+
+    function updateVisuals() {
+      const { Vs, Is } = solve();
+
+      for (let i = 0; i < 3; i++) {
+        const bulb = bulbs[i];
+        const state = bulbGlowFromVoltage(Vs[i]);
+
+        if (!present[i]) {
+          bulb.base.visible = true;
+          bulb.assembly.position.copy(bulb.assemblyHome).add(new THREE.Vector3(0.95, 0.18, -0.5));
+          bulb.assembly.rotation.x = THREE.MathUtils.degToRad(24);
+          bulb.assembly.rotation.y = THREE.MathUtils.degToRad(30);
+          bulb.assembly.rotation.z = THREE.MathUtils.degToRad(-14);
+          bulb.globe.material.color.setHex(0xdfe6f3);
+          bulb.globe.material.emissive.setHex(0x000000);
+          bulb.globe.material.emissiveIntensity = 0;
+          bulb.glow.intensity = 0;
+          continue;
+        }
+
+        bulb.group.position.copy(bulb.home);
+        bulb.assembly.position.copy(bulb.assemblyHome);
+        bulb.assembly.rotation.set(0, 0, 0);
+        bulb.base.visible = false;
+        bulb.globe.material.color.setHex(state.color);
+        bulb.globe.material.emissive.setHex(state.emissive);
+        bulb.globe.material.emissiveIntensity = state.emissiveIntensity;
+        bulb.glow.intensity = state.power;
+      }
+
+      for (let i = 0; i < 3; i++) {
+        const current = present[i] ? Is[i] : 0;
+        labels[i].innerHTML = showValues
+          ? bulbNames[i] + '<br>I=' + sig2(current) + ' A, V=' + sig2(Vs[i]) + ' V'
+          : bulbNames[i];
+      }
+    }
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    function onPointerDown(ev) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const hit = raycaster.intersectObjects(pickTargets, false)[0];
+      if (!hit) return;
+      const i = hit.object.userData.index;
+
+      toggleBulb(i);
+      updateVisuals();
+    }
+
+    renderer.domElement.addEventListener('pointerdown', onPointerDown);
+
+    toggleValuesBtn.addEventListener('click', () => {
+      showValues = !showValues;
+      toggleValuesBtn.textContent = showValues
+        ? 'Hide Current/Voltage Values'
+        : 'Show Current/Voltage Values';
+      updateVisuals();
+    });
+
+    function setOverlayPosition(el, worldPos, yOffset = 0, xOffsetPx = 0) {
+      const p = worldPos.clone();
+      p.y += yOffset;
+      p.project(camera);
+
+      const x = (p.x * 0.5 + 0.5) * viewer.clientWidth + xOffsetPx;
+      const y = (1 - (p.y * 0.5 + 0.5)) * viewer.clientHeight;
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.style.display = p.z > 1 ? 'none' : '';
+    }
+
+    function updateOverlays() {
+      for (let i = 0; i < 3; i++) {
+        setOverlayPosition(labels[i], bulbs[i].group.position, -0.85, 0);
+      }
+    }
+
+    function onResize() {
+      camera.aspect = viewer.clientWidth / viewer.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(viewer.clientWidth, viewer.clientHeight);
+      updateOverlays();
+    }
+
+    window.addEventListener('resize', onResize);
+
+    function tick() {
+      controls.update();
+      updateOverlays();
+      renderer.render(scene, camera);
+      requestAnimationFrame(tick);
+    }
+
+    updateVisuals();
+    tick();
+  </script>
+</body>
+</html>

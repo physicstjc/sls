@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Three-Bulb 3D Blindbox Simulation</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --ink: #0f172a;
+      --panel: #ffffff;
+      --line: #cfd6e3;
+    }
+
+    body {
+      margin: 0;
+      padding: 10px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at 20% 0%, #ffffff 0%, var(--bg) 55%, #e9eef7 100%);
+    }
+
+    .sim-wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 10px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+    }
+
+    .canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+
+    .meter-read {
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sim-wrap">
+    <svg id="box-svg" class="canvas" width="960" height="620" viewBox="0 0 960 620" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <linearGradient id="box-front" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#9aa2af"/>
+          <stop offset="100%" stop-color="#6b7280"/>
+        </linearGradient>
+        <linearGradient id="box-top" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#c7ced8"/>
+          <stop offset="100%" stop-color="#8b95a5"/>
+        </linearGradient>
+        <linearGradient id="box-side" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#7b8493"/>
+          <stop offset="100%" stop-color="#5a6270"/>
+        </linearGradient>
+
+        <radialGradient id="bulb-glass-1" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98"/>
+          <stop offset="55%" stop-color="#fff8cf" stop-opacity="0.82"/>
+          <stop offset="100%" stop-color="#ffd24d" stop-opacity="0.9"/>
+        </radialGradient>
+        <radialGradient id="bulb-glass-2" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98"/>
+          <stop offset="55%" stop-color="#fff8cf" stop-opacity="0.82"/>
+          <stop offset="100%" stop-color="#ffd24d" stop-opacity="0.9"/>
+        </radialGradient>
+        <radialGradient id="bulb-glass-3" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98"/>
+          <stop offset="55%" stop-color="#fff8cf" stop-opacity="0.82"/>
+          <stop offset="100%" stop-color="#ffd24d" stop-opacity="0.9"/>
+        </radialGradient>
+
+        <linearGradient id="socket-metal" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#7a8599"/>
+          <stop offset="45%" stop-color="#eef2f9"/>
+          <stop offset="100%" stop-color="#687286"/>
+        </linearGradient>
+        <linearGradient id="socket-shadow" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#5d6677"/>
+          <stop offset="100%" stop-color="#3e4553"/>
+        </linearGradient>
+
+        <filter id="glow1" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur id="glow1-blur" stdDeviation="3" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        <filter id="glow2" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur id="glow2-blur" stdDeviation="3" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        <filter id="glow3" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur id="glow3-blur" stdDeviation="3" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      <g id="title-block">
+        <text x="480" y="40" text-anchor="middle" font-size="23" font-weight="700">3D Three-Bulb Blindbox</text>
+        <text x="480" y="63" text-anchor="middle" font-size="14" fill="#334155">Bulb 1 and Bulb 2 are in parallel, with Bulb 3 in series.</text>
+      </g>
+
+      <g id="blindbox-shell">
+        <polygon points="100,390 760,390 850,350 190,350" fill="url(#box-top)" stroke="#5e6675" stroke-width="2"/>
+        <polygon points="760,390 760,510 850,470 850,350" fill="url(#box-side)" stroke="#5e6675" stroke-width="2"/>
+        <rect x="100" y="390" width="660" height="120" fill="url(#box-front)" stroke="#5e6675" stroke-width="2"/>
+        <ellipse cx="430" cy="522" rx="300" ry="22" fill="#646d7c" opacity="0.35"/>
+      </g>
+
+      <g id="bulb1" style="cursor:pointer">
+        <g id="bulb1-holder">
+          <ellipse cx="290" cy="393" rx="48" ry="12" fill="#4c5568" opacity="0.45"/>
+          <ellipse cx="290" cy="376" rx="42" ry="10" fill="#3d4555"/>
+          <rect x="251" y="344" width="78" height="32" rx="10" fill="url(#socket-shadow)"/>
+          <rect x="259" y="330" width="62" height="20" rx="8" fill="url(#socket-metal)"/>
+          <line x1="264" y1="338" x2="316" y2="338" stroke="#5f6a80" stroke-width="1.5"/>
+          <line x1="264" y1="345" x2="316" y2="345" stroke="#5f6a80" stroke-width="1.5"/>
+        </g>
+        <g id="bulb1-assembly">
+          <ellipse id="globe1" cx="290" cy="312" rx="50" ry="50" fill="url(#bulb-glass-1)" stroke="#727f99" stroke-width="2" filter="url(#glow1)"/>
+          <ellipse cx="274" cy="294" rx="13" ry="20" fill="#ffffff" opacity="0.65"/>
+          <g id="bulb1-base">
+            <ellipse cx="290" cy="359" rx="31" ry="6" fill="#b3bece"/>
+            <rect x="259" y="359" width="62" height="34" rx="6" fill="url(#socket-metal)" stroke="#76839a" stroke-width="1"/>
+            <line x1="264" y1="365" x2="316" y2="365" stroke="#6f7d94" stroke-width="1.2"/>
+            <line x1="264" y1="370" x2="316" y2="370" stroke="#6f7d94" stroke-width="1.2"/>
+            <line x1="264" y1="375" x2="316" y2="375" stroke="#6f7d94" stroke-width="1.2"/>
+            <line x1="264" y1="380" x2="316" y2="380" stroke="#6f7d94" stroke-width="1.2"/>
+            <line x1="264" y1="385" x2="316" y2="385" stroke="#6f7d94" stroke-width="1.2"/>
+            <line x1="264" y1="390" x2="316" y2="390" stroke="#6f7d94" stroke-width="1.2"/>
+            <ellipse cx="290" cy="393" rx="29" ry="4" fill="#8f9bb0"/>
+          </g>
+          <line x1="282" y1="359" x2="282" y2="336" stroke="#69758d" stroke-width="2"/>
+          <line x1="298" y1="359" x2="298" y2="336" stroke="#69758d" stroke-width="2"/>
+          <path d="M282 339 C290 331, 290 328, 298 339" fill="none" stroke="#6f7b91" stroke-width="2"/>
+        </g>
+        <text x="290" y="540" text-anchor="middle" font-size="17" font-weight="600" fill="#dbe4f3">Bulb 1</text>
+      </g>
+
+      <g id="bulb2" style="cursor:pointer">
+        <g id="bulb2-holder">
+          <ellipse cx="480" cy="388" rx="48" ry="12" fill="#4c5568" opacity="0.45"/>
+          <ellipse cx="480" cy="371" rx="42" ry="10" fill="#3d4555"/>
+          <rect x="441" y="339" width="78" height="32" rx="10" fill="url(#socket-shadow)"/>
+          <rect x="449" y="325" width="62" height="20" rx="8" fill="url(#socket-metal)"/>
+          <line x1="454" y1="333" x2="506" y2="333" stroke="#5f6a80" stroke-width="1.5"/>
+          <line x1="454" y1="340" x2="506" y2="340" stroke="#5f6a80" stroke-width="1.5"/>
+        </g>
+        <g id="bulb2-assembly">
+          <ellipse id="globe2" cx="480" cy="307" rx="50" ry="50" fill="url(#bulb-glass-2)" stroke="#727f99" stroke-width="2" filter="url(#glow2)"/>
+          <ellipse cx="464" cy="289" rx="13" ry="20" fill="#ffffff" opacity="0.65"/>
+          <g id="bulb2-base">
+            <ellipse cx="480" cy="354" rx="31" ry="6" fill="#b3bece"/>
+            <rect x="449" y="354" width="62" height="34" rx="6" fill="url(#socket-metal)" stroke="#76839a" stroke-width="1"/>
+            <line x1="454" y1="360" x2="506" y2="360" stroke="#6f7d94" stroke-width="1.2"/>
+            <line x1="454" y1="365" x2="506" y2="365" stroke="#6f7d94" stroke-width="1.2"/>
+            <line x1="454" y1="370" x2="506" y2="370" stroke="#6f7d94" stroke-width="1.2"/>
+            <line x1="454" y1="375" x2="506" y2="375" stroke="#6f7d94" stroke-width="1.2"/>
+            <line x1="454" y1="380" x2="506" y2="380" stroke="#6f7d94" stroke-width="1.2"/>
+            <line x1="454" y1="385" x2="506" y2="385" stroke="#6f7d94" stroke-width="1.2"/>
+            <ellipse cx="480" cy="388" rx="29" ry="4" fill="#8f9bb0"/>
+          </g>
+          <line x1="472" y1="354" x2="472" y2="331" stroke="#69758d" stroke-width="2"/>
+          <line x1="488" y1="354" x2="488" y2="331" stroke="#69758d" stroke-width="2"/>
+          <path d="M472 334 C480 326, 480 323, 488 334" fill="none" stroke="#6f7b91" stroke-width="2"/>
+        </g>
+        <text x="480" y="540" text-anchor="middle" font-size="17" font-weight="600" fill="#dbe4f3">Bulb 2</text>
+      </g>
+
+      <g id="bulb3" style="cursor:pointer">
+        <g id="bulb3-holder">
+          <ellipse cx="670" cy="393" rx="48" ry="12" fill="#4c5568" opacity="0.45"/>
+          <ellipse cx="670" cy="376" rx="42" ry="10" fill="#3d4555"/>
+          <rect x="631" y="344" width="78" height="32" rx="10" fill="url(#socket-shadow)"/>
+          <rect x="639" y="330" width="62" height="20" rx="8" fill="url(#socket-metal)"/>
+          <line x1="644" y1="338" x2="696" y2="338" stroke="#5f6a80" stroke-width="1.5"/>
+          <line x1="644" y1="345" x2="696" y2="345" stroke="#5f6a80" stroke-width="1.5"/>
+        </g>
+        <g id="bulb3-assembly">
+          <ellipse id="globe3" cx="670" cy="312" rx="50" ry="50" fill="url(#bulb-glass-3)" stroke="#727f99" stroke-width="2" filter="url(#glow3)"/>
+          <ellipse cx="654" cy="294" rx="13" ry="20" fill="#ffffff" opacity="0.65"/>
+          <g id="bulb3-base">
+            <ellipse cx="670" cy="359" rx="31" ry="6" fill="#b3bece"/>
+            <rect x="639" y="359" width="62" height="34" rx="6" fill="url(#socket-metal)" stroke="#76839a" stroke-width="1"/>
+            <line x1="644" y1="365" x2="696" y2="365" stroke="#6f7d94" stroke-width="1.2"/>
+            <line x1="644" y1="370" x2="696" y2="370" stroke="#6f7d94" stroke-width="1.2"/>
+            <line x1="644" y1="375" x2="696" y2="375" stroke="#6f7d94" stroke-width="1.2"/>
+            <line x1="644" y1="380" x2="696" y2="380" stroke="#6f7d94" stroke-width="1.2"/>
+            <line x1="644" y1="385" x2="696" y2="385" stroke="#6f7d94" stroke-width="1.2"/>
+            <line x1="644" y1="390" x2="696" y2="390" stroke="#6f7d94" stroke-width="1.2"/>
+            <ellipse cx="670" cy="393" rx="29" ry="4" fill="#8f9bb0"/>
+          </g>
+          <line x1="662" y1="359" x2="662" y2="336" stroke="#69758d" stroke-width="2"/>
+          <line x1="678" y1="359" x2="678" y2="336" stroke="#69758d" stroke-width="2"/>
+          <path d="M662 339 C670 331, 670 328, 678 339" fill="none" stroke="#6f7b91" stroke-width="2"/>
+        </g>
+        <text x="670" y="540" text-anchor="middle" font-size="17" font-weight="600" fill="#dbe4f3">Bulb 3</text>
+      </g>
+
+      <g id="ammeter-wire"></g>
+      <g id="voltmeter-wires"></g>
+
+      <g id="ammeter" transform="translate(130,85)" style="cursor:grab">
+        <circle cx="0" cy="0" r="18" stroke="#0f172a" stroke-width="2" fill="#f8fafc"/>
+        <text x="0" y="4" text-anchor="middle" font-size="16">A</text>
+        <text id="ammeter-reading" class="meter-read" x="0" y="24" text-anchor="middle"></text>
+      </g>
+
+      <g id="voltmeter" transform="translate(172,85)" style="cursor:grab">
+        <circle cx="0" cy="0" r="18" stroke="#0f172a" stroke-width="2" fill="#f8fafc"/>
+        <text x="0" y="4" text-anchor="middle" font-size="16">V</text>
+        <text id="voltmeter-reading" class="meter-read" x="0" y="24" text-anchor="middle"></text>
+      </g>
+
+      <g id="reset-btn" transform="translate(900,590)" style="cursor:pointer">
+        <rect x="-40" y="-14" width="80" height="28" rx="8" ry="8" stroke="#0f172a" stroke-width="2" fill="#f8fafc"/>
+        <text x="0" y="4" text-anchor="middle" font-size="14" font-weight="600">Reset</text>
+      </g>
+    </svg>
+  </div>
+
+  <script>
+    (function () {
+      const EMF = 12;
+      const R = [2, 2, 2];
+      const present = [true, true, true];
+
+      const svg = document.getElementById('box-svg');
+      const bulbs = [
+        document.getElementById('globe1'),
+        document.getElementById('globe2'),
+        document.getElementById('globe3')
+      ];
+      const bulbBases = [
+        document.getElementById('bulb1-base'),
+        document.getElementById('bulb2-base'),
+        document.getElementById('bulb3-base')
+      ];
+      const bulbAssemblies = [
+        document.getElementById('bulb1-assembly'),
+        document.getElementById('bulb2-assembly'),
+        document.getElementById('bulb3-assembly')
+      ];
+      const removedOffsets = [
+        { x: 92, y: -44 },
+        { x: 94, y: -46 },
+        { x: 92, y: -44 }
+      ];
+      const groups = [
+        document.getElementById('bulb1'),
+        document.getElementById('bulb2'),
+        document.getElementById('bulb3')
+      ];
+
+      const ammeter = document.getElementById('ammeter');
+      const voltmeter = document.getElementById('voltmeter');
+      const aRead = document.getElementById('ammeter-reading');
+      const vRead = document.getElementById('voltmeter-reading');
+      const aWire = document.getElementById('ammeter-wire');
+      const wires = document.getElementById('voltmeter-wires');
+      const attach = { ammeter: null, voltmeter: null };
+
+      function sig2(x) {
+        if (!isFinite(x)) return '0';
+        const s = Number(x).toPrecision(2);
+        return s.replace(/\.0+$/, '').replace(/(\..*?)0+$/, '$1');
+      }
+
+      function parallelEq(i, j) {
+        const p1 = present[i];
+        const p2 = present[j];
+        if (!p1 && !p2) return Infinity;
+        if (p1 && !p2) return R[i];
+        if (!p1 && p2) return R[j];
+        return (R[i] * R[j]) / (R[i] + R[j]);
+      }
+
+      function solve() {
+        const R12 = parallelEq(0, 1);
+        const R3 = present[2] ? R[2] : Infinity;
+        const Rtot = (R12 === Infinity || R3 === Infinity) ? Infinity : R12 + R3;
+        const Itot = Rtot === Infinity ? 0 : EMF / Rtot;
+        const V12 = Rtot === Infinity ? 0 : Itot * R12;
+        const V3 = Rtot === Infinity ? 0 : Itot * R3;
+
+        const Vs = [V12, V12, V3];
+        const Is = [0, 0, 0];
+
+        if (present[0]) Is[0] = V12 / R[0];
+        if (present[1]) Is[1] = V12 / R[1];
+        if (present[2]) Is[2] = Itot;
+
+        return { Vs, Is };
+      }
+
+      function getInfo(el) {
+        if (!el) return null;
+        return {
+          cx: parseFloat(el.getAttribute('cx')),
+          cy: parseFloat(el.getAttribute('cy')),
+          rx: parseFloat(el.getAttribute('rx')),
+          ry: parseFloat(el.getAttribute('ry'))
+        };
+      }
+
+      function placeAmmeter(info) {
+        if (!info) return;
+        const x = info.cx - info.rx - 30;
+        const y = info.cy + info.ry - 1;
+        ammeter.setAttribute('transform', 'translate(' + x + ',' + y + ')');
+
+        if (aWire) {
+          const x1 = x + 18;
+          const x2 = info.cx - 18;
+          const yy = y;
+          const boxTopY = 390;
+          const enterY = boxTopY - 4;
+          const leftX1 = x - 18;
+          const leftX2 = x - 52;
+          const leftDropY = yy + 6;
+          aWire.innerHTML =
+            '<polyline points="' + x1 + ',' + yy + ' ' + x2 + ',' + yy + ' ' + x2 + ',' + (info.cy + info.ry - 1) + '" fill="none" stroke="#0f172a" stroke-width="2"/>' +
+            '<polyline points="' + leftX1 + ',' + yy + ' ' + leftX1 + ',' + leftDropY + ' ' + leftX2 + ',' + leftDropY + ' ' + leftX2 + ',' + enterY + '" fill="none" stroke="#0f172a" stroke-width="2"/>';
+        }
+      }
+
+      function placeVoltmeter(info) {
+        if (!info) return;
+        const x = info.cx;
+        const y = info.cy - info.ry - 30;
+        voltmeter.setAttribute('transform', 'translate(' + x + ',' + y + ')');
+
+        const baseHalfWidth = 31;
+        const left = info.cx - baseHalfWidth;
+        const right = info.cx + baseHalfWidth;
+        const topY = y;
+        const bulbY = info.cy + info.ry - 1;
+
+        wires.innerHTML =
+          '<line x1="' + left + '" y1="' + bulbY + '" x2="' + left + '" y2="' + topY + '" stroke="#0f172a" stroke-width="2"/>' +
+          '<line x1="' + left + '" y1="' + topY + '" x2="' + (x - 18) + '" y2="' + topY + '" stroke="#0f172a" stroke-width="2"/>' +
+          '<line x1="' + right + '" y1="' + bulbY + '" x2="' + right + '" y2="' + topY + '" stroke="#0f172a" stroke-width="2"/>' +
+          '<line x1="' + right + '" y1="' + topY + '" x2="' + (x + 18) + '" y2="' + topY + '" stroke="#0f172a" stroke-width="2"/>';
+      }
+
+      function updateBulbVisual(i, vBulb) {
+        const globe = bulbs[i];
+        const base = bulbBases[i];
+        const assembly = bulbAssemblies[i];
+        if (!globe) return;
+
+        const blur = document.getElementById('glow' + (i + 1) + '-blur');
+        if (!present[i]) {
+          if (assembly) {
+            assembly.setAttribute('transform', 'translate(' + removedOffsets[i].x + ',' + removedOffsets[i].y + ') rotate(30 ' + infoCenterX(i) + ' ' + infoCenterY(i) + ')');
+          }
+          if (base) base.style.display = '';
+          globe.setAttribute('fill', '#e5e9f2');
+          globe.setAttribute('stroke', '#8e98aa');
+          globe.style.opacity = '0.55';
+          if (blur) blur.setAttribute('stdDeviation', '0');
+          return;
+        }
+
+        if (assembly) assembly.setAttribute('transform', 'translate(0,-10)');
+        if (base) base.style.display = 'none';
+
+        globe.style.opacity = '1';
+        globe.setAttribute('stroke', '#727f99');
+
+        const shades = ['#f8fbff', '#fff2ad', '#ffd86a', '#ffbe2f'];
+        const glows = [1.5, 4, 8, 12];
+        let idx = 0;
+
+        if (vBulb < 2) idx = 0;
+        else if (vBulb < 5) idx = 1;
+        else if (vBulb < 7) idx = 2;
+        else idx = 3;
+
+        globe.setAttribute('fill', shades[idx]);
+        if (blur) blur.setAttribute('stdDeviation', String(glows[idx]));
+      }
+
+      function infoCenterX(i) {
+        return [290, 480, 670][i];
+      }
+
+      function infoCenterY(i) {
+        return [312, 307, 312][i];
+      }
+
+      function update() {
+        const state = solve();
+        const Vs = state.Vs;
+        const Is = state.Is;
+
+        for (let i = 0; i < 3; i++) updateBulbVisual(i, Vs[i] || 0);
+
+        if (attach.ammeter != null) {
+          const i = attach.ammeter;
+          const val = present[i] ? (Is[i] || 0) : 0;
+          aRead.textContent = 'I = ' + sig2(val) + ' A';
+          aRead.setAttribute('y', '-26');
+          placeAmmeter(getInfo(bulbs[i]));
+        } else {
+          aRead.textContent = '';
+          aRead.setAttribute('y', '24');
+          aWire.innerHTML = '';
+        }
+
+        if (attach.voltmeter != null) {
+          const i = attach.voltmeter;
+          const val = Vs[i] || 0;
+          vRead.textContent = 'V = ' + sig2(val) + ' V';
+          vRead.setAttribute('y', '-26');
+          placeVoltmeter(getInfo(bulbs[i]));
+        } else {
+          vRead.textContent = '';
+          vRead.setAttribute('y', '24');
+          wires.innerHTML = '';
+        }
+      }
+
+      function startDrag(el, e) {
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+        const t = el.getAttribute('transform') || 'translate(0,0)';
+        const m = /translate\(([^,]+),([^\)]+)\)/.exec(t);
+        const ox = m ? parseFloat(m[1]) : 0;
+        const oy = m ? parseFloat(m[2]) : 0;
+
+        el.__drag = { dx: loc.x - ox, dy: loc.y - oy };
+        svg.__dragEl = el;
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+      }
+
+      function onMove(e) {
+        const el = svg.__dragEl;
+        if (!el || !el.__drag) return;
+
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+        const x = loc.x - el.__drag.dx;
+        const y = loc.y - el.__drag.dy;
+        el.setAttribute('transform', 'translate(' + x + ',' + y + ')');
+      }
+
+      function nearestBulb() {
+        const t = svg.__dragEl.getAttribute('transform');
+        const m = /translate\(([^,]+),([^\)]+)\)/.exec(t);
+        const x = m ? parseFloat(m[1]) : 0;
+        const y = m ? parseFloat(m[2]) : 0;
+
+        let best = 0;
+        let dMin = Infinity;
+
+        bulbs.forEach(function (g, i) {
+          const cx = parseFloat(g.getAttribute('cx'));
+          const cy = parseFloat(g.getAttribute('cy'));
+          const d = Math.hypot(x - cx, y - cy);
+          if (d < dMin) {
+            dMin = d;
+            best = i;
+          }
+        });
+
+        return { index: best, dist: dMin };
+      }
+
+      function clearMeter(elId) {
+        if (elId === 'ammeter') {
+          attach.ammeter = null;
+          aWire.innerHTML = '';
+          aRead.textContent = '';
+          aRead.setAttribute('y', '24');
+          ammeter.setAttribute('transform', 'translate(130,85)');
+        }
+        if (elId === 'voltmeter') {
+          attach.voltmeter = null;
+          wires.innerHTML = '';
+          vRead.textContent = '';
+          vRead.setAttribute('y', '24');
+          voltmeter.setAttribute('transform', 'translate(172,85)');
+        }
+      }
+
+      function onUp() {
+        const el = svg.__dragEl;
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+        if (!el) return;
+
+        const nb = nearestBulb();
+        if (nb.dist < 52) {
+          const idx = nb.index;
+          if (!present[idx]) {
+            clearMeter(el.id);
+          } else {
+            if (el.id === 'ammeter') {
+              attach.ammeter = idx;
+              placeAmmeter(getInfo(bulbs[idx]));
+            }
+            if (el.id === 'voltmeter') {
+              attach.voltmeter = idx;
+              placeVoltmeter(getInfo(bulbs[idx]));
+            }
+          }
+        } else {
+          clearMeter(el.id);
+        }
+
+        svg.__dragEl = null;
+        el.__drag = null;
+        update();
+      }
+
+      function bind(el) {
+        el.addEventListener('mousedown', function (e) { startDrag(el, e); });
+      }
+
+      bind(ammeter);
+      bind(voltmeter);
+
+      function toggleBulb(i) {
+        present[i] = !present[i];
+        if (!present[i]) {
+          if (attach.ammeter === i) clearMeter('ammeter');
+          if (attach.voltmeter === i) clearMeter('voltmeter');
+        }
+        update();
+      }
+
+      const clickablePartSelectors = [
+        'ellipse',
+        'rect',
+        'line',
+        'path',
+        'text'
+      ];
+
+      groups.forEach(function (g, i) {
+        clickablePartSelectors.forEach(function (sel) {
+          g.querySelectorAll(sel).forEach(function (p) {
+            p.style.pointerEvents = 'all';
+            p.addEventListener('click', function () { toggleBulb(i); });
+          });
+        });
+      });
+
+      document.getElementById('reset-btn').addEventListener('click', function () {
+        for (let i = 0; i < 3; i++) present[i] = true;
+        clearMeter('ammeter');
+        clearMeter('voltmeter');
+        update();
+      });
+
+      update();
+    })();
+  </script>
+</body>
+</html>
