@@ -171,7 +171,7 @@
     scene.background = new THREE.Color(0xeef3fb);
 
     const camera = new THREE.PerspectiveCamera(45, viewer.clientWidth / viewer.clientHeight, 0.1, 100);
-    camera.position.set(0, 8, 12);
+    camera.position.set(0, 7.2, 10.2);
     camera.lookAt(0, 1.8, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -185,24 +185,30 @@
     controls.enableDamping = true;
     controls.enablePan = false;
     controls.target.set(0, 1.8, 0);
-    controls.minDistance = 8;
-    controls.maxDistance = 20;
+    controls.minDistance = 7;
+    controls.maxDistance = 18;
     controls.maxPolarAngle = Math.PI * 0.48;
 
     function applyResponsiveView() {
       const width = viewer.clientWidth;
       if (width <= 640) {
-        camera.fov = 54;
-        controls.minDistance = 9;
-        controls.maxDistance = 24;
-      } else if (width <= 900) {
-        camera.fov = 49;
-        controls.minDistance = 8;
-        controls.maxDistance = 22;
-      } else {
-        camera.fov = 45;
+        camera.fov = 52;
+        camera.position.set(0, 8.4, 13.2);
+        controls.target.set(0, 1.45, 0);
         controls.minDistance = 8;
         controls.maxDistance = 20;
+      } else if (width <= 900) {
+        camera.fov = 48;
+        camera.position.set(0, 7.8, 11.8);
+        controls.target.set(0, 1.65, 0);
+        controls.minDistance = 7.5;
+        controls.maxDistance = 19;
+      } else {
+        camera.fov = 45;
+        camera.position.set(0, 7.2, 10.2);
+        controls.target.set(0, 1.8, 0);
+        controls.minDistance = 7;
+        controls.maxDistance = 18;
       }
       camera.updateProjectionMatrix();
     }
@@ -499,6 +505,7 @@
       camera.aspect = viewer.clientWidth / viewer.clientHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(viewer.clientWidth, viewer.clientHeight);
+      controls.update();
       updateOverlays();
     }
 
