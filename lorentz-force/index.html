@@ -1,3 +1,4 @@
+:Continuous Stream Lorentz Simulator:perpendicular_lorentz_multi.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -68,6 +69,12 @@
             margin-bottom: 18px;
         }
 
+        .flex-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
         .control-label {
             display: flex;
             justify-content: space-between;
@@ -85,6 +92,23 @@
             padding: 2px 6px;
             border-radius: 4px;
             color: #0f172a;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            gap: 8px;
+        }
+
+        .checkbox-container input {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent-color);
         }
 
         input[type="range"] {
@@ -138,19 +162,6 @@
             flex-shrink: 0;
         }
 
-        /* Equation display */
-        .equation {
-            font-family: "Times New Roman", Times, serif;
-            font-style: italic;
-            text-align: center;
-            margin: 15px 0;
-            padding: 8px;
-            background: #f8fafc;
-            border-radius: 8px;
-            font-size: 14px;
-            border: 1px solid #f1f5f9;
-        }
-
         #toast {
             position: absolute;
             bottom: 20px;
@@ -179,10 +190,6 @@
     <div id="control-panel">
         <h1>Continuous Stream</h1>
         <p class="subtitle">A sequential flow of multiple charged particles traveling along a single perpendicular trajectory line through a wide boundary plane ($x = 0$).</p>
-        
-        <div class="equation">
-            \vec{F} = q (\vec{v} \times \vec{B})
-        </div>
 
         <!-- Magnetic Field Strength Slider -->
         <div class="control-group">
@@ -211,11 +218,23 @@
             <input type="range" id="slider-charge" min="-2.0" max="2.0" step="0.2" value="1.0">
         </div>
 
+        <!-- Toggle Local Particle Force Vectors Checkbox -->
+        <div class="flex-row">
+            <label class="checkbox-container">
+                <input type="checkbox" id="check-local-vectors" checked>
+                Show Magnetic Force Vector (F) on Particles
+            </label>
+        </div>
+
         <!-- Legend -->
         <div id="legend">
             <div class="legend-item">
                 <div class="legend-color" style="background-color: #2563eb;"></div>
                 <span>Magnetic Field Vector Lines (B)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ef4444;"></div>
+                <span>Magnetic Force Vector (F = q * v x B)</span>
             </div>
             <div class="legend-item">
                 <div class="legend-color" style="background-image: linear-gradient(to right, #ec4899, #8b5cf6); border: 1px solid #ddd;"></div>
@@ -363,8 +382,17 @@
         for (let i = 0; i < numParticles; i++) {
             const beadMesh = new THREE.Mesh(beadGeom, beadMat);
             scene.add(beadMesh);
+
+            // Create a corresponding local magnetic FORCE arrow for this particle
+            const arrowDir = new THREE.Vector3(1, 0, 0);
+            const arrowPos = new THREE.Vector3(0, 0, 0);
+            const localForceArrow = new THREE.ArrowHelper(arrowDir, arrowPos, 1.5, 0xef4444, 0.3, 0.15); // Bright Red
+            localForceArrow.visible = false;
+            scene.add(localForceArrow);
+
             particlesArray.push({
                 mesh: beadMesh,
+                localArrow: localForceArrow,
                 offsetPercent: i / numParticles 
             });
         }
@@ -420,6 +448,7 @@
         const sliderBField = document.getElementById('slider-bfield');
         const sliderSpeed = document.getElementById('slider-speed');
         const sliderCharge = document.getElementById('slider-charge');
+        const checkLocalVectors = document.getElementById('check-local-vectors');
 
         const valBField = document.getElementById('val-bfield');
         const valSpeed = document.getElementById('val-speed');
@@ -454,6 +483,7 @@
             controls.update();
 
             const delta = clock.getDelta();
+            const showLocalArrows = checkLocalVectors.checked;
             
             if (trajectoryPoints.length >= 2) {
                 // Advance the master animation clock
@@ -482,8 +512,32 @@
                     if (p1 && p2) {
                         particle.mesh.position.lerpVectors(p1, p2, fract);
                         particle.mesh.visible = true;
+
+                        // Calculate instantaneous velocity vector
+                        const tangent = new THREE.Vector3().subVectors(p2, p1).normalize();
+                        const velocity = tangent.clone().multiplyScalar(simParams.speed);
+
+                        // Calculate magnetic force: F = q * (v x B)
+                        // B-field vector is strictly in the Y direction: (0, B_y, 0)
+                        const bVec = new THREE.Vector3(0, simParams.bField, 0);
+                        const forceVec = new THREE.Vector3().crossVectors(velocity, bVec).multiplyScalar(simParams.charge);
+                        const forceMag = forceVec.length();
+
+                        // Position and configure local force arrow if particle is inside the field (x >= 0)
+                        if (showLocalArrows && particle.mesh.position.x >= 0 && forceMag > 0.05) {
+                            particle.localArrow.position.copy(particle.mesh.position);
+                            particle.localArrow.setDirection(forceVec.clone().normalize());
+                            
+                            // Scale length nicely relative to actual physics magnitude
+                            const arrowLength = 1.0 + forceMag * 0.15;
+                            particle.localArrow.setLength(arrowLength, 0.4, 0.2);
+                            particle.localArrow.visible = true;
+                        } else {
+                            particle.localArrow.visible = false;
+                        }
                     } else {
                         particle.mesh.visible = false;
+                        particle.localArrow.visible = false;
                     }
                 });
             }
