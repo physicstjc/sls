@@ -1,10 +1,9 @@
-:Single Path Lorentz Simulator Perpendicular:perpendicular_lorentz_simulator.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Lorentz Force - Perpendicular Deflection</title>
+    <title>3D Lorentz Force - Continuous Particle Stream</title>
     <style>
         :root {
             --bg-color: #f8fafc;
@@ -116,38 +115,6 @@
             background: var(--accent-hover);
         }
 
-        /* Preset Buttons */
-        .btn-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 15px;
-        }
-
-        button {
-            background: #fff;
-            border: 1px solid var(--border-color);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            color: #475569;
-            transition: all 0.2s;
-        }
-
-        button:hover {
-            background: #f1f5f9;
-            border-color: #cbd5e1;
-            color: var(--text-color);
-        }
-
-        button.active {
-            background: #eff6ff;
-            border-color: #3b82f6;
-            color: #1d4ed8;
-        }
-
         /* Legend Panel */
         #legend {
             margin-top: 20px;
@@ -210,11 +177,11 @@
     <div id="canvas-container"></div>
 
     <div id="control-panel">
-        <h1>Perpendicular Deflection</h1>
-        <p class="subtitle">A charged particle enters a wide, uniform magnetic field ($\vec{B}$ parallel to $Y$-axis) with a velocity strictly perpendicular to the field lines.</p>
+        <h1>Continuous Stream</h1>
+        <p class="subtitle">A sequential flow of multiple charged particles traveling along a single perpendicular trajectory line through a wide boundary plane ($x = 0$).</p>
         
         <div class="equation">
-            \vec{v}_0 \perp \vec{B} \implies \text{Circular Motion}
+            \vec{F} = q (\vec{v} \times \vec{B})
         </div>
 
         <!-- Magnetic Field Strength Slider -->
@@ -244,15 +211,6 @@
             <input type="range" id="slider-charge" min="-2.0" max="2.0" step="0.2" value="1.0">
         </div>
 
-        <!-- Presets -->
-        <div class="control-label" style="margin-top: 10px;">Presets</div>
-        <div class="btn-grid">
-            <button onclick="setPreset('clockwise')">Clockwise Arc</button>
-            <button onclick="setPreset('counter')">Counter-Clockwise</button>
-            <button onclick="setPreset('reflection')">Magnetic Mirror</button>
-            <button onclick="setPreset('neutral')">No Deflection</button>
-        </div>
-
         <!-- Legend -->
         <div id="legend">
             <div class="legend-item">
@@ -261,11 +219,15 @@
             </div>
             <div class="legend-item">
                 <div class="legend-color" style="background-image: linear-gradient(to right, #ec4899, #8b5cf6); border: 1px solid #ddd;"></div>
-                <span>Perpendicular Trajectory</span>
+                <span>Continuous Trajectory Line</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #9333ea; border-radius: 50%;"></div>
+                <span>Flowing Particle Stream</span>
             </div>
             <div class="legend-item">
                 <div class="legend-color" style="background-color: #10b981; opacity: 0.3;"></div>
-                <span>Boundary Plane (x = 0)</span>
+                <span>Enlarged Boundary Plane (x = 0)</span>
             </div>
         </div>
     </div>
@@ -286,9 +248,9 @@
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xf8fafc); 
 
-        // Set up camera positioned higher up to easily view the perpendicular circular action
+        // Camera positioned to easily view the trajectory plane and boundary
         const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(25, 35, 35);
+        camera.position.set(25, 35, 40);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -300,7 +262,7 @@
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
-        controls.target.set(10, 0, 0); // Focus the camera further inside the wider field
+        controls.target.set(10, 0, 0); 
 
         // --- 3. Lights & Environment Grid ---
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
@@ -311,12 +273,12 @@
         scene.add(dirLight);
 
         // Subgrid on X-Z floor plane
-        const gridFloor = new THREE.GridHelper(80, 80, 0xcbd5e1, 0xf1f5f9);
-        gridFloor.position.y = -12;
+        const gridFloor = new THREE.GridHelper(100, 100, 0xcbd5e1, 0xf1f5f9);
+        gridFloor.position.y = -22;
         scene.add(gridFloor);
 
-        // Boundary Plane at X = 0 (Starts abruptly, wide boundary)
-        const boundaryGeometry = new THREE.PlaneGeometry(30, 30);
+        // --- ENLARGED BOUNDARY PLANE ---
+        const boundaryGeometry = new THREE.PlaneGeometry(80, 80);
         const boundaryMaterial = new THREE.MeshBasicMaterial({
             color: 0x10b981,
             transparent: true,
@@ -328,7 +290,7 @@
         boundaryPlane.rotation.y = Math.PI / 2; // Orient vertically facing along X
         scene.add(boundaryPlane);
 
-        // Wireframe border for the boundary plane
+        // Wireframe border for the enlarged boundary plane
         const boundaryEdges = new THREE.EdgesGeometry(boundaryGeometry);
         const boundaryLine = new THREE.LineSegments(boundaryEdges, new THREE.LineBasicMaterial({ color: 0x10b981, opacity: 0.4, transparent: true }));
         boundaryLine.rotation.y = Math.PI / 2;
@@ -353,10 +315,10 @@
             const arrowLength = 1.2 + strengthRatio * 2.0;
             const arrowColor = 0x2563eb; 
 
-            // Much wider distribution: X goes from 4 up to 46, Z from -22 to 22
+            // Wide distribution aligned with the scale of the enlarged boundary
             for (let x = 4; x <= 46; x += 8) {
-                for (let y = -8; y <= 8; y += 8) {
-                    for (let z = -20; z <= 20; z += 8) {
+                for (let y = -20; y <= 20; y += 10) {
+                    for (let z = -24; z <= 24; z += 8) {
                         const origin = new THREE.Vector3(x, y, z);
                         const arrowHelper = new THREE.ArrowHelper(
                             direction, 
@@ -372,9 +334,9 @@
             }
         }
 
-        // --- 5. Single Perpendicular Path Generation ---
-        const maxPointsPerLine = 850; // Increased length for wider paths
-        const dt = 0.025; // High resolution path calculation
+        // --- 5. Single Trajectory Line Generation ---
+        const maxPointsPerLine = 1000; 
+        const dt = 0.025; 
 
         const lineGeom = new THREE.BufferGeometry();
         const lineMat = new THREE.LineBasicMaterial({
@@ -386,19 +348,29 @@
         const lineMesh = new THREE.Line(lineGeom, lineMat);
         scene.add(lineMesh);
 
-        // Particle Bead
-        const beadGeom = new THREE.SphereGeometry(0.42, 32, 32);
+        // --- 6. Multiple Particle Beads Traversing One Path ---
+        const numParticles = 35; // Number of particles flowing sequentially along the single path
+        const particlesArray = [];
+        const beadGeom = new THREE.SphereGeometry(0.38, 32, 32);
+        
         const beadMat = new THREE.MeshStandardMaterial({
-            color: 0x9333ea, // Purple
+            color: 0x9333ea, // Vibrant Purple
             emissive: 0x9333ea,
-            emissiveIntensity: 0.7,
+            emissiveIntensity: 0.6,
             roughness: 0.1
         });
-        const beadMesh = new THREE.Mesh(beadGeom, beadMat);
-        scene.add(beadMesh);
+
+        for (let i = 0; i < numParticles; i++) {
+            const beadMesh = new THREE.Mesh(beadGeom, beadMat);
+            scene.add(beadMesh);
+            particlesArray.push({
+                mesh: beadMesh,
+                offsetPercent: i / numParticles 
+            });
+        }
 
         let trajectoryPoints = [];
-        let beadProgress = 0;
+        let baseProgress = 0; // The master animation progress timer
 
         // Compute physical trajectory
         function computeStreamTrajectory() {
@@ -408,11 +380,10 @@
 
             trajectoryPoints = [];
             
-            // Start at x = -25, y = 0, z = 0.
-            const pos = new THREE.Vector3(-25, 0, 0);
+            // Start at x = -35 to emphasize the long straight approaching trajectory
+            const pos = new THREE.Vector3(-35, 0, 0);
             
             // Strictly perpendicular velocity: purely moving in the X-direction.
-            // With B-field strictly along Y, the entire trajectory will stay in the horizontal X-Z plane (y=0).
             const vel = new THREE.Vector3(v0, 0, 0); 
 
             for (let step = 0; step < maxPointsPerLine; step++) {
@@ -437,7 +408,7 @@
                 pos.addScaledVector(vel, dt);
 
                 // Stop plotting if we escape the boundaries of this wide simulation space
-                if (pos.x > 55 || pos.x < -35 || Math.abs(pos.y) > 25 || Math.abs(pos.z) > 30) {
+                if (pos.x > 55 || pos.x < -45 || Math.abs(pos.y) > 35 || Math.abs(pos.z) > 35) {
                     break;
                 }
             }
@@ -445,7 +416,7 @@
             lineGeom.setFromPoints(trajectoryPoints);
         }
 
-        // --- 6. Event Listeners & UI Binding ---
+        // --- 7. Event Listeners & UI Binding ---
         const sliderBField = document.getElementById('slider-bfield');
         const sliderSpeed = document.getElementById('slider-speed');
         const sliderCharge = document.getElementById('slider-charge');
@@ -473,37 +444,7 @@
         sliderSpeed.addEventListener('input', updateParametersFromUI);
         sliderCharge.addEventListener('input', updateParametersFromUI);
 
-        // Preset Configurations
-        function setPreset(type) {
-            document.querySelectorAll('.btn-grid button').forEach(b => b.classList.remove('active'));
-            
-            switch (type) {
-                case 'clockwise':
-                    sliderBField.value = "1.50";
-                    sliderSpeed.value = "14.0";
-                    sliderCharge.value = "1.0";
-                    break;
-                case 'counter':
-                    sliderBField.value = "1.50";
-                    sliderSpeed.value = "14.0";
-                    sliderCharge.value = "-1.0";
-                    break;
-                case 'reflection':
-                    // High field strength causes the particle to loop around and exit back through x = 0
-                    sliderBField.value = "3.20";
-                    sliderSpeed.value = "11.0";
-                    sliderCharge.value = "1.2";
-                    break;
-                case 'neutral':
-                    sliderBField.value = "2.00";
-                    sliderSpeed.value = "14.0";
-                    sliderCharge.value = "0.0";
-                    break;
-            }
-            updateParametersFromUI();
-        }
-
-        // --- 7. Animation Loop ---
+        // --- 8. Animation Loop ---
         const clock = new THREE.Clock();
         
         function animate() {
@@ -515,33 +456,42 @@
             const delta = clock.getDelta();
             
             if (trajectoryPoints.length >= 2) {
-                // Advance the bead along the calculated trajectory path
+                // Advance the master animation clock
                 const flowSpeed = simParams.speed * 1.5;
-                beadProgress += flowSpeed * delta;
+                baseProgress += flowSpeed * delta;
 
-                if (beadProgress >= trajectoryPoints.length - 1) {
-                    beadProgress = 0; // Seamless loop
+                // Loop the baseProgress back safely so we don't overflow
+                if (baseProgress >= trajectoryPoints.length) {
+                    baseProgress -= trajectoryPoints.length;
                 }
 
-                const idx = Math.floor(beadProgress);
-                const nextIdx = (idx + 1) % trajectoryPoints.length;
-                const fract = beadProgress - idx;
+                particlesArray.forEach((particle) => {
+                    // Stagger particles at even intervals along the current path
+                    let currentProgress = baseProgress + (particle.offsetPercent * trajectoryPoints.length);
+                    
+                    // Wrap progress dynamically to keep all beads cycling continuously
+                    currentProgress = currentProgress % trajectoryPoints.length;
 
-                const p1 = trajectoryPoints[idx];
-                const p2 = trajectoryPoints[nextIdx];
+                    const idx = Math.floor(currentProgress);
+                    const nextIdx = (idx + 1) % trajectoryPoints.length;
+                    const fract = currentProgress - idx;
 
-                if (p1 && p2) {
-                    beadMesh.position.lerpVectors(p1, p2, fract);
-                    beadMesh.visible = true;
-                } else {
-                    beadMesh.visible = false;
-                }
+                    const p1 = trajectoryPoints[idx];
+                    const p2 = trajectoryPoints[nextIdx];
+
+                    if (p1 && p2) {
+                        particle.mesh.position.lerpVectors(p1, p2, fract);
+                        particle.mesh.visible = true;
+                    } else {
+                        particle.mesh.visible = false;
+                    }
+                });
             }
 
             renderer.render(scene, camera);
         }
 
-        // --- 8. Initialization ---
+        // --- 9. Initialization ---
         window.onload = function() {
             updateParametersFromUI();
 
