@@ -489,11 +489,21 @@
         metalness: 0.55
       });
       const filament = new THREE.Mesh(
-        new THREE.TorusGeometry(0.112, 0.018, 10, 36, Math.PI * 1.08),
+        new THREE.TubeGeometry(
+          new THREE.CatmullRomCurve3([
+            new THREE.Vector3(-0.11, 0.93, 0.02),
+            new THREE.Vector3(-0.055, 0.99, 0.03),
+            new THREE.Vector3(0, 1.01, 0.035),
+            new THREE.Vector3(0.055, 0.99, 0.03),
+            new THREE.Vector3(0.11, 0.93, 0.02)
+          ]),
+          36,
+          0.018,
+          10,
+          false
+        ),
         filamentMat
       );
-      filament.position.set(0, 0.88, 0.03);
-      filament.rotation.x = Math.PI / 2;
       assembly.add(filament);
 
       const glow = new THREE.PointLight(0xffd56a, 0, 5.8, 1.35);
