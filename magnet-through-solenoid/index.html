@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Magnet Through Solenoid Simulation</title>
+  <script src="./vendor/tailwindcss.js"></script>
+  <script src="./vendor/three.r128.min.js"></script>
+  <script src="./vendor/OrbitControls.r128.js"></script>
+  <script src="./vendor/lucide.js"></script>
+  <script src="./lib/xapiwrapper.min.js"></script>
+  <script src="./lib/xAPI.js"></script>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      background: #f7faf8;
+      color: #1f2937;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    #graph-canvas {
+      width: 100%;
+      height: 180px;
+      border-radius: 12px;
+      border: 1px solid #d1d5db;
+      background: #f9fffb;
+      touch-action: none;
+    }
+
+    .mode-btn.active {
+      background: #14532d;
+      color: #ffffff;
+      border-color: #14532d;
+    }
+
+    #control-sidebar,
+    main {
+      transition: width 180ms ease, height 180ms ease;
+    }
+
+    #control-sidebar {
+      width: clamp(220px, 34vw, 320px);
+      flex: 0 0 clamp(220px, 34vw, 320px);
+      height: 100%;
+    }
+
+    main {
+      height: 100%;
+    }
+
+    .sidebar-collapsed #control-sidebar {
+      width: 56px;
+      flex-basis: 56px;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .sidebar-collapsed #sidebar-content,
+    .sidebar-collapsed #sidebar-title {
+      display: none;
+    }
+
+    .sidebar-collapsed main {
+      height: 100%;
+    }
+
+    .sidebar-collapsed #sidebar-header {
+      justify-content: center;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+
+    @media (max-width: 640px) {
+      #control-sidebar {
+        width: 220px;
+        flex-basis: 220px;
+      }
+
+      #sidebar-content {
+        padding: 0.75rem;
+      }
+
+      .sidebar-collapsed #sidebar-header {
+        padding-left: 0.35rem;
+        padding-right: 0.35rem;
+      }
+    }
+
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-row overflow-hidden select-none bg-emerald-50/40">
+  <aside id="control-sidebar" class="bg-white border-r border-emerald-100 shadow-lg z-20 overflow-y-auto">
+    <div id="sidebar-header" class="px-4 py-3 border-b border-emerald-100 flex items-center justify-between gap-3">
+      <div id="sidebar-title" class="min-w-0">
+        <h1 class="text-base font-semibold text-slate-900">3D Electromagnetic Induction</h1>
+        <p class="text-xs text-slate-500">Magnet through solenoid</p>
+      </div>
+      <button id="btn-toggle-sidebar" class="shrink-0 w-9 h-9 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-emerald-50" aria-label="Collapse controls" title="Collapse controls">
+        <i data-lucide="panel-left-close" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div id="sidebar-content" class="p-4 space-y-4">
+      <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+        <p class="text-xs uppercase font-semibold text-slate-500 mb-2">Mode</p>
+        <div class="grid grid-cols-3 gap-2">
+          <button id="btn-manual" class="mode-btn active text-xs px-2 py-2 rounded-lg border border-slate-300 bg-white">Manual</button>
+          <button id="btn-oscillate" class="mode-btn text-xs px-2 py-2 rounded-lg border border-slate-300 bg-white">Oscillate</button>
+          <button id="btn-freefall" class="mode-btn text-xs px-2 py-2 rounded-lg border border-slate-300 bg-white">Free Fall</button>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-slate-700">Pause simulation</span>
+          <button id="btn-pause" class="px-3 py-1.5 text-xs rounded-lg bg-emerald-700 text-white">Pause</button>
+        </div>
+        <label class="flex items-center justify-between cursor-pointer">
+          <span class="text-sm text-slate-700">Reverse poles</span>
+          <input id="flip-poles" type="checkbox" class="accent-emerald-700 w-4 h-4">
+        </label>
+      </div>
+
+      <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+        <div class="flex items-center justify-between text-xs text-slate-500">
+          <span>Motion speed</span>
+          <span id="speed-value" class="font-semibold text-emerald-700">1.00x</span>
+        </div>
+        <input id="speed-slider" type="range" min="20" max="220" value="100" class="w-full accent-emerald-700">
+      </div>
+
+      <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+        <div class="flex items-center justify-between text-xs text-slate-500">
+          <span>Solenoid length</span>
+          <span id="solenoid-length-value" class="font-semibold text-emerald-700">1.00x</span>
+        </div>
+        <input id="solenoid-length-slider" type="range" min="40" max="320" value="100" class="w-full accent-emerald-700">
+      </div>
+
+      <div id="manual-group" class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+        <div class="flex items-center justify-between text-xs text-slate-500">
+          <span>Magnet position</span>
+          <span id="position-value" class="font-semibold text-emerald-700">0.00</span>
+        </div>
+        <input id="position-slider" type="range" min="-260" max="260" value="0" class="w-full accent-emerald-700">
+      </div>
+
+      <div id="freefall-group" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hidden">
+        <button id="btn-drop" class="w-full px-3 py-2 rounded-lg bg-slate-800 text-white text-sm">Drop magnet</button>
+      </div>
+
+      <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+        <p class="text-xs uppercase font-semibold text-slate-500">Display</p>
+        <label class="flex items-center justify-between">
+          <span class="text-sm text-slate-700">Show magnet field</span>
+          <input id="toggle-field" type="checkbox" checked class="accent-emerald-700 w-4 h-4">
+        </label>
+        <button id="btn-reset-view" class="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-sm">Reset camera view</button>
+      </div>
+
+      <div id="datalogger-panel" class="p-3 rounded-xl border border-slate-200 bg-white space-y-2">
+        <div class="flex items-center justify-between">
+          <p class="text-xs uppercase font-semibold text-slate-500">Datalogger</p>
+          <span id="voltage-readout" class="text-sm font-semibold text-slate-700">0.00 V</span>
+        </div>
+        <canvas id="graph-canvas" width="560" height="180"></canvas>
+      </div>
+    </div>
+  </aside>
+
+  <main class="flex-1 relative min-w-0">
+    <div id="viewport" class="w-full h-full"></div>
+    <div class="absolute right-4 bottom-4 bg-white/95 border border-emerald-100 rounded-xl px-3 py-2 text-xs text-slate-500 shadow-md">
+      Drag to rotate. Scroll to zoom. Right-drag to pan.
+    </div>
+  </main>
+
+  <script>
+    lucide.createIcons();
+
+    const MODE_MANUAL = "manual";
+    const MODE_OSCILLATE = "oscillate";
+    const MODE_FREEFALL = "freefall";
+
+    const TABLE_TOP_Y = -3.02;
+    const SOLENOID_TABLE_CLEARANCE = 0.22;
+    const BASE_SOLENOID_LENGTH = 4.1;
+    const DROP_START_MARGIN = 0.75;
+    const DROP_BOTTOM_EXTRA = 0.9;
+    const MAGNET_HALF_HEIGHT = 0.62;
+    const OSC_PERIOD = 5.0;
+    const OSC_AMPLITUDE = 1.85;
+    const GRAVITY = 4.5;
+    const PHYSICS_EMF_GAIN = 3.1;
+
+    const graphWindowSeconds = 10;
+    const baseGraphMaxAbsVoltage = 7;
+    const dataLog = [];
+
+    let mode = MODE_MANUAL;
+    let isPaused = false;
+    let speedScale = 1.0;
+    let flipPoles = false;
+
+    let manualPosition = 0;
+    let prevPosition = manualPosition;
+    let smoothedVelocity = 0;
+    let oscillateStart = null;
+    let freeFallActive = false;
+    let freeFallNeedsReset = false;
+    let suppressEmfFrame = false;
+    let fallPosition = 2.8;
+    let fallVelocity = 0;
+
+    let scene;
+    let camera;
+    let renderer;
+    let controls;
+    let solenoidGroup;
+    let magnetGroup;
+    let northCap;
+    let southCap;
+    let northLabel;
+    let southLabel;
+    let fieldLinesGroup;
+    let dataloggerScreenTexture;
+
+    let solenoidLengthScale = 1.0;
+    let graphVoltageZoom = 1.0;
+    let graphPinchDistance = null;
+
+    function clampValue(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function applyGraphZoom(factor) {
+      graphVoltageZoom = clampValue(graphVoltageZoom * factor, 0.5, 8);
+      updateGraph();
+    }
+
+    function getTouchDistance(touchA, touchB) {
+      const dx = touchA.clientX - touchB.clientX;
+      const dy = touchA.clientY - touchB.clientY;
+      return Math.hypot(dx, dy);
+    }
+
+    function getSolenoidLength() {
+      return BASE_SOLENOID_LENGTH * solenoidLengthScale;
+    }
+
+    function getSolenoidTurns() {
+      const baseTurns = 14;
+      return Math.max(5, Math.min(60, Math.round(baseTurns * solenoidLengthScale)));
+    }
+
+    function getDropStartY() {
+      return getSolenoidCenterY() + getSolenoidLength() / 2 + DROP_START_MARGIN;
+    }
+
+    function getDropEndY() {
+      return getSolenoidCenterY() - getSolenoidLength() / 2 - DROP_BOTTOM_EXTRA;
+    }
+
+    function getSolenoidCenterY() {
+      return TABLE_TOP_Y + SOLENOID_TABLE_CLEARANCE + getSolenoidLength() / 2;
+    }
+
+    function getOscillationCenterY() {
+      return getSolenoidCenterY();
+    }
+
+    const viewport = document.getElementById("viewport");
+    const graphCanvas = document.getElementById("graph-canvas");
+    const gctx = graphCanvas.getContext("2d");
+
+    const btnManual = document.getElementById("btn-manual");
+    const btnOscillate = document.getElementById("btn-oscillate");
+    const btnFreefall = document.getElementById("btn-freefall");
+    const btnPause = document.getElementById("btn-pause");
+    const btnDrop = document.getElementById("btn-drop");
+    const btnResetView = document.getElementById("btn-reset-view");
+    const btnToggleSidebar = document.getElementById("btn-toggle-sidebar");
+    const speedSlider = document.getElementById("speed-slider");
+    const speedValue = document.getElementById("speed-value");
+    const solenoidLengthSlider = document.getElementById("solenoid-length-slider");
+    const solenoidLengthValue = document.getElementById("solenoid-length-value");
+    const positionSlider = document.getElementById("position-slider");
+    const positionValue = document.getElementById("position-value");
+    const flipPolesInput = document.getElementById("flip-poles");
+    const toggleFieldInput = document.getElementById("toggle-field");
+    const voltageReadout = document.getElementById("voltage-readout");
+
+    const manualGroup = document.getElementById("manual-group");
+    const freefallGroup = document.getElementById("freefall-group");
+    const dataloggerPanel = document.getElementById("datalogger-panel");
+
+    const xapiActionLog = [];
+    const xapiSessionStart = Date.now();
+    let solenoidLengthLogTimer = null;
+    let lastLoggedSolenoidLength = solenoidLengthScale;
+
+    function resizeAfterLayoutChange() {
+      requestAnimationFrame(onResize);
+      window.setTimeout(onResize, 220);
+    }
+
+    function getModeLabel(value) {
+      const labels = {
+        [MODE_MANUAL]: "Manual",
+        [MODE_OSCILLATE]: "Oscillate",
+        [MODE_FREEFALL]: "Free Fall"
+      };
+      return labels[value] || value;
+    }
+
+    function buildXapiFeedback() {
+      const lines = ["3D Electromagnetic Induction Interaction Log"];
+      xapiActionLog.slice(-20).forEach((entry) => {
+        lines.push(`[${entry.t}s] ${entry.label}`);
+      });
+      return lines.join("\n");
+    }
+
+    function sendXapiInteraction(type, label, details = {}) {
+      const entry = {
+        t: Number(((Date.now() - xapiSessionStart) / 1000).toFixed(1)),
+        type,
+        label,
+        details
+      };
+      xapiActionLog.push(entry);
+      if (xapiActionLog.length > 100) xapiActionLog.shift();
+
+      const modesUsed = Array.from(new Set(
+        xapiActionLog
+          .filter((item) => item.type === "mode_used")
+          .map((item) => item.details.mode)
+      ));
+      const solenoidLengthChanges = xapiActionLog.filter((item) => item.type === "solenoid_length_changed").length;
+      const magnetDrops = xapiActionLog.filter((item) => item.type === "magnet_dropped").length;
+
+      const stateValue = {
+        reason: type,
+        feedback: buildXapiFeedback(),
+        actionLog: xapiActionLog.slice(),
+        summary: {
+          interactions: xapiActionLog.length,
+          modesUsed,
+          solenoidLengthChanges,
+          magnetDrops,
+          currentMode: mode,
+          solenoidLengthScale: Number(solenoidLengthScale.toFixed(2))
+        },
+        details: {
+          lastInteraction: entry,
+          currentMode: mode,
+          currentModeLabel: getModeLabel(mode),
+          solenoidLengthScale: Number(solenoidLengthScale.toFixed(2)),
+          magnetPosition: Number(magnetGroup ? magnetGroup.position.y.toFixed(2) : manualPosition.toFixed(2)),
+          freeFallActive
+        }
+      };
+
+      if (typeof window.storeState === "function") {
+        window.storeState(stateValue);
+      } else {
+        window.__xapiLastState = stateValue;
+      }
+    }
+
+    function logSolenoidLengthChange() {
+      if (Math.abs(solenoidLengthScale - lastLoggedSolenoidLength) < 0.005) return;
+      lastLoggedSolenoidLength = solenoidLengthScale;
+      sendXapiInteraction(
+        "solenoid_length_changed",
+        `Solenoid length changed to ${solenoidLengthScale.toFixed(2)}x`,
+        {
+          solenoidLengthScale: Number(solenoidLengthScale.toFixed(2)),
+          turns: getSolenoidTurns(),
+          physicalLength: Number(getSolenoidLength().toFixed(2))
+        }
+      );
+    }
+
+    function queueSolenoidLengthLog() {
+      window.clearTimeout(solenoidLengthLogTimer);
+      solenoidLengthLogTimer = window.setTimeout(logSolenoidLengthChange, 600);
+    }
+
+    graphCanvas.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      const zoomFactor = Math.exp(-event.deltaY * 0.0015);
+      applyGraphZoom(zoomFactor);
+    }, { passive: false });
+
+    graphCanvas.addEventListener("touchstart", (event) => {
+      if (event.touches.length === 2) {
+        graphPinchDistance = getTouchDistance(event.touches[0], event.touches[1]);
+      }
+    }, { passive: false });
+
+    graphCanvas.addEventListener("touchmove", (event) => {
+      if (event.touches.length !== 2) {
+        return;
+      }
+      event.preventDefault();
+      const currentDistance = getTouchDistance(event.touches[0], event.touches[1]);
+      if (graphPinchDistance && graphPinchDistance > 0) {
+        const zoomFactor = currentDistance / graphPinchDistance;
+        applyGraphZoom(zoomFactor);
+      }
+      graphPinchDistance = currentDistance;
+    }, { passive: false });
+
+    graphCanvas.addEventListener("touchend", (event) => {
+      if (event.touches.length < 2) {
+        graphPinchDistance = null;
+      }
+    });
+
+    graphCanvas.addEventListener("touchcancel", () => {
+      graphPinchDistance = null;
+    });
+
+    function buildScene() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xf8fffb);
+
+      camera = new THREE.PerspectiveCamera(45, viewport.clientWidth / viewport.clientHeight, 0.1, 100);
+      camera.position.set(4.8, 4.2, 6.2);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      viewport.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.06;
+      controls.minDistance = 3;
+      controls.maxDistance = 40;
+      controls.maxPolarAngle = Math.PI * 0.55;
+      controls.target.set(0, 0, 0);
+
+      const ambient = new THREE.AmbientLight(0xffffff, 0.72);
+      scene.add(ambient);
+
+      const key = new THREE.DirectionalLight(0xffffff, 0.8);
+      key.position.set(8, 10, 6);
+      key.castShadow = true;
+      key.shadow.mapSize.width = 1024;
+      key.shadow.mapSize.height = 1024;
+      scene.add(key);
+
+      const fill = new THREE.DirectionalLight(0x86efac, 0.18);
+      fill.position.set(-8, 4, -4);
+      scene.add(fill);
+
+      const grid = new THREE.GridHelper(24, 24, 0x9ca3af, 0xd1d5db);
+      grid.position.y = -3;
+      scene.add(grid);
+
+      const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(28, 28),
+        new THREE.MeshStandardMaterial({ color: 0xf0fdf4, roughness: 1 })
+      );
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.y = TABLE_TOP_Y;
+      floor.receiveShadow = true;
+      scene.add(floor);
+
+      createSolenoid();
+      createMagnet();
+      createFieldLines();
+      createFrameLabels();
+    }
+
+    function createSolenoid() {
+      if (solenoidGroup) {
+        scene.remove(solenoidGroup);
+      }
+
+      const totalLength = getSolenoidLength();
+      const centerY = getSolenoidCenterY();
+      const turns = getSolenoidTurns();
+      const coilRadius = 0.9;
+      const wireRadius = 0.065;
+      const segmentsPerTurn = 26;
+      const totalSegments = turns * segmentsPerTurn;
+      const copper = new THREE.MeshStandardMaterial({ color: 0xb45309, metalness: 0.75, roughness: 0.3 });
+
+      const points = [];
+      for (let i = 0; i <= totalSegments; i++) {
+        const t = i / totalSegments;
+        const angle = t * turns * Math.PI * 2;
+        const y = centerY - totalLength / 2 + t * totalLength;
+        points.push(new THREE.Vector3(Math.cos(angle) * coilRadius, y, Math.sin(angle) * coilRadius));
+      }
+
+      const helixCurve = new THREE.CatmullRomCurve3(points);
+      const helixGeom = new THREE.TubeGeometry(helixCurve, totalSegments * 2, wireRadius, 18, false);
+      const helix = new THREE.Mesh(helixGeom, copper);
+      helix.castShadow = true;
+      helix.receiveShadow = true;
+
+      solenoidGroup = new THREE.Group();
+      solenoidGroup.add(helix);
+
+      const bottomCoilEnd = points[0].clone();
+      const topCoilEnd = points[points.length - 1].clone();
+      bottomCoilEnd.z = 0;
+      topCoilEnd.z = 0;
+      const leadMaterial = new THREE.MeshStandardMaterial({ color: 0x92400e, metalness: 0.7, roughness: 0.35 });
+      const topLeadTip = topCoilEnd.clone().add(new THREE.Vector3(0, 0.7, 0));
+      const topLead = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 12), leadMaterial);
+      topLead.position.copy(topCoilEnd).lerp(topLeadTip, 0.5);
+      topLead.castShadow = true;
+      solenoidGroup.add(topLead);
+
+      const bottomLeadTip = bottomCoilEnd.clone().add(new THREE.Vector3(0.7, 0, 0));
+      const bottomLead = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 12), leadMaterial);
+      bottomLead.position.copy(bottomCoilEnd).lerp(bottomLeadTip, 0.5);
+      bottomLead.rotation.z = Math.PI / 2;
+      bottomLead.castShadow = true;
+      solenoidGroup.add(bottomLead);
+
+      const dataloggerSize = { x: 1.9, y: 0.18, z: 1.3 };
+      const dataloggerPos = new THREE.Vector3(3.75, TABLE_TOP_Y + dataloggerSize.y / 2, 1.45);
+
+      const dataloggerBox = new THREE.Mesh(
+        new THREE.BoxGeometry(dataloggerSize.x, dataloggerSize.y, dataloggerSize.z),
+        new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.55, metalness: 0.2 })
+      );
+      dataloggerBox.position.copy(dataloggerPos);
+      dataloggerBox.castShadow = true;
+      dataloggerBox.receiveShadow = true;
+      solenoidGroup.add(dataloggerBox);
+
+      if (!dataloggerScreenTexture) {
+        dataloggerScreenTexture = new THREE.CanvasTexture(graphCanvas);
+        dataloggerScreenTexture.minFilter = THREE.LinearFilter;
+        dataloggerScreenTexture.magFilter = THREE.LinearFilter;
+      }
+
+      const dataloggerScreen = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.55, 0.92),
+        new THREE.MeshBasicMaterial({ map: dataloggerScreenTexture })
+      );
+      dataloggerScreen.rotation.x = -Math.PI / 2;
+      dataloggerScreen.position.set(
+        dataloggerPos.x,
+        dataloggerPos.y + dataloggerSize.y / 2 + 0.002,
+        dataloggerPos.z
+      );
+      solenoidGroup.add(dataloggerScreen);
+
+      const terminalMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.35, metalness: 0.6 });
+      const terminalY = dataloggerPos.y + 0.04;
+      const topTerminal = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.09, 14), terminalMat);
+      topTerminal.position.set(dataloggerPos.x + dataloggerSize.x / 2 + 0.04, terminalY, dataloggerPos.z + 0.78);
+      topTerminal.rotation.z = Math.PI / 2;
+      topTerminal.castShadow = true;
+      solenoidGroup.add(topTerminal);
+
+      const bottomTerminal = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.09, 14), terminalMat);
+      bottomTerminal.position.set(dataloggerPos.x + dataloggerSize.x / 2 + 0.04, terminalY, dataloggerPos.z - 0.78);
+      bottomTerminal.rotation.z = Math.PI / 2;
+      bottomTerminal.castShadow = true;
+      solenoidGroup.add(bottomTerminal);
+
+      const wireMaterial = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.45, metalness: 0.4 });
+      const wireRadiusConnection = 0.04;
+      const terminalContactOffset = 0.045;
+      const topTerminalContact = new THREE.Vector3(
+        topTerminal.position.x - terminalContactOffset,
+        topTerminal.position.y,
+        topTerminal.position.z
+      );
+      const bottomTerminalContact = new THREE.Vector3(
+        bottomTerminal.position.x - terminalContactOffset,
+        bottomTerminal.position.y,
+        bottomTerminal.position.z
+      );
+
+      const topWirePoints = [
+        topLeadTip,
+        new THREE.Vector3(1.45, topLeadTip.y - 0.25, 0.95),
+        new THREE.Vector3(2.85, -0.95, 2.25),
+        topTerminalContact
+      ];
+      const topWireCurve = new THREE.CatmullRomCurve3(topWirePoints);
+      const topWire = new THREE.Mesh(
+        new THREE.TubeGeometry(topWireCurve, 44, wireRadiusConnection, 12, false),
+        wireMaterial
+      );
+      topWire.castShadow = true;
+      topWire.receiveShadow = true;
+      solenoidGroup.add(topWire);
+
+      const bottomWirePoints = [
+        bottomLeadTip,
+        new THREE.Vector3(1.85, bottomLeadTip.y + 0.18, -0.12),
+        new THREE.Vector3(2.9, terminalY + 0.05, bottomTerminal.position.z),
+        bottomTerminalContact
+      ];
+      const bottomWireCurve = new THREE.CatmullRomCurve3(bottomWirePoints);
+      const bottomWire = new THREE.Mesh(
+        new THREE.TubeGeometry(bottomWireCurve, 44, wireRadiusConnection, 12, false),
+        wireMaterial
+      );
+      bottomWire.castShadow = true;
+      bottomWire.receiveShadow = true;
+      solenoidGroup.add(bottomWire);
+
+      scene.add(solenoidGroup);
+    }
+
+    function createMagnet() {
+      magnetGroup = new THREE.Group();
+
+      const capGeo = new THREE.CylinderGeometry(0.42, 0.42, MAGNET_HALF_HEIGHT, 26);
+      const northMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.28, metalness: 0.15 });
+      const southMat = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.28, metalness: 0.15 });
+
+      northCap = new THREE.Mesh(capGeo, northMat);
+      southCap = new THREE.Mesh(capGeo, southMat);
+
+      northCap.position.y = MAGNET_HALF_HEIGHT / 2;
+      southCap.position.y = -MAGNET_HALF_HEIGHT / 2;
+
+      northCap.castShadow = true;
+      southCap.castShadow = true;
+      northCap.receiveShadow = true;
+      southCap.receiveShadow = true;
+
+      magnetGroup.add(northCap);
+      magnetGroup.add(southCap);
+
+      magnetGroup.position.set(0, manualPosition, 0);
+      scene.add(magnetGroup);
+
+      northLabel = addPoleText("N", 0xef4444, 0.36, MAGNET_HALF_HEIGHT / 2 + 0.01, 0);
+      southLabel = addPoleText("S", 0x2563eb, 0.36, -MAGNET_HALF_HEIGHT / 2 - 0.01, Math.PI);
+    }
+
+    function addPoleText(letter, color, size, y, rotX) {
+      const labelCanvas = document.createElement("canvas");
+      labelCanvas.width = 128;
+      labelCanvas.height = 128;
+      const lctx = labelCanvas.getContext("2d");
+      lctx.fillStyle = "#ffffff";
+      lctx.fillRect(0, 0, 128, 128);
+      lctx.fillStyle = "#111827";
+      lctx.font = "bold 94px Trebuchet MS";
+      lctx.textAlign = "center";
+      lctx.textBaseline = "middle";
+      lctx.fillText(letter, 64, 68);
+      const texture = new THREE.CanvasTexture(labelCanvas);
+      const mat = new THREE.MeshBasicMaterial({ map: texture, color: color, transparent: true });
+      const label = new THREE.Mesh(new THREE.CircleGeometry(size, 24), mat);
+      label.position.set(0, y, 0);
+      label.rotation.x = rotX;
+      magnetGroup.add(label);
+      return label;
+    }
+
+    function createFieldLines() {
+      fieldLinesGroup = new THREE.Group();
+      const lineMat = new THREE.LineBasicMaterial({ color: 0x0ea5e9, transparent: true, opacity: 0.62 });
+      const arrowMat = new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        transparent: true,
+        opacity: 0.82,
+        side: THREE.DoubleSide
+      });
+      const upVector = new THREE.Vector3(0, 1, 0);
+
+      function fieldDirectionAt(point) {
+        const northPole = new THREE.Vector3(0, MAGNET_HALF_HEIGHT * 0.92, 0);
+        const southPole = new THREE.Vector3(0, -MAGNET_HALF_HEIGHT * 0.92, 0);
+        const fromNorth = point.clone().sub(northPole);
+        const fromSouth = point.clone().sub(southPole);
+        const northDistance = Math.max(fromNorth.length(), 0.08);
+        const southDistance = Math.max(fromSouth.length(), 0.08);
+        const field = fromNorth
+          .multiplyScalar(1 / (northDistance * northDistance * northDistance))
+          .sub(fromSouth.multiplyScalar(1 / (southDistance * southDistance * southDistance)));
+        return field.normalize();
+      }
+
+      function traceFieldLine(angle, startRadius) {
+        const xDir = Math.cos(angle);
+        const zDir = Math.sin(angle);
+        const points = [new THREE.Vector3(
+          xDir * startRadius,
+          MAGNET_HALF_HEIGHT + 0.1,
+          zDir * startRadius
+        )];
+        const stepSize = 0.034;
+        const southFaceY = -MAGNET_HALF_HEIGHT - 0.08;
+
+        for (let step = 0; step < 280; step++) {
+          const current = points[points.length - 1];
+          const direction = fieldDirectionAt(current);
+          const next = current.clone().add(direction.multiplyScalar(stepSize));
+          const radialDistance = Math.hypot(next.x, next.z);
+          points.push(next);
+
+          if (next.y <= southFaceY && radialDistance <= 0.46) {
+            const crossing = (southFaceY - current.y) / (next.y - current.y);
+            points[points.length - 1] = current.clone().lerp(next, crossing);
+            break;
+          }
+          if (radialDistance > 3.4 || Math.abs(next.y) > 3.2) break;
+        }
+
+        return points;
+      }
+
+      function addArrowhead(points) {
+        const arrowIndex = Math.floor(points.length * 0.56);
+        const point = points[arrowIndex];
+        const next = points[Math.min(points.length - 1, arrowIndex + 2)];
+        const tangent = next.clone().sub(point).normalize();
+        const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.16, 16), arrowMat);
+        arrow.position.copy(point);
+        arrow.quaternion.setFromUnitVectors(upVector, tangent);
+        fieldLinesGroup.add(arrow);
+      }
+
+      const lineCount = 10;
+      for (let i = 0; i < lineCount; i++) {
+        const angle = (i / lineCount) * Math.PI * 2;
+        const startRadius = i % 2 === 0 ? 0.18 : 0.28;
+        const points = traceFieldLine(angle, startRadius);
+        const geom = new THREE.BufferGeometry().setFromPoints(points);
+        fieldLinesGroup.add(new THREE.Line(geom, lineMat));
+        addArrowhead(points);
+      }
+
+      magnetGroup.add(fieldLinesGroup);
+    }
+
+    function createFrameLabels() {
+      const labels = [
+        { text: "Solenoid", x: 1.45, y: 2.4, z: 0, color: "#14532d" }
+      ];
+
+      labels.forEach((item) => {
+        const c = document.createElement("canvas");
+        c.width = 256;
+        c.height = 64;
+        const lctx = c.getContext("2d");
+        lctx.fillStyle = item.color;
+        lctx.font = "bold 28px Trebuchet MS";
+        lctx.textAlign = "center";
+        lctx.textBaseline = "middle";
+        lctx.fillText(item.text, 128, 32);
+
+        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true }));
+        sprite.position.set(item.x, item.y, item.z);
+        sprite.scale.set(2.5, 0.62, 1);
+        scene.add(sprite);
+      });
+    }
+
+    function setMode(nextMode, shouldLog = true) {
+      mode = nextMode;
+      oscillateStart = null;
+      freeFallActive = false;
+      fallVelocity = 0;
+
+      [btnManual, btnOscillate, btnFreefall].forEach((btn) => btn.classList.remove("active"));
+      if (mode === MODE_MANUAL) btnManual.classList.add("active");
+      if (mode === MODE_OSCILLATE) btnOscillate.classList.add("active");
+      if (mode === MODE_FREEFALL) btnFreefall.classList.add("active");
+
+      manualGroup.classList.toggle("hidden", mode !== MODE_MANUAL);
+      freefallGroup.classList.toggle("hidden", mode !== MODE_FREEFALL);
+
+      if (mode === MODE_FREEFALL) {
+        fallPosition = getDropStartY();
+        freeFallNeedsReset = false;
+        suppressEmfFrame = true;
+        prevPosition = fallPosition;
+        smoothedVelocity = 0;
+        magnetGroup.position.y = fallPosition;
+      } else if (mode === MODE_OSCILLATE) {
+        const centerY = getOscillationCenterY();
+        magnetGroup.position.y = centerY;
+        prevPosition = centerY;
+        smoothedVelocity = 0;
+      }
+
+      if (shouldLog) {
+        sendXapiInteraction(
+          "mode_used",
+          `Mode used: ${getModeLabel(mode)}`,
+          { mode, modeLabel: getModeLabel(mode) }
+        );
+      }
+    }
+
+    function updatePoleOrientation() {
+      if (!flipPoles) {
+        northCap.material.color.setHex(0xef4444);
+        southCap.material.color.setHex(0x2563eb);
+        northLabel.position.y = MAGNET_HALF_HEIGHT / 2 + 0.01;
+        northLabel.rotation.x = 0;
+        southLabel.position.y = -MAGNET_HALF_HEIGHT / 2 - 0.01;
+        southLabel.rotation.x = Math.PI;
+        fieldLinesGroup.scale.y = 1;
+      } else {
+        northCap.material.color.setHex(0x2563eb);
+        southCap.material.color.setHex(0xef4444);
+        northLabel.position.y = -MAGNET_HALF_HEIGHT / 2 - 0.01;
+        northLabel.rotation.x = Math.PI;
+        southLabel.position.y = MAGNET_HALF_HEIGHT / 2 + 0.01;
+        southLabel.rotation.x = 0;
+        fieldLinesGroup.scale.y = -1;
+      }
+    }
+
+    function updateGraph() {
+      const w = graphCanvas.width;
+      const h = graphCanvas.height;
+      gctx.clearRect(0, 0, w, h);
+
+      gctx.fillStyle = "#f4fff8";
+      gctx.fillRect(0, 0, w, h);
+
+      gctx.strokeStyle = "#cbd5e1";
+      gctx.lineWidth = 1;
+      for (let i = 1; i < 6; i++) {
+        const y = (h / 6) * i;
+        gctx.beginPath();
+        gctx.moveTo(0, y);
+        gctx.lineTo(w, y);
+        gctx.stroke();
+      }
+
+      gctx.strokeStyle = "#64748b";
+      gctx.beginPath();
+      gctx.moveTo(0, h / 2);
+      gctx.lineTo(w, h / 2);
+      gctx.stroke();
+
+      if (dataLog.length < 2) {
+        return;
+      }
+
+      const tNow = dataLog[dataLog.length - 1].t;
+      const tMin = tNow - graphWindowSeconds;
+      const visible = dataLog.filter((d) => d.t >= tMin);
+      if (visible.length < 2) {
+        return;
+      }
+
+      const graphScale = baseGraphMaxAbsVoltage / graphVoltageZoom;
+
+      gctx.strokeStyle = "#15803d";
+      gctx.lineWidth = 2;
+      gctx.beginPath();
+      visible.forEach((d, idx) => {
+        const x = ((d.t - tMin) / graphWindowSeconds) * w;
+        const y = h / 2 - (d.v / graphScale) * (h * 0.42);
+        if (idx === 0) gctx.moveTo(x, y);
+        else gctx.lineTo(x, y);
+      });
+      gctx.stroke();
+    }
+
+    function onResize() {
+      if (!camera || !renderer) return;
+      camera.aspect = viewport.clientWidth / viewport.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+    }
+
+    let prevTime = performance.now();
+    function animate(now) {
+      requestAnimationFrame(animate);
+      if (!scene) return;
+
+      const dt = Math.min((now - prevTime) / 1000, 0.05);
+      prevTime = now;
+
+      if (!isPaused) {
+        let position = magnetGroup.position.y;
+        let analyticVelocity = null;
+
+        if (mode === MODE_MANUAL) {
+          position = manualPosition;
+        } else if (mode === MODE_OSCILLATE) {
+          if (oscillateStart === null) oscillateStart = now;
+          const t = ((now - oscillateStart) / 1000) * speedScale;
+          const omega = (2 * Math.PI) / OSC_PERIOD;
+          position = getOscillationCenterY() + OSC_AMPLITUDE * Math.sin(omega * t);
+          analyticVelocity = OSC_AMPLITUDE * omega * Math.cos(omega * t) * speedScale;
+        } else if (mode === MODE_FREEFALL) {
+          if (!freeFallActive) {
+            position = fallPosition;
+            analyticVelocity = 0;
+          } else {
+            fallVelocity += GRAVITY * speedScale * dt;
+            fallPosition -= fallVelocity * dt;
+            const dropEndY = getDropEndY();
+            if (fallPosition < dropEndY) {
+              freeFallActive = false;
+              fallVelocity = 0;
+              freeFallNeedsReset = true;
+              fallPosition = dropEndY;
+            }
+            position = fallPosition;
+          }
+        }
+
+        magnetGroup.position.y = position;
+
+        const rawVelocity = dt > 0 ? (position - prevPosition) / dt : 0;
+        const adjustedVelocity = flipPoles ? -rawVelocity : rawVelocity;
+        smoothedVelocity = 0.2 * adjustedVelocity + 0.8 * smoothedVelocity;
+
+        const effectiveVelocity = analyticVelocity !== null
+          ? (flipPoles ? -analyticVelocity : analyticVelocity)
+          : smoothedVelocity;
+
+        const solenoidHalfLength = getSolenoidLength() / 2;
+        const topEdgeY = getSolenoidCenterY() + solenoidHalfLength;
+        const bottomEdgeY = getSolenoidCenterY() - solenoidHalfLength;
+        const edgeSigma = 0.42;
+        const topResponse = Math.exp(-((position - topEdgeY) ** 2) / (2 * edgeSigma * edgeSigma));
+        const bottomResponse = Math.exp(-((position - bottomEdgeY) ** 2) / (2 * edgeSigma * edgeSigma));
+        const edgeGradient = topResponse - bottomResponse;
+        const turnScale = getSolenoidTurns() / 14;
+        const voltage = suppressEmfFrame
+          ? 0
+          : PHYSICS_EMF_GAIN * turnScale * (effectiveVelocity / 2.1) * edgeGradient;
+        if (suppressEmfFrame) {
+          suppressEmfFrame = false;
+        }
+
+        voltageReadout.textContent = `${voltage.toFixed(2)} V`;
+
+        dataLog.push({ t: now / 1000, v: voltage });
+        const cutoff = now / 1000 - 20;
+        while (dataLog.length > 1 && dataLog[0].t < cutoff) dataLog.shift();
+        updateGraph();
+        if (dataloggerScreenTexture) {
+          dataloggerScreenTexture.needsUpdate = true;
+        }
+
+        prevPosition = position;
+      }
+
+      fieldLinesGroup.visible = toggleFieldInput.checked;
+      updatePoleOrientation();
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    btnManual.addEventListener("click", () => setMode(MODE_MANUAL));
+    btnOscillate.addEventListener("click", () => setMode(MODE_OSCILLATE));
+    btnFreefall.addEventListener("click", () => setMode(MODE_FREEFALL));
+
+    btnPause.addEventListener("click", () => {
+      isPaused = !isPaused;
+      btnPause.textContent = isPaused ? "Resume" : "Pause";
+      btnPause.className = isPaused
+        ? "px-3 py-1.5 text-xs rounded-lg bg-amber-600 text-white"
+        : "px-3 py-1.5 text-xs rounded-lg bg-emerald-700 text-white";
+    });
+
+    speedSlider.addEventListener("input", (event) => {
+      speedScale = Number(event.target.value) / 100;
+      speedValue.textContent = `${speedScale.toFixed(2)}x`;
+    });
+
+    solenoidLengthSlider.addEventListener("input", (event) => {
+      solenoidLengthScale = Number(event.target.value) / 100;
+      solenoidLengthValue.textContent = `${solenoidLengthScale.toFixed(2)}x`;
+      createSolenoid();
+      queueSolenoidLengthLog();
+      if (mode === MODE_OSCILLATE) {
+        const centerY = getOscillationCenterY();
+        magnetGroup.position.y = centerY;
+        prevPosition = centerY;
+        smoothedVelocity = 0;
+        oscillateStart = performance.now();
+      }
+      if (mode === MODE_FREEFALL && !freeFallActive && !freeFallNeedsReset) {
+        fallPosition = getDropStartY();
+        magnetGroup.position.y = fallPosition;
+        prevPosition = fallPosition;
+        smoothedVelocity = 0;
+        suppressEmfFrame = true;
+      }
+    });
+
+    solenoidLengthSlider.addEventListener("change", () => {
+      window.clearTimeout(solenoidLengthLogTimer);
+      logSolenoidLengthChange();
+    });
+
+    positionSlider.addEventListener("input", (event) => {
+      const normalized = Number(event.target.value) / 100;
+      manualPosition = normalized;
+      positionValue.textContent = manualPosition.toFixed(2);
+      if (mode === MODE_MANUAL) {
+        magnetGroup.position.y = manualPosition;
+      }
+    });
+
+    flipPolesInput.addEventListener("change", (event) => {
+      flipPoles = event.target.checked;
+    });
+
+    btnDrop.addEventListener("click", () => {
+      if (mode !== MODE_FREEFALL) return;
+      if (freeFallNeedsReset) {
+        fallPosition = getDropStartY();
+        magnetGroup.position.y = fallPosition;
+        prevPosition = fallPosition;
+        smoothedVelocity = 0;
+        freeFallNeedsReset = false;
+        suppressEmfFrame = true;
+      }
+      freeFallActive = true;
+      fallVelocity = 0;
+      prevPosition = fallPosition;
+      sendXapiInteraction(
+        "magnet_dropped",
+        "Magnet dropped",
+        {
+          dropStartY: Number(fallPosition.toFixed(2)),
+          solenoidLengthScale: Number(solenoidLengthScale.toFixed(2)),
+          polesReversed: flipPoles
+        }
+      );
+    });
+
+    btnResetView.addEventListener("click", () => {
+      camera.position.set(4.8, 4.2, 6.2);
+      controls.target.set(0, 0, 0);
+      controls.update();
+    });
+
+    btnToggleSidebar.addEventListener("click", () => {
+      const collapsed = document.body.classList.toggle("sidebar-collapsed");
+      btnToggleSidebar.setAttribute("aria-label", collapsed ? "Expand controls" : "Collapse controls");
+      btnToggleSidebar.setAttribute("title", collapsed ? "Expand controls" : "Collapse controls");
+      btnToggleSidebar.innerHTML = `<i data-lucide="${collapsed ? "panel-left-open" : "panel-left-close"}" class="w-4 h-4"></i>`;
+      lucide.createIcons();
+      resizeAfterLayoutChange();
+    });
+
+    window.addEventListener("resize", onResize);
+
+    buildScene();
+    setMode(MODE_MANUAL, false);
+    onResize();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
