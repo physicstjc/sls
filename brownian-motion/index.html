@@ -3,176 +3,394 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Air Molecules Simulation</title>
+  <title>Brownian Motion Simulation</title>
   <style>
-    canvas {
-      border: 1px solid #000;
+    :root {
+      --bg-1: #f6f3ea;
+      --bg-2: #e8f0df;
+      --card: #fffdf8;
+      --ink: #1f2a1f;
+      --muted: #556455;
+      --accent: #2f6a4f;
+      --accent-soft: #dcebdc;
+      --danger: #c43d2f;
+      --border: #bcccb8;
+      --shadow: 0 14px 40px rgba(31, 42, 31, 0.14);
     }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    canvas {
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      background: #fbfbf8;
+      box-shadow: inset 0 0 0 1px rgba(47, 106, 79, 0.08);
+      width: 100%;
+      height: auto;
+      max-width: 600px;
+    }
+
     body {
-      font-family: sans-serif;
-      text-align: center;
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Avenir Next", "Gill Sans", "Trebuchet MS", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 15%, rgba(47, 106, 79, 0.16), transparent 38%),
+        radial-gradient(circle at 88% 80%, rgba(196, 61, 47, 0.13), transparent 32%),
+        linear-gradient(155deg, var(--bg-1), var(--bg-2));
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: min(920px, 100%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 20px 20px 16px;
+    }
+
+    .hero {
+      text-align: left;
+      margin-bottom: 14px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(1.2rem, 2.3vw, 1.8rem);
+      line-height: 1.2;
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .canvas-wrap {
+      display: flex;
+      justify-content: center;
+    }
+
+    .controls {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
+      gap: 10px;
+    }
+
+    .control-group {
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff, #f6fbf5);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 10px;
+      min-height: 52px;
+    }
+
+    .control-group label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      justify-self: start;
+    }
+
+    .value {
+      min-width: 4ch;
+      display: inline-block;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .ghost-button {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--accent-soft);
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 0.82rem;
+      padding: 7px 10px;
+      cursor: pointer;
+    }
+
+    .ghost-button:hover {
+      filter: brightness(0.98);
+    }
+
+    @media (max-width: 720px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .app {
+        padding: 14px 14px 12px;
+      }
     }
   </style>
 </head>
 <body>
-    <h3>Particles of the same mass</h3>
-    <canvas id="particleCanvas" width="600" height="400"></canvas>
-    <br><label for="showParticlesCheckbox">Show Grey Particles:</label>
-  <input type="checkbox" id="showParticlesCheckbox" checked>
+  <main class="app">
+    <header class="hero">
+      <h1 class="title">Brownian Motion Lab</h1>
+      <p class="subtitle">Adjust speed and mass, then watch how the heavy red particle responds to molecular collisions.</p>
+    </header>
 
-  <label for="speedSlider">Particle Speed:</label>
-  <input type="range" id="speedSlider" min="1" max="5" step="1" value="2">
-    <a href="different-mass.html">Change Mass</a>
+    <div class="canvas-wrap">
+      <canvas id="particleCanvas" width="600" height="400"></canvas>
+    </div>
 
+    <div class="controls">
+      <div class="control-group">
+        <label for="showParticlesCheckbox">Show Grey Particles</label>
+        <div></div>
+        <input type="checkbox" id="showParticlesCheckbox" checked>
+      </div>
 
+      <div class="control-group">
+        <label for="traceRedCheckbox">Trace Red Particle</label>
+        <button id="clearTraceButton" class="ghost-button" type="button">Clear Trace</button>
+        <input type="checkbox" id="traceRedCheckbox" checked>
+      </div>
+
+      <div class="control-group">
+        <label for="speedSlider">Particle Speed</label>
+        <input type="range" id="speedSlider" min="1" max="5" step="1" value="2">
+        <span id="speedValue" class="value">2</span>
+      </div>
+
+      <div class="control-group">
+        <label for="massSlider">Red Mass</label>
+        <input type="range" id="massSlider" min="1" max="200" step="1" value="100">
+        <span id="massValue" class="value">100</span>
+      </div>
+    </div>
+  </main>
 
   <script>
     const canvas = document.getElementById('particleCanvas');
     const ctx = canvas.getContext('2d');
-    const particleCount = 500;
-    const particles = [];
-    const largerParticles = [];
-    let particleSpeed = 5;
-    let showParticles = true;
+    const showParticlesCheckbox = document.getElementById('showParticlesCheckbox');
+    const traceRedCheckbox = document.getElementById('traceRedCheckbox');
+    const clearTraceButton = document.getElementById('clearTraceButton');
+    const speedSlider = document.getElementById('speedSlider');
+    const speedValue = document.getElementById('speedValue');
+    const massSlider = document.getElementById('massSlider');
+    const massValue = document.getElementById('massValue');
 
-    function initParticles() {
-      for (let i = 0; i < particleCount; i++) {
-        particles.push({
+    const greyParticleCount = 500;
+    const greyParticles = [];
+    const redTrail = [];
+    const maxTrailPoints = 240;
+
+    function radiusFromMass(mass) {
+      const minMass = 1;
+      const maxMass = 200;
+      const minRadius = 8;
+      const maxRadius = 24;
+      const clampedMass = Math.min(maxMass, Math.max(minMass, mass));
+      return minRadius + ((clampedMass - minMass) / (maxMass - minMass)) * (maxRadius - minRadius);
+    }
+
+    const redParticle = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      radius: radiusFromMass(Number(massSlider.value)),
+      mass: Number(massSlider.value),
+      color: 'red',
+      velocity: { x: Number(speedSlider.value), y: Number(speedSlider.value) },
+    };
+
+    function createGreyParticles() {
+      greyParticles.length = 0;
+      const speed = Number(speedSlider.value);
+
+      for (let i = 0; i < greyParticleCount; i++) {
+        greyParticles.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * particleSpeed,
-          vy: (Math.random() - 0.5) * particleSpeed,
-        });
-      }
-
-      for (let i = 0; i < 1; i++) {
-        largerParticles.push({
-          x: canvas.width / 2,
-          y: canvas.height / 2,
-          vx: particleSpeed,
-          vy: particleSpeed,
+          radius: 5,
+          mass: 1,
+          color: 'grey',
+          velocity: {
+            x: (Math.random() - 0.5) * speed * 2,
+            y: (Math.random() - 0.5) * speed * 2,
+          },
         });
       }
     }
 
-    function updateParticles() {
-      particles.forEach((particle, index) => {
-        if (showParticles) {
-          particle.x += particle.vx;
-          particle.y += particle.vy;
+    function updateParticle(particle) {
+      particle.x += particle.velocity.x;
+      particle.y += particle.velocity.y;
 
-          // Bounce off walls
-          if (particle.x < 0 || particle.x > canvas.width) {
-            particle.vx *= -1;
-          }
+      if (particle.x - particle.radius < 0 || particle.x + particle.radius > canvas.width) {
+        particle.velocity.x *= -1;
+      }
 
-          if (particle.y < 0 || particle.y > canvas.height) {
-            particle.vy *= -1;
-          }
+      if (particle.y - particle.radius < 0 || particle.y + particle.radius > canvas.height) {
+        particle.velocity.y *= -1;
+      }
+    }
 
-          // Check for collisions with other particles
-          for (let i = 0; i < particles.length; i++) {
-            if (i !== index) {
-              const otherParticle = particles[i];
-              const dx = particle.x - otherParticle.x;
-              const dy = particle.y - otherParticle.y;
-              const distance = Math.sqrt(dx * dx + dy * dy);
+    function checkParticleCollision(particleA, particleB) {
+      const dx = particleB.x - particleA.x;
+      const dy = particleB.y - particleA.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      return distance < particleA.radius + particleB.radius;
+    }
 
-              if (distance < 6) {
-                // Simple elastic collision
-                const tempVx = particle.vx;
-                const tempVy = particle.vy;
-                particle.vx = otherParticle.vx;
-                particle.vy = otherParticle.vy;
-                otherParticle.vx = tempVx;
-                otherParticle.vy = tempVy;
-              }
+    function handleParticleCollision(particleA, particleB) {
+      const dx = particleB.x - particleA.x;
+      const dy = particleB.y - particleA.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance === 0) {
+        return;
+      }
+
+      const normalX = dx / distance;
+      const normalY = dy / distance;
+
+      const relativeVelocityX = particleB.velocity.x - particleA.velocity.x;
+      const relativeVelocityY = particleB.velocity.y - particleA.velocity.y;
+      const relativeSpeed = relativeVelocityX * normalX + relativeVelocityY * normalY;
+
+      if (relativeSpeed > 0) {
+        return;
+      }
+
+      const impulse = (2 * relativeSpeed) / (particleA.mass + particleB.mass);
+
+      particleA.velocity.x += impulse * particleB.mass * normalX;
+      particleA.velocity.y += impulse * particleB.mass * normalY;
+      particleB.velocity.x -= impulse * particleA.mass * normalX;
+      particleB.velocity.y -= impulse * particleA.mass * normalY;
+    }
+
+    function checkCollisions() {
+      if (showParticlesCheckbox.checked) {
+        for (let i = 0; i < greyParticles.length; i++) {
+          for (let j = i + 1; j < greyParticles.length; j++) {
+            if (checkParticleCollision(greyParticles[i], greyParticles[j])) {
+              handleParticleCollision(greyParticles[i], greyParticles[j]);
             }
           }
         }
-      });
+      }
 
-      largerParticles.forEach(particle => {
-        particle.x += particle.vx;
-        particle.y += particle.vy;
-
-        // Bounce off walls
-        if (particle.x < 0 || particle.x > canvas.width) {
-          particle.vx *= -1;
+      for (const greyParticle of greyParticles) {
+        if (checkParticleCollision(redParticle, greyParticle)) {
+          handleParticleCollision(redParticle, greyParticle);
         }
-
-        if (particle.y < 0 || particle.y > canvas.height) {
-          particle.vy *= -1;
-        }
-
-        // Check for collisions with smaller particles
-        particles.forEach(smallerParticle => {
-          const dx = particle.x - smallerParticle.x;
-          const dy = particle.y - smallerParticle.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance < 10) {
-            // Simple elastic collision
-            const tempVx = particle.vx;
-            const tempVy = particle.vy;
-            particle.vx = smallerParticle.vx;
-            particle.vy = smallerParticle.vy;
-            smallerParticle.vx = tempVx;
-            smallerParticle.vy = tempVy;
-          }
-        });
-      });
+      }
     }
 
     function drawParticles() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      if (showParticles) {
-        particles.forEach(particle => {
-          ctx.fillStyle = 'grey';
+      if (showParticlesCheckbox.checked) {
+        for (const particle of greyParticles) {
           ctx.beginPath();
-          ctx.arc(particle.x, particle.y, 5, 0, Math.PI * 2);
+          ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+          ctx.fillStyle = particle.color;
           ctx.fill();
-        });
+          ctx.closePath();
+        }
       }
 
-      largerParticles.forEach(particle => {
-        ctx.fillStyle = 'red';
+      if (traceRedCheckbox.checked && redTrail.length > 1) {
         ctx.beginPath();
-        ctx.arc(particle.x, particle.y, 8, 0, Math.PI * 2);
-        ctx.fill();
-      });
+        ctx.moveTo(redTrail[0].x, redTrail[0].y);
+
+        for (let i = 1; i < redTrail.length; i++) {
+          ctx.lineTo(redTrail[i].x, redTrail[i].y);
+        }
+
+        ctx.strokeStyle = 'rgba(196, 61, 47, 0.6)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.closePath();
+      }
+
+      ctx.beginPath();
+      ctx.arc(redParticle.x, redParticle.y, redParticle.radius, 0, Math.PI * 2);
+      ctx.fillStyle = redParticle.color;
+      ctx.fill();
+      ctx.closePath();
     }
 
-    function animate() {
-      updateParticles();
+    function update() {
+      if (showParticlesCheckbox.checked) {
+        for (const particle of greyParticles) {
+          updateParticle(particle);
+        }
+      }
+
+      updateParticle(redParticle);
+
+      if (traceRedCheckbox.checked) {
+        redTrail.push({ x: redParticle.x, y: redParticle.y });
+        if (redTrail.length > maxTrailPoints) {
+          redTrail.shift();
+        }
+      } else if (redTrail.length > 0) {
+        redTrail.length = 0;
+      }
+
+      checkCollisions();
       drawParticles();
-      requestAnimationFrame(animate);
+      requestAnimationFrame(update);
     }
 
-    initParticles();
-    animate();
-
-    // Event listener for speed slider
-    const speedSlider = document.getElementById('speedSlider');
     speedSlider.addEventListener('input', () => {
-      particleSpeed = parseInt(speedSlider.value);
-      particles.forEach(particle => {
-        particle.vx = (Math.random() - 0.5) * particleSpeed * 2;
-        particle.vy = (Math.random() - 0.5) * particleSpeed * 2;
-      });
+      speedValue.textContent = speedSlider.value;
+      const speed = Number(speedSlider.value);
 
-      largerParticles.forEach(particle => {
-        particle.vx = particleSpeed * 2;
-        particle.vy = particleSpeed * 2;
-      });
+      for (const particle of greyParticles) {
+        particle.velocity.x = (Math.random() - 0.5) * speed * 2;
+        particle.velocity.y = (Math.random() - 0.5) * speed * 2;
+      }
+
+      redParticle.velocity.x = speed;
+      redParticle.velocity.y = speed;
     });
 
-    // Event listener for show particles checkbox
-    const showParticlesCheckbox = document.getElementById('showParticlesCheckbox');
-    showParticlesCheckbox.addEventListener('change', () => {
-      showParticles = showParticlesCheckbox.checked;
+    massSlider.addEventListener('input', () => {
+      redParticle.mass = Number(massSlider.value);
+      redParticle.radius = radiusFromMass(redParticle.mass);
+      massValue.textContent = massSlider.value;
     });
+
+    clearTraceButton.addEventListener('click', () => {
+      redTrail.length = 0;
+    });
+
+    createGreyParticles();
+    speedValue.textContent = speedSlider.value;
+    massValue.textContent = massSlider.value;
+    update();
   </script>
 </body>
 </html>
