@@ -29,7 +29,7 @@
       box-shadow: inset 0 0 0 1px rgba(47, 106, 79, 0.08);
       width: 100%;
       height: auto;
-      max-width: 600px;
+      max-width: 440px;
     }
 
     body {
@@ -42,63 +42,90 @@
         radial-gradient(circle at 88% 80%, rgba(196, 61, 47, 0.13), transparent 32%),
         linear-gradient(155deg, var(--bg-1), var(--bg-2));
       display: grid;
-      place-items: center;
-      padding: 24px;
+      place-items: start center;
+      padding: 8px 12px 12px;
     }
 
     .app {
-      width: min(920px, 100%);
+      width: min(800px, 100%);
+      height: min(480px, calc(100vh - 24px));
       background: transparent;
       border: 0;
       border-radius: 0;
       box-shadow: none;
-      padding: 0;
+      padding: 8px 10px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 298px;
+      grid-template-rows: auto 1fr auto auto;
+      grid-template-areas:
+        "hero hero"
+        "canvas controls"
+        "canvas metrics"
+        "canvas footnote";
+      gap: 8px 12px;
+      overflow: hidden;
     }
 
     .hero {
       text-align: left;
-      margin-bottom: 14px;
+      margin: 0;
+      grid-area: hero;
     }
 
     .title {
       margin: 0;
-      font-size: clamp(1.2rem, 2.3vw, 1.8rem);
-      line-height: 1.2;
+      font-size: clamp(0.95rem, 1.5vw, 1.25rem);
+      line-height: 1.1;
       letter-spacing: 0.02em;
     }
 
     .subtitle {
-      margin: 6px 0 0;
+      margin: 2px 0 0;
       color: var(--muted);
-      font-size: 0.95rem;
+      font-size: 0.76rem;
+      line-height: 1.2;
     }
 
     .canvas-wrap {
+      grid-area: canvas;
       display: flex;
       justify-content: center;
+      align-items: center;
+      align-self: stretch;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .canvas-wrap canvas {
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      display: block;
     }
 
     .controls {
-      margin-top: 14px;
+      grid-area: controls;
+      margin: 0;
       display: grid;
-      grid-template-columns: repeat(2, minmax(220px, 1fr));
-      gap: 10px;
+      grid-template-columns: 1fr;
+      gap: 6px;
+      align-self: start;
     }
 
     .control-group {
       border: 1px solid var(--border);
       background: linear-gradient(180deg, #ffffff, #f6fbf5);
-      border-radius: 12px;
-      padding: 10px 12px;
+      border-radius: 10px;
+      padding: 6px 8px;
       display: grid;
       grid-template-columns: auto 1fr auto;
       align-items: center;
-      gap: 10px;
-      min-height: 52px;
+      gap: 6px;
+      min-height: 36px;
     }
 
     .control-group label {
-      font-size: 0.88rem;
+      font-size: 0.76rem;
       font-weight: 600;
       letter-spacing: 0.02em;
     }
@@ -109,8 +136,8 @@
     }
 
     input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
+      width: 14px;
+      height: 14px;
       accent-color: var(--accent);
       justify-self: start;
     }
@@ -122,16 +149,17 @@
       font-variant-numeric: tabular-nums;
       color: var(--accent);
       font-weight: 700;
+      font-size: 0.76rem;
     }
 
     .ghost-button {
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       background: var(--accent-soft);
       color: var(--ink);
       font-weight: 600;
-      font-size: 0.82rem;
-      padding: 7px 10px;
+      font-size: 0.7rem;
+      padding: 5px 7px;
       cursor: pointer;
     }
 
@@ -139,9 +167,80 @@
       filter: brightness(0.98);
     }
 
+    .metrics {
+      grid-area: metrics;
+      margin: 0;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+      align-self: start;
+    }
+
+    .metric-card {
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), #f5faf2);
+      border-radius: 10px;
+      padding: 8px 10px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric-label {
+      margin: 0;
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .metric-value {
+      margin: 4px 0 0;
+      font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+      line-height: 1.15;
+      font-weight: 700;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric-note {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.72rem;
+      line-height: 1.25;
+    }
+
+    .metrics-footnote {
+      grid-area: footnote;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.7rem;
+      line-height: 1.25;
+      text-align: left;
+      align-self: end;
+    }
+
     @media (max-width: 720px) {
-      .controls {
+      .app {
+        height: auto;
+        align-self: start;
         grid-template-columns: 1fr;
+        grid-template-areas:
+          "hero"
+          "canvas"
+          "controls"
+          "metrics"
+          "footnote";
+      }
+
+      canvas {
+        max-width: 100%;
+      }
+
+      .controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
   </style>
@@ -172,7 +271,7 @@
 
       <div class="control-group">
         <label for="speedSlider">Particle Speed</label>
-        <input type="range" id="speedSlider" min="1" max="5" step="1" value="2">
+        <input type="range" id="speedSlider" min="1" max="5" step="0.1" value="2">
         <span id="speedValue" class="value">2</span>
       </div>
 
@@ -182,6 +281,21 @@
         <span id="massValue" class="value">100</span>
       </div>
     </div>
+
+    <section class="metrics" aria-label="Estimated collision statistics">
+      <article class="metric-card">
+        <p class="metric-label">Average wall force</p>
+        <p id="forceValue" class="metric-value">--</p>
+        <p class="metric-note">Estimated force exerted on the walls by particle bounces using the current mass and speed settings.</p>
+      </article>
+
+      <article class="metric-card">
+        <p class="metric-label">Average collision frequency</p>
+        <p id="frequencyValue" class="metric-value">--</p>
+        <p class="metric-note">Estimated red-particle collisions per second from particle density and relative speed.</p>
+      </article>
+    </section>
+    <p class="metrics-footnote">Estimates use a 1 nm canvas scale, 1 fg per mass unit, and a 1 ps collision window.</p>
   </main>
 
   <script>
@@ -194,11 +308,16 @@
     const speedValue = document.getElementById('speedValue');
     const massSlider = document.getElementById('massSlider');
     const massValue = document.getElementById('massValue');
+    const forceValue = document.getElementById('forceValue');
+    const frequencyValue = document.getElementById('frequencyValue');
 
     const greyParticleCount = 500;
     const greyParticles = [];
     const redTrail = [];
     const maxTrailPoints = 240;
+    const framesPerSecond = 60;
+    let metersPerPixel = 1e-9;
+    const massUnitToKg = 1e-18;
 
     function radiusFromMass(mass) {
       const minMass = 1;
@@ -217,6 +336,77 @@
       color: 'red',
       velocity: { x: Number(speedSlider.value), y: Number(speedSlider.value) },
     };
+
+    function resizeCanvas() {
+      const bounds = canvas.getBoundingClientRect();
+      const displayWidth = Math.max(1, Math.round(bounds.width));
+      const displayHeight = Math.max(1, Math.round(bounds.height));
+
+      if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
+      }
+
+      metersPerPixel = 1e-9;
+      redParticle.x = canvas.width / 2;
+      redParticle.y = canvas.height / 2;
+    }
+
+    function formatForce(newtons) {
+      const absoluteForce = Math.abs(newtons);
+
+      if (absoluteForce >= 1e-9) {
+        return `${(newtons / 1e-9).toFixed(2)} nN`;
+      }
+
+      if (absoluteForce >= 1e-12) {
+        return `${(newtons / 1e-12).toFixed(2)} pN`;
+      }
+
+      if (absoluteForce >= 1e-15) {
+        return `${(newtons / 1e-15).toFixed(2)} fN`;
+      }
+
+      return `${newtons.toExponential(2)} N`;
+    }
+
+    function formatFrequency(collisionsPerSecond) {
+      if (collisionsPerSecond >= 1e6) {
+        return `${(collisionsPerSecond / 1e6).toFixed(2)} M collisions/s`;
+      }
+
+      if (collisionsPerSecond >= 1e3) {
+        return `${(collisionsPerSecond / 1e3).toFixed(2)} k collisions/s`;
+      }
+
+      return `${collisionsPerSecond.toFixed(2)} collisions/s`;
+    }
+
+    function updateMetrics() {
+      const widthMeters = canvas.width * metersPerPixel;
+      const heightMeters = canvas.height * metersPerPixel;
+      const particles = [redParticle, ...greyParticles];
+
+      const wallForceNewtons = particles.reduce((sum, particle) => {
+        const velocityXMetersPerSecond = particle.velocity.x * metersPerPixel * framesPerSecond;
+        const velocityYMetersPerSecond = particle.velocity.y * metersPerPixel * framesPerSecond;
+        const forceFromVerticalWalls = (2 * particle.mass * massUnitToKg * velocityXMetersPerSecond * velocityXMetersPerSecond) / widthMeters;
+        const forceFromHorizontalWalls = (2 * particle.mass * massUnitToKg * velocityYMetersPerSecond * velocityYMetersPerSecond) / heightMeters;
+
+        return sum + forceFromVerticalWalls + forceFromHorizontalWalls;
+      }, 0);
+      const collisionFrequency = particles.reduce((sum, particle) => {
+        const velocityXMetersPerSecond = Math.abs(particle.velocity.x) * metersPerPixel * framesPerSecond;
+        const velocityYMetersPerSecond = Math.abs(particle.velocity.y) * metersPerPixel * framesPerSecond;
+        const verticalHitsPerSecond = velocityXMetersPerSecond / widthMeters;
+        const horizontalHitsPerSecond = velocityYMetersPerSecond / heightMeters;
+
+        return sum + verticalHitsPerSecond + horizontalHitsPerSecond;
+      }, 0);
+
+      forceValue.textContent = formatForce(wallForceNewtons);
+      frequencyValue.textContent = formatFrequency(collisionFrequency);
+    }
 
     function createGreyParticles() {
       greyParticles.length = 0;
@@ -237,16 +427,25 @@
       }
     }
 
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      createGreyParticles();
+      redTrail.length = 0;
+      updateMetrics();
+    });
+
     function updateParticle(particle) {
       particle.x += particle.velocity.x;
       particle.y += particle.velocity.y;
 
       if (particle.x - particle.radius < 0 || particle.x + particle.radius > canvas.width) {
         particle.velocity.x *= -1;
+        particle.x = Math.min(canvas.width - particle.radius, Math.max(particle.radius, particle.x));
       }
 
       if (particle.y - particle.radius < 0 || particle.y + particle.radius > canvas.height) {
         particle.velocity.y *= -1;
+        particle.y = Math.min(canvas.height - particle.radius, Math.max(particle.radius, particle.y));
       }
     }
 
@@ -286,12 +485,10 @@
     }
 
     function checkCollisions() {
-      if (showParticlesCheckbox.checked) {
-        for (let i = 0; i < greyParticles.length; i++) {
-          for (let j = i + 1; j < greyParticles.length; j++) {
-            if (checkParticleCollision(greyParticles[i], greyParticles[j])) {
-              handleParticleCollision(greyParticles[i], greyParticles[j]);
-            }
+      for (let i = 0; i < greyParticles.length; i++) {
+        for (let j = i + 1; j < greyParticles.length; j++) {
+          if (checkParticleCollision(greyParticles[i], greyParticles[j])) {
+            handleParticleCollision(greyParticles[i], greyParticles[j]);
           }
         }
       }
@@ -338,10 +535,8 @@
     }
 
     function update() {
-      if (showParticlesCheckbox.checked) {
-        for (const particle of greyParticles) {
-          updateParticle(particle);
-        }
+      for (const particle of greyParticles) {
+        updateParticle(particle);
       }
 
       updateParticle(redParticle);
@@ -357,6 +552,7 @@
 
       checkCollisions();
       drawParticles();
+      updateMetrics();
       requestAnimationFrame(update);
     }
 
@@ -371,21 +567,25 @@
 
       redParticle.velocity.x = speed;
       redParticle.velocity.y = speed;
+      updateMetrics();
     });
 
     massSlider.addEventListener('input', () => {
       redParticle.mass = Number(massSlider.value);
       redParticle.radius = radiusFromMass(redParticle.mass);
       massValue.textContent = massSlider.value;
+      updateMetrics();
     });
 
     clearTraceButton.addEventListener('click', () => {
       redTrail.length = 0;
     });
 
+    resizeCanvas();
     createGreyParticles();
     speedValue.textContent = speedSlider.value;
     massValue.textContent = massSlider.value;
+    updateMetrics();
     update();
   </script>
 </body>
