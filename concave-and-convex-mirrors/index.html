@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Parabolic Mirror Simulation - OpticsLab</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+        }
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar for control panel */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        #control-panel {
+            transition: width 250ms ease, border-color 250ms ease;
+            overflow-x: hidden;
+            flex-shrink: 0;
+        }
+        @media (min-width: 768px) {
+            #control-panel {
+                width: 20rem;
+            }
+            #control-panel.panel-collapsed {
+                width: 0 !important;
+                border-right-color: transparent;
+            }
+        }
+        #control-page-results,
+        #control-page-results * {
+            box-sizing: border-box;
+            max-width: 100%;
+        }
+        #control-page-results span,
+        #diag-type {
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        #object-label,
+        #image-label,
+        #focal-label {
+            opacity: 0.78;
+        }
+    </style>
+</head>
+<body class="text-slate-800 overflow-hidden h-screen w-screen flex flex-col md:flex-row">
+
+<!-- Left Side Panel: Sidebar Controls and Info -->
+<aside id="control-panel" class="w-full md:w-80 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col h-2/5 md:h-full z-10 overflow-y-auto shadow-xl">
+    <!-- Header -->
+    <div class="p-4 border-b border-slate-150">
+        <div class="flex items-center space-x-3">
+            <div class="p-2 bg-indigo-600 rounded-lg text-white shadow-md shadow-indigo-200">
+                <i class="fa-solid fa-circle-nodes text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight text-slate-900">OpticsLab 3D</h1>
+                <p class="text-xs text-slate-500 font-semibold">Parabolic Mirror Simulation</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-1 p-2 border-b border-slate-200 bg-slate-50">
+        <button class="control-page-tab rounded-md px-2 py-2 text-xs font-semibold bg-indigo-600 text-white" data-page="setup">Setup</button>
+        <button class="control-page-tab rounded-md px-2 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-200" data-page="rays">Rays</button>
+        <button class="control-page-tab rounded-md px-2 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-200" data-page="results">Results</button>
+    </div>
+
+    <!-- Main Settings Panel -->
+    <div class="p-4 space-y-4 flex-1">
+        <div id="control-page-setup" class="control-page space-y-4">
+        <!-- Mirror Type Selector -->
+        <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Mirror Configuration</label>
+            <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button id="btn-concave" class="py-2.5 px-4 rounded-lg text-sm font-semibold transition-all bg-indigo-600 text-white shadow-sm">
+                    <i class="fa-solid fa-magnifying-glass-chart mr-1.5"></i> Concave
+                </button>
+                <button id="btn-convex" class="py-2.5 px-4 rounded-lg text-sm font-semibold transition-all text-slate-500 hover:text-slate-900 hover:bg-slate-200/50">
+                    <i class="fa-solid fa-circle-half-stroke mr-1.5"></i> Convex
+                </button>
+            </div>
+        </div>
+
+        <!-- Parameters Sliders -->
+        <div class="space-y-3">
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Physical Parameters</label>
+            
+            <!-- Object Distance (do) -->
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-150 space-y-2 shadow-sm">
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-700 font-medium">Object Distance (<span class="italic text-emerald-600 font-bold">d<sub>o</sub></span>)</span>
+                    <span id="val-do" class="font-bold code-font text-emerald-600">3.50 m</span>
+                </div>
+                <input id="slider-do" type="range" min="0.5" max="8.0" step="0.05" value="3.5" class="w-full accent-emerald-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                <div class="flex justify-between text-2xs text-slate-400">
+                    <span>0.5m</span>
+                    <span>8.0m</span>
+                </div>
+            </div>
+
+            <!-- Focal Length (f) -->
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-150 space-y-2 shadow-sm">
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-700 font-medium">Focal Point / Length (<span class="italic text-indigo-600 font-bold">f</span>)</span>
+                    <span id="val-f" class="font-bold code-font text-indigo-600">2.00 m</span>
+                </div>
+                <input id="slider-f" type="range" min="1.0" max="4.0" step="0.05" value="2.0" class="w-full accent-indigo-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                <div class="flex justify-between text-2xs text-slate-400">
+                    <span>1.0m</span>
+                    <span>Controls curvature</span>
+                    <span>4.0m</span>
+                </div>
+            </div>
+
+            <!-- Object Height (ho) -->
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-150 space-y-2 shadow-sm">
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-700 font-medium">Object Height (<span class="italic text-emerald-600 font-bold">h<sub>o</sub></span>)</span>
+                    <span id="val-ho" class="font-bold code-font text-emerald-600">1.20 m</span>
+                </div>
+                <input id="slider-ho" type="range" min="0.4" max="2.0" step="0.05" value="1.2" class="w-full accent-emerald-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                <div class="flex justify-between text-2xs text-slate-400">
+                    <span>0.4m</span>
+                    <span>2.0m</span>
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <div id="control-page-rays" class="control-page hidden space-y-4">
+        <!-- Ray Visibility Options -->
+        <div class="space-y-2">
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Ray Path Options</label>
+            <div class="space-y-2.5">
+                <label class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-150 cursor-pointer hover:bg-slate-100/70 transition-colors shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <span class="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></span>
+                        <span class="text-sm font-medium text-slate-700">Ray 1: Parallel to Axis</span>
+                    </div>
+                    <input id="chk-ray1" type="checkbox" checked class="w-4 h-4 rounded text-indigo-600 bg-slate-100 border-slate-300 focus:ring-indigo-500">
+                </label>
+                <label class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-150 cursor-pointer hover:bg-slate-100/70 transition-colors shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <span class="w-3 h-3 rounded-full bg-teal-600 shadow-[0_0_8px_rgba(13,148,136,0.5)]"></span>
+                        <span class="text-sm font-medium text-slate-700">Ray 2: Through Focal Point</span>
+                    </div>
+                    <input id="chk-ray2" type="checkbox" checked class="w-4 h-4 rounded text-indigo-600 bg-slate-100 border-slate-300 focus:ring-indigo-500">
+                </label>
+                <label class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-150 cursor-pointer hover:bg-slate-100/70 transition-colors shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <span class="w-3 h-3 rounded-full bg-fuchsia-600 shadow-[0_0_8px_rgba(219,39,119,0.5)]"></span>
+                        <span class="text-sm font-medium text-slate-700">Ray 3: At Mirror Vertex (V)</span>
+                    </div>
+                    <input id="chk-ray3" type="checkbox" checked class="w-4 h-4 rounded text-indigo-600 bg-slate-100 border-slate-300 focus:ring-indigo-500">
+                </label>
+            </div>
+        </div>
+
+        <!-- Animation Toggles -->
+        <div class="space-y-2">
+            <button id="btn-animate" class="w-full py-3 px-4 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100/80 active:scale-95 transition-all shadow-sm">
+                <i id="icon-play" class="fa-solid fa-play"></i>
+                <span id="txt-play">Auto-Sweep Object Position</span>
+            </button>
+            <button id="btn-reset-cam" class="w-full py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 border border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all shadow-sm">
+                <i class="fa-solid fa-camera-rotate"></i>
+                <span>Reset View Angle</span>
+            </button>
+        </div>
+        </div>
+
+        <div id="control-page-results" class="control-page hidden min-w-0 max-w-full overflow-hidden">
+            <div class="min-w-0 max-w-full overflow-hidden p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Live Diagnostics</h3>
+
+                <div class="grid grid-cols-1 gap-2">
+                    <div class="min-w-0 overflow-hidden p-3 bg-white rounded-lg border border-slate-200 shadow-sm">
+                        <span class="block break-words text-2xs text-slate-400 font-semibold uppercase">Image Dist. (<span class="italic">d<sub>i</sub></span>)</span>
+                        <span id="diag-di" class="block min-w-0 break-words text-sm font-bold code-font text-orange-600">1.50 m</span>
+                    </div>
+                    <div class="min-w-0 overflow-hidden p-3 bg-white rounded-lg border border-slate-200 shadow-sm">
+                        <span class="block break-words text-2xs text-slate-400 font-semibold uppercase">Magnification (<span class="italic">m</span>)</span>
+                        <span id="diag-m" class="block min-w-0 break-words text-sm font-bold code-font text-teal-600">-0.43</span>
+                    </div>
+                </div>
+
+                <div id="diag-type" class="min-w-0 break-words p-3 bg-orange-100 border border-orange-200 text-orange-700 rounded-lg text-center text-xs font-bold shadow-sm animate-pulse">
+                    Real, Inverted, Diminished
+                </div>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<!-- Right Interactive 3D Canvas Container -->
+<main class="flex-1 relative h-3/5 md:h-full w-full bg-slate-100">
+    <button id="btn-toggle-panel" type="button" aria-label="Collapse control panel" aria-expanded="true" title="Collapse control panel" class="hidden md:flex absolute top-4 left-4 z-30 w-9 h-9 items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-600 shadow-md hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+        <i id="icon-toggle-panel" class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <!-- Overlay 3D Navigation Guide -->
+    <div class="hidden absolute top-4 left-16 z-10 pointer-events-none flex-col space-y-1 bg-white/90 p-3 rounded-lg border border-slate-200 shadow-md backdrop-blur-sm">
+        <span class="text-xs text-slate-500 uppercase tracking-wider font-extrabold">Viewport Navigation</span>
+        <span class="text-2xs text-slate-600"><i class="fa-solid fa-mouse-pointer mr-1"></i> Left-Click + Drag to Rotate</span>
+        <span class="text-2xs text-slate-600"><i class="fa-solid fa-arrows-up-down-left-right mr-1"></i> Right-Click + Drag to Pan</span>
+        <span class="text-2xs text-slate-600"><i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Scroll to Zoom</span>
+    </div>
+
+    <!-- Quick Legend Overlay -->
+    <div class="hidden absolute top-4 right-4 z-10 bg-white/95 border border-slate-200 p-4 rounded-xl text-xs space-y-2 shadow-xl backdrop-blur-md max-w-xs pointer-events-none text-slate-700">
+        <h4 class="font-bold text-slate-900 border-b border-slate-150 pb-1.5 mb-1.5 flex items-center justify-between">
+            <span>Parabolic Sign Convention</span>
+            <i class="fa-solid fa-scale-balanced text-indigo-500"></i>
+        </h4>
+        <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-2xs">
+            <span class="text-slate-500 font-medium">Real Front Side:</span>
+            <span class="text-emerald-600 font-semibold text-right">Z &gt; 0 (Front)</span>
+            <span class="text-slate-500 font-medium">Virtual Back Side:</span>
+            <span class="text-indigo-600 font-semibold text-right">Z &lt; 0 (Behind)</span>
+            <span class="text-slate-500 font-medium">Concave Mirror:</span>
+            <span class="text-indigo-600 font-semibold text-right">f &gt; 0 (Parabolic)</span>
+            <span class="text-slate-500 font-medium">Convex Mirror:</span>
+            <span class="text-indigo-600 font-semibold text-right">f &lt; 0 (Parabolic)</span>
+        </div>
+    </div>
+
+    <!-- Active Formula Card -->
+    <div class="hidden absolute bottom-4 left-4 right-4 md:right-auto z-10 bg-white/95 border border-slate-200 p-4 rounded-xl shadow-xl backdrop-blur-md max-w-sm text-slate-700">
+        <div class="flex items-center space-x-2 text-indigo-600 text-xs font-bold uppercase tracking-wider mb-2">
+            <i class="fa-solid fa-calculator"></i>
+            <span>Calculations Breakdown</span>
+        </div>
+        <div class="space-y-2 text-xs">
+            <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                <span class="text-slate-500">Mirror Equation</span>
+                <span class="code-font text-slate-900 font-bold">1/f = 1/d<sub>o</sub> + 1/d<sub>i</sub></span>
+            </div>
+            <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                <span class="text-slate-500">Paraboloid Surface</span>
+                <span class="code-font text-slate-900 font-bold">z = (x² + y²) / 4f</span>
+            </div>
+            <div id="equation-sub" class="flex justify-between items-center text-slate-500">
+                <span>Value Substitution:</span>
+                <span id="math-substitution" class="code-font text-indigo-700 font-bold text-2xs bg-slate-50 border border-slate-150 px-2.5 py-1 rounded">1/2.00 = 1/3.50 + 1/4.67</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Labels retained only for the object and its image -->
+    <div class="absolute inset-0 pointer-events-none z-20 overflow-hidden">
+        <div id="object-label" class="absolute px-2 py-1 rounded-md bg-emerald-600 text-white text-xs font-bold shadow-md whitespace-nowrap">Object</div>
+        <div id="image-label" class="absolute px-2 py-1 rounded-md bg-orange-500 text-white text-xs font-bold shadow-md whitespace-nowrap">Image</div>
+        <div id="focal-label" class="absolute px-2 py-1 rounded-md bg-indigo-600 text-white text-xs font-bold shadow-md whitespace-nowrap">F</div>
+    </div>
+
+    <!-- Three.js Canvas mount -->
+    <div id="canvas-container" class="w-full h-full bg-slate-100"></div>
+</main>
+
+<!-- CDN Libraries (Three.js and OrbitControls) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+// Optics Simulation Settings & State Variable Map
+const state = {
+    isConcave: true,
+    do: 3.5, // Object distance (m)
+    f: 2.0,  // Absolute value of focal length (m)
+    ho: 1.2, // Object height (m)
+    di: 4.67, // Calculated image distance (m)
+    m: -1.33,  // Calculated magnification
+    isAnimate: false,
+    animateDir: 1, // Sweep Direction
+    showRay1: true,
+    showRay2: true,
+    showRay3: true
+};
+
+const MIRROR_RADIUS = 2.6;
+// Keep the mirror, axis, objects, images, and rays fully above the floor.
+const AXIS_Y = MIRROR_RADIUS + 0.6;
+const DEFAULT_CONCAVE_OBJECT_HEIGHT = 1.2;
+const DEFAULT_CONVEX_OBJECT_HEIGHT = 1.8;
+
+// Polished Light-themed Color Palette with excellent contrast
+const COLORS = {
+    axis: 0x64748b,        // Slate 500 - bold principal axis line
+    object: 0x10b981,      // Clean emerald green neon
+    realImage: 0xf97316,   // Vivid real image orange neon
+    virtualImage: 0x0ea5e9, // Distinct virtual image sky blue hologram
+    ray1: 0xf59e0b,        // High-contrast deep amber
+    ray2: 0x0d9488,        // Deep Teal
+    ray3: 0xd946ef,        // Highly readable magenta-violet
+    mirrorGlass: 0xd7dde3, // Bright neutral silver
+    mirrorEdge: 0x334155   // Slate 700 bracket frame
+};
+
+// UI Element selectors
+const elDoSlider = document.getElementById('slider-do');
+const elFSlider = document.getElementById('slider-f');
+const elHoSlider = document.getElementById('slider-ho');
+const elDoVal = document.getElementById('val-do');
+const elFVal = document.getElementById('val-f');
+const elHoVal = document.getElementById('val-ho');
+
+const elBtnConcave = document.getElementById('btn-concave');
+const elBtnConvex = document.getElementById('btn-convex');
+const elChkRay1 = document.getElementById('chk-ray1');
+const elChkRay2 = document.getElementById('chk-ray2');
+const elChkRay3 = document.getElementById('chk-ray3');
+const elBtnAnimate = document.getElementById('btn-animate');
+const elBtnResetCam = document.getElementById('btn-reset-cam');
+const elControlPanel = document.getElementById('control-panel');
+const elBtnTogglePanel = document.getElementById('btn-toggle-panel');
+const elIconTogglePanel = document.getElementById('icon-toggle-panel');
+const elControlPageTabs = document.querySelectorAll('.control-page-tab');
+const elControlPages = document.querySelectorAll('.control-page');
+
+const elDiagDi = document.getElementById('diag-di');
+const elDiagM = document.getElementById('diag-m');
+const elDiagType = document.getElementById('diag-type');
+const elMathSub = document.getElementById('math-substitution');
+const elObjectLabel = document.getElementById('object-label');
+const elImageLabel = document.getElementById('image-label');
+const elFocalLabel = document.getElementById('focal-label');
+
+// Three.js Core Variables
+let scene, camera, renderer, controls;
+let mirrorMesh, mirrorBackplate, focalPointMesh, objectGroup, imageGroup;
+let virtualImageDiagramGroup;
+let axisLine;
+let rayLines = [];
+let pulseMeshes = [];
+const dragRaycaster = new THREE.Raycaster();
+const dragPointer = new THREE.Vector2();
+const dragPlane = new THREE.Plane();
+const dragIntersection = new THREE.Vector3();
+let isDraggingObject = false;
+let isDraggingFocalPoint = false;
+let dragStartZ = 0;
+let dragStartPointZ = 0;
+
+// Calculate optical values and update global state
+function calculateOptics() {
+    const fSigned = state.isConcave ? state.f : -state.f;
+    
+    // Check if object is at focus to avoid division by zero
+    if (Math.abs(state.do - fSigned) < 0.08) {
+        state.di = Infinity;
+        state.m = Infinity;
+    } else {
+        // Mirror formula: 1/do + 1/di = 1/f => di = (do * f) / (do - f)
+        state.di = (state.do * fSigned) / (state.do - fSigned);
+        state.m = -state.di / state.do;
+    }
+}
+
+// Refresh dashboard UI parameters
+function updateUI() {
+    elDoVal.textContent = state.do.toFixed(2) + ' m';
+    elFVal.textContent = state.f.toFixed(2) + ' m';
+    elHoVal.textContent = state.ho.toFixed(2) + ' m';
+    
+    // Sliders synchronization
+    elDoSlider.value = state.do;
+    elFSlider.value = state.f;
+    elHoSlider.value = state.ho;
+
+    const fSigned = state.isConcave ? state.f : -state.f;
+
+    // Substitution text update
+    if (Number.isFinite(state.di)) {
+        elMathSub.innerHTML = `1/${fSigned.toFixed(2)} = 1/${state.do.toFixed(2)} + 1/${state.di.toFixed(2)}`;
+        elDiagDi.textContent = state.di.toFixed(2) + ' m';
+        elDiagM.textContent = state.m.toFixed(2);
+        
+        // Characterization tag
+        let realStr = state.di > 0 ? "Real" : "Virtual";
+        let orientationStr = state.m > 0 ? "Upright" : "Inverted";
+        let sizeStr = Math.abs(state.m) > 1.05 ? "Magnified" : (Math.abs(state.m) < 0.95 ? "Diminished" : "Same Size");
+        
+        elDiagType.textContent = `${realStr}, ${orientationStr}, ${sizeStr}`;
+        if (state.di > 0) {
+            elDiagType.className = "min-w-0 break-words p-3 bg-orange-50 border border-orange-200 text-orange-700 rounded-lg text-center text-xs font-extrabold shadow-sm animate-pulse";
+            elDiagDi.className = "block min-w-0 break-words text-sm font-bold code-font text-orange-600";
+        } else {
+            elDiagType.className = "min-w-0 break-words p-3 bg-sky-50 border border-sky-200 text-sky-700 rounded-lg text-center text-xs font-extrabold shadow-sm";
+            elDiagDi.className = "block min-w-0 break-words text-sm font-bold code-font text-sky-600";
+        }
+    } else {
+        elMathSub.innerHTML = `1/${fSigned.toFixed(2)} = 1/${state.do.toFixed(2)} + 1/&infin;`;
+        elDiagDi.innerHTML = "&infin; (Infinity)";
+        elDiagM.innerHTML = "&infin;";
+        elDiagType.textContent = "No Image Formed (Parallel Rays)";
+        elDiagType.className = "min-w-0 break-words p-3 bg-slate-100 border border-slate-300 text-slate-600 rounded-lg text-center text-xs font-bold shadow-sm";
+    }
+}
+
+/**
+ * Calculates exact intersection of a 2D line (in x=0 plane) with our paraboloid:
+ * z = y_local^2 / (4 * f) where y_local = y - AXIS_Y
+ */
+function getParabolicIntersection(p1, p2, fSigned) {
+    const y1 = p1.y - AXIS_Y;
+    const y2 = p2.y - AXIS_Y;
+    
+    const dy = y2 - y1;
+    const dz = p2.z - p1.z;
+    
+    const a = dy * dy;
+    const b = 2 * y1 * dy - 4 * fSigned * dz;
+    const c = y1 * y1 - 4 * fSigned * p1.z;
+    
+    let t;
+    if (Math.abs(a) < 1e-6) {
+        if (Math.abs(b) < 1e-6) return null;
+        t = -c / b;
+    } else {
+        const discriminant = b * b - 4 * a * c;
+        if (discriminant < 0) {
+            return null;
+        } else {
+            const t1 = (-b + Math.sqrt(discriminant)) / (2 * a);
+            const t2 = (-b - Math.sqrt(discriminant)) / (2 * a);
+            
+            // Pick intersection parameter closest to actual mirror surface (z near 0)
+            const z1 = p1.z + t1 * dz;
+            const z2 = p1.z + t2 * dz;
+            t = Math.abs(z1) < Math.abs(z2) ? t1 : t2;
+        }
+    }
+    
+    const hit = new THREE.Vector3(0, AXIS_Y + y1 + t * dy, p1.z + t * dz);
+    const radialDistance = Math.abs(hit.y - AXIS_Y);
+
+    // The mathematical paraboloid is infinite, but the physical mirror is not.
+    // Suppress rays that would pass outside its circular aperture.
+    if (!Number.isFinite(t) || radialDistance > MIRROR_RADIUS) return null;
+
+    return hit;
+}
+
+function initEngine() {
+    const container = document.getElementById('canvas-container');
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    // Create Scene with a crisp bright light backdrop
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf1f5f9);
+    // Very light depth haze; stronger white fog makes distant images look faint.
+    scene.fog = new THREE.FogExp2(0xf1f5f9, 0.01);
+
+    // Setup Camera
+    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.set(8, 5.5, 9);
+
+    // Renderer setup
+    renderer = new THREE.WebGLRenderer({ antialias: true, stencil: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
+
+    // Orbit Controls
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI;
+    controls.minDistance = 2;
+    controls.maxDistance = 25;
+    controls.target.set(0, AXIS_Y - 0.2, 1.5);
+
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
+    scene.add(ambientLight);
+
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.75);
+    dirLight1.position.set(8, 12, 8);
+    scene.add(dirLight1);
+
+    // Front directional key light to strike chrome reflections on curved mirror
+    const keyLight = new THREE.DirectionalLight(0xffffff, 0.3);
+    keyLight.position.set(0, AXIS_Y, 12);
+    scene.add(keyLight);
+
+    // Principal Optical Axis Line - elevated cleanly at AXIS_Y
+    const axisGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, AXIS_Y, -15),
+        new THREE.Vector3(0, AXIS_Y, 15)
+    ]);
+    const axisMat = new THREE.LineBasicMaterial({ color: COLORS.axis, linewidth: 2 });
+    axisLine = new THREE.Line(axisGeo, axisMat);
+    scene.add(axisLine);
+
+}
+
+function createLetterPShape() {
+    const shape = new THREE.Shape();
+    shape.moveTo(-0.09, 0);
+    shape.lineTo(0.1, 0);
+    shape.lineTo(0.1, 0.55);
+    shape.lineTo(0.24, 0.55);
+    shape.bezierCurveTo(0.48, 0.55, 0.57, 0.68, 0.57, 0.88);
+    shape.bezierCurveTo(0.57, 1.08, 0.43, 1.2, 0.23, 1.2);
+    shape.lineTo(-0.09, 1.2);
+    shape.closePath();
+
+    const counter = new THREE.Path();
+    counter.moveTo(0.11, 0.7);
+    counter.lineTo(0.11, 1.04);
+    counter.lineTo(0.23, 1.04);
+    counter.bezierCurveTo(0.35, 1.04, 0.4, 0.98, 0.4, 0.87);
+    counter.bezierCurveTo(0.4, 0.76, 0.34, 0.7, 0.22, 0.7);
+    counter.closePath();
+    shape.holes.push(counter);
+    return shape;
+}
+
+// Recreates a smooth, continuous volumetric neon letter P.
+function createLetterP(color, glowColor) {
+    const group = new THREE.Group();
+
+    // High clarity, emissive material so the standing objects remain extremely clear
+    const material = new THREE.MeshStandardMaterial({
+        color: color,
+        roughness: 0.1,
+        metalness: 0.6,
+        emissive: glowColor,
+        emissiveIntensity: 0.5
+    });
+
+    const geometry = new THREE.ExtrudeGeometry(createLetterPShape(), {
+        depth: 0.16,
+        bevelEnabled: true,
+        bevelThickness: 0.025,
+        bevelSize: 0.025,
+        bevelSegments: 4,
+        curveSegments: 24
+    });
+    geometry.translate(0, 0, -0.08);
+    geometry.computeVertexNormals();
+    group.add(new THREE.Mesh(geometry, material));
+
+    return group;
+}
+
+// Dotted skeleton used to distinguish a virtual image from a real image.
+function createDottedLetterP(color) {
+    const group = new THREE.Group();
+    const dotGeometry = new THREE.SphereGeometry(0.022, 7, 5);
+    const dotMaterial = new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.35,
+        depthWrite: false
+    });
+    const spacing = 0.075;
+
+    const contours = createLetterPShape().extractPoints(48);
+    [contours.shape, ...contours.holes].forEach(contour => {
+        const points = contour.map(point => new THREE.Vector3(point.x, point.y, 0));
+        points.push(points[0].clone());
+
+        const cumulativeLengths = [0];
+        for (let i = 1; i < points.length; i++) {
+            cumulativeLengths.push(
+                cumulativeLengths[i - 1] + points[i - 1].distanceTo(points[i])
+            );
+        }
+
+        const totalLength = cumulativeLengths[cumulativeLengths.length - 1];
+        const dotCount = Math.max(2, Math.floor(totalLength / spacing));
+        for (let dotIndex = 0; dotIndex < dotCount; dotIndex++) {
+            const targetDistance = dotIndex * totalLength / dotCount;
+            let segment = 1;
+            while (cumulativeLengths[segment] < targetDistance) segment++;
+            const segmentStart = cumulativeLengths[segment - 1];
+            const segmentLength = cumulativeLengths[segment] - segmentStart;
+            const t = segmentLength > 0
+                ? (targetDistance - segmentStart) / segmentLength
+                : 0;
+            const dot = new THREE.Mesh(dotGeometry, dotMaterial);
+            dot.position.lerpVectors(points[segment - 1], points[segment], t);
+            group.add(dot);
+        }
+    });
+
+    // Preserve the exact top-of-image point shared by the virtual ray endpoints.
+    const convergenceDot = new THREE.Mesh(dotGeometry, dotMaterial);
+    convergenceDot.position.set(0, 1.2, 0);
+    group.add(convergenceDot);
+    return group;
+}
+
+// Build a disk with subdivisions in both the radial and angular directions.
+// THREE.CircleGeometry only has a centre vertex and an outer ring, so bending it
+// creates flat triangular facets (a cone-like surface), not a paraboloid.
+function createParaboloidGeometry(radius, fSigned, radialSegments = 32, angularSegments = 96) {
+    const positions = [];
+    const uvs = [];
+    const indices = [];
+
+    // Duplicate the centre for each angular column. This keeps the grid regular
+    // and gives computeVertexNormals enough vertices to produce a smooth surface.
+    for (let ring = 0; ring <= radialSegments; ring++) {
+        const r = radius * ring / radialSegments;
+        const z = (r * r) / (4 * fSigned);
+
+        for (let segment = 0; segment <= angularSegments; segment++) {
+            const theta = 2 * Math.PI * segment / angularSegments;
+            const x = r * Math.cos(theta);
+            const y = r * Math.sin(theta);
+            positions.push(x, y, z);
+            uvs.push(0.5 + x / (2 * radius), 0.5 + y / (2 * radius));
+        }
+    }
+
+    const rowSize = angularSegments + 1;
+    for (let ring = 0; ring < radialSegments; ring++) {
+        for (let segment = 0; segment < angularSegments; segment++) {
+            const a = ring * rowSize + segment;
+            const b = a + rowSize;
+            const c = b + 1;
+            const d = a + 1;
+            indices.push(a, b, d, b, c, d);
+        }
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+    geometry.computeBoundingSphere();
+    return geometry;
+}
+
+// Generates mirror curvature directly from z = r^2 / (4f).
+function updateMirrorGeometry() {
+    if (mirrorMesh) scene.remove(mirrorMesh);
+    if (mirrorBackplate) scene.remove(mirrorBackplate);
+
+    const fSigned = state.isConcave ? state.f : -state.f;
+    const radius = MIRROR_RADIUS;
+    
+    // A genuinely curved surface, rather than a deformed one-ring disk.
+    const geom = createParaboloidGeometry(radius, fSigned);
+
+    // Phong highlights keep the mirror bright and silver even without an
+    // environment map; a fully metallic StandardMaterial can render black.
+    const mirrorMat = new THREE.MeshPhongMaterial({
+        color: COLORS.mirrorGlass,
+        specular: 0xffffff,
+        shininess: 140,
+        emissive: 0x16191c,
+        side: THREE.DoubleSide,
+        // Mark only the visible mirror pixels in the stencil buffer. Virtual
+        // images use this mask so they appear solely inside the reflection.
+        stencilWrite: true,
+        stencilRef: 1,
+        stencilFunc: THREE.AlwaysStencilFunc,
+        stencilFail: THREE.KeepStencilOp,
+        stencilZFail: THREE.KeepStencilOp,
+        stencilZPass: THREE.ReplaceStencilOp
+    });
+
+    mirrorMesh = new THREE.Mesh(geom, mirrorMat);
+    mirrorMesh.position.y = AXIS_Y;
+    mirrorMesh.renderOrder = 1;
+    // CRITICAL: No rotation around Y-axis is applied, keeping the mesh and calculations perfectly aligned
+    scene.add(mirrorMesh);
+
+    // Create a gorgeous curved ring bracket surrounding the parabolic mirror
+    const borderGeo = new THREE.RingGeometry(radius - 0.06, radius + 0.06, 64);
+    const borderPos = borderGeo.attributes.position;
+    for (let i = 0; i < borderPos.count; i++) {
+        const x = borderPos.getX(i);
+        const y = borderPos.getY(i);
+        const r2 = x*x + y*y;
+        const z = r2 / (4 * fSigned);
+        borderPos.setZ(i, z);
+    }
+    borderGeo.computeVertexNormals();
+
+    const borderMat = new THREE.MeshStandardMaterial({
+        color: COLORS.mirrorEdge,
+        roughness: 0.3,
+        metalness: 0.8,
+        side: THREE.DoubleSide
+    });
+    mirrorBackplate = new THREE.Mesh(borderGeo, borderMat);
+    mirrorBackplate.position.y = AXIS_Y;
+    scene.add(mirrorBackplate);
+
+}
+
+function updateFocalPoint() {
+    if (focalPointMesh) scene.remove(focalPointMesh);
+
+    const fSigned = state.isConcave ? state.f : -state.f;
+    focalPointMesh = new THREE.Group();
+
+    const geometry = new THREE.SphereGeometry(0.075, 20, 16);
+    const material = new THREE.MeshBasicMaterial({ color: 0x4f46e5 });
+    focalPointMesh.add(new THREE.Mesh(geometry, material));
+
+    // Retain a comfortable drag target without enlarging the visible marker.
+    const hitGeometry = new THREE.SphereGeometry(0.18, 12, 8);
+    const hitMaterial = new THREE.MeshBasicMaterial({
+        transparent: true,
+        opacity: 0,
+        depthWrite: false
+    });
+    focalPointMesh.add(new THREE.Mesh(hitGeometry, hitMaterial));
+    focalPointMesh.position.set(0, AXIS_Y, fSigned);
+    scene.add(focalPointMesh);
+}
+
+// High contrast custom laser cylinder line generators
+function create3DLine(points, color, dashed = false) {
+    const group = new THREE.Group();
+    
+    if (dashed) {
+        // Virtual-ray construction lines are shown as evenly spaced dots.
+        const dotSpacing = 0.16;
+        const dotGeometry = new THREE.SphereGeometry(0.025, 6, 5);
+        const dotMaterial = new THREE.MeshBasicMaterial({ color });
+        
+        for (let i = 0; i < points.length - 1; i++) {
+            const p1 = points[i];
+            const p2 = points[i+1];
+            const dir = p2.clone().sub(p1);
+            const dist = dir.length();
+            dir.normalize();
+
+            // Distribute dots over the complete segment so the final dot lands
+            // exactly on the shared virtual-image point.
+            const steps = Math.max(1, Math.ceil(dist / dotSpacing));
+            for (let step = 0; step <= steps; step++) {
+                const distance = dist * step / steps;
+                const dot = new THREE.Mesh(dotGeometry, dotMaterial);
+                dot.position.copy(p1).addScaledVector(dir, distance);
+                group.add(dot);
+            }
+        }
+        return group;
+    }
+
+    // For beautiful volumetric rays, construct cylinder meshes along path segments
+    for (let i = 0; i < points.length - 1; i++) {
+        const p1 = points[i];
+        const p2 = points[i+1];
+        const dist = p1.distanceTo(p2);
+        if (dist < 1e-4) continue;
+        
+        // Volumetric line to make ray paths pop against the pure white background
+        const cylGeo = new THREE.CylinderGeometry(0.02, 0.02, dist, 6);
+        const cylMat = new THREE.MeshBasicMaterial({ color: color });
+        const cyl = new THREE.Mesh(cylGeo, cylMat);
+
+        cyl.position.copy(p1).add(p2).multiplyScalar(0.5);
+        cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), p2.clone().sub(p1).normalize());
+        group.add(cyl);
+    }
+    return group;
+}
+
+// Clear active ray and particle systems
+function clearRays() {
+    rayLines.forEach(line => scene.remove(line));
+    rayLines = [];
+    pulseMeshes.forEach(p => scene.remove(p.mesh));
+    pulseMeshes = [];
+}
+
+// Draw a moving arrowhead that indicates the direction of travel along a ray.
+function addPulse(points, color) {
+    if (points.length < 2) return;
+    const arrowGeo = new THREE.ConeGeometry(0.075, 0.22, 10);
+    const arrowMat = new THREE.MeshBasicMaterial({ color });
+    const arrow = new THREE.Mesh(arrowGeo, arrowMat);
+    scene.add(arrow);
+
+    pulseMeshes.push({
+        mesh: arrow,
+        points: points,
+        segment: 0,
+        t: 0.0,
+        speed: 0.8
+    });
+}
+
+// Trace rays mathematically and project their paths in 3D Space
+function updateRays() {
+    clearRays();
+
+    const fSigned = state.isConcave ? state.f : -state.f;
+    const P_o = new THREE.Vector3(0, AXIS_Y + state.ho / 2, state.do);
+    const isInfinity = !Number.isFinite(state.di);
+    const P_i = isInfinity
+        ? null
+        : new THREE.Vector3(0, AXIS_Y + state.m * state.ho / 2, state.di);
+
+    // This construction uses the paraxial image point from the mirror equation
+    // while keeping each visible hit on the rendered mirror surface.
+    function addPrincipalRay(P_hit, color) {
+        const incident = [P_o, P_hit];
+        const reflected = [P_hit];
+
+        if (isInfinity) {
+            const direction = new THREE.Vector3(0, -state.ho / 2, state.f).normalize();
+            reflected.push(P_hit.clone().add(direction.multiplyScalar(12)));
+        } else if (state.di > 0) {
+            const direction = P_i.clone().sub(P_hit).normalize();
+            reflected.push(P_i, P_i.clone().add(direction.multiplyScalar(3)));
+        } else {
+            const direction = P_hit.clone().sub(P_i).normalize();
+            reflected.push(P_hit.clone().add(direction.multiplyScalar(10)));
+        }
+
+        const incomingLine = create3DLine(incident, color);
+        const reflectedLine = create3DLine(reflected, color);
+        scene.add(incomingLine, reflectedLine);
+        rayLines.push(incomingLine, reflectedLine);
+        addPulse(incident, color);
+        addPulse(reflected, color);
+
+        if (!isInfinity && state.di < 0) {
+            const virtualLine = create3DLine([P_hit, P_i], color, true);
+            scene.add(virtualLine);
+            rayLines.push(virtualLine);
+        }
+    }
+
+    // Ray 1: parallel to the axis.
+    if (state.showRay1) {
+        const P_hit = getParabolicIntersection(
+            P_o,
+            new THREE.Vector3(0, P_o.y, -10),
+            fSigned
+        );
+        if (P_hit) addPrincipalRay(P_hit, COLORS.ray1);
+    }
+
+    // Ray 2: directed through (or toward) the signed focal point.
+    if (state.showRay2 && !isInfinity) {
+        const P_hit = getParabolicIntersection(
+            P_o,
+            new THREE.Vector3(0, AXIS_Y, fSigned),
+            fSigned
+        );
+        if (P_hit) addPrincipalRay(P_hit, COLORS.ray2);
+    }
+
+    // Ray 3: strikes the vertex; equal incident/reflection angles provide the
+    // third independent paraxial construction without assuming a spherical C.
+    if (state.showRay3) {
+        addPrincipalRay(new THREE.Vector3(0, AXIS_Y, 0), COLORS.ray3);
+    }
+}
+
+// Rebuild or scale object and mirror elements on parameter updates
+function rebuildSimulation() {
+    // 1. Calculate Core Optics Properties
+    calculateOptics();
+
+    // 2. Adjust Parabolic Mirror Curvature
+    updateMirrorGeometry();
+    updateFocalPoint();
+
+    // 3. Clear existing standing shapes
+    if (objectGroup) scene.remove(objectGroup);
+    if (imageGroup) scene.remove(imageGroup);
+    if (virtualImageDiagramGroup) scene.remove(virtualImageDiagramGroup);
+    virtualImageDiagramGroup = null;
+
+    // 4. Create Standing Object P (Glowing Emerald Green)
+    objectGroup = createLetterP(COLORS.object, COLORS.object);
+    const scaleObj = state.ho / 1.2;
+    objectGroup.scale.set(scaleObj, scaleObj, scaleObj);
+    // Centre the full letter height on the principal axis.
+    objectGroup.position.set(0, AXIS_Y - state.ho / 2, state.do);
+    scene.add(objectGroup);
+
+    // 5. Create Standing Image P (Only if formed and within realistic bounds)
+    if (Number.isFinite(state.di) && Math.abs(state.di) < 16) {
+        const imgColor = state.di > 0 ? COLORS.realImage : COLORS.virtualImage;
+        // The reflected image remains a solid copy of the object. A separate
+        // dotted construction is created for virtual-image ray-diagram views.
+        imageGroup = createLetterP(imgColor, imgColor);
+
+        // Scale factors (negative Y reflects inversion)
+        const signedTransverseScale = (state.m * state.ho) / 1.2;
+        const axialScale = Math.abs(signedTransverseScale);
+
+        // Negative magnification reverses both axes transverse to the optical
+        // axis. Virtual images remain upright and sit at their signed d_i.
+        imageGroup.scale.set(
+            signedTransverseScale,
+            signedTransverseScale,
+            axialScale
+        );
+        imageGroup.position.set(0, AXIS_Y - state.m * state.ho / 2, state.di);
+        
+        // Add transparent holographic projection to virtual image to denote behind mirror
+        if (state.di < 0) {
+            virtualImageDiagramGroup = createDottedLetterP(imgColor);
+            virtualImageDiagramGroup.scale.set(
+                signedTransverseScale,
+                signedTransverseScale,
+                axialScale
+            );
+            // Anchor the top of the P's stem to the exact image point used by
+            // every dotted virtual ray, avoiding any visual offset.
+            const virtualImageTipY = AXIS_Y + state.m * state.ho / 2;
+            virtualImageDiagramGroup.position.set(
+                0,
+                virtualImageTipY - 1.2 * signedTransverseScale,
+                state.di
+            );
+            scene.add(virtualImageDiagramGroup);
+
+            imageGroup.traverse(child => {
+                if (child.isMesh) {
+                    child.material.transparent = true;
+                    child.material.opacity = 0.92;
+                    // A virtual image is drawn as an apparent image behind the
+                    // reflecting surface, so it must not be depth-occluded by it.
+                    child.material.depthTest = false;
+                    child.material.depthWrite = false;
+                    child.material.stencilWrite = true;
+                    child.material.stencilRef = 1;
+                    child.material.stencilFunc = THREE.EqualStencilFunc;
+                    child.material.stencilFail = THREE.KeepStencilOp;
+                    child.material.stencilZFail = THREE.KeepStencilOp;
+                    child.material.stencilZPass = THREE.KeepStencilOp;
+                    child.renderOrder = 2;
+                }
+            });
+        }
+        scene.add(imageGroup);
+    }
+
+    // 6. Refresh Ray paths
+    updateRays();
+
+    // 7. Refresh side pane values
+    updateUI();
+}
+
+function initEvents() {
+    elControlPageTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const selectedPage = tab.dataset.page;
+            elControlPages.forEach(page => {
+                page.classList.toggle('hidden', page.id !== `control-page-${selectedPage}`);
+            });
+            elControlPageTabs.forEach(candidate => {
+                const isActive = candidate === tab;
+                candidate.className = isActive
+                    ? 'control-page-tab rounded-md px-2 py-2 text-xs font-semibold bg-indigo-600 text-white'
+                    : 'control-page-tab rounded-md px-2 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-200';
+            });
+        });
+    });
+
+    elBtnTogglePanel.addEventListener('click', () => {
+        const isCollapsed = !elControlPanel.classList.contains('panel-collapsed');
+        elControlPanel.classList.toggle('panel-collapsed', isCollapsed);
+        elIconTogglePanel.className = isCollapsed
+            ? 'fa-solid fa-chevron-right'
+            : 'fa-solid fa-chevron-left';
+        elBtnTogglePanel.setAttribute(
+            'aria-label',
+            isCollapsed ? 'Expand control panel' : 'Collapse control panel'
+        );
+        elBtnTogglePanel.title = isCollapsed
+            ? 'Expand control panel'
+            : 'Collapse control panel';
+        elBtnTogglePanel.setAttribute('aria-expanded', String(!isCollapsed));
+
+        // Recalculate the canvas after the width transition completes.
+        requestAnimationFrame(onWindowResize);
+        setTimeout(onWindowResize, 260);
+    });
+
+    // Slider Handlers
+    elDoSlider.addEventListener('input', (e) => {
+        state.do = parseFloat(e.target.value);
+        rebuildSimulation();
+    });
+
+    elFSlider.addEventListener('input', (e) => {
+        state.f = parseFloat(e.target.value);
+        rebuildSimulation();
+    });
+
+    elHoSlider.addEventListener('input', (e) => {
+        state.ho = parseFloat(e.target.value);
+        rebuildSimulation();
+    });
+
+    // Mirror Type Buttons
+    elBtnConcave.addEventListener('click', () => {
+        state.isConcave = true;
+        state.ho = DEFAULT_CONCAVE_OBJECT_HEIGHT;
+        elBtnConcave.className = "py-2.5 px-4 rounded-lg text-sm font-semibold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-100";
+        elBtnConvex.className = "py-2.5 px-4 rounded-lg text-sm font-semibold transition-all text-slate-500 hover:text-slate-900 hover:bg-slate-100";
+        rebuildSimulation();
+    });
+
+    elBtnConvex.addEventListener('click', () => {
+        state.isConcave = false;
+        state.ho = DEFAULT_CONVEX_OBJECT_HEIGHT;
+        elBtnConvex.className = "py-2.5 px-4 rounded-lg text-sm font-semibold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-100";
+        elBtnConcave.className = "py-2.5 px-4 rounded-lg text-sm font-semibold transition-all text-slate-500 hover:text-slate-900 hover:bg-slate-100";
+        rebuildSimulation();
+    });
+
+    // Checkbox toggles
+    elChkRay1.addEventListener('change', (e) => {
+        state.showRay1 = e.target.checked;
+        updateRays();
+    });
+    elChkRay2.addEventListener('change', (e) => {
+        state.showRay2 = e.target.checked;
+        updateRays();
+    });
+    elChkRay3.addEventListener('change', (e) => {
+        state.showRay3 = e.target.checked;
+        updateRays();
+    });
+
+    // Sweep Animation Trigger
+    elBtnAnimate.addEventListener('click', () => {
+        state.isAnimate = !state.isAnimate;
+        if (state.isAnimate) {
+            document.getElementById('icon-play').className = "fa-solid fa-pause text-rose-500";
+            document.getElementById('txt-play').textContent = "Pause Auto-Sweep";
+            elBtnAnimate.className = "w-full py-3 px-4 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100/80 active:scale-95 transition-all shadow-sm";
+        } else {
+            document.getElementById('icon-play').className = "fa-solid fa-play text-indigo-600";
+            document.getElementById('txt-play').textContent = "Auto-Sweep Object Position";
+            elBtnAnimate.className = "w-full py-3 px-4 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100/80 active:scale-95 transition-all shadow-sm";
+        }
+    });
+
+    // Camera Reset Angle
+    elBtnResetCam.addEventListener('click', () => {
+        camera.position.set(8, 5.5, 9);
+        controls.target.set(0, AXIS_Y - 0.2, 1.5);
+        controls.update();
+    });
+
+    // Drag the object along the principal axis without changing its height.
+    const canvas = renderer.domElement;
+    const updateDragPointer = (event) => {
+        const rect = canvas.getBoundingClientRect();
+        dragPointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        dragPointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        dragRaycaster.setFromCamera(dragPointer, camera);
+    };
+
+    canvas.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        updateDragPointer(event);
+        const objectHits = objectGroup
+            ? dragRaycaster.intersectObject(objectGroup, true)
+            : [];
+        const focalHits = focalPointMesh
+            ? dragRaycaster.intersectObject(focalPointMesh, true)
+            : [];
+        if (objectHits.length === 0 && focalHits.length === 0) return;
+
+        isDraggingObject = objectHits.length > 0;
+        isDraggingFocalPoint = !isDraggingObject && focalHits.length > 0;
+        if (state.isAnimate) elBtnAnimate.click();
+        controls.enabled = false;
+        canvas.setPointerCapture(event.pointerId);
+        canvas.style.cursor = 'grabbing';
+
+        const cameraDirection = new THREE.Vector3();
+        camera.getWorldDirection(cameraDirection);
+        const draggedPosition = isDraggingObject
+            ? objectGroup.position
+            : focalPointMesh.position;
+        dragPlane.setFromNormalAndCoplanarPoint(cameraDirection, draggedPosition);
+        if (dragRaycaster.ray.intersectPlane(dragPlane, dragIntersection)) {
+            dragStartPointZ = dragIntersection.z;
+        }
+        dragStartZ = isDraggingObject
+            ? state.do
+            : (state.isConcave ? state.f : -state.f);
+    });
+
+    canvas.addEventListener('pointermove', (event) => {
+        updateDragPointer(event);
+        if (!isDraggingObject && !isDraggingFocalPoint) {
+            const isOverObject = Boolean(objectGroup &&
+                dragRaycaster.intersectObject(objectGroup, true).length > 0);
+            const isOverFocalPoint = Boolean(focalPointMesh &&
+                dragRaycaster.intersectObject(focalPointMesh, true).length > 0);
+            canvas.style.cursor = isOverObject || isOverFocalPoint ? 'grab' : 'default';
+            return;
+        }
+        if (!dragRaycaster.ray.intersectPlane(dragPlane, dragIntersection)) return;
+
+        const nextZ = dragStartZ + dragIntersection.z - dragStartPointZ;
+        if (isDraggingObject) {
+            state.do = THREE.MathUtils.clamp(nextZ, 0.5, 8.0);
+        } else {
+            const nextMagnitude = state.isConcave ? nextZ : -nextZ;
+            state.f = THREE.MathUtils.clamp(nextMagnitude, 1.0, 4.0);
+        }
+        rebuildSimulation();
+    });
+
+    const endObjectDrag = (event) => {
+        if (!isDraggingObject && !isDraggingFocalPoint) return;
+        isDraggingObject = false;
+        isDraggingFocalPoint = false;
+        controls.enabled = true;
+        canvas.style.cursor = 'default';
+        if (canvas.hasPointerCapture(event.pointerId)) {
+            canvas.releasePointerCapture(event.pointerId);
+        }
+    };
+    canvas.addEventListener('pointerup', endObjectDrag);
+    canvas.addEventListener('pointercancel', endObjectDrag);
+
+    // Responsive Window Resize Support
+    window.addEventListener('resize', onWindowResize);
+}
+
+function onWindowResize() {
+    const container = document.getElementById('canvas-container');
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+}
+
+// A virtual image is an apparent image seen by looking into the reflecting
+// surface. Do not expose its construction object from behind the mirror.
+function updateImageVisibility() {
+    if (!imageGroup) return;
+    if (state.di >= 0) {
+        imageGroup.visible = true;
+        if (virtualImageDiagramGroup) virtualImageDiagramGroup.visible = false;
+        return;
+    }
+
+    const mirrorVertex = new THREE.Vector3(0, AXIS_Y, 0);
+    const directionToMirror = mirrorVertex.clone().sub(camera.position).normalize();
+    const directionToCamera = camera.position.clone().sub(mirrorVertex).normalize();
+    const cameraDirection = new THREE.Vector3();
+    camera.getWorldDirection(cameraDirection);
+
+    const isOnFrontSide = camera.position.z > 0;
+    if (!state.isConcave) {
+        imageGroup.visible = isOnFrontSide;
+        if (virtualImageDiagramGroup) {
+            virtualImageDiagramGroup.visible = !imageGroup.visible;
+        }
+        return;
+    }
+
+    const isNearFrontView = directionToCamera.z > 0.65;
+    const isLookingIntoMirror = cameraDirection.dot(directionToMirror) > 0.8;
+    imageGroup.visible = isOnFrontSide && isNearFrontView && isLookingIntoMirror;
+    if (virtualImageDiagramGroup) {
+        virtualImageDiagramGroup.visible = !imageGroup.visible;
+    }
+}
+
+function positionSceneLabel(element, worldPosition, isVisible = true) {
+    if (!isVisible) {
+        element.style.display = 'none';
+        return;
+    }
+
+    const projected = worldPosition.clone().project(camera);
+    if (projected.z < -1 || projected.z > 1) {
+        element.style.display = 'none';
+        return;
+    }
+
+    const width = renderer.domElement.clientWidth;
+    const height = renderer.domElement.clientHeight;
+    const x = (projected.x * 0.5 + 0.5) * width;
+    const y = (-projected.y * 0.5 + 0.5) * height;
+    element.style.display = 'block';
+    element.style.transform = `translate(-50%, -130%) translate(${x}px, ${y}px)`;
+}
+
+function updateSceneLabels() {
+    positionSceneLabel(
+        elObjectLabel,
+        new THREE.Vector3(0, AXIS_Y + state.ho / 2, state.do),
+        Boolean(objectGroup && objectGroup.visible)
+    );
+
+    const showImageLabel = Boolean(
+        (imageGroup && imageGroup.visible) ||
+        (virtualImageDiagramGroup && virtualImageDiagramGroup.visible)
+    );
+    const imageTip = showImageLabel
+        ? new THREE.Vector3(
+            0,
+            AXIS_Y + state.m * state.ho / 2,
+            state.di
+        )
+        : new THREE.Vector3();
+    elImageLabel.style.backgroundColor = state.di < 0 ? '#0ea5e9' : '#f97316';
+    positionSceneLabel(elImageLabel, imageTip, showImageLabel);
+
+    const fSigned = state.isConcave ? state.f : -state.f;
+    positionSceneLabel(
+        elFocalLabel,
+        new THREE.Vector3(0, AXIS_Y, fSigned),
+        Boolean(focalPointMesh)
+    );
+}
+
+const clock = new THREE.Clock();
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    const delta = clock.getDelta();
+
+    // 1. Process Auto Sweep Animation (Focal transitions)
+    if (state.isAnimate) {
+        state.do += state.animateDir * delta * 0.7;
+        
+        // Boundaries checks
+        if (state.do > 7.5) {
+            state.do = 7.5;
+            state.animateDir = -1;
+        } else if (state.do < 0.6) {
+            state.do = 0.6;
+            state.animateDir = 1;
+        }
+
+        // Avoid infinite state freezing precisely at the Focus point
+        const fSigned = state.isConcave ? state.f : -state.f;
+        if (Math.abs(state.do - fSigned) < 0.08) {
+            state.do += state.animateDir * 0.15; // Push through singularity quickly
+        }
+
+        rebuildSimulation();
+    }
+
+    // 2. Animate Ray Pulses along their exact physical paths
+    pulseMeshes.forEach(pulse => {
+        if (pulse.points.length < 2) return;
+
+        pulse.t += delta * pulse.speed;
+        if (pulse.t > 1.0) {
+            pulse.t = 0.0;
+            pulse.segment++;
+            if (pulse.segment >= pulse.points.length - 1) {
+                pulse.segment = 0;
+            }
+        }
+
+        const start = pulse.points[pulse.segment];
+        const end = pulse.points[pulse.segment + 1];
+        if (start && end) {
+            pulse.mesh.position.lerpVectors(start, end, pulse.t);
+            const direction = end.clone().sub(start).normalize();
+            pulse.mesh.quaternion.setFromUnitVectors(
+                new THREE.Vector3(0, 1, 0),
+                direction
+            );
+        }
+    });
+
+    // 3. Update Camera Controls
+    controls.update();
+
+    // 4. Apply view-dependent visibility for virtual images
+    updateImageVisibility();
+
+    // 5. Keep the object and image labels attached to their 3D positions
+    updateSceneLabels();
+
+    // 6. Render Scene
+    renderer.render(scene, camera);
+}
+
+// Window load trigger
+window.onload = function() {
+    initEngine();
+    initEvents();
+    rebuildSimulation();
+    animate();
+};
+</script>
+</body>
+</html>
