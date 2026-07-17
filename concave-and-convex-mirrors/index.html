@@ -76,7 +76,7 @@
                 <img src="https://www.physicslens.com/favicon.svg" alt="Physics Lens" class="w-full h-full block">
             </div>
             <div>
-                <h1 class="text-lg font-bold tracking-tight text-slate-900">PhysicsLens.com</h1>
+                <h1 class="text-lg font-bold tracking-tight text-slate-900">PhysicsLens</h1>
                 <p class="text-xs text-slate-500 font-semibold">Concave &amp; Convex Mirrors</p>
             </div>
         </div>
@@ -100,6 +100,19 @@
                 </button>
                 <button id="btn-convex" class="py-2.5 px-4 rounded-lg text-sm font-semibold transition-all text-slate-500 hover:text-slate-900 hover:bg-slate-200/50">
                     <i class="fa-solid fa-circle-half-stroke mr-1.5"></i> Convex
+                </button>
+            </div>
+        </div>
+
+        <!-- Object Type Selector -->
+        <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Object</label>
+            <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button id="btn-object-p" class="py-2.5 px-4 rounded-lg text-sm font-semibold transition-all bg-emerald-600 text-white shadow-sm">
+                    <i class="fa-solid fa-font mr-1.5"></i> Letter P
+                </button>
+                <button id="btn-object-candle" class="py-2.5 px-4 rounded-lg text-sm font-semibold transition-all text-slate-500 hover:text-slate-900 hover:bg-slate-200/50">
+                    <i class="fa-solid fa-fire-flame-curved mr-1.5"></i> Candle
                 </button>
             </div>
         </div>
@@ -288,6 +301,7 @@
 // Optics Simulation Settings & State Variable Map
 const state = {
     isConcave: true,
+    objectType: 'p',
     do: 3.5, // Object distance (m)
     f: 2.0,  // Absolute value of focal length (m)
     ho: 1.2, // Object height (m)
@@ -329,6 +343,8 @@ const elHoVal = document.getElementById('val-ho');
 
 const elBtnConcave = document.getElementById('btn-concave');
 const elBtnConvex = document.getElementById('btn-convex');
+const elBtnObjectP = document.getElementById('btn-object-p');
+const elBtnObjectCandle = document.getElementById('btn-object-candle');
 const elChkRay1 = document.getElementById('chk-ray1');
 const elChkRay2 = document.getElementById('chk-ray2');
 const elChkRay3 = document.getElementById('chk-ray3');
@@ -351,6 +367,7 @@ const elFocalLabel = document.getElementById('focal-label');
 // Three.js Core Variables
 let scene, camera, renderer, controls;
 let mirrorMesh, mirrorBackplate, focalPointMesh, objectGroup, imageGroup;
+let projectionScreenGroup;
 let virtualImageDiagramGroup;
 let axisLine;
 let rayLines = [];
@@ -569,6 +586,81 @@ function createLetterP(color, glowColor) {
     return group;
 }
 
+// A 1.2 m-tall candle assembled from simple geometry so it scales and inverts
+// using the same magnification transform as the letter P.
+function createCandle(color, glowColor) {
+    const group = new THREE.Group();
+    const bodyMaterial = new THREE.MeshStandardMaterial({
+        color,
+        roughness: 0.35,
+        metalness: 0.1,
+        emissive: glowColor,
+        emissiveIntensity: 0.22
+    });
+    const body = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.16, 0.18, 0.78, 24),
+        bodyMaterial
+    );
+    body.position.y = 0.39;
+    group.add(body);
+
+    const wick = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.018, 0.018, 0.12, 8),
+        new THREE.MeshBasicMaterial({ color: 0x334155 })
+    );
+    wick.position.y = 0.84;
+    group.add(wick);
+
+    const flame = new THREE.Mesh(
+        new THREE.SphereGeometry(0.12, 20, 14),
+        new THREE.MeshBasicMaterial({ color: 0xf59e0b })
+    );
+    flame.scale.set(0.72, 1.25, 0.72);
+    flame.position.y = 1.05;
+    group.add(flame);
+    return group;
+}
+
+function createOpticalObject(color, glowColor) {
+    return state.objectType === 'candle'
+        ? createCandle(color, glowColor)
+        : createLetterP(color, glowColor);
+}
+
+// A real image can be received on a screen placed at the image plane. The
+// screen is perpendicular to the principal axis and follows d_i as it changes.
+function createProjectionScreen(imageHeight) {
+    const group = new THREE.Group();
+    const screenHeight = Math.max(1.5, imageHeight + 0.55);
+    const screenWidth = Math.max(1.3, imageHeight * 0.7 + 0.55);
+    const geometry = new THREE.PlaneGeometry(screenWidth, screenHeight);
+
+    const panel = new THREE.Mesh(
+        geometry,
+        new THREE.MeshPhongMaterial({
+            color: 0xfffbeb,
+            emissive: 0x2a1705,
+            transparent: true,
+            opacity: 0.72,
+            side: THREE.DoubleSide,
+            depthWrite: false
+        })
+    );
+    group.add(panel);
+
+    const frame = new THREE.LineSegments(
+        new THREE.EdgesGeometry(geometry),
+        new THREE.LineBasicMaterial({ color: 0x92400e })
+    );
+    frame.position.z = 0.006;
+    group.add(frame);
+
+    // Keep the paper immediately behind the flattened projection. The tiny
+    // offset prevents z-fighting without creating a visible air gap.
+    group.position.set(0, AXIS_Y, state.di - 0.01);
+    return group;
+}
+
 // Dotted skeleton used to distinguish a virtual image from a real image.
 function createDottedLetterP(color) {
     const group = new THREE.Group();
@@ -615,6 +707,43 @@ function createDottedLetterP(color) {
     convergenceDot.position.set(0, 1.2, 0);
     group.add(convergenceDot);
     return group;
+}
+
+function createDottedCandle(color) {
+    const group = new THREE.Group();
+    const dotGeometry = new THREE.SphereGeometry(0.022, 7, 5);
+    const dotMaterial = new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.35,
+        depthWrite: false
+    });
+    const addDot = (x, y) => {
+        const dot = new THREE.Mesh(dotGeometry, dotMaterial);
+        dot.position.set(x, y, 0);
+        group.add(dot);
+    };
+
+    for (let y = 0; y <= 0.78; y += 0.075) {
+        addDot(-0.17, y);
+        addDot(0.17, y);
+    }
+    for (let x = -0.15; x <= 0.15; x += 0.075) {
+        addDot(x, 0);
+        addDot(x, 0.78);
+    }
+    for (let i = 0; i < 18; i++) {
+        const angle = 2 * Math.PI * i / 18;
+        addDot(0.09 * Math.cos(angle), 1.04 + 0.16 * Math.sin(angle));
+    }
+    addDot(0, 1.2);
+    return group;
+}
+
+function createDottedOpticalObject(color) {
+    return state.objectType === 'candle'
+        ? createDottedCandle(color)
+        : createDottedLetterP(color);
 }
 
 // Build a disk with subdivisions in both the radial and angular directions.
@@ -837,7 +966,8 @@ function updateRays() {
             reflected.push(P_hit.clone().add(direction.multiplyScalar(12)));
         } else if (state.di > 0) {
             const direction = P_i.clone().sub(P_hit).normalize();
-            reflected.push(P_i, P_i.clone().add(direction.multiplyScalar(3)));
+            // The receiving screen stops the ray at the real-image plane.
+            reflected.push(P_i);
         } else {
             const direction = P_hit.clone().sub(P_i).normalize();
             reflected.push(P_hit.clone().add(direction.multiplyScalar(10)));
@@ -897,10 +1027,12 @@ function rebuildSimulation() {
     if (objectGroup) scene.remove(objectGroup);
     if (imageGroup) scene.remove(imageGroup);
     if (virtualImageDiagramGroup) scene.remove(virtualImageDiagramGroup);
+    if (projectionScreenGroup) scene.remove(projectionScreenGroup);
     virtualImageDiagramGroup = null;
+    projectionScreenGroup = null;
 
     // 4. Create Standing Object P (Glowing Emerald Green)
-    objectGroup = createLetterP(COLORS.object, COLORS.object);
+    objectGroup = createOpticalObject(COLORS.object, COLORS.object);
     const scaleObj = state.ho / 1.2;
     objectGroup.scale.set(scaleObj, scaleObj, scaleObj);
     // Centre the full letter height on the principal axis.
@@ -912,24 +1044,34 @@ function rebuildSimulation() {
         const imgColor = state.di > 0 ? COLORS.realImage : COLORS.virtualImage;
         // The reflected image remains a solid copy of the object. A separate
         // dotted construction is created for virtual-image ray-diagram views.
-        imageGroup = createLetterP(imgColor, imgColor);
+        imageGroup = createOpticalObject(imgColor, imgColor);
 
         // Scale factors (negative Y reflects inversion)
         const signedTransverseScale = (state.m * state.ho) / 1.2;
         const axialScale = Math.abs(signedTransverseScale);
+        // A real image received by paper is a flat light pattern, not a second
+        // volumetric object. Virtual images retain depth for the mirror view.
+        const imageDepthScale = state.di > 0 ? 0.015 : axialScale;
 
         // Negative magnification reverses both axes transverse to the optical
         // axis. Virtual images remain upright and sit at their signed d_i.
         imageGroup.scale.set(
             signedTransverseScale,
             signedTransverseScale,
-            axialScale
+            imageDepthScale
         );
         imageGroup.position.set(0, AXIS_Y - state.m * state.ho / 2, state.di);
+
+        if (state.di > 0) {
+            projectionScreenGroup = createProjectionScreen(
+                Math.abs(state.m * state.ho)
+            );
+            scene.add(projectionScreenGroup);
+        }
         
         // Add transparent holographic projection to virtual image to denote behind mirror
         if (state.di < 0) {
-            virtualImageDiagramGroup = createDottedLetterP(imgColor);
+            virtualImageDiagramGroup = createDottedOpticalObject(imgColor);
             virtualImageDiagramGroup.scale.set(
                 signedTransverseScale,
                 signedTransverseScale,
@@ -1039,6 +1181,20 @@ function initEvents() {
         state.ho = DEFAULT_CONVEX_OBJECT_HEIGHT;
         elBtnConvex.className = "py-2.5 px-4 rounded-lg text-sm font-semibold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-100";
         elBtnConcave.className = "py-2.5 px-4 rounded-lg text-sm font-semibold transition-all text-slate-500 hover:text-slate-900 hover:bg-slate-100";
+        rebuildSimulation();
+    });
+
+    elBtnObjectP.addEventListener('click', () => {
+        state.objectType = 'p';
+        elBtnObjectP.className = "py-2.5 px-4 rounded-lg text-sm font-semibold transition-all bg-emerald-600 text-white shadow-sm";
+        elBtnObjectCandle.className = "py-2.5 px-4 rounded-lg text-sm font-semibold transition-all text-slate-500 hover:text-slate-900 hover:bg-slate-200/50";
+        rebuildSimulation();
+    });
+
+    elBtnObjectCandle.addEventListener('click', () => {
+        state.objectType = 'candle';
+        elBtnObjectCandle.className = "py-2.5 px-4 rounded-lg text-sm font-semibold transition-all bg-emerald-600 text-white shadow-sm";
+        elBtnObjectP.className = "py-2.5 px-4 rounded-lg text-sm font-semibold transition-all text-slate-500 hover:text-slate-900 hover:bg-slate-200/50";
         rebuildSimulation();
     });
 
@@ -1236,6 +1392,9 @@ function updateSceneLabels() {
         )
         : new THREE.Vector3();
     elImageLabel.style.backgroundColor = state.di < 0 ? '#0ea5e9' : '#f97316';
+    elImageLabel.textContent = state.di < 0
+        ? 'Virtual image'
+        : 'Real image on screen';
     positionSceneLabel(elImageLabel, imageTip, showImageLabel);
 
     const fSigned = state.isConcave ? state.f : -state.f;
