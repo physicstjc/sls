@@ -64,6 +64,13 @@
             opacity: 0.78;
         }
     </style>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-FSRBCRECMR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-FSRBCRECMR');
+  </script>
 </head>
 <body class="text-slate-800 overflow-hidden h-screen w-screen flex flex-col md:flex-row">
 
@@ -631,19 +638,20 @@ function createOpticalObject(color, glowColor) {
 // screen is perpendicular to the principal axis and follows d_i as it changes.
 function createProjectionScreen(imageHeight) {
     const group = new THREE.Group();
-    const screenHeight = Math.max(1.5, imageHeight + 0.55);
-    const screenWidth = Math.max(1.3, imageHeight * 0.7 + 0.55);
+    // Keep a proportional border around the complete projected object so the
+    // screen remains larger even as magnification changes dramatically.
+    const screenHeight = Math.max(1.5, imageHeight * 1.25 + 0.5);
+    const screenWidth = Math.max(1.3, imageHeight * 0.85 + 0.5);
     const geometry = new THREE.PlaneGeometry(screenWidth, screenHeight);
 
     const panel = new THREE.Mesh(
         geometry,
-        new THREE.MeshPhongMaterial({
+        new THREE.MeshBasicMaterial({
             color: 0xfffbeb,
-            emissive: 0x2a1705,
-            transparent: true,
-            opacity: 0.72,
+            transparent: false,
+            opacity: 1,
             side: THREE.DoubleSide,
-            depthWrite: false
+            depthWrite: true
         })
     );
     group.add(panel);
@@ -655,9 +663,10 @@ function createProjectionScreen(imageHeight) {
     frame.position.z = 0.006;
     group.add(frame);
 
-    // Keep the paper immediately behind the flattened projection. The tiny
-    // offset prevents z-fighting without creating a visible air gap.
-    group.position.set(0, AXIS_Y, state.di - 0.01);
+    // Keep the paper immediately behind the flattened projection as viewed
+    // from the mirror. This prevents the translucent panel from washing out
+    // the image while retaining a tiny offset to avoid z-fighting.
+    group.position.set(0, AXIS_Y, state.di + 0.01);
     return group;
 }
 
@@ -1041,7 +1050,11 @@ function rebuildSimulation() {
 
     // 5. Create Standing Image P (Only if formed and within realistic bounds)
     if (Number.isFinite(state.di) && Math.abs(state.di) < 16) {
-        const imgColor = state.di > 0 ? COLORS.realImage : COLORS.virtualImage;
+        // A candle image retains the candle's real body, wick, and flame
+        // colours. The letter P keeps its image-type diagnostic colouring.
+        const imgColor = state.objectType === 'candle'
+            ? COLORS.object
+            : (state.di > 0 ? COLORS.realImage : COLORS.virtualImage);
         // The reflected image remains a solid copy of the object. A separate
         // dotted construction is created for virtual-image ray-diagram views.
         imageGroup = createOpticalObject(imgColor, imgColor);
@@ -1067,6 +1080,16 @@ function rebuildSimulation() {
                 Math.abs(state.m * state.ho)
             );
             scene.add(projectionScreenGroup);
+
+            // The image sits just in front of the receiving surface. Standard
+            // depth testing lets the opaque screen hide it from the reverse,
+            // while the mirror can occlude it naturally from behind.
+            imageGroup.traverse(child => {
+                if (!child.isMesh) return;
+                child.material.depthTest = true;
+                child.material.depthWrite = true;
+                child.renderOrder = 0;
+            });
         }
         
         // Add transparent holographic projection to virtual image to denote behind mirror
@@ -1325,6 +1348,8 @@ function onWindowResize() {
 function updateImageVisibility() {
     if (!imageGroup) return;
     if (state.di >= 0) {
+        // Depth testing handles screen-side and mirror occlusion while still
+        // allowing an unobstructed side view of the real image.
         imageGroup.visible = true;
         if (virtualImageDiagramGroup) virtualImageDiagramGroup.visible = false;
         return;
