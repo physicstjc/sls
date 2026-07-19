@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhysicsLens.com — AC to DC Rectifier</title>
+    <!-- FontAwesome for clean iconography -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        html {
+            line-height: 1.5;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+        }
+        button, input { font: inherit; }
+        button { cursor: pointer; }
+        svg, canvas { display: block; }
+        h1, p { margin: 0; }
+        header h1 a { color: inherit; text-decoration: none; }
+        header h1 a:hover { color: #2563eb; }
+
+        /* Local utility layer: keeps the page self-contained without Tailwind. */
+        .absolute { position: absolute; } .relative { position: relative; }
+        .inset-0 { inset: 0; } .z-10 { z-index: 10; }
+        .block { display: block; } .hidden { display: none; }
+        .flex { display: flex; } .grid { display: grid; }
+        .flex-col { flex-direction: column; } .flex-grow { flex-grow: 1; }
+        .items-center { align-items: center; } .items-baseline { align-items: baseline; }
+        .items-stretch { align-items: stretch; } .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .gap-1 { gap: .25rem; } .gap-1\.5 { gap: .375rem; } .gap-2 { gap: .5rem; }
+        .gap-3 { gap: .75rem; } .gap-4 { gap: 1rem; }
+        .w-2 { width: .5rem; } .w-2\.5 { width: .625rem; } .w-10 { width: 2.5rem; } .w-full { width: 100%; }
+        .h-0\.5 { height: .125rem; } .h-2 { height: .5rem; }
+        .h-10 { height: 2.5rem; } .h-\[240px\] { height: 240px; } .h-full { height: 100%; }
+        .min-h-screen { min-height: 100vh; } .min-w-\[640px\] { min-width: 640px; }
+        .max-w-7xl { max-width: 80rem; } .max-w-\[1440px\] { max-width: 1440px; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .mb-1 { margin-bottom: .25rem; } .mb-2 { margin-bottom: .5rem; }
+        .mb-3 { margin-bottom: .75rem; } .mb-4 { margin-bottom: 1rem; }
+        .mb-5 { margin-bottom: 1.25rem; } .mb-6 { margin-bottom: 1.5rem; }
+        .mb-7 { margin-bottom: 1.75rem; } .mt-1 { margin-top: .25rem; }
+        .mt-4 { margin-top: 1rem; } .mt-8 { margin-top: 2rem; }
+        .ml-1 { margin-left: .25rem; } .mr-1\.5 { margin-right: .375rem; }
+        .p-1 { padding: .25rem; } .p-2\.5 { padding: .625rem; }
+        .p-3 { padding: .75rem; } .p-3\.5 { padding: .875rem; } .p-4 { padding: 1rem; }
+        .pt-4 { padding-top: 1rem; } .px-2 { padding-left: .5rem; padding-right: .5rem; }
+        .px-2\.5 { padding-left: .625rem; padding-right: .625rem; }
+        .px-3 { padding-left: .75rem; padding-right: .75rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+        .py-0\.5 { padding-top: .125rem; padding-bottom: .125rem; }
+        .py-1 { padding-top: .25rem; padding-bottom: .25rem; }
+        .py-1\.5 { padding-top: .375rem; padding-bottom: .375rem; }
+        .py-2 { padding-top: .5rem; padding-bottom: .5rem; }
+        .py-2\.5 { padding-top: .625rem; padding-bottom: .625rem; }
+        .py-3\.5 { padding-top: .875rem; padding-bottom: .875rem; }
+        .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+        .overflow-hidden { overflow: hidden; } .overflow-x-auto { overflow-x: auto; }
+        .pointer-events-none { pointer-events: none; }
+        .border { border-width: 1px; border-style: solid; }
+        .border-b { border-bottom-width: 1px; border-bottom-style: solid; }
+        .border-t { border-top-width: 1px; border-top-style: solid; }
+        .border-x { border-left-width: 1px; border-right-width: 1px; border-left-style: solid; border-right-style: solid; }
+        .rounded { border-radius: .25rem; } .rounded-md { border-radius: .375rem; }
+        .rounded-lg { border-radius: .5rem; } .rounded-xl { border-radius: .75rem; }
+        .rounded-full { border-radius: 9999px; }
+        .bg-white { background-color: #fff; } .bg-slate-50 { background-color: #f8fafc; }
+        .bg-slate-100 { background-color: #f1f5f9; } .bg-blue-50 { background-color: #eff6ff; }
+        .bg-cyan-50 { background-color: #ecfeff; } .bg-amber-50 { background-color: #fffbeb; }
+        .bg-amber-100 { background-color: #fef3c7; } .bg-amber-500 { background-color: #f59e0b; }
+        .bg-cyan-500 { background-color: #06b6d4; } .bg-emerald-500 { background-color: #10b981; }
+        .bg-rose-50 { background-color: #fff1f2; } .bg-rose-500 { background-color: #f43f5e; }
+        .border-slate-100 { border-color: #f1f5f9; } .border-slate-200 { border-color: #e2e8f0; }
+        .border-slate-200\/50 { border-color: rgba(226,232,240,.5); }
+        .border-slate-200\/60 { border-color: rgba(226,232,240,.6); }
+        .border-blue-100 { border-color: #dbeafe; } .border-cyan-100 { border-color: #cffafe; }
+        .border-amber-100 { border-color: #fef3c7; } .border-amber-200 { border-color: #fde68a; }
+        .border-rose-100 { border-color: #ffe4e6; }
+        .text-white { color: #fff; } .text-slate-400 { color: #94a3b8; }
+        .text-slate-500 { color: #64748b; } .text-slate-600 { color: #475569; }
+        .text-slate-700 { color: #334155; } .text-slate-800 { color: #1e293b; }
+        .text-slate-900 { color: #0f172a; } .text-blue-600 { color: #2563eb; }
+        .text-blue-700 { color: #1d4ed8; } .text-cyan-600 { color: #0891b2; }
+        .text-cyan-700 { color: #0e7490; } .text-amber-500 { color: #f59e0b; }
+        .text-amber-600 { color: #d97706; } .text-amber-700 { color: #b45309; }
+        .text-amber-800 { color: #92400e; } .text-rose-600 { color: #e11d48; }
+        .text-\[10px\] { font-size: 10px; } .text-\[11px\] { font-size: 11px; }
+        .text-xs { font-size: .75rem; line-height: 1rem; } .text-sm { font-size: .875rem; line-height: 1.25rem; }
+        .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+        .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+        .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+        .font-normal { font-weight: 400; } .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; } .font-bold { font-weight: 700; }
+        .uppercase { text-transform: uppercase; } .text-center { text-align: center; }
+        .tracking-tight { letter-spacing: -.025em; } .tracking-wide { letter-spacing: .025em; }
+        .tracking-wider { letter-spacing: .05em; } .leading-relaxed { line-height: 1.625; }
+        .opacity-40 { opacity: .4; }
+        .shadow-sm { box-shadow: 0 1px 2px rgba(15,23,42,.08); }
+        .shadow-md { box-shadow: 0 4px 6px -1px rgba(15,23,42,.12); }
+        .shadow-inner { box-shadow: inset 0 2px 4px rgba(15,23,42,.06); }
+        .transition-all { transition-property: all; } .transition-colors { transition-property: color, background-color, border-color; }
+        .transition-opacity { transition-property: opacity; } .duration-200 { transition-duration: .2s; }
+        .duration-300 { transition-duration: .3s; }
+        .bg-gradient-to-tr { background-image: linear-gradient(to top right, #f59e0b, #facc15); }
+        .bg-gradient-to-r.from-blue-600.to-indigo-600 { background-image: linear-gradient(to right, #2563eb, #4f46e5); }
+        .border-blue-400\/20 { border-color: rgba(96,165,250,.2); }
+        .bg-emerald-100 { background-color: #d1fae5; } .text-emerald-800 { color: #065f46; }
+        .border-emerald-200 { border-color: #a7f3d0; }
+        .animate-pulse { animation: pulse 2s cubic-bezier(.4,0,.6,1) infinite; }
+        @keyframes pulse { 50% { opacity: .5; } }
+        .hover\:bg-slate-200\/80:hover { background-color: rgba(226,232,240,.8); }
+        .hover\:bg-amber-200\/80:hover { background-color: rgba(253,230,138,.8); }
+        .hover\:bg-emerald-200\/80:hover { background-color: rgba(167,243,208,.8); }
+        .hover\:text-slate-800:hover { color: #1e293b; } .hover\:text-slate-900:hover { color: #0f172a; }
+        .hover\:from-blue-500:hover { background-image: linear-gradient(to right, #3b82f6, #6366f1); }
+        @media (min-width: 768px) { .md\:flex-row { flex-direction: row; } .md\:p-4 { padding: 1rem; } }
+        @media (min-width: 1024px) {
+            .lg\:grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+            .lg\:col-span-3 { grid-column: span 3 / span 3; } .lg\:col-span-9 { grid-column: span 9 / span 9; }
+            .lg\:border-r { border-right: 1px solid #e2e8f0; }
+        }
+
+        /* Fixed simulation canvas: the complete app fits within 800 × 480. */
+        body {
+            width: 800px;
+            height: 480px;
+            min-height: 0;
+            max-width: 100vw;
+            max-height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            margin: 0;
+            transform: translateX(-50%);
+            overflow: hidden;
+            border-left: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+            justify-content: flex-start;
+            gap: 0;
+        }
+        #app-header {
+            flex: 0 0 56px;
+            width: 100%;
+            height: 56px;
+            min-height: 56px;
+            padding: 7px 14px !important;
+            border-bottom: 0;
+            box-shadow: none;
+        }
+        #app-header > div {
+            max-width: none;
+            height: 100%;
+            align-items: flex-start;
+            justify-content: flex-start;
+        }
+        #app-main {
+            position: absolute;
+            top: 56px;
+            left: 0;
+            margin: 0;
+            align-self: flex-start;
+            flex: 0 0 424px;
+            height: 424px;
+            min-height: 0;
+            max-width: none;
+            grid-template-columns: minmax(0, 2fr) minmax(250px, 1fr);
+            border-left: 0;
+            border-right: 0;
+            overflow: hidden;
+        }
+        body > main > div:first-child {
+            grid-column: 1;
+            min-width: 0;
+            border-right: 1px solid #e2e8f0;
+            display: grid;
+            grid-template-rows: minmax(0, 60%) minmax(0, 40%);
+            height: 100%;
+            align-content: start;
+        }
+        body > main > div:last-child {
+            grid-column: 2;
+            min-width: 0;
+            overflow: hidden;
+            height: 100%;
+            justify-content: flex-start;
+        }
+        body > main > div:first-child > div:first-child {
+            min-height: 0;
+            padding: 8px 10px;
+            overflow: hidden;
+        }
+        body > main > div:first-child > div:first-child > div:last-child {
+            height: calc(100% - 25px);
+            overflow: hidden;
+            align-items: flex-start;
+        }
+        #schematic { min-width: 0; width: 100%; height: 100%; }
+        body > main > div:first-child > div:nth-child(2) {
+            height: auto;
+            min-height: 0;
+            padding: 7px 10px 9px;
+            border-top: 0;
+        }
+        body > main > div:last-child > div:first-child { padding: 9px; }
+        body > main > div:last-child > div:last-child {
+            padding: 9px;
+            min-height: 0;
+            justify-content: flex-start;
+        }
+        body > main > div:last-child > div:first-child .mb-4 { margin-bottom: 7px; }
+        body > main > div:last-child .text-2xl { font-size: 1.25rem; line-height: 1.5rem; }
+        #education-tip { display: none; }
+        body > main > div:last-child .mt-4 { margin-top: 7px; }
+        body > main > div:last-child .mt-8 { margin-top: 8px; }
+        body > main > div:last-child .mb-4 { margin-bottom: 8px; }
+        body > main > div:last-child .mb-5 { margin-bottom: 10px; }
+        body > main > div:last-child .mb-6 { margin-bottom: 10px; }
+        body > main > div:last-child .mb-7 { margin-bottom: 12px; }
+        body > main > div:last-child .p-3,
+        body > main > div:last-child .p-3\.5 { padding: 8px; }
+        #controlsPageCircuit input[type="range"] + div,
+        #controlsPagePlayback input[type="range"] + div { display: none; }
+        body > main > div:last-child > div:last-child > div:last-child { display: none; }
+        body > footer { display: none; }
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom styled range slider for light theme */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #cbd5e1;
+            height: 6px;
+            border-radius: 9999px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.2s ease;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+            background: #1d4ed8;
+        }
+        input[type="range"]:disabled::-webkit-slider-thumb {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <header id="app-header" class="border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl overflow-hidden shadow-md">
+                    <img src="https://www.physicslens.com/favicon.svg" alt="Physics Lens" class="w-full h-full block">
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+                        <a href="https://www.physicslens.com/">PhysicsLens.com</a>
+                    </h1>
+                    <p class="text-xs text-slate-500">AC to DC Rectifier</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main id="app-main" class="flex-grow max-w-[1440px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 items-stretch border-x border-slate-200">
+        
+        <!-- Left Side: Simulation Visuals (Circuit Schematic prioritized on top) -->
+        <div class="lg:col-span-9 flex flex-col lg:border-r border-slate-200">
+            
+            <!-- Primary Focus: Circuit Schematic -->
+            <div class="bg-white p-3 md:p-4 border-b border-slate-200">
+                <div class="flex items-center mb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-diagram-project text-amber-500 text-lg"></i>
+                        <span class="text-sm font-semibold text-slate-700 uppercase tracking-wider">Live Circuit Schematic</span>
+                    </div>
+                </div>
+                
+                <!-- SVG Schematic Canvas (Light themed) -->
+                <div class="w-full flex justify-center bg-white overflow-x-auto">
+                    <svg id="schematic" viewBox="45 35 520 190" preserveAspectRatio="xMidYMin meet" class="w-full min-w-[640px]" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Definitions of reusable components & filters -->
+                        <defs>
+                            <filter id="glow-amber-light" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="2.5" result="blur" />
+                                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                            </filter>
+                            <filter id="glow-blue-light" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="3" result="blur" />
+                                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                            </filter>
+                            <!-- Reusable Diode Symbol: pointing strictly right (Base on Left, Cathode Bar on Right) -->
+                            <g id="diode-symbol" fill="currentColor" stroke="currentColor">
+                                <polygon points="-9,-8 -9,8 7,0" />
+                                <line x1="7" y1="-9" x2="7" y2="9" stroke-width="3" />
+                            </g>
+                        </defs>
+
+                        <!-- Static wire backings (Standard H-Bridge Rectifier Topology) -->
+                        <g stroke="#64748b" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <!-- Input AC Phase wire (Top) -->
+                            <path d="M 100,120 L 180,120" />
+                            
+                            <!-- Input AC Neutral wire (Bottom, loops cleanly below the bridge using a jump-arc) -->
+                            <path d="M 80,140 L 80,210 L 320,210 L 320,192 A 12,12 0 0,1 320,168 L 320,120" />
+                            
+                            <!-- Bridge Wires (Diamond shape)
+                                 Left: (180, 120), Top: (250, 60), Right: (320, 120), Bottom: (250, 180) -->
+                            <path d="M 180,120 L 250,60 L 320,120 L 250,180 Z" />
+                            
+                            <!-- Output Wires (Top rail to Filter & Load) -->
+                            <path d="M 250,60 L 520,60" /> <!-- Positive DC Line -->
+                            <path d="M 250,180 L 520,180" /> <!-- Negative DC / GND Line -->
+                            
+                            <!-- Capacitor branch (Middle) -->
+                            <path d="M 400,88 L 400,100" />
+                            <path d="M 400,140 L 400,180" />
+                            
+                            <!-- Load Resistor branch (Right) -->
+                            <path d="M 520,60 L 520,100" />
+                            <path d="M 520,140 L 520,180" />
+                        </g>
+
+                        <!-- Modularized Glowing Dot Currents (Circular dots formed via stroke-dasharray) -->
+                        
+                        <!-- 1. AC Currents (Sloshing back-and-forth) -->
+                        <path id="path-ac-top" d="M 100,120 L 180,120" 
+                              fill="none" stroke="#d97706" stroke-width="6.5" stroke-dasharray="0 24" stroke-linecap="round" opacity="0" filter="url(#glow-amber-light)" />
+                        
+                        <!-- For the bottom AC line, we define it from source to bridge so it coordinates directionally -->
+                        <path id="path-ac-bottom" d="M 80,140 L 80,210 L 320,210 L 320,192 A 12,12 0 0,1 320,168 L 320,120" 
+                              fill="none" stroke="#d97706" stroke-width="6.5" stroke-dasharray="0 24" stroke-linecap="round" opacity="0" filter="url(#glow-amber-light)" />
+
+                        <!-- 2. Bridge Diode Currents (Unidirectional) -->
+                        <path id="path-d1" d="M 180,120 L 250,60" 
+                              fill="none" stroke="#d97706" stroke-width="6.5" stroke-dasharray="0 24" stroke-linecap="round" opacity="0" filter="url(#glow-amber-light)" />
+                        
+                        <path id="path-d2" d="M 320,120 L 250,60" 
+                              fill="none" stroke="#d97706" stroke-width="6.5" stroke-dasharray="0 24" stroke-linecap="round" opacity="0" filter="url(#glow-amber-light)" />
+                        
+                        <path id="path-d3" d="M 250,180 L 180,120" 
+                              fill="none" stroke="#d97706" stroke-width="6.5" stroke-dasharray="0 24" stroke-linecap="round" opacity="0" filter="url(#glow-amber-light)" />
+                        
+                        <path id="path-d4" d="M 250,180 L 320,120" 
+                              fill="none" stroke="#d97706" stroke-width="6.5" stroke-dasharray="0 24" stroke-linecap="round" opacity="0" filter="url(#glow-amber-light)" />
+
+                        <!-- 3. DC Outputs (Unidirectional) -->
+                        <path id="path-dc-top-1" d="M 250,60 L 400,60" 
+                              fill="none" stroke="#d97706" stroke-width="6.5" stroke-dasharray="0 24" stroke-linecap="round" opacity="0" filter="url(#glow-amber-light)" />
+                        
+                        <path id="path-dc-top-2" d="M 400,60 L 520,60" 
+                              fill="none" stroke="#d97706" stroke-width="6.5" stroke-dasharray="0 24" stroke-linecap="round" opacity="0" filter="url(#glow-amber-light)" />
+
+                        <path id="path-dc-bottom-1" d="M 400,180 L 250,180" 
+                              fill="none" stroke="#d97706" stroke-width="6.5" stroke-dasharray="0 24" stroke-linecap="round" opacity="0" filter="url(#glow-amber-light)" />
+                        
+                        <path id="path-dc-bottom-2" d="M 520,180 L 400,180" 
+                              fill="none" stroke="#d97706" stroke-width="6.5" stroke-dasharray="0 24" stroke-linecap="round" opacity="0" filter="url(#glow-amber-light)" />
+
+                        <!-- 4. Capacitor Current (Up/Down alternating) -->
+                        <path id="path-cap-top" d="M 400,60 L 400,100" 
+                            fill="none" stroke="#f59e0b" stroke-width="6.5" stroke-dasharray="0 24" stroke-linecap="round" opacity="0" filter="url(#glow-amber-light)" />
+                        
+                        <path id="path-cap-bottom" d="M 400,140 L 400,180" 
+                            fill="none" stroke="#f59e0b" stroke-width="6.5" stroke-dasharray="0 24" stroke-linecap="round" opacity="0" filter="url(#glow-amber-light)" />
+
+                        <!-- 4b. Complete closed-loop current paths (one per half-cycle conduction) -->
+                        <path id="path-loop-positive" d="M 100,120 L 180,120 L 250,60 L 520,60 L 520,180 L 250,180 L 320,120 L 320,168 A 12,12 0 0,0 320,192 L 320,210 L 80,210 L 80,140"
+                            fill="none" stroke="#f59e0b" stroke-width="7" stroke-dasharray="0 24" stroke-linecap="round" opacity="0" filter="url(#glow-amber-light)" />
+
+                        <path id="path-loop-negative" d="M 80,140 L 80,210 L 320,210 L 320,192 A 12,12 0 0,1 320,168 L 320,120 L 250,60 L 520,60 L 520,180 L 250,180 L 180,120 L 100,120"
+                            fill="none" stroke="#f59e0b" stroke-width="7" stroke-dasharray="0 24" stroke-linecap="round" opacity="0" filter="url(#glow-amber-light)" />
+
+                        <!-- 4c. Capacitor discharge loop (visible between charging peaks) -->
+                        <path id="path-loop-cap-discharge" d="M 400,100 L 400,60 L 520,60 L 520,180 L 400,180 L 400,140"
+                            fill="none" stroke="#38bdf8" stroke-width="6.5" stroke-dasharray="0 24" stroke-linecap="round" opacity="0" filter="url(#glow-blue-light)" />
+
+                        <!-- AC Source Graphic -->
+                        <circle cx="80" cy="120" r="20" fill="#f1f5f9" stroke="#0891b2" stroke-width="3" />
+                        <path d="M 70,120 Q 75,110 80,120 T 90,120" stroke="#0891b2" stroke-width="2.5" fill="none" stroke-linecap="round" />
+                        <text x="80" y="153" fill="#475569" font-size="10" font-weight="bold" text-anchor="middle" class="code-font">AC SOURCE</text>
+
+                        <!-- Diodes Configuration -->
+                        <use href="#diode-symbol" x="215" y="90" transform="rotate(-40.6, 215, 90)" id="diode-d1" style="color: #64748b;" />
+                        <use href="#diode-symbol" x="285" y="90" transform="rotate(-139.4, 285, 90)" id="diode-d2" style="color: #64748b;" />
+                        <use href="#diode-symbol" x="215" y="150" transform="rotate(-139.4, 215, 150)" id="diode-d3" style="color: #64748b;" />
+                        <use href="#diode-symbol" x="285" y="150" transform="rotate(-40.6, 285, 150)" id="diode-d4" style="color: #64748b;" />
+
+                        <!-- Diode Labels -->
+                        <text x="195" y="82" fill="#475569" font-size="9" font-weight="bold" class="code-font">D1</text>
+                        <text x="302" y="82" fill="#475569" font-size="9" font-weight="bold" class="code-font">D2</text>
+                        <text x="195" y="162" fill="#475569" font-size="9" font-weight="bold" class="code-font">D3</text>
+                        <text x="302" y="162" fill="#475569" font-size="9" font-weight="bold" class="code-font">D4</text>
+
+                        <!-- Capacitor Structure -->
+                        <!-- Upper plate -->
+                        <line x1="385" y1="120" x2="415" y2="120" stroke="#475569" stroke-width="4" id="cap-plate-top" />
+                        <!-- Lower plate -->
+                        <line x1="385" y1="128" x2="415" y2="128" stroke="#475569" stroke-width="4" id="cap-plate-bottom" />
+                        <!-- Connection status label -->
+                        <text x="400" y="152" fill="#475569" font-size="11" font-weight="bold" text-anchor="middle" class="code-font" id="cap-label">C</text>
+                        <text x="400" y="166" fill="#64748b" font-size="9" font-weight="700" text-anchor="middle" class="code-font" id="cap-charge-readout">0%</text>
+
+                        <!-- Switch representation -->
+                        <circle cx="400" cy="60" r="4" fill="#64748b" />
+                        <line x1="400" y1="60" x2="415" y2="88" stroke="#64748b" stroke-width="3.5" stroke-linecap="round" id="switch-lever" />
+                        <circle cx="400" cy="88" r="4" fill="#64748b" />
+
+                        <!-- Load Resistor (Rectangle Symbol) -->
+                        <rect id="resistor" x="510" y="100" width="20" height="40" stroke="#dc2626" stroke-width="3.5" fill="#f8fafc" rx="2" />
+                        <text x="520" y="167" fill="#dc2626" font-size="11" font-weight="bold" text-anchor="middle" class="code-font">LOAD (R)</text>
+
+                        <!-- 5. Resistor Load Current (Downward) -->
+                        <!-- MOVED BELOW THE RESISTOR BLOCK: Ensures dots flow continuously and visibly directly ON TOP of the resistor symbol -->
+                        <path id="path-load" d="M 520,60 L 520,180" 
+                              fill="none" stroke="#d97706" stroke-width="6.5" stroke-dasharray="0 24" stroke-linecap="round" opacity="0" filter="url(#glow-amber-light)" />
+
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Secondary Instrument: Oscilloscope (Zoomed Out horizontally) -->
+            <div class="bg-white p-3 md:p-4 relative overflow-hidden flex flex-col h-[240px]">
+                <div class="flex justify-between items-center mb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-wave-square text-blue-600"></i>
+                        <span class="text-xs font-semibold text-slate-700 uppercase tracking-wider">Virtual Oscilloscope (Rolling 60ms View)</span>
+                    </div>
+                    <!-- Signal Legend -->
+                    <div class="flex gap-4 text-[11px] font-semibold">
+                        <span class="flex items-center gap-1 text-cyan-600">
+                            <span class="w-2.5 h-0.5 bg-cyan-500 rounded"></span> AC Input (V<sub>in</sub>)
+                        </span>
+                        <span class="flex items-center gap-1 text-amber-600">
+                            <span class="w-2.5 h-0.5 bg-amber-500 rounded"></span> DC Output (V<sub>out</sub>)
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Oscilloscope Canvas Container -->
+                <div class="relative flex-grow bg-white rounded-lg border border-slate-200 overflow-hidden">
+                    <!-- Dynamic Grid Lines -->
+                    <div class="absolute inset-0 pointer-events-none" 
+                         style="background-image: linear-gradient(to right, #e2e8f0 1px, transparent 1px), linear-gradient(to bottom, #e2e8f0 1px, transparent 1px); background-size: 40px 40px;">
+                    </div>
+                    <canvas id="scopeCanvas" class="w-full h-full block relative z-10"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Controls & Analytics Panel (Light Mode) -->
+        <div class="lg:col-span-3 flex flex-col">
+            
+            <!-- Real-Time Metrics & Performance -->
+            <div class="bg-white p-4 border-b border-slate-200 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="fa-solid fa-chart-simple text-blue-600"></i>
+                        <span class="text-sm font-semibold text-slate-700 uppercase tracking-wider">Output Signal Stats</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <!-- Stat card: V_dc -->
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                            <div class="text-slate-500 text-xs font-medium mb-1 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Avg DC Voltage
+                            </div>
+                            <div class="text-2xl font-bold code-font text-slate-800 flex items-baseline">
+                                <span id="valAvgDC">0.0</span><span class="text-xs text-slate-500 ml-1">V</span>
+                            </div>
+                        </div>
+
+                        <!-- Stat card: V_ripple -->
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                            <div class="text-slate-500 text-xs font-medium mb-1 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-rose-500"></span> Ripple Voltage
+                            </div>
+                            <div class="text-2xl font-bold code-font text-slate-800 flex items-baseline">
+                                <span id="valRipple">0.0</span><span class="text-xs text-slate-500 ml-1">V</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Explanation/Dynamic Tip Box -->
+                <div id="education-tip" class="mt-4 p-3.5 bg-slate-50 rounded-xl border border-slate-200/50 text-xs leading-relaxed text-slate-500">
+                    <span class="text-slate-700 font-semibold block mb-1">
+                        <i class="fa-solid fa-graduation-cap text-blue-600 mr-1.5"></i>Did you know?
+                    </span>
+                    <span id="education-text">Without a capacitor filter, the rectified signal has a massive ripple voltage. Toggle the capacitor ON to smooth out these fluctuations!</span>
+                </div>
+            </div>
+
+            <!-- Minimized Control Interface -->
+            <div class="bg-white p-4 flex-grow flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fa-solid fa-sliders text-blue-600"></i>
+                        <span class="text-sm font-semibold text-slate-700 uppercase tracking-wider">Control Desk</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-1 p-1 mb-5 bg-slate-100 rounded-lg" role="tablist" aria-label="Control pages">
+                        <button id="controlsTabCircuit" type="button" role="tab" aria-selected="true" class="control-tab py-2 px-2 rounded-md bg-white text-blue-700 shadow-sm text-xs font-bold transition-colors">
+                            Circuit
+                        </button>
+                        <button id="controlsTabPlayback" type="button" role="tab" aria-selected="false" class="control-tab py-2 px-2 rounded-md text-slate-500 text-xs font-bold transition-colors hover:text-slate-800">
+                            Load &amp; Speed
+                        </button>
+                    </div>
+
+                    <div id="controlsPageCircuit" role="tabpanel">
+
+                    <!-- 1. CAPACITOR TOGGLE SWITCH -->
+                    <div class="mb-6">
+                        <label class="text-sm font-semibold text-slate-700 block mb-3 flex justify-between items-center">
+                            <span>Capacitor Filter</span>
+                            <span id="filter-badge" class="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 bg-slate-100 text-slate-500 border border-slate-200 rounded-md">Disconnected</span>
+                        </label>
+                        <button id="toggleCapacitor" class="w-full py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide transition-all duration-300 flex items-center justify-center gap-2 bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200/80 hover:text-slate-900 shadow-sm">
+                            <i id="toggleIcon" class="fa-solid fa-circle-xmark text-slate-400"></i>
+                            <span id="toggleText">Connect Capacitor</span>
+                        </button>
+                    </div>
+
+                    <!-- 2. CAPACITANCE SLIDER -->
+                    <div id="capacitanceControl" class="mb-4 opacity-40 transition-opacity duration-300 pointer-events-none">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                                <i class="fa-solid fa-battery-half text-blue-600"></i> Capacitance (C)
+                            </label>
+                            <span class="text-xs code-font font-bold text-blue-600 bg-blue-50 px-2 py-0.5 border border-blue-100 rounded">
+                                <span id="valCapacitance">100</span> μF
+                            </span>
+                        </div>
+                        <input type="range" id="sliderCapacitance" min="10" max="470" step="10" value="100" class="w-full">
+                        <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                            <span>10 μF (Small)</span>
+                            <span>470 μF (Large)</span>
+                        </div>
+                    </div>
+
+                    </div>
+
+                    <div id="controlsPagePlayback" role="tabpanel" class="hidden">
+
+                    <!-- 3. LOAD RESISTANCE SLIDER -->
+                    <div class="mb-7">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                                <i class="fa-solid fa-plug-circle-bolt text-rose-600"></i> Load Resistance (R)
+                            </label>
+                            <span class="text-xs code-font font-bold text-rose-600 bg-rose-50 px-2 py-0.5 border border-rose-100 rounded">
+                                <span id="valResistance">500</span> Ω
+                            </span>
+                        </div>
+                        <input type="range" id="sliderResistance" min="50" max="1000" step="25" value="500" class="w-full">
+                        <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                            <span>50 Ω (Heavy Drain)</span>
+                            <span>1000 Ω (Light Drain)</span>
+                        </div>
+                    </div>
+
+                    <!-- 4. ANIMATION SPEED SLIDER -->
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                                <i class="fa-solid fa-gauge-high text-cyan-600"></i> Animation Speed
+                            </label>
+                            <span class="text-xs code-font font-bold text-cyan-700 bg-cyan-50 px-2 py-0.5 border border-cyan-100 rounded">
+                                <span id="valAnimationSpeed">1.0</span>×
+                            </span>
+                        </div>
+                        <input type="range" id="sliderAnimationSpeed" min="0.1" max="1" step="0.1" value="1" class="w-full">
+                        <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                            <span>0.1× (Slow)</span>
+                            <span>1.0× (Normal)</span>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <!-- Footer details -->
+                <button id="pauseSimulation" class="w-full mb-4 py-2.5 px-4 rounded-lg font-semibold text-xs tracking-wide transition-all duration-200 flex items-center justify-center gap-2 bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200/80">
+                    <i id="pauseIcon" class="fa-solid fa-pause"></i>
+                    <span id="pauseText">Pause Simulation</span>
+                </button>
+
+                <div class="mt-8 border-t border-slate-100 pt-4 flex justify-between items-center text-[10px] text-slate-400">
+                    <span>AC frequency fixed at 50 Hz</span>
+                    <span>Peak Input = 10V</span>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200 bg-white py-3.5 px-6 text-center text-xs text-slate-500 shadow-inner">
+        <p>Interactive Circuit & Dynamic Phase-Resolved Numerical Physics Model.</p>
+    </footer>
+
+    <script>
+        const canvas = document.getElementById('scopeCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Settings / Physics Parameter Setup
+        let isCapConnected = false;
+        let capacitance = 100; // microFarads
+        let resistance = 500;  // Ohms
+        
+        const frequency = 50;  // Fixed constant frequency (Hz)
+        const peakVoltage = 10.0; // Fixed voltage peak (V)
+        
+        // Time parameters - locked to slow observable rate
+        const timeScale = 0.01;
+        let animationSpeed = 1.0;
+        let globalTime = 0;
+        let simulationAccumulator = 0;
+        
+        // Scope settings
+        const numTracePoints = 400;
+        const scopeWindow = 0.06; // 60ms rolling window showing exactly 3 cycles (1 cycle = 20ms at 50Hz)
+        const scopeSamples = []; // Array of {time, vin, vout}
+
+        // Cache DOM elements
+        const btnToggleCap = document.getElementById('toggleCapacitor');
+        const toggleIcon = document.getElementById('toggleIcon');
+        const toggleText = document.getElementById('toggleText');
+        const filterBadge = document.getElementById('filter-badge');
+        const pauseBtn = document.getElementById('pauseSimulation');
+        const pauseIcon = document.getElementById('pauseIcon');
+        const pauseText = document.getElementById('pauseText');
+        const controlsTabCircuit = document.getElementById('controlsTabCircuit');
+        const controlsTabPlayback = document.getElementById('controlsTabPlayback');
+        const controlsPageCircuit = document.getElementById('controlsPageCircuit');
+        const controlsPagePlayback = document.getElementById('controlsPagePlayback');
+        
+        const capacitanceControl = document.getElementById('capacitanceControl');
+        const sliderCap = document.getElementById('sliderCapacitance');
+        const sliderRes = document.getElementById('sliderResistance');
+        const sliderAnimationSpeed = document.getElementById('sliderAnimationSpeed');
+        
+        const valCap = document.getElementById('valCapacitance');
+        const valRes = document.getElementById('valResistance');
+        const valAnimationSpeed = document.getElementById('valAnimationSpeed');
+        const valAvgDC = document.getElementById('valAvgDC');
+        const valRipple = document.getElementById('valRipple');
+        const eduText = document.getElementById('education-text');
+
+        // Schematic Components to highlight
+        const capPlateTop = document.getElementById('cap-plate-top');
+        const capPlateBottom = document.getElementById('cap-plate-bottom');
+        const capLabel = document.getElementById('cap-label');
+        const capChargeReadout = document.getElementById('cap-charge-readout');
+        const switchLever = document.getElementById('switch-lever');
+        
+        // Individual Wire Segment Pathways for fine-grained animation control
+        const pathAcTop = document.getElementById('path-ac-top');
+        const pathAcBottom = document.getElementById('path-ac-bottom');
+        const pathD1 = document.getElementById('path-d1');
+        const pathD2 = document.getElementById('path-d2');
+        const pathD3 = document.getElementById('path-d3');
+        const pathD4 = document.getElementById('path-d4');
+        const pathDcTop1 = document.getElementById('path-dc-top-1');
+        const pathDcTop2 = document.getElementById('path-dc-top-2');
+        const pathDcBottom1 = document.getElementById('path-dc-bottom-1');
+        const pathDcBottom2 = document.getElementById('path-dc-bottom-2');
+        const pathCapTop = document.getElementById('path-cap-top');
+        const pathCapBottom = document.getElementById('path-cap-bottom');
+        const pathLoad = document.getElementById('path-load');
+        const pathLoopPositive = document.getElementById('path-loop-positive');
+        const pathLoopNegative = document.getElementById('path-loop-negative');
+        const pathLoopCapDischarge = document.getElementById('path-loop-cap-discharge');
+
+        // Dynamic individual animation offsets
+        let acOffset = 0;
+        let d1Offset = 0;
+        let d2Offset = 0;
+        let d3Offset = 0;
+        let d4Offset = 0;
+        let dcTop1Offset = 0;
+        let dcTop2Offset = 0;
+        let dcBottom1Offset = 0;
+        let dcBottom2Offset = 0;
+        let capTopOffset = 0;
+        let capBottomOffset = 0;
+        let loadOffset = 0;
+        let loopPositiveOffset = 0;
+        let loopNegativeOffset = 0;
+        let loopCapDischargeOffset = 0;
+        let isPaused = false;
+
+        function showControlsPage(page) {
+            const showCircuit = page === 'circuit';
+            controlsPageCircuit.classList.toggle('hidden', !showCircuit);
+            controlsPagePlayback.classList.toggle('hidden', showCircuit);
+            controlsTabCircuit.setAttribute('aria-selected', showCircuit.toString());
+            controlsTabPlayback.setAttribute('aria-selected', (!showCircuit).toString());
+            controlsTabCircuit.className = showCircuit
+                ? 'control-tab py-2 px-2 rounded-md bg-white text-blue-700 shadow-sm text-xs font-bold transition-colors'
+                : 'control-tab py-2 px-2 rounded-md text-slate-500 text-xs font-bold transition-colors hover:text-slate-800';
+            controlsTabPlayback.className = !showCircuit
+                ? 'control-tab py-2 px-2 rounded-md bg-white text-blue-700 shadow-sm text-xs font-bold transition-colors'
+                : 'control-tab py-2 px-2 rounded-md text-slate-500 text-xs font-bold transition-colors hover:text-slate-800';
+        }
+
+        controlsTabCircuit.addEventListener('click', () => showControlsPage('circuit'));
+        controlsTabPlayback.addEventListener('click', () => showControlsPage('playback'));
+
+        pauseBtn.addEventListener('click', () => {
+            isPaused = !isPaused;
+            if (isPaused) {
+                pauseBtn.className = "w-full mb-4 py-2.5 px-4 rounded-lg font-semibold text-xs tracking-wide transition-all duration-200 flex items-center justify-center gap-2 bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200/80";
+                pauseIcon.className = "fa-solid fa-play";
+                pauseText.innerText = "Resume Simulation";
+            } else {
+                pauseBtn.className = "w-full mb-4 py-2.5 px-4 rounded-lg font-semibold text-xs tracking-wide transition-all duration-200 flex items-center justify-center gap-2 bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200/80";
+                pauseIcon.className = "fa-solid fa-pause";
+                pauseText.innerText = "Pause Simulation";
+            }
+        });
+
+        btnToggleCap.addEventListener('click', () => {
+            isCapConnected = !isCapConnected;
+            if (isCapConnected) {
+                // UI styles when Capacitor is CONNECTED
+                btnToggleCap.className = "w-full py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md hover:from-blue-500 hover:to-indigo-500 border border-blue-400/20";
+                toggleIcon.className = "fa-solid fa-circle-check text-white";
+                toggleText.innerText = "Disconnect Capacitor";
+                filterBadge.innerText = "Connected & Active";
+                filterBadge.className = "text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 bg-blue-50 text-blue-600 border border-blue-100 rounded-md";
+                
+                capacitanceControl.className = "mb-4 opacity-100 transition-opacity duration-300";
+                sliderCap.removeAttribute('disabled');
+                
+                // Active components coloring
+                capPlateTop.setAttribute('stroke', '#38bdf8');
+                capPlateBottom.setAttribute('stroke', '#38bdf8');
+                capLabel.setAttribute('fill', '#475569');
+                switchLever.setAttribute('x2', '400');
+                switchLever.setAttribute('y2', '88');
+                switchLever.setAttribute('stroke', '#38bdf8');
+                capChargeReadout.style.opacity = 1;
+
+                eduText.innerHTML = `With the capacitor active, the voltage is smoothed. Try <strong>increasing capacitance (C)</strong> or <strong>increasing resistance (R)</strong> to reduce the ripple voltage.`;
+            } else {
+                // UI styles when Capacitor is DISCONNECTED
+                btnToggleCap.className = "w-full py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide transition-all duration-300 flex items-center justify-center gap-2 bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200/80 hover:text-slate-900";
+                toggleIcon.className = "fa-solid fa-circle-xmark text-slate-400";
+                toggleText.innerText = "Connect Capacitor";
+                filterBadge.innerText = "Disconnected";
+                filterBadge.className = "text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 bg-slate-100 text-slate-500 border border-slate-200 rounded-md";
+                
+                capacitanceControl.className = "mb-4 opacity-40 transition-opacity duration-300 pointer-events-none";
+                sliderCap.setAttribute('disabled', 'true');
+                
+                // Inactive components coloring
+                capPlateTop.setAttribute('stroke', '#475569');
+                capPlateBottom.setAttribute('stroke', '#475569');
+                capLabel.setAttribute('fill', '#475569');
+                switchLever.setAttribute('x2', '415');
+                switchLever.setAttribute('y2', '88');
+                switchLever.setAttribute('stroke', '#64748b');
+                capChargeReadout.textContent = '0%';
+                capChargeReadout.style.opacity = 0.65;
+                eduText.innerHTML = `Without a filter, the DC output is pulsating. Power shuts down entirely 100 times per second! Connecting a capacitor acts like an energy reservoir.`;
+            }
+        });
+
+        // Sliders updates
+        sliderCap.addEventListener('input', (e) => {
+            capacitance = parseInt(e.target.value);
+            valCap.innerText = capacitance;
+        });
+
+        sliderRes.addEventListener('input', (e) => {
+            resistance = parseInt(e.target.value);
+            valRes.innerText = resistance;
+        });
+
+        sliderAnimationSpeed.addEventListener('input', (e) => {
+            animationSpeed = parseFloat(e.target.value);
+            valAnimationSpeed.innerText = animationSpeed.toFixed(1);
+        });
+
+        // Set initial state matching sliders
+        valCap.innerText = sliderCap.value;
+        valRes.innerText = sliderRes.value;
+
+        // Resize handler for Canvas
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // ----------------- PHYSICS SYSTEM ENGINE -----------------
+        let currentCapacitorVoltage = 0.0;
+        let previousCapacitorVoltage = 0.0;
+        
+        // Pre-populate historical samples buffer so that the zoomed-out oscilloscope 
+        // immediately displays a gorgeous sequence of waveforms upon load.
+        function initializeScopeBuffer() {
+            const sampleTimeInterval = scopeWindow / numTracePoints;
+            for (let i = 0; i < numTracePoints; i++) {
+                const t = -scopeWindow + (i * sampleTimeInterval);
+                const vin = peakVoltage * Math.sin(2 * Math.PI * frequency * t);
+                const vRectified = Math.abs(vin);
+                scopeSamples.push({
+                    time: t,
+                    vin: vin,
+                    vout: vRectified,
+                    sourceConducting: true
+                });
+            }
+        }
+        initializeScopeBuffer();
+
+        // Evaluates circuit properties at any arbitrary point in simulated time
+        function calculateCircuitStateAtTime(simTime, previousVout) {
+            const vin = peakVoltage * Math.sin(2 * Math.PI * frequency * simTime);
+            const vRectified = Math.abs(vin); // Ideal bridge: no diode voltage drop
+
+            let vout = 0;
+            let sourceConducting = true;
+            if (isCapConnected) {
+                const C_Farads = capacitance * 1e-6;
+                const RC = resistance * C_Farads;
+                
+                // Decaying rate factor based on the specific sample interval
+                const sampleInterval = scopeWindow / numTracePoints;
+                const decayFactor = Math.exp(-sampleInterval / RC);
+                const dischargedVoltage = previousVout * decayFactor;
+                
+                vout = Math.max(vRectified, dischargedVoltage);
+                sourceConducting = vRectified > 0.01 && vRectified >= dischargedVoltage;
+            } else {
+                vout = vRectified;
+            }
+
+            return { vin, vout, sourceConducting };
+        }
+
+        function updatePhysicsAndBuffer(dt) {
+            simulationAccumulator += dt * timeScale * animationSpeed;
+            const sampleInterval = scopeWindow / numTracePoints;
+            let lastSample = scopeSamples[scopeSamples.length - 1];
+            
+            // Consume only the simulated time accumulated since the last frame.
+            while (simulationAccumulator >= sampleInterval) {
+                globalTime += sampleInterval;
+                simulationAccumulator -= sampleInterval;
+                
+                // Integrate and store the next step in the rolling timeline
+                const state = calculateCircuitStateAtTime(globalTime, lastSample.vout);
+                scopeSamples.push({
+                    time: globalTime,
+                    vin: state.vin,
+                    vout: state.vout,
+                    sourceConducting: state.sourceConducting
+                });
+                
+                // Slide scope window forwards
+                scopeSamples.shift();
+                lastSample = scopeSamples[scopeSamples.length - 1];
+            }
+
+            // Sync the active tracking capacitor voltage to match the latest real-time sample
+            previousCapacitorVoltage = currentCapacitorVoltage;
+            currentCapacitorVoltage = lastSample.vout;
+            return lastSample;
+        }
+
+        // ----------------- DRAW GRAPHICS -----------------
+        function drawOscilloscope() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const w = canvas.width;
+            const h = canvas.height;
+            const centerY = h / 2;
+
+            // Dynamically scale pixels per volt to prevent any wave peak clipping
+            const dynamicPixelsPerVolt = (centerY) * 0.85 / peakVoltage;
+
+            // Draw horizontal zero baseline
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(w, centerY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw Trace 1: AC Input (Cyan dashed line)
+            ctx.strokeStyle = 'rgba(6, 182, 212, 0.7)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            for (let i = 0; i < numTracePoints; i++) {
+                const x = (i / numTracePoints) * w;
+                const y = centerY - (scopeSamples[i].vin * dynamicPixelsPerVolt);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw Trace 2: DC Output (Amber Glowing solid line)
+            ctx.shadowBlur = 3;
+            ctx.shadowColor = 'rgba(245, 158, 11, 0.35)';
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let i = 0; i < numTracePoints; i++) {
+                const x = (i / numTracePoints) * w;
+                const y = centerY - (scopeSamples[i].vout * dynamicPixelsPerVolt);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            ctx.shadowBlur = 0; // Reset
+        }
+
+        function updateSchematicVisuals(vin, vout, sourceConducting, dt) {
+            // With the filter connected, rectifier conduction means the AC
+            // source is actively charging the capacitor.
+            const hasConduction = isCapConnected
+                ? sourceConducting
+                : Math.abs(vin) > 0.01;
+            
+            // Speed of flow (very gentle, easy-to-follow rate)
+            const baseVelocity = 60.0 * animationSpeed;
+
+            // Conduction color parameters
+            const normalColor = '#64748b';
+            const activeColor = '#d97706';
+            const sourceCurrentColor = '#f59e0b';
+            const capacitorCurrentColor = '#38bdf8';
+            const capacitorStateColor = hasConduction ? sourceCurrentColor : capacitorCurrentColor;
+
+            // --- 1. DETERMINE DIODE STATUS ---
+            let d1Conduction = false;
+            let d2Conduction = false;
+            let d3Conduction = false;
+            let d4Conduction = false;
+            let acDirection = 0; // 0 = stationary, 1 = forward, -1 = backward
+
+            if (hasConduction) {
+                if (vin > 0) {
+                    d1Conduction = true;
+                    d4Conduction = true;
+                    acDirection = 1; // Current enters top, leaves bottom
+                } else {
+                    d2Conduction = true;
+                    d3Conduction = true;
+                    acDirection = -1; // Current enters bottom, leaves top
+                }
+            }
+
+            // Adjust diode visual markers
+            document.getElementById('diode-d1').style.color = d1Conduction ? activeColor : normalColor;
+            document.getElementById('diode-d2').style.color = d2Conduction ? activeColor : normalColor;
+            document.getElementById('diode-d3').style.color = d3Conduction ? activeColor : normalColor;
+            document.getElementById('diode-d4').style.color = d4Conduction ? activeColor : normalColor;
+
+            // --- 2. AC DOTS PATHS (SLOSHING BACK AND FORTH) ---
+            // The complete loop paths provide the source-current animation;
+            // keep the smaller overlapping segment dots hidden.
+            pathAcTop.style.opacity = 0;
+            pathAcBottom.style.opacity = 0;
+            
+            // Increment offset by speed and actual AC direction (reversing sign flips direction!)
+            acOffset -= acDirection * baseVelocity * dt;
+            pathAcTop.setAttribute('stroke-dashoffset', acOffset.toString());
+            pathAcBottom.setAttribute('stroke-dashoffset', acOffset.toString());
+
+            // Full visible loop for the active half-cycle
+            pathLoopPositive.style.opacity = d1Conduction && d4Conduction ? 1 : 0;
+            pathLoopNegative.style.opacity = d2Conduction && d3Conduction ? 1 : 0;
+
+            if (d1Conduction && d4Conduction) {
+                loopPositiveOffset -= baseVelocity * dt;
+                pathLoopPositive.setAttribute('stroke-dashoffset', loopPositiveOffset.toString());
+            }
+            if (d2Conduction && d3Conduction) {
+                loopNegativeOffset -= baseVelocity * dt;
+                pathLoopNegative.setAttribute('stroke-dashoffset', loopNegativeOffset.toString());
+            }
+
+            // --- 3. DIODE DOTS PATHS (ON-AND-OFF CONDUCTION) ---
+            pathD1.style.opacity = 0;
+            pathD2.style.opacity = 0;
+            pathD3.style.opacity = 0;
+            pathD4.style.opacity = 0;
+
+            if (d1Conduction) { d1Offset -= baseVelocity * dt; pathD1.setAttribute('stroke-dashoffset', d1Offset.toString()); }
+            if (d2Conduction) { d2Offset -= baseVelocity * dt; pathD2.setAttribute('stroke-dashoffset', d2Offset.toString()); }
+            if (d3Conduction) { d3Offset -= baseVelocity * dt; pathD3.setAttribute('stroke-dashoffset', d3Offset.toString()); }
+            if (d4Conduction) { d4Offset -= baseVelocity * dt; pathD4.setAttribute('stroke-dashoffset', d4Offset.toString()); }
+
+            // --- 4. DC RAILS & LOAD DOT PATHS (ALWAYS FORWARD) ---
+            const hasVout = vout > 0.05;
+            const capacitorSupplyingLoad = isCapConnected && hasVout && !hasConduction;
+            pathDcTop1.style.opacity = 0;
+            pathDcBottom1.style.opacity = 0;
+            pathDcTop2.style.opacity = capacitorSupplyingLoad ? 1 : 0;
+            pathDcBottom2.style.opacity = capacitorSupplyingLoad ? 1 : 0;
+            pathLoad.style.opacity = capacitorSupplyingLoad ? 1 : 0;
+
+            // Orange dots are supplied by the AC source; blue dots are energy
+            // released by the capacitor between rectified charging peaks.
+            const loadCurrentColor = capacitorSupplyingLoad ? capacitorCurrentColor : sourceCurrentColor;
+            const loadCurrentFilter = capacitorSupplyingLoad ? 'url(#glow-blue-light)' : 'url(#glow-amber-light)';
+            [pathDcTop2, pathDcBottom2, pathLoad].forEach((path) => {
+                path.setAttribute('stroke', loadCurrentColor);
+                path.setAttribute('filter', loadCurrentFilter);
+            });
+
+            if (d1Conduction || d2Conduction) {
+                dcTop1Offset -= baseVelocity * dt;
+                pathDcTop1.setAttribute('stroke-dashoffset', dcTop1Offset.toString());
+            }
+            if (d3Conduction || d4Conduction) {
+                dcBottom1Offset -= baseVelocity * dt;
+                pathDcBottom1.setAttribute('stroke-dashoffset', dcBottom1Offset.toString());
+            }
+            if (hasVout) {
+                dcTop2Offset -= baseVelocity * dt;
+                dcBottom2Offset -= baseVelocity * dt;
+                loadOffset -= baseVelocity * dt;
+
+                pathDcTop2.setAttribute('stroke-dashoffset', dcTop2Offset.toString());
+                pathDcBottom2.setAttribute('stroke-dashoffset', dcBottom2Offset.toString());
+                pathLoad.setAttribute('stroke-dashoffset', loadOffset.toString());
+            }
+
+            // --- 5. CAPACITOR FLOW DIRECTIONS (UP/DOWN/OFF) ---
+            if (isCapConnected) {
+                if (hasConduction) {
+                    // Charging (Current flows downwards into plates)
+                    pathCapTop.style.opacity = 1;
+                    pathCapBottom.style.opacity = 1;
+                    pathCapTop.setAttribute('stroke', sourceCurrentColor);
+                    pathCapBottom.setAttribute('stroke', sourceCurrentColor);
+                    pathCapTop.setAttribute('filter', 'url(#glow-amber-light)');
+                    pathCapBottom.setAttribute('filter', 'url(#glow-amber-light)');
+                    pathLoopCapDischarge.style.opacity = 0;
+                    capTopOffset -= baseVelocity * dt; // Moving downwards
+                    capBottomOffset -= baseVelocity * dt; // Moving downwards
+                    
+                    pathCapTop.setAttribute('stroke-dashoffset', capTopOffset.toString());
+                    pathCapBottom.setAttribute('stroke-dashoffset', capBottomOffset.toString());
+                } else if (hasVout) {
+                    // Discharging (Current flows upwards out of plates into load)
+                    pathCapTop.style.opacity = 1;
+                    pathCapBottom.style.opacity = 1;
+                    pathCapTop.setAttribute('stroke', capacitorCurrentColor);
+                    pathCapBottom.setAttribute('stroke', capacitorCurrentColor);
+                    pathCapTop.setAttribute('filter', 'url(#glow-blue-light)');
+                    pathCapBottom.setAttribute('filter', 'url(#glow-blue-light)');
+                    pathLoopCapDischarge.style.opacity = 1;
+                    capTopOffset += baseVelocity * dt; // Moving upwards (reverse offset)
+                    capBottomOffset += baseVelocity * dt; // Moving upwards (reverse offset)
+                    loopCapDischargeOffset -= baseVelocity * dt;
+                    
+                    pathCapTop.setAttribute('stroke-dashoffset', capTopOffset.toString());
+                    pathCapBottom.setAttribute('stroke-dashoffset', capBottomOffset.toString());
+                    pathLoopCapDischarge.setAttribute('stroke-dashoffset', loopCapDischargeOffset.toString());
+                } else {
+                    pathCapTop.style.opacity = 0;
+                    pathCapBottom.style.opacity = 0;
+                    pathLoopCapDischarge.style.opacity = 0;
+                }
+            } else {
+                pathCapTop.style.opacity = 0;
+                pathCapBottom.style.opacity = 0;
+                pathLoopCapDischarge.style.opacity = 0;
+            }
+
+            // Change only the capacitor line colors to show its current state.
+            if (isCapConnected) {
+                const chargeRatio = Math.max(0, Math.min(1, currentCapacitorVoltage / peakVoltage));
+                capPlateTop.setAttribute('stroke', capacitorStateColor);
+                capPlateBottom.setAttribute('stroke', capacitorStateColor);
+
+                capChargeReadout.textContent = `${Math.round(chargeRatio * 100)}%`;
+                capChargeReadout.setAttribute('fill', '#64748b');
+            } else {
+                capChargeReadout.textContent = '0%';
+                capChargeReadout.setAttribute('fill', '#64748b');
+            }
+        }
+
+        function calculateRealtimeStats() {
+            let sum = 0;
+            let min = scopeSamples[0].vout;
+            let max = scopeSamples[0].vout;
+
+            for (let i = 0; i < numTracePoints; i++) {
+                const val = scopeSamples[i].vout;
+                sum += val;
+                if (val < min) min = val;
+                if (val > max) max = val;
+            }
+
+            const avg = sum / numTracePoints;
+            const ripple = max - min;
+
+            valAvgDC.innerText = avg.toFixed(1);
+            valRipple.innerText = ripple.toFixed(1);
+        }
+
+        let lastTime = performance.now();
+        
+        function tick(timestamp) {
+            if (isPaused) {
+                lastTime = timestamp;
+                requestAnimationFrame(tick);
+                return;
+            }
+
+            let dt = (timestamp - lastTime) / 1000.0;
+            if (dt > 0.1) dt = 0.1; // Protect simulation integrity on tab focus loss
+            lastTime = timestamp;
+
+            const currentSensingState = updatePhysicsAndBuffer(dt);
+
+            drawOscilloscope();
+            updateSchematicVisuals(
+                currentSensingState.vin,
+                currentSensingState.vout,
+                currentSensingState.sourceConducting,
+                dt
+            );
+            calculateRealtimeStats();
+
+            requestAnimationFrame(tick);
+        }
+
+        window.onload = function () {
+            requestAnimationFrame(tick);
+        };
+    </script>
+</body>
+</html>
