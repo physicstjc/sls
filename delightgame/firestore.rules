@@ -2,40 +2,59 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /delight_scores/{scoreId} {
+    function validPlayerFields() {
+      return request.resource.data.keys().hasOnly([
+        'nameKey',
+        'name',
+        'points',
+        'gamesPlayed',
+        'lastPoints',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      request.resource.data.nameKey is string &&
+      request.resource.data.nameKey.size() >= 1 &&
+      request.resource.data.nameKey.size() <= 100 &&
+      request.resource.data.name is string &&
+      request.resource.data.name.size() >= 1 &&
+      request.resource.data.name.size() <= 24 &&
+      request.resource.data.points is number &&
+      request.resource.data.points >= -100000 &&
+      request.resource.data.points <= 100000 &&
+      request.resource.data.gamesPlayed is int &&
+      request.resource.data.gamesPlayed >= 1 &&
+      request.resource.data.lastPoints is number &&
+      request.resource.data.lastPoints >= -1000 &&
+      request.resource.data.lastPoints <= 1000;
+    }
+
+    match /delight_players/{nameKey} {
       allow read: if true;
 
       allow create: if
-        request.resource.data.keys().hasOnly([
-          'id',
-          'name',
-          'score',
-          'team',
-          'mode',
-          'opponent',
-          'isComputer',
-          'playedAt',
-          'createdAt'
-        ]) &&
-        request.resource.data.id == scoreId &&
-        request.resource.data.name is string &&
-        request.resource.data.name.size() >= 1 &&
-        request.resource.data.name.size() <= 24 &&
-        request.resource.data.score is number &&
-        request.resource.data.score >= 0 &&
-        request.resource.data.score <= 1000 &&
-        request.resource.data.team in ['red', 'blue'] &&
-        request.resource.data.mode in ['solo', 'two-player'] &&
-        request.resource.data.opponent is string &&
-        request.resource.data.opponent.size() >= 1 &&
-        request.resource.data.opponent.size() <= 24 &&
-        request.resource.data.isComputer is bool &&
-        request.resource.data.playedAt is string &&
-        request.resource.data.playedAt.size() >= 20 &&
-        request.resource.data.playedAt.size() <= 30 &&
-        request.resource.data.createdAt == request.time;
+        validPlayerFields() &&
+        request.resource.data.nameKey == nameKey &&
+        request.resource.data.gamesPlayed == 1 &&
+        request.resource.data.points == request.resource.data.lastPoints &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.updatedAt == request.time;
 
-      allow update, delete: if false;
+      allow update: if
+        validPlayerFields() &&
+        request.resource.data.nameKey == nameKey &&
+        request.resource.data.nameKey == resource.data.nameKey &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.gamesPlayed == resource.data.gamesPlayed + 1 &&
+        request.resource.data.points == resource.data.points + request.resource.data.lastPoints &&
+        request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    // Legacy match records remain readable but are no longer collected.
+    match /delight_scores/{scoreId} {
+      allow read: if true;
+      allow write: if false;
     }
   }
 }
