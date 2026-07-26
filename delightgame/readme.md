@@ -11,9 +11,11 @@ bulbs, junction equations, and short circuits with equations rendered by
 KaTeX. The interface uses a playful, rounded visual system designed for
 younger learners.
 
-Human player results are stored in the `delight_players` collection in the
-`h2-physics` Firebase project. A player's points for a match are their total
-brightness minus their opponent's total brightness. Points accumulate under
-one case-insensitive, normalized name; computer opponents are never recorded.
-The included Firestore rules allow public reads and validated transactional
-updates while preventing arbitrary score replacement and deletion.
+After a match, each human can optionally enter a unique name to add the result
+to the leaderboard. Results are stored in the `delight_players` collection in
+the `h2-physics` Firebase project. A player's points for a match are their
+total brightness minus their opponent's total brightness. Points accumulate
+under one case-insensitive, normalized name; computer opponents are never
+recorded. The included Firestore rules allow public reads and validated
+transactional updates while preventing arbitrary score replacement and
+deletion.
