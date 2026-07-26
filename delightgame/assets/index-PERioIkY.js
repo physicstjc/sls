@@ -525,6 +525,7 @@ l0,-`+(t+144)+`c-2,-159.3,-10,-310.7,-24,-454c-53.3,-528,-210,-949.7,
       <section class="modal setup-modal" role="dialog" aria-modal="true" aria-labelledby="mode-title">
         <p class="setup-eyebrow">DeLight</p>
         <h2 id="mode-title">How would you like to play?</h2>
+        <p class="setup-copy">Connect your bulbs to produce the greatest possible total brightness, then outshine your opponent.</p>
         <p class="setup-copy">Choose a local two-player match or challenge an AI opponent.</p>
           <div class="mode-grid">
           <button class="mode-card" data-mode="solo">
