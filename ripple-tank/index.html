@@ -65,8 +65,8 @@
       padding-right: .5rem;
     }
     .switch {
-      width: 42px;
-      height: 24px;
+      width: 34px;
+      height: 20px;
       position: relative;
       display: inline-block;
       flex: 0 0 auto;
@@ -83,8 +83,8 @@
     .switch-track::before {
       content: "";
       position: absolute;
-      width: 18px;
-      height: 18px;
+      width: 14px;
+      height: 14px;
       left: 3px;
       top: 3px;
       border-radius: 50%;
@@ -93,7 +93,7 @@
       transition: 160ms;
     }
     .switch input:checked + .switch-track { background: #0284c7; }
-    .switch input:checked + .switch-track::before { transform: translateX(18px); }
+    .switch input:checked + .switch-track::before { transform: translateX(14px); }
     @media (max-width: 640px) {
       body { flex-direction: column !important; }
       #control-sidebar {
@@ -128,14 +128,23 @@
     </div>
 
     <div id="sidebar-content" class="p-4 space-y-4">
-      <section class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+      <div class="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100 border border-slate-200">
+        <button class="control-tab rounded-lg px-2 py-2 text-xs font-semibold bg-sky-700 text-white" data-page="setup">Waves</button>
+        <button class="control-tab rounded-lg px-2 py-2 text-xs font-semibold text-slate-500 hover:bg-white" data-page="refraction">Refraction</button>
+        <button class="control-tab rounded-lg px-2 py-2 text-xs font-semibold text-slate-500 hover:bg-white" data-page="reflection">Reflection</button>
+        <button class="control-tab rounded-lg px-2 py-2 text-xs font-semibold text-slate-500 hover:bg-white" data-page="diffraction">Diffraction</button>
+        <button class="control-tab rounded-lg px-2 py-2 text-xs font-semibold text-slate-500 hover:bg-white" data-page="interference">Interference</button>
+      </div>
+
+      <div id="control-page-setup" class="space-y-4">
+      <section id="wave-source-panel" class="p-3 rounded-xl border border-slate-200 bg-slate-50">
         <p class="text-xs uppercase font-semibold tracking-wide text-slate-500 mb-2">Wave source</p>
         <div class="grid grid-cols-2 gap-2">
-          <button id="btn-circular" class="mode-btn active text-sm px-3 py-2 rounded-lg border border-slate-300 bg-white flex items-center justify-center gap-2">
-            <i data-lucide="radio" class="w-4 h-4"></i><span>Circular</span>
+          <button id="btn-circular" class="mode-btn active text-xs px-2 py-1.5 rounded-lg border border-slate-300 bg-white flex items-center justify-center gap-1.5">
+            <i data-lucide="radio" class="w-3.5 h-3.5"></i><span>Circular</span>
           </button>
-          <button id="btn-linear" class="mode-btn text-sm px-3 py-2 rounded-lg border border-slate-300 bg-white flex items-center justify-center gap-2">
-            <i data-lucide="align-justify" class="w-4 h-4"></i><span>Linear</span>
+          <button id="btn-linear" class="mode-btn text-xs px-2 py-1.5 rounded-lg border border-slate-300 bg-white flex items-center justify-center gap-1.5">
+            <i data-lucide="align-justify" class="w-3.5 h-3.5"></i><span>Linear</span>
           </button>
         </div>
         <p id="source-hint" class="mt-2 text-[10px] whitespace-nowrap tracking-tight text-slate-500">Click water to move the point source.</p>
@@ -172,7 +181,7 @@
         </div>
       </section>
 
-      <section class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
+      <section id="wave-visual-toggles" class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-sm text-slate-700">Show crests</span>
           <label class="switch" aria-label="Show crests">
@@ -207,6 +216,84 @@
           <i data-lucide="rotate-ccw" class="w-4 h-4"></i><span>Reset view</span>
         </button>
       </section>
+      </div>
+
+      <div id="control-page-refraction" class="control-page hidden space-y-4">
+        <section class="p-3 rounded-xl border border-sky-100 bg-sky-50 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-semibold text-slate-800">Depth boundary</p>
+              <p class="text-[10px] text-slate-500">Enable a second water depth</p>
+            </div>
+            <label class="switch" aria-label="Enable depth boundary">
+              <input id="toggle-boundary" type="checkbox" checked>
+              <span class="switch-track"></span>
+            </label>
+          </div>
+        </section>
+
+        <section id="boundary-controls" class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-4">
+          <div>
+            <div class="flex items-center justify-between gap-2 text-[10px] whitespace-nowrap text-slate-500">
+              <label for="depth-ratio">Depth beyond boundary</label>
+              <span id="depth-ratio-value" class="font-semibold text-sky-700">Shallower · 60%</span>
+            </div>
+            <input id="depth-ratio" type="range" min="35" max="165" value="60" class="w-full accent-sky-600">
+            <div class="flex justify-between text-[9px] text-slate-400"><span>Shallower</span><span>Same</span><span>Deeper</span></div>
+          </div>
+          <div>
+            <div class="flex justify-between text-[10px] text-slate-500"><label for="boundary-near">Near-side endpoint</label><span id="boundary-near-value" class="font-semibold text-purple-700">−0.8 m</span></div>
+            <input id="boundary-near" type="range" min="-420" max="420" value="-80" class="w-full accent-purple-600">
+          </div>
+          <div>
+            <div class="flex justify-between text-[10px] text-slate-500"><label for="boundary-far">Far-side endpoint</label><span id="boundary-far-value" class="font-semibold text-purple-700">0.8 m</span></div>
+            <input id="boundary-far" type="range" min="-420" max="420" value="80" class="w-full accent-purple-600">
+          </div>
+          <div class="rounded-lg border border-amber-100 bg-amber-50 px-2.5 py-2 text-[10px] leading-relaxed text-amber-800">
+            Adjust both endpoints to move or rotate the dotted boundary. Wave speed varies with √depth.
+          </div>
+          <button id="btn-reset-boundary" class="w-full px-2 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 text-xs">Reset boundary</button>
+        </section>
+      </div>
+
+      <div id="control-page-reflection" class="control-page hidden space-y-4">
+        <section class="p-3 rounded-xl border border-violet-100 bg-violet-50 space-y-3">
+          <div class="flex items-center justify-between">
+            <div><p class="text-sm font-semibold text-slate-800">Reflecting wall</p><p class="text-[10px] text-slate-500">Superpose incident and reflected waves</p></div>
+            <label class="switch" aria-label="Enable reflection"><input id="toggle-reflection" type="checkbox" checked><span class="switch-track"></span></label>
+          </div>
+        </section>
+        <section id="reflection-controls" class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-4">
+          <div><div class="flex justify-between text-[10px] text-slate-500"><label for="reflection-near">Near-side endpoint</label><span id="reflection-near-value" class="font-semibold text-violet-700">1.4 m</span></div><input id="reflection-near" type="range" min="-100" max="420" value="140" class="w-full accent-violet-600"></div>
+          <div><div class="flex justify-between text-[10px] text-slate-500"><label for="reflection-far">Far-side endpoint</label><span id="reflection-far-value" class="font-semibold text-violet-700">2.6 m</span></div><input id="reflection-far" type="range" min="-100" max="420" value="260" class="w-full accent-violet-600"></div>
+          <p class="text-[10px] leading-relaxed text-violet-700 bg-violet-50 rounded-lg p-2">Adjust both endpoints to move or rotate the wall. Reflected waves return to the source side.</p>
+          <button id="btn-reset-reflection" class="w-full px-2 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 text-xs">Reset wall</button>
+        </section>
+      </div>
+
+      <div id="control-page-diffraction" class="control-page hidden space-y-4">
+        <section class="p-3 rounded-xl border border-teal-100 bg-teal-50 space-y-3">
+          <div class="flex items-center justify-between"><div><p class="text-sm font-semibold text-slate-800">Diffraction barrier</p><p class="text-[10px] text-slate-500">Observe spreading around an opening or edge</p></div><label class="switch" aria-label="Enable diffraction"><input id="toggle-diffraction" type="checkbox" checked><span class="switch-track"></span></label></div>
+        </section>
+        <section id="diffraction-controls" class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-4">
+          <div class="grid grid-cols-2 gap-1 p-1 rounded-lg bg-slate-100">
+            <button id="btn-slit" class="diffraction-type rounded-md py-1.5 text-xs font-semibold bg-teal-600 text-white">Opening</button>
+            <button id="btn-obstacle" class="diffraction-type rounded-md py-1.5 text-xs font-semibold text-slate-500">Obstacle</button>
+          </div>
+          <div><div class="flex justify-between text-[10px] text-slate-500"><label id="diffraction-size-label" for="diffraction-size">Opening width</label><span id="diffraction-size-value" class="font-semibold text-teal-700">1.4 m</span></div><input id="diffraction-size" type="range" min="40" max="420" value="140" class="w-full accent-teal-600"></div>
+          <p class="text-[10px] leading-relaxed text-teal-700 bg-teal-50 rounded-lg p-2">The barrier is fixed across the centre. Smaller openings produce greater spreading.</p>
+        </section>
+      </div>
+
+      <div id="control-page-interference" class="control-page hidden space-y-4">
+        <section class="p-3 rounded-xl border border-rose-100 bg-rose-50 space-y-3">
+          <div class="flex items-center justify-between"><div><p class="text-sm font-semibold text-slate-800">Interference sources</p><p class="text-[10px] text-slate-500">Create two coherent wave sources</p></div><label class="switch" aria-label="Enable interference"><input id="toggle-interference" type="checkbox" checked><span class="switch-track"></span></label></div>
+        </section>
+        <section id="interference-controls" class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-4">
+          <div><div class="flex justify-between text-[10px] text-slate-500"><label for="slit-separation">Oscillator separation</label><span id="slit-separation-value" class="font-semibold text-rose-700">2.0 m</span></div><input id="slit-separation" type="range" min="80" max="460" value="200" class="w-full accent-rose-600"></div>
+          <p id="interference-description" class="text-[10px] leading-relaxed text-rose-700 bg-rose-50 rounded-lg p-2">Two coherent point oscillators emit circular waves in phase, forming an interference pattern.</p>
+        </section>
+      </div>
     </div>
   </aside>
 
@@ -346,11 +433,10 @@
     water.renderOrder = 2;
     tankGroup.add(water);
 
-    const waterVolumeMaterial = new THREE.MeshPhongMaterial({
-      color: 0x0ea5e9,
+    const waterVolumeMaterial = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
       transparent: true,
-      opacity: 0.34,
-      shininess: 55,
+      opacity: 0.44,
       side: THREE.DoubleSide,
       depthWrite: false
     });
@@ -385,6 +471,111 @@
     waterBottom.position.y = -0.76;
     waterBottom.renderOrder = 1;
     tankGroup.add(waterBottom);
+
+    const depthBottomGroup = new THREE.Group();
+    depthBottomGroup.visible = false;
+    tankGroup.add(depthBottomGroup);
+    const depthFloorMaterial = new THREE.MeshPhongMaterial({
+      color: 0x075985,
+      transparent: true,
+      opacity: 0.68,
+      shininess: 45,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const depthStepMaterial = new THREE.MeshPhongMaterial({
+      color: 0x0c4a6e,
+      transparent: true,
+      opacity: 0.92,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    function createQuad(material) {
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(12), 3));
+      geometry.setIndex([0, 1, 2, 0, 2, 3]);
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.frustumCulled = false;
+      depthBottomGroup.add(mesh);
+      return mesh;
+    }
+    const primaryDepthFloor = createQuad(depthFloorMaterial);
+    const secondaryDepthFloor = createQuad(depthFloorMaterial);
+    const depthStepFace = createQuad(depthStepMaterial);
+
+    const boundaryGroup = new THREE.Group();
+    boundaryGroup.visible = false;
+    tankGroup.add(boundaryGroup);
+    const boundaryDots = [];
+    const boundaryDotGeometry = new THREE.SphereGeometry(0.045, 12, 8);
+    const boundaryDotMaterial = new THREE.MeshBasicMaterial({ color: 0x7c3aed });
+    for (let i = 0; i < 34; i++) {
+      const dot = new THREE.Mesh(boundaryDotGeometry, boundaryDotMaterial);
+      boundaryGroup.add(dot);
+      boundaryDots.push(dot);
+    }
+    const boundaryHandleMaterial = new THREE.MeshStandardMaterial({ color: 0xa855f7, roughness: 0.3 });
+    const boundaryNearHandle = new THREE.Mesh(new THREE.SphereGeometry(0.13, 20, 14), boundaryHandleMaterial);
+    const boundaryFarHandle = new THREE.Mesh(new THREE.SphereGeometry(0.13, 20, 14), boundaryHandleMaterial);
+    boundaryGroup.add(boundaryNearHandle, boundaryFarHandle);
+
+    const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.28, roughness: 0.42 });
+    const reflectionGroup = new THREE.Group();
+    reflectionGroup.visible = false;
+    tankGroup.add(reflectionGroup);
+    const reflectionWall = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.20, 1), wallMaterial);
+    reflectionWall.position.y = -0.17;
+    reflectionGroup.add(reflectionWall);
+    const wallHandleMaterial = new THREE.MeshStandardMaterial({ color: 0x8b5cf6 });
+    const reflectionNearHandle = new THREE.Mesh(new THREE.SphereGeometry(0.13, 18, 12), wallHandleMaterial);
+    const reflectionFarHandle = new THREE.Mesh(new THREE.SphereGeometry(0.13, 18, 12), wallHandleMaterial);
+    reflectionGroup.add(reflectionNearHandle, reflectionFarHandle);
+
+    const diffractionGroup = new THREE.Group();
+    diffractionGroup.visible = false;
+    tankGroup.add(diffractionGroup);
+    const diffractionSegments = [];
+    for (let i = 0; i < 3; i++) {
+      const segment = new THREE.Mesh(new THREE.BoxGeometry(0.14, 1.20, 1), wallMaterial);
+      segment.position.y = -0.17;
+      diffractionGroup.add(segment);
+      diffractionSegments.push(segment);
+    }
+
+    const interferenceGroup = new THREE.Group();
+    interferenceGroup.visible = false;
+    tankGroup.add(interferenceGroup);
+    const interferenceSegments = [];
+    for (let i = 0; i < 3; i++) {
+      const segment = new THREE.Mesh(new THREE.BoxGeometry(0.14, 1.20, 1), wallMaterial);
+      segment.position.y = -0.17;
+      interferenceGroup.add(segment);
+      interferenceSegments.push(segment);
+    }
+    const interferenceOscillatorGroup = new THREE.Group();
+    interferenceOscillatorGroup.visible = false;
+    tankGroup.add(interferenceOscillatorGroup);
+    const interferenceDippers = [];
+    function createInterferenceOscillator(color) {
+      const oscillator = new THREE.Group();
+      const stem = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.04, 0.04, 1.75, 14),
+        new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.5, roughness: 0.3 })
+      );
+      stem.position.y = 1.0;
+      oscillator.add(stem);
+      const dipper = new THREE.Mesh(
+        new THREE.SphereGeometry(0.14, 22, 16),
+        new THREE.MeshStandardMaterial({ color, emissive: 0x881337, emissiveIntensity: 0.2 })
+      );
+      dipper.position.y = 0.1;
+      oscillator.add(dipper);
+      interferenceDippers.push(dipper);
+      interferenceOscillatorGroup.add(oscillator);
+      return oscillator;
+    }
+    const oscillatorOne = createInterferenceOscillator(0xfb7185);
+    const oscillatorTwo = createInterferenceOscillator(0xfb7185);
 
     const sourceGroup = new THREE.Group();
     tankGroup.add(sourceGroup);
@@ -501,34 +692,191 @@
     let paused = false;
     let elapsed = 0;
     let particleDragging = false;
+    let boundaryDragging = null;
+    const boundaryDragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
     const trackedParticlePosition = new THREE.Vector2(2.2, 0);
     const circularSourcePosition = new THREE.Vector3(0, 0, 0);
+    let refractionEnabled = false;
+    let experimentMode = "none";
+    let depthRatio = 0.60;
+    let boundaryNearX = -0.8;
+    let boundaryFarX = 0.8;
+    let reflectionNearX = 1.4;
+    let reflectionFarX = 2.6;
+    let diffractionType = "slit";
+    let diffractionSize = 1.4;
+    let slitSeparation = 2.0;
+    let doubleSlitSize = 0.5;
+    let interferenceType = "oscillators";
+    let refractionAutoRay = false;
+    const barrierX = 0.65;
+    const phaseDistanceCache = new Float32Array(waterGeometry.attributes.position.count);
     let params = { frequency: 1.2, wavelength: 1.2, amplitude: 0.2, damping: 0.08 };
 
     function resetCamera() {
       camera.position.set(7.4, 6.1, 8.0);
-      controls.target.set(
-        sourceGroup.position.x,
-        WATER_Y + 0.12,
-        sourceGroup.position.z
-      );
+      controls.target.set(0, WATER_Y, 0);
       controls.update();
     }
     resetCamera();
 
-    function heightAt(x, z, time) {
-      let distance;
-      if (waveType === "circular") {
-        distance = Math.hypot(x - sourceGroup.position.x, z - sourceGroup.position.z);
-      } else {
-        distance = Math.abs(x - sourceGroup.position.x);
+    function boundaryXAt(z) {
+      const ratio = (z + TANK_DEPTH / 2) / TANK_DEPTH;
+      return boundaryNearX + (boundaryFarX - boundaryNearX) * ratio;
+    }
+
+    function isBeyondBoundary(x, z) {
+      return refractionEnabled && x > boundaryXAt(z);
+    }
+
+    function opticalDistanceAt(x, z) {
+      const directDistance = waveType === "circular"
+        ? Math.hypot(x - sourceGroup.position.x, z - sourceGroup.position.z)
+        : Math.abs(x - sourceGroup.position.x);
+      if (!isBeyondBoundary(x, z)) return directDistance;
+
+      const relativeIndex = 1 / Math.sqrt(depthRatio);
+      let shortest = Infinity;
+      const samples = 36;
+      for (let i = 0; i <= samples; i++) {
+        const ratio = i / samples;
+        const boundaryZ = -TANK_DEPTH / 2 + ratio * TANK_DEPTH;
+        const boundaryX = boundaryNearX + ratio * (boundaryFarX - boundaryNearX);
+        const incidentDistance = waveType === "circular"
+          ? Math.hypot(boundaryX - sourceGroup.position.x, boundaryZ - sourceGroup.position.z)
+          : Math.max(0, boundaryX - sourceGroup.position.x);
+        const refractedDistance = Math.hypot(x - boundaryX, z - boundaryZ);
+        shortest = Math.min(shortest, incidentDistance + relativeIndex * refractedDistance);
       }
+      return shortest;
+    }
+
+    function rebuildPhaseDistanceCache() {
+      for (let i = 0; i < waterGeometry.attributes.position.count; i++) {
+        phaseDistanceCache[i] = opticalDistanceAt(basePositions[i * 3], basePositions[i * 3 + 2]);
+      }
+    }
+
+    function heightFromDistance(distance, time) {
       const k = Math.PI * 2 / params.wavelength;
       const omega = Math.PI * 2 * params.frequency;
       const fade = Math.exp(-params.damping * distance);
-      let height = params.amplitude * Math.sin(k * distance - omega * time) * fade;
+      return params.amplitude * Math.sin(k * distance - omega * time) * fade;
+    }
 
-      return height;
+    function reflectionBoundaryXAt(z) {
+      const ratio = (z + TANK_DEPTH / 2) / TANK_DEPTH;
+      return reflectionNearX + (reflectionFarX - reflectionNearX) * ratio;
+    }
+
+    function reflectedSourcePosition() {
+      const ax = reflectionNearX;
+      const az = -TANK_DEPTH / 2;
+      const bx = reflectionFarX;
+      const bz = TANK_DEPTH / 2;
+      const vx = bx - ax;
+      const vz = bz - az;
+      const lengthSquared = vx * vx + vz * vz;
+      const projection = ((sourceGroup.position.x - ax) * vx + (sourceGroup.position.z - az) * vz) / lengthSquared;
+      const closestX = ax + projection * vx;
+      const closestZ = az + projection * vz;
+      return {
+        x: closestX * 2 - sourceGroup.position.x,
+        z: closestZ * 2 - sourceGroup.position.z
+      };
+    }
+
+    function reflectionHeightAt(x, z, time) {
+      if (x > reflectionBoundaryXAt(z)) return 0;
+      if (waveType === "linear") {
+        const slope = (reflectionFarX - reflectionNearX) / TANK_DEPTH;
+        const normalLength = Math.hypot(1, slope);
+        const nx = 1 / normalLength;
+        const nz = -slope / normalLength;
+        const dot = nx;
+        const reflectedX = 1 - 2 * dot * nx;
+        const reflectedZ = -2 * dot * nz;
+        const midpointX = (reflectionNearX + reflectionFarX) / 2;
+        const incidentDistance = Math.max(0, x - sourceGroup.position.x);
+        const boundaryPhaseDistance = midpointX - sourceGroup.position.x;
+        const reflectedDistance = boundaryPhaseDistance
+          + reflectedX * (x - midpointX)
+          + reflectedZ * z;
+        return heightFromDistance(incidentDistance, time)
+          + 0.72 * heightFromDistance(Math.max(0, reflectedDistance), time);
+      }
+      const direct = Math.hypot(x - sourceGroup.position.x, z - sourceGroup.position.z);
+      const image = reflectedSourcePosition();
+      const reflected = Math.hypot(x - image.x, z - image.z);
+      return heightFromDistance(direct, time) + 0.72 * heightFromDistance(reflected, time);
+    }
+
+    function diffractionHeightAt(x, z, time) {
+      const incidentDistance = Math.max(0, barrierX - sourceGroup.position.x);
+      if (x <= barrierX) return heightFromDistance(Math.max(0, x - sourceGroup.position.x), time);
+      if (diffractionType === "slit") {
+        const halfGap = diffractionSize / 2;
+        const distanceInsideEdge = halfGap - Math.abs(z);
+        const straightWave = heightFromDistance(x - sourceGroup.position.x, time);
+        const upperDistance = Math.hypot(x - barrierX, z - halfGap);
+        const lowerDistance = Math.hypot(x - barrierX, z + halfGap);
+        const distanceBeyondBarrier = x - barrierX;
+        const upperObliquity = distanceBeyondBarrier / Math.max(0.001, upperDistance);
+        const lowerObliquity = distanceBeyondBarrier / Math.max(0.001, lowerDistance);
+        const upperEdgeWave = upperObliquity
+          * heightFromDistance(incidentDistance + upperDistance, time);
+        const lowerEdgeWave = lowerObliquity
+          * heightFromDistance(incidentDistance + lowerDistance, time);
+        const edgeWave = z >= 0 ? upperEdgeWave : lowerEdgeWave;
+        const transitionWidth = Math.max(0.16, params.wavelength * 0.28);
+        const blendInput = Math.max(0, Math.min(1, distanceInsideEdge / transitionWidth));
+        const straightBlend = blendInput * blendInput * (3 - 2 * blendInput);
+        if (distanceInsideEdge >= 0) {
+          return straightBlend * straightWave + (1 - straightBlend) * edgeWave;
+        }
+        return edgeWave;
+      }
+      const halfLength = diffractionSize / 2;
+      if (Math.abs(z) > halfLength) return heightFromDistance(x - sourceGroup.position.x, time);
+      const distanceBehindWall = x - barrierX;
+      const upperRadius = Math.hypot(distanceBehindWall, z - halfLength);
+      const lowerRadius = Math.hypot(distanceBehindWall, z + halfLength);
+      const upperObliquity = distanceBehindWall / Math.max(0.001, upperRadius);
+      const lowerObliquity = distanceBehindWall / Math.max(0.001, lowerRadius);
+      const upper = upperObliquity * heightFromDistance(incidentDistance + upperRadius, time);
+      const lower = lowerObliquity * heightFromDistance(incidentDistance + lowerRadius, time);
+      return 0.46 * (upper + lower);
+    }
+
+    function interferenceHeightAt(x, z, time) {
+      if (waveType === "linear") {
+        if (x <= barrierX) return heightFromDistance(Math.max(0, x - sourceGroup.position.x), time);
+        const incidentDistance = Math.max(0, barrierX - sourceGroup.position.x);
+        const halfSeparation = slitSeparation / 2;
+        const distanceBeyondBarrier = x - barrierX;
+        const radiusOne = Math.hypot(distanceBeyondBarrier, z - halfSeparation);
+        const radiusTwo = Math.hypot(distanceBeyondBarrier, z + halfSeparation);
+        const obliquityOne = distanceBeyondBarrier / Math.max(0.001, radiusOne);
+        const obliquityTwo = distanceBeyondBarrier / Math.max(0.001, radiusTwo);
+        return 0.56 * (
+          obliquityOne * heightFromDistance(incidentDistance + radiusOne, time)
+          + obliquityTwo * heightFromDistance(incidentDistance + radiusTwo, time)
+        );
+      }
+      const sourceX = -2.2;
+      const halfSeparation = slitSeparation / 2;
+      const distanceOne = Math.hypot(x - sourceX, z - halfSeparation);
+      const distanceTwo = Math.hypot(x - sourceX, z + halfSeparation);
+      return 0.55 * (
+        heightFromDistance(distanceOne, time) + heightFromDistance(distanceTwo, time)
+      );
+    }
+
+    function heightAt(x, z, time) {
+      if (experimentMode === "reflection") return reflectionHeightAt(x, z, time);
+      if (experimentMode === "diffraction") return diffractionHeightAt(x, z, time);
+      if (experimentMode === "interference") return interferenceHeightAt(x, z, time);
+      return heightFromDistance(opticalDistanceAt(x, z), time);
     }
 
     function updateWater() {
@@ -537,14 +885,16 @@
       for (let i = 0; i < position.count; i++) {
         const x = basePositions[i * 3];
         const z = basePositions[i * 3 + 2];
-        const height = heightAt(x, z, elapsed);
+        const height = experimentMode === "none" || experimentMode === "refraction"
+          ? heightFromDistance(phaseDistanceCache[i], elapsed)
+          : heightAt(x, z, elapsed);
         position.setY(i, height);
         const normalized = Math.max(-1, Math.min(1, height / Math.max(params.amplitude, 0.01)));
         color.setXYZ(
           i,
           0.08 + Math.max(0, normalized) * 0.34,
-          0.53 + normalized * 0.18,
-          0.76 + normalized * 0.19
+          0.53 + normalized * 0.18 + (isBeyondBoundary(x, z) ? (depthRatio < 1 ? 0.08 : -0.08) : 0),
+          0.76 + normalized * 0.19 + (isBeyondBoundary(x, z) ? (depthRatio < 1 ? 0.10 : -0.10) : 0)
         );
       }
       position.needsUpdate = true;
@@ -553,6 +903,7 @@
       const dip = Math.sin(Math.PI * 2 * params.frequency * elapsed);
       pointDipper.position.y = 0.1 + dip * params.amplitude * 0.55;
       lineDipper.position.y = pointDipper.position.y;
+      interferenceDippers.forEach(dipper => dipper.position.y = pointDipper.position.y);
       updateWaterVolume();
       updateMarkers();
     }
@@ -571,6 +922,107 @@
         }
         position.needsUpdate = true;
       });
+    }
+
+    function updateBoundaryVisual() {
+      if (!refractionEnabled) return;
+      const fixedHeight = WATER_Y + 0.055;
+      boundaryDots.forEach((dot, index) => {
+        const ratio = index / (boundaryDots.length - 1);
+        dot.position.set(
+          boundaryNearX + (boundaryFarX - boundaryNearX) * ratio,
+          fixedHeight,
+          -TANK_DEPTH / 2 + TANK_DEPTH * ratio
+        );
+      });
+      boundaryNearHandle.position.set(boundaryNearX, fixedHeight, -TANK_DEPTH / 2 + 0.04);
+      boundaryFarHandle.position.set(boundaryFarX, fixedHeight, TANK_DEPTH / 2 - 0.04);
+    }
+
+    function setQuadVertices(mesh, vertices) {
+      const position = mesh.geometry.attributes.position;
+      vertices.forEach((vertex, index) => position.setXYZ(index, vertex[0], vertex[1], vertex[2]));
+      position.needsUpdate = true;
+      mesh.geometry.computeVertexNormals();
+    }
+
+    function updateDepthBottomVisual() {
+      if (!refractionEnabled) return;
+      const primaryY = -0.76;
+      const secondaryY = -0.76 * depthRatio;
+      const left = -TANK_WIDTH / 2 + 0.08;
+      const right = TANK_WIDTH / 2 - 0.08;
+      const near = -TANK_DEPTH / 2 + 0.08;
+      const far = TANK_DEPTH / 2 - 0.08;
+      setQuadVertices(primaryDepthFloor, [
+        [left, primaryY, near], [boundaryNearX, primaryY, near],
+        [boundaryFarX, primaryY, far], [left, primaryY, far]
+      ]);
+      setQuadVertices(secondaryDepthFloor, [
+        [boundaryNearX, secondaryY, near], [right, secondaryY, near],
+        [right, secondaryY, far], [boundaryFarX, secondaryY, far]
+      ]);
+      setQuadVertices(depthStepFace, [
+        [boundaryNearX, primaryY, near], [boundaryNearX, secondaryY, near],
+        [boundaryFarX, secondaryY, far], [boundaryFarX, primaryY, far]
+      ]);
+    }
+
+    function updateReflectionVisual() {
+      const dx = reflectionFarX - reflectionNearX;
+      const length = Math.hypot(dx, TANK_DEPTH);
+      reflectionWall.position.set((reflectionNearX + reflectionFarX) / 2, -0.17, 0);
+      reflectionWall.scale.z = length;
+      reflectionWall.rotation.y = Math.atan2(dx, TANK_DEPTH);
+      reflectionNearHandle.position.set(reflectionNearX, 0.44, -TANK_DEPTH / 2 + 0.05);
+      reflectionFarHandle.position.set(reflectionFarX, 0.44, TANK_DEPTH / 2 - 0.05);
+    }
+
+    function setBarrierSegment(segment, startZ, endZ) {
+      const length = Math.max(0, endZ - startZ);
+      segment.visible = length > 0.02;
+      segment.position.set(barrierX, -0.17, (startZ + endZ) / 2);
+      segment.scale.z = length;
+    }
+
+    function updateDiffractionVisual() {
+      const edge = TANK_DEPTH / 2;
+      if (diffractionType === "slit") {
+        const halfGap = diffractionSize / 2;
+        setBarrierSegment(diffractionSegments[0], -edge, -halfGap);
+        setBarrierSegment(diffractionSegments[1], halfGap, edge);
+        diffractionSegments[2].visible = false;
+      } else {
+        setBarrierSegment(diffractionSegments[0], -diffractionSize / 2, diffractionSize / 2);
+        diffractionSegments[1].visible = false;
+        diffractionSegments[2].visible = false;
+      }
+    }
+
+    function updateInterferenceVisual() {
+      const active = experimentMode === "interference";
+      const useOpenings = waveType === "linear";
+      interferenceGroup.visible = active && useOpenings;
+      interferenceOscillatorGroup.visible = active && !useOpenings;
+      sourceGroup.visible = !active || useOpenings;
+      oscillatorOne.position.set(-2.2, 0, slitSeparation / 2);
+      oscillatorTwo.position.set(-2.2, 0, -slitSeparation / 2);
+      if (active && useOpenings) {
+        const edge = TANK_DEPTH / 2;
+        const halfGap = doubleSlitSize / 2;
+        const lowerCentre = -slitSeparation / 2;
+        const upperCentre = slitSeparation / 2;
+        setBarrierSegment(interferenceSegments[0], -edge, lowerCentre - halfGap);
+        setBarrierSegment(interferenceSegments[1], lowerCentre + halfGap, upperCentre - halfGap);
+        setBarrierSegment(interferenceSegments[2], upperCentre + halfGap, edge);
+      } else {
+        interferenceSegments.forEach(segment => {
+          segment.visible = false;
+        });
+      }
+      document.getElementById("interference-description").textContent = useOpenings
+        ? "A linear wave passes through two openings, producing constructive and destructive interference regions."
+        : "Two coherent point oscillators emit circular waves in phase, forming an interference pattern.";
     }
 
     function updateMarkers() {
@@ -599,13 +1051,70 @@
 
     function getSampleRay() {
       const startX = sourceGroup.position.x;
+      const startZ = sourceGroup.position.z;
       const direction = waveType === "linear" || startX <= 0 ? 1 : -1;
+      if (experimentMode === "reflection") {
+        const hitX = reflectionBoundaryXAt(startZ);
+        const firstLength = Math.max(0, hitX - startX);
+        const slope = (reflectionFarX - reflectionNearX) / TANK_DEPTH;
+        const normalLength = Math.hypot(1, slope);
+        const nx = 1 / normalLength;
+        const nz = -slope / normalLength;
+        const dot = nx;
+        const dx = 1 - 2 * dot * nx;
+        const dz = -2 * dot * nz;
+        const distances = [];
+        if (dx > 0.0001) distances.push((TANK_WIDTH / 2 - 0.2 - hitX) / dx);
+        if (dx < -0.0001) distances.push((-TANK_WIDTH / 2 + 0.2 - hitX) / dx);
+        if (dz > 0.0001) distances.push((TANK_DEPTH / 2 - 0.2 - startZ) / dz);
+        if (dz < -0.0001) distances.push((-TANK_DEPTH / 2 + 0.2 - startZ) / dz);
+        const secondLength = Math.max(0, Math.min(...distances.filter(value => value > 0)));
+        return {
+          length: firstLength + secondLength,
+          sample(distance) {
+            if (distance <= firstLength) return { x: startX + distance, z: startZ, dx: 1, dz: 0 };
+            const after = Math.min(secondLength, distance - firstLength);
+            return { x: hitX + dx * after, z: startZ + dz * after, dx, dz };
+          }
+        };
+      }
+      if (refractionEnabled && direction > 0) {
+        const hitX = boundaryXAt(startZ);
+        const firstLength = Math.max(0, hitX - startX);
+        const slope = (boundaryFarX - boundaryNearX) / TANK_DEPTH;
+        const normalLength = Math.hypot(1, slope);
+        const nx = 1 / normalLength;
+        const nz = -slope / normalLength;
+        const tx = slope / normalLength;
+        const tz = 1 / normalLength;
+        const sin1 = tx;
+        const sin2 = Math.max(-0.98, Math.min(0.98, Math.sqrt(depthRatio) * sin1));
+        const cos2 = Math.sqrt(1 - sin2 * sin2);
+        const dx = nx * cos2 + tx * sin2;
+        const dz = nz * cos2 + tz * sin2;
+        const distances = [];
+        if (dx > 0.0001) distances.push((TANK_WIDTH / 2 - 0.2 - hitX) / dx);
+        if (dx < -0.0001) distances.push((-TANK_WIDTH / 2 + 0.2 - hitX) / dx);
+        if (dz > 0.0001) distances.push((TANK_DEPTH / 2 - 0.2 - startZ) / dz);
+        if (dz < -0.0001) distances.push((-TANK_DEPTH / 2 + 0.2 - startZ) / dz);
+        const secondLength = Math.max(0, Math.min(...distances.filter(value => value > 0)));
+        return {
+          length: firstLength + secondLength,
+          sample(distance) {
+            if (distance <= firstLength) return { x: startX + distance, z: startZ, dx: 1, dz: 0 };
+            const after = Math.min(secondLength, distance - firstLength);
+            return { x: hitX + dx * after, z: startZ + dz * after, dx, dz };
+          }
+        };
+      }
+
       const endX = direction > 0 ? TANK_WIDTH / 2 - 0.2 : -TANK_WIDTH / 2 + 0.2;
+      const length = Math.max(0.2, Math.abs(endX - startX));
       return {
-        startX,
-        z: sourceGroup.position.z,
-        direction,
-        length: Math.max(0.2, Math.abs(endX - startX))
+        length,
+        sample(distance) {
+          return { x: startX + direction * distance, z: startZ, dx: direction, dz: 0 };
+        }
       };
     }
 
@@ -614,15 +1123,20 @@
       const position = sampleRayGeometry.attributes.position;
       for (let i = 0; i < SAMPLE_RAY_POINTS; i++) {
         const distance = ray.length * i / (SAMPLE_RAY_POINTS - 1);
-        const x = ray.startX + ray.direction * distance;
-        const y = heightAt(x, ray.z, elapsed) + 0.04;
-        position.setXYZ(i * 2, x, y, ray.z - SAMPLE_RAY_HALF_WIDTH);
-        position.setXYZ(i * 2 + 1, x, y, ray.z + SAMPLE_RAY_HALF_WIDTH);
+        const point = ray.sample(distance);
+        const y = heightAt(point.x, point.z, elapsed) + 0.04;
+        const offsetX = -point.dz * SAMPLE_RAY_HALF_WIDTH;
+        const offsetZ = point.dx * SAMPLE_RAY_HALF_WIDTH;
+        position.setXYZ(i * 2, point.x - offsetX, y, point.z - offsetZ);
+        position.setXYZ(i * 2 + 1, point.x + offsetX, y, point.z + offsetZ);
       }
       position.needsUpdate = true;
-      const tipX = ray.startX + ray.direction * ray.length;
-      rayTip.position.set(tipX, heightAt(tipX, ray.z, elapsed) + 0.07, ray.z);
-      rayTip.rotation.z = ray.direction > 0 ? -Math.PI / 2 : Math.PI / 2;
+      const tip = ray.sample(ray.length);
+      rayTip.position.set(tip.x, heightAt(tip.x, tip.z, elapsed) + 0.07, tip.z);
+      rayTip.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        new THREE.Vector3(tip.dx, 0, tip.dz).normalize()
+      );
     }
 
     function updateTrackedParticle() {
@@ -678,8 +1192,8 @@
       ctx.beginPath();
       for (let i = 0; i <= 180; i++) {
         const distance = ray.length * i / 180;
-        const xWorld = ray.startX + ray.direction * distance;
-        const displacement = heightAt(xWorld, ray.z, elapsed);
+        const point = ray.sample(distance);
+        const displacement = heightAt(point.x, point.z, elapsed);
         const px = left + plotWidth * i / 180;
         const py = midY - displacement / scaleAmplitude * (plotHeight / 2);
         if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
@@ -700,10 +1214,15 @@
       ctx.fillText(ray.length.toFixed(1), left + plotWidth, midY + 24);
 
       document.getElementById("wave-equation").textContent =
-        `y = ${params.amplitude.toFixed(2)} sin(2π(x/${params.wavelength.toFixed(2)} − ${params.frequency.toFixed(2)}t)) e^(−${params.damping.toFixed(2)}x)`;
+        refractionEnabled
+          ? `λ₁=${params.wavelength.toFixed(2)} m · λ₂=${(params.wavelength * Math.sqrt(depthRatio)).toFixed(2)} m · f=${params.frequency.toFixed(2)} Hz`
+          : `y = ${params.amplitude.toFixed(2)} sin(2π(x/${params.wavelength.toFixed(2)} − ${params.frequency.toFixed(2)}t)) e^(−${params.damping.toFixed(2)}x)`;
     }
 
     function setWaveType(type) {
+      if (experimentMode === "diffraction" && type !== "linear") {
+        type = "linear";
+      }
       if (waveType === "circular") {
         circularSourcePosition.copy(sourceGroup.position);
       }
@@ -725,6 +1244,8 @@
         : "Drag to rotate · Scroll to zoom";
       document.querySelector("#wave-badge span:last-child").textContent =
         type === "circular" ? "Circular wavefronts" : "Linear wavefronts";
+      rebuildPhaseDistanceCache();
+      updateInterferenceVisual();
     }
 
     function bindRange(id, apply, format) {
@@ -765,6 +1286,244 @@
 
     bindRange("amplitude", v => params.amplitude = v / 100, v => (v / 100).toFixed(2) + " m");
     bindRange("damping", v => params.damping = v / 100, v => v === 0 ? "None" : v < 10 ? "Low" : v < 21 ? "Medium" : "High");
+
+    document.querySelectorAll(".control-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        const page = tab.dataset.page;
+        document.querySelectorAll(".control-page").forEach(panel => panel.classList.add("hidden"));
+        document.getElementById("control-page-" + page).classList.remove("hidden");
+        if (page === "setup") {
+          clearOtherExperiments("none");
+          experimentMode = "none";
+          refractionEnabled = false;
+          boundaryGroup.visible = false;
+          depthBottomGroup.visible = false;
+          waterBottom.visible = true;
+          base.visible = true;
+          rebuildPhaseDistanceCache();
+          restartWaves();
+          updateCrestAvailability();
+        } else {
+          const toggleByPage = {
+            refraction: "toggle-boundary",
+            reflection: "toggle-reflection",
+            diffraction: "toggle-diffraction",
+            interference: "toggle-interference"
+          };
+          const experimentToggle = document.getElementById(toggleByPage[page]);
+          if (experimentToggle) {
+            experimentToggle.checked = true;
+            experimentToggle.dispatchEvent(new Event("change", { bubbles: true }));
+          }
+        }
+        document.querySelectorAll(".control-tab").forEach(button => {
+          const active = button === tab;
+          button.classList.toggle("bg-sky-700", active);
+          button.classList.toggle("text-white", active);
+          button.classList.toggle("text-slate-500", !active);
+          button.classList.toggle("hover:bg-white", !active);
+        });
+      });
+    });
+
+    const boundaryControls = document.getElementById("boundary-controls");
+    const depthRatioInput = document.getElementById("depth-ratio");
+    const boundaryNearInput = document.getElementById("boundary-near");
+    const boundaryFarInput = document.getElementById("boundary-far");
+
+    function clearOtherExperiments(activeMode) {
+      const experiments = [
+        ["refraction", "toggle-boundary", boundaryGroup, "boundary-controls"],
+        ["reflection", "toggle-reflection", reflectionGroup, "reflection-controls"],
+        ["diffraction", "toggle-diffraction", diffractionGroup, "diffraction-controls"],
+        ["interference", "toggle-interference", interferenceGroup, "interference-controls"]
+      ];
+      experiments.forEach(([mode, toggleId, group, controlsId]) => {
+        if (mode === activeMode) return;
+        document.getElementById(toggleId).checked = false;
+        group.visible = false;
+        const panel = document.getElementById(controlsId);
+        panel.classList.add("opacity-50", "pointer-events-none");
+      });
+      if (activeMode !== "refraction") {
+        refractionEnabled = false;
+        depthBottomGroup.visible = false;
+        waterBottom.visible = true;
+        base.visible = true;
+        if (refractionAutoRay) {
+          document.getElementById("toggle-cross-section").checked = false;
+          sampleRay.visible = false;
+          rayTip.visible = false;
+          document.getElementById("cross-section-panel").classList.add("hidden");
+          refractionAutoRay = false;
+        }
+      }
+      if (activeMode !== "interference") {
+        interferenceOscillatorGroup.visible = false;
+        sourceGroup.visible = true;
+      }
+    }
+
+    function restartWaves() {
+      elapsed = 0;
+    }
+
+    function updateCrestAvailability() {
+      const markerToggle = document.getElementById("toggle-markers");
+      const disabled = experimentMode !== "none" && experimentMode !== "refraction";
+      if (disabled) {
+        markerToggle.checked = false;
+        markerGroup.visible = false;
+      }
+      markerToggle.disabled = disabled || refractionEnabled;
+      markerToggle.closest("div").classList.toggle("opacity-50", disabled || refractionEnabled);
+    }
+
+    function applyBoundaryControls() {
+      depthRatio = Number(depthRatioInput.value) / 100;
+      boundaryNearX = Number(boundaryNearInput.value) / 100;
+      boundaryFarX = Number(boundaryFarInput.value) / 100;
+      const depthDescription = depthRatio === 1 ? "Same" : depthRatio < 1 ? "Shallower" : "Deeper";
+      document.getElementById("depth-ratio-value").textContent = `${depthDescription} · ${Math.round(depthRatio * 100)}%`;
+      document.getElementById("boundary-near-value").textContent = boundaryNearX.toFixed(1) + " m";
+      document.getElementById("boundary-far-value").textContent = boundaryFarX.toFixed(1) + " m";
+      rebuildPhaseDistanceCache();
+      updateBoundaryVisual();
+      updateDepthBottomVisual();
+      updateCrestAvailability();
+    }
+
+    document.getElementById("toggle-boundary").addEventListener("change", e => {
+      if (e.target.checked) clearOtherExperiments("refraction");
+      refractionEnabled = e.target.checked;
+      experimentMode = refractionEnabled ? "refraction" : "none";
+      if (refractionEnabled) {
+        setWaveType("linear");
+        restartWaves();
+        const crossSectionToggle = document.getElementById("toggle-cross-section");
+        if (!crossSectionToggle.checked) refractionAutoRay = true;
+        crossSectionToggle.checked = true;
+        sampleRay.visible = true;
+        rayTip.visible = true;
+        document.getElementById("cross-section-panel").classList.remove("hidden");
+      }
+      boundaryGroup.visible = refractionEnabled;
+      depthBottomGroup.visible = refractionEnabled;
+      waterBottom.visible = !refractionEnabled;
+      base.visible = !refractionEnabled;
+      boundaryControls.classList.toggle("opacity-50", !refractionEnabled);
+      boundaryControls.classList.toggle("pointer-events-none", !refractionEnabled);
+      if (refractionEnabled && waveType === "circular") {
+        const safeX = boundaryXAt(sourceGroup.position.z) - 0.6;
+        sourceGroup.position.x = Math.min(sourceGroup.position.x, safeX);
+        circularSourcePosition.copy(sourceGroup.position);
+      }
+      const markerToggle = document.getElementById("toggle-markers");
+      if (refractionEnabled) {
+        markerToggle.checked = false;
+        markerGroup.visible = false;
+      }
+      markerToggle.disabled = refractionEnabled;
+      markerToggle.closest("div").classList.toggle("opacity-50", refractionEnabled);
+      rebuildPhaseDistanceCache();
+      updateBoundaryVisual();
+      updateDepthBottomVisual();
+    });
+    [depthRatioInput, boundaryNearInput, boundaryFarInput].forEach(input => input.addEventListener("input", applyBoundaryControls));
+    document.getElementById("btn-reset-boundary").addEventListener("click", () => {
+      depthRatioInput.value = 60;
+      boundaryNearInput.value = -80;
+      boundaryFarInput.value = 80;
+      applyBoundaryControls();
+    });
+
+    const reflectionControls = document.getElementById("reflection-controls");
+    const reflectionNearInput = document.getElementById("reflection-near");
+    const reflectionFarInput = document.getElementById("reflection-far");
+    function applyReflectionControls() {
+      reflectionNearX = Number(reflectionNearInput.value) / 100;
+      reflectionFarX = Number(reflectionFarInput.value) / 100;
+      document.getElementById("reflection-near-value").textContent = reflectionNearX.toFixed(1) + " m";
+      document.getElementById("reflection-far-value").textContent = reflectionFarX.toFixed(1) + " m";
+      updateReflectionVisual();
+    }
+    [reflectionNearInput, reflectionFarInput].forEach(input => input.addEventListener("input", applyReflectionControls));
+    document.getElementById("btn-reset-reflection").addEventListener("click", () => {
+      reflectionNearInput.value = 140;
+      reflectionFarInput.value = 260;
+      applyReflectionControls();
+      restartWaves();
+    });
+    document.getElementById("toggle-reflection").addEventListener("change", e => {
+      if (e.target.checked) {
+        clearOtherExperiments("reflection");
+        experimentMode = "reflection";
+        setWaveType("linear");
+        restartWaves();
+      } else if (experimentMode === "reflection") experimentMode = "none";
+      reflectionGroup.visible = e.target.checked;
+      sampleRay.visible = e.target.checked;
+      rayTip.visible = e.target.checked;
+      reflectionControls.classList.toggle("opacity-50", !e.target.checked);
+      reflectionControls.classList.toggle("pointer-events-none", !e.target.checked);
+      updateCrestAvailability();
+    });
+
+    const diffractionControls = document.getElementById("diffraction-controls");
+    const diffractionSizeInput = document.getElementById("diffraction-size");
+    function applyDiffractionControls() {
+      diffractionSize = Number(diffractionSizeInput.value) / 100;
+      document.getElementById("diffraction-size-value").textContent = diffractionSize.toFixed(1) + " m";
+      updateDiffractionVisual();
+    }
+    diffractionSizeInput.addEventListener("input", applyDiffractionControls);
+    function setDiffractionType(type) {
+      diffractionType = type;
+      document.getElementById("btn-slit").className = "diffraction-type rounded-md py-1.5 text-xs font-semibold " + (type === "slit" ? "bg-teal-600 text-white" : "text-slate-500");
+      document.getElementById("btn-obstacle").className = "diffraction-type rounded-md py-1.5 text-xs font-semibold " + (type === "obstacle" ? "bg-teal-600 text-white" : "text-slate-500");
+      document.getElementById("diffraction-size-label").textContent = type === "slit" ? "Opening width" : "Obstacle length";
+      updateDiffractionVisual();
+    }
+    document.getElementById("btn-slit").addEventListener("click", () => setDiffractionType("slit"));
+    document.getElementById("btn-obstacle").addEventListener("click", () => setDiffractionType("obstacle"));
+    document.getElementById("toggle-diffraction").addEventListener("change", e => {
+      if (e.target.checked) {
+        clearOtherExperiments("diffraction");
+        experimentMode = "diffraction";
+        setWaveType("linear");
+        restartWaves();
+      } else if (experimentMode === "diffraction") experimentMode = "none";
+      diffractionGroup.visible = e.target.checked;
+      diffractionControls.classList.toggle("opacity-50", !e.target.checked);
+      diffractionControls.classList.toggle("pointer-events-none", !e.target.checked);
+      updateCrestAvailability();
+    });
+
+    const interferenceControls = document.getElementById("interference-controls");
+    const slitSeparationInput = document.getElementById("slit-separation");
+    function applyInterferenceControls() {
+      slitSeparation = Number(slitSeparationInput.value) / 100;
+      document.getElementById("slit-separation-value").textContent = slitSeparation.toFixed(1) + " m";
+      updateInterferenceVisual();
+    }
+    slitSeparationInput.addEventListener("input", applyInterferenceControls);
+    document.getElementById("toggle-interference").addEventListener("change", e => {
+      if (e.target.checked) {
+        clearOtherExperiments("interference");
+        experimentMode = "interference";
+        restartWaves();
+      } else if (experimentMode === "interference") experimentMode = "none";
+      if (!e.target.checked) {
+        interferenceGroup.visible = false;
+        interferenceOscillatorGroup.visible = false;
+        sourceGroup.visible = true;
+      } else {
+        updateInterferenceVisual();
+      }
+      interferenceControls.classList.toggle("opacity-50", !e.target.checked);
+      interferenceControls.classList.toggle("pointer-events-none", !e.target.checked);
+      updateCrestAvailability();
+    });
 
     document.getElementById("btn-circular").addEventListener("click", () => setWaveType("circular"));
     document.getElementById("btn-linear").addEventListener("click", () => setWaveType("linear"));
@@ -841,13 +1600,17 @@
       setPointerFromEvent(e);
       const hit = raycaster.intersectObject(water)[0];
       if (hit && waveType === "circular") {
-        sourceGroup.position.x = Math.max(-4.25, Math.min(4.25, hit.point.x));
+        let nextX = Math.max(-4.25, Math.min(4.25, hit.point.x));
+        if (refractionEnabled) nextX = Math.min(nextX, boundaryXAt(hit.point.z) - 0.35);
+        sourceGroup.position.x = nextX;
         sourceGroup.position.z = Math.max(-2.75, Math.min(2.75, hit.point.z));
         circularSourcePosition.copy(sourceGroup.position);
+        rebuildPhaseDistanceCache();
       }
     });
     renderer.domElement.addEventListener("pointercancel", () => {
       particleDragging = false;
+      boundaryDragging = null;
       controls.enabled = true;
       pointerDown = null;
     });
@@ -863,6 +1626,11 @@
     const viewportResizeObserver = new ResizeObserver(resize);
     viewportResizeObserver.observe(viewport);
     resize();
+    applyBoundaryControls();
+    applyReflectionControls();
+    applyDiffractionControls();
+    applyInterferenceControls();
+    rebuildPhaseDistanceCache();
     requestAnimationFrame(() => {
       resize();
       resetCamera();
@@ -875,6 +1643,7 @@
       const delta = Math.min(clock.getDelta(), 0.04);
       if (!paused) elapsed += delta;
       updateWater();
+      updateBoundaryVisual();
       updateSampleRay();
       updateTrackedParticle();
       updateCrossSection();
