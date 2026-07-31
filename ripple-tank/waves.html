@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Ripple Tank Simulation</title>
+  <script src="./vendor/tailwindcss.js"></script>
+  <script src="./vendor/three.r128.min.js"></script>
+  <script src="./vendor/OrbitControls.r128.js"></script>
+  <script src="./vendor/lucide.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      background: #effaff;
+      color: #1f2937;
+    }
+    canvas { display: block; }
+    #viewport {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    #viewport > canvas {
+      position: absolute;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    #cross-section-canvas {
+      position: static !important;
+      width: 100% !important;
+      height: 118px !important;
+      border-radius: 8px;
+      background: rgba(248, 250, 252, 0.96);
+    }
+    input[type="range"] { cursor: pointer; }
+    .mode-btn.active {
+      color: white;
+      background: #0369a1;
+      border-color: #0369a1;
+      box-shadow: 0 4px 12px rgba(3, 105, 161, 0.18);
+    }
+    #control-sidebar, main {
+      transition: width 180ms ease, height 180ms ease, flex-basis 180ms ease;
+    }
+    #control-sidebar {
+      width: clamp(230px, 26vw, 280px);
+      flex: 0 0 clamp(230px, 26vw, 280px);
+      height: 100%;
+    }
+    .sidebar-collapsed #control-sidebar {
+      width: 56px;
+      flex-basis: 56px;
+      overflow: hidden;
+    }
+    .sidebar-collapsed #sidebar-content,
+    .sidebar-collapsed #sidebar-title { display: none; }
+    .sidebar-collapsed #sidebar-header {
+      justify-content: center;
+      padding-left: .5rem;
+      padding-right: .5rem;
+    }
+    .switch {
+      width: 42px;
+      height: 24px;
+      position: relative;
+      display: inline-block;
+      flex: 0 0 auto;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch-track {
+      position: absolute;
+      inset: 0;
+      cursor: pointer;
+      border-radius: 999px;
+      background: #cbd5e1;
+      transition: 160ms;
+    }
+    .switch-track::before {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      top: 3px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, .3);
+      transition: 160ms;
+    }
+    .switch input:checked + .switch-track { background: #0284c7; }
+    .switch input:checked + .switch-track::before { transform: translateX(18px); }
+    @media (max-width: 640px) {
+      body { flex-direction: column !important; }
+      #control-sidebar {
+        width: 100%;
+        flex: 0 0 42%;
+        height: 42%;
+        border-right: 0;
+        border-bottom: 1px solid #bae6fd;
+      }
+      main { height: 58%; }
+      .sidebar-collapsed #control-sidebar {
+        width: 100%;
+        height: 56px;
+        flex-basis: 56px;
+      }
+      .sidebar-collapsed main { height: calc(100% - 56px); }
+      #navigation-hint { display: none; }
+      #cross-section-panel { width: min(250px, calc(100% - 2rem)); }
+    }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-row overflow-hidden select-none bg-sky-50/60">
+  <aside id="control-sidebar" class="bg-white border-r border-sky-100 shadow-lg z-20 overflow-y-auto">
+    <div id="sidebar-header" class="px-4 py-3 border-b border-sky-100 flex items-center justify-between gap-3">
+      <div id="sidebar-title" class="min-w-0">
+        <h1 class="text-base font-semibold text-slate-900">3D Ripple Tank</h1>
+        <p class="text-xs text-slate-500">Explore wavefronts on water</p>
+      </div>
+      <button id="btn-toggle-sidebar" class="shrink-0 w-9 h-9 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-sky-50" aria-label="Collapse controls" title="Collapse controls">
+        <i id="sidebar-icon" data-lucide="panel-left-close" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div id="sidebar-content" class="p-4 space-y-4">
+      <section class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+        <p class="text-xs uppercase font-semibold tracking-wide text-slate-500 mb-2">Wave source</p>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="btn-circular" class="mode-btn active text-sm px-3 py-2 rounded-lg border border-slate-300 bg-white flex items-center justify-center gap-2">
+            <i data-lucide="radio" class="w-4 h-4"></i><span>Circular</span>
+          </button>
+          <button id="btn-linear" class="mode-btn text-sm px-3 py-2 rounded-lg border border-slate-300 bg-white flex items-center justify-center gap-2">
+            <i data-lucide="align-justify" class="w-4 h-4"></i><span>Linear</span>
+          </button>
+        </div>
+        <p id="source-hint" class="mt-2 text-[10px] whitespace-nowrap tracking-tight text-slate-500">Click water to move the point source.</p>
+      </section>
+
+      <section class="p-3 rounded-xl border border-slate-200 bg-slate-50 grid grid-cols-2 gap-x-3 gap-y-3">
+        <div>
+          <div class="flex items-center justify-between gap-1 text-[10px] whitespace-nowrap text-slate-500">
+            <label for="frequency">Frequency</label>
+            <span id="frequency-value" class="font-semibold text-sky-700">1.2 Hz</span>
+          </div>
+          <input id="frequency" type="range" min="4" max="24" value="12" class="w-full accent-sky-600">
+        </div>
+        <div>
+          <div class="flex items-center justify-between gap-1 text-[10px] whitespace-nowrap text-slate-500">
+            <label for="wavelength">Wavelength</label>
+            <span id="wavelength-value" class="font-semibold text-sky-700">1.20 m</span>
+          </div>
+          <input id="wavelength" type="range" min="60" max="360" value="120" class="w-full accent-sky-600">
+        </div>
+        <div>
+          <div class="flex items-center justify-between gap-1 text-[10px] whitespace-nowrap text-slate-500">
+            <label for="amplitude">Amplitude</label>
+            <span id="amplitude-value" class="font-semibold text-sky-700">0.20 m</span>
+          </div>
+          <input id="amplitude" type="range" min="0" max="32" value="20" class="w-full accent-sky-600">
+        </div>
+        <div>
+          <div class="flex items-center justify-between gap-1 text-[10px] whitespace-nowrap text-slate-500">
+            <label for="damping">Damping</label>
+            <span id="damping-value" class="font-semibold text-sky-700">None</span>
+          </div>
+          <input id="damping" type="range" min="0" max="30" value="0" class="w-full accent-sky-600">
+        </div>
+      </section>
+
+      <section class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-slate-700">Show crests</span>
+          <label class="switch" aria-label="Show crests">
+            <input id="toggle-markers" type="checkbox">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-slate-700">Show wave cross-section</span>
+          <label class="switch" aria-label="Show wave cross-section">
+            <input id="toggle-cross-section" type="checkbox">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-slate-700">Show water particle</span>
+          <label class="switch" aria-label="Show water particle oscillation">
+            <input id="toggle-particle" type="checkbox">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <p id="particle-hint" class="hidden text-xs text-purple-700 bg-purple-50 border border-purple-100 rounded-lg px-2 py-1.5">
+          Drag the purple particle across the water.
+        </p>
+      </section>
+
+      <section class="grid grid-cols-2 gap-2">
+        <button id="btn-pause" class="px-2 py-2 rounded-lg bg-sky-700 text-white text-xs flex items-center justify-center gap-1.5 hover:bg-sky-800">
+          <i id="pause-icon" data-lucide="pause" class="w-4 h-4"></i><span id="pause-label">Pause</span>
+        </button>
+        <button id="btn-reset-view" class="px-2 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 text-xs flex items-center justify-center gap-1.5 hover:bg-sky-50">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i><span>Reset view</span>
+        </button>
+      </section>
+    </div>
+  </aside>
+
+  <main class="flex-1 relative min-w-0">
+    <div id="viewport" class="w-full h-full"></div>
+    <div id="wave-badge" class="absolute top-4 right-4 pointer-events-none bg-white/90 border border-sky-100 rounded-xl px-3 py-2 shadow-md backdrop-blur">
+      <span class="block text-[10px] uppercase tracking-wider text-slate-400">Source</span>
+      <span class="text-sm font-semibold text-sky-800">Circular wavefronts</span>
+    </div>
+    <div id="cross-section-panel" class="hidden absolute left-4 bottom-4 pointer-events-none w-72 max-w-[calc(100%-2rem)] bg-white/95 border border-sky-100 rounded-xl p-3 shadow-lg backdrop-blur">
+      <div class="flex items-start justify-between gap-3 mb-2">
+        <div>
+          <span class="block text-[10px] uppercase tracking-wider text-slate-400">Wave cross-section</span>
+          <span class="text-xs font-semibold text-slate-700">Displacement vs distance</span>
+        </div>
+        <span class="flex items-center gap-1 text-[10px] font-semibold text-amber-600">
+          <span class="inline-block w-4 h-0.5 bg-amber-500"></span>Ray
+        </span>
+      </div>
+      <canvas id="cross-section-canvas" width="560" height="236"></canvas>
+      <div id="wave-equation" class="mt-1.5 text-[10px] text-slate-500 font-mono truncate"></div>
+    </div>
+    <div id="navigation-hint" class="absolute right-4 bottom-4 pointer-events-none bg-white/90 border border-sky-100 rounded-xl px-3 py-2 text-xs text-slate-500 shadow-md backdrop-blur">
+      Drag to rotate · Scroll to zoom · Click water to move source
+    </div>
+  </main>
+
+  <script>
+    const TANK_WIDTH = 10;
+    const TANK_DEPTH = 7;
+    const WATER_Y = 0;
+    const SEGMENTS_X = 110;
+    const SEGMENTS_Z = 78;
+    const WAVE_SPEED = 1.44;
+
+    const viewport = document.getElementById("viewport");
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xeaf8ff);
+    scene.fog = new THREE.Fog(0xeaf8ff, 17, 31);
+
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.localClippingEnabled = true;
+    viewport.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.07;
+    controls.minDistance = 7;
+    controls.maxDistance = 23;
+    controls.minPolarAngle = Math.PI * 0.04;
+    controls.maxPolarAngle = Math.PI * 0.94;
+    controls.target.set(0, -0.2, 0);
+
+    scene.add(new THREE.HemisphereLight(0xdff6ff, 0x64748b, 1.35));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.15);
+    keyLight.position.set(-6, 10, 5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(1024, 1024);
+    scene.add(keyLight);
+
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 40),
+      new THREE.MeshStandardMaterial({ color: 0xe4edf1, roughness: 0.9 })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -30;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const tankGroup = new THREE.Group();
+    scene.add(tankGroup);
+
+    const base = new THREE.Mesh(
+      new THREE.BoxGeometry(TANK_WIDTH + 0.45, 0.18, TANK_DEPTH + 0.45),
+      new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.48, metalness: 0.22 })
+    );
+    base.position.y = -0.86;
+    base.castShadow = true;
+    base.receiveShadow = true;
+    tankGroup.add(base);
+
+    const glassMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xb9e9f8,
+      transparent: true,
+      opacity: 0.28,
+      roughness: 0.08,
+      metalness: 0,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    function addWall(width, height, depth, x, z) {
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), glassMaterial);
+      wall.position.set(x, -0.36, z);
+      wall.renderOrder = 3;
+      tankGroup.add(wall);
+    }
+    addWall(TANK_WIDTH + 0.28, 1.35, 0.14, 0, -TANK_DEPTH / 2 - 0.07);
+    addWall(TANK_WIDTH + 0.28, 1.35, 0.14, 0, TANK_DEPTH / 2 + 0.07);
+    addWall(0.14, 1.35, TANK_DEPTH, -TANK_WIDTH / 2 - 0.07, 0);
+    addWall(0.14, 1.35, TANK_DEPTH, TANK_WIDTH / 2 + 0.07, 0);
+
+    const rimMaterial = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.35, metalness: 0.35 });
+    function addRim(width, depth, x, z) {
+      const rim = new THREE.Mesh(new THREE.BoxGeometry(width, 0.12, depth), rimMaterial);
+      rim.position.set(x, 0.31, z);
+      rim.castShadow = true;
+      tankGroup.add(rim);
+    }
+    addRim(TANK_WIDTH + 0.45, 0.16, 0, -TANK_DEPTH / 2 - 0.07);
+    addRim(TANK_WIDTH + 0.45, 0.16, 0, TANK_DEPTH / 2 + 0.07);
+    addRim(0.16, TANK_DEPTH, -TANK_WIDTH / 2 - 0.07, 0);
+    addRim(0.16, TANK_DEPTH, TANK_WIDTH / 2 + 0.07, 0);
+
+    const waterGeometry = new THREE.PlaneGeometry(TANK_WIDTH, TANK_DEPTH, SEGMENTS_X, SEGMENTS_Z);
+    waterGeometry.rotateX(-Math.PI / 2);
+    const basePositions = new Float32Array(waterGeometry.attributes.position.array);
+    const waterMaterial = new THREE.MeshPhongMaterial({
+      color: 0x38bdf8,
+      emissive: 0x062f4b,
+      emissiveIntensity: 0.18,
+      transparent: true,
+      opacity: 0.84,
+      shininess: 105,
+      specular: 0xcffafe,
+      side: THREE.DoubleSide,
+      vertexColors: true
+    });
+    const colors = new Float32Array(waterGeometry.attributes.position.count * 3);
+    waterGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    const water = new THREE.Mesh(waterGeometry, waterMaterial);
+    water.receiveShadow = true;
+    water.renderOrder = 2;
+    tankGroup.add(water);
+
+    const waterVolumeMaterial = new THREE.MeshPhongMaterial({
+      color: 0x0ea5e9,
+      transparent: true,
+      opacity: 0.34,
+      shininess: 55,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const waterSides = [];
+    function createWaterSide(axis, fixedCoordinate, segments) {
+      const positions = new Float32Array((segments + 1) * 2 * 3);
+      const indices = [];
+      for (let i = 0; i < segments; i++) {
+        const a = i * 2;
+        indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+      }
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      geometry.setIndex(indices);
+      const side = new THREE.Mesh(geometry, waterVolumeMaterial);
+      side.userData = { axis, fixedCoordinate, segments };
+      side.frustumCulled = false;
+      side.renderOrder = 1;
+      tankGroup.add(side);
+      waterSides.push(side);
+    }
+    createWaterSide("x", -TANK_DEPTH / 2, SEGMENTS_X);
+    createWaterSide("x", TANK_DEPTH / 2, SEGMENTS_X);
+    createWaterSide("z", -TANK_WIDTH / 2, SEGMENTS_Z);
+    createWaterSide("z", TANK_WIDTH / 2, SEGMENTS_Z);
+
+    const waterBottom = new THREE.Mesh(
+      new THREE.PlaneGeometry(TANK_WIDTH, TANK_DEPTH),
+      waterVolumeMaterial
+    );
+    waterBottom.rotation.x = -Math.PI / 2;
+    waterBottom.position.y = -0.76;
+    waterBottom.renderOrder = 1;
+    tankGroup.add(waterBottom);
+
+    const sourceGroup = new THREE.Group();
+    tankGroup.add(sourceGroup);
+    const sourceStem = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.045, 0.045, 1.9, 16),
+      new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.55, roughness: 0.28 })
+    );
+    sourceStem.position.y = 1.15;
+    sourceStem.castShadow = true;
+    sourceGroup.add(sourceStem);
+    const pointDipper = new THREE.Mesh(
+      new THREE.SphereGeometry(0.15, 24, 16),
+      new THREE.MeshStandardMaterial({ color: 0xf97316, emissive: 0x9a3412, emissiveIntensity: 0.2 })
+    );
+    pointDipper.position.y = 0.12;
+    sourceGroup.add(pointDipper);
+    const lineDipper = new THREE.Mesh(
+      new THREE.BoxGeometry(0.16, 0.18, TANK_DEPTH * 0.94),
+      new THREE.MeshStandardMaterial({ color: 0xf97316, emissive: 0x9a3412, emissiveIntensity: 0.18 })
+    );
+    lineDipper.position.y = 0.12;
+    lineDipper.visible = false;
+    sourceGroup.add(lineDipper);
+
+    const markerGroup = new THREE.Group();
+    markerGroup.visible = false;
+    tankGroup.add(markerGroup);
+    const markerMaterial = new THREE.MeshBasicMaterial({
+      color: 0xef4444,
+      transparent: true,
+      opacity: 0.92,
+      side: THREE.DoubleSide,
+      clippingPlanes: [
+        new THREE.Plane(new THREE.Vector3(1, 0, 0), TANK_WIDTH / 2),
+        new THREE.Plane(new THREE.Vector3(-1, 0, 0), TANK_WIDTH / 2),
+        new THREE.Plane(new THREE.Vector3(0, 0, 1), TANK_DEPTH / 2),
+        new THREE.Plane(new THREE.Vector3(0, 0, -1), TANK_DEPTH / 2)
+      ]
+    });
+
+    const SAMPLE_RAY_POINTS = 96;
+    const SAMPLE_RAY_HALF_WIDTH = 0.035;
+    const sampleRayGeometry = new THREE.BufferGeometry();
+    const sampleRayPositions = new Float32Array(SAMPLE_RAY_POINTS * 2 * 3);
+    const sampleRayIndices = [];
+    for (let i = 0; i < SAMPLE_RAY_POINTS - 1; i++) {
+      const a = i * 2;
+      sampleRayIndices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+    }
+    sampleRayGeometry.setAttribute("position", new THREE.BufferAttribute(sampleRayPositions, 3));
+    sampleRayGeometry.setIndex(sampleRayIndices);
+    const sampleRay = new THREE.Mesh(
+      sampleRayGeometry,
+      new THREE.MeshBasicMaterial({ color: 0xf59e0b, side: THREE.DoubleSide })
+    );
+    sampleRay.renderOrder = 5;
+    sampleRay.frustumCulled = false;
+    sampleRay.visible = false;
+    tankGroup.add(sampleRay);
+
+    const rayTip = new THREE.Mesh(
+      new THREE.ConeGeometry(0.10, 0.28, 16),
+      new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0x78350f, emissiveIntensity: 0.18 })
+    );
+    rayTip.rotation.z = -Math.PI / 2;
+    rayTip.visible = false;
+    tankGroup.add(rayTip);
+
+    const particleGroup = new THREE.Group();
+    particleGroup.visible = false;
+    tankGroup.add(particleGroup);
+    const trackedParticle = new THREE.Mesh(
+      new THREE.SphereGeometry(0.13, 24, 18),
+      new THREE.MeshStandardMaterial({
+        color: 0xa855f7,
+        emissive: 0x581c87,
+        emissiveIntensity: 0.35,
+        roughness: 0.28
+      })
+    );
+    trackedParticle.castShadow = true;
+    particleGroup.add(trackedParticle);
+    const particleGuide = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.018, 0.018, 1, 10),
+      new THREE.MeshBasicMaterial({ color: 0x7e22ce, transparent: true, opacity: 0.55 })
+    );
+    particleGroup.add(particleGuide);
+    const circularMarkers = [];
+    const unitCirclePoints = [];
+    for (let i = 0; i < 96; i++) {
+      const angle = Math.PI * 2 * i / 96;
+      unitCirclePoints.push(new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle)));
+    }
+    const unitCircleCurve = new THREE.CatmullRomCurve3(unitCirclePoints, true);
+    const circularMarkerGeometry = new THREE.TubeGeometry(unitCircleCurve, 128, 0.018, 5, true);
+    for (let i = 0; i < 12; i++) {
+      const ring = new THREE.Mesh(circularMarkerGeometry, markerMaterial);
+      markerGroup.add(ring);
+      circularMarkers.push(ring);
+    }
+    const linearMarkers = [];
+    const linearMarkerGeometry = new THREE.BoxGeometry(0.065, 0.025, TANK_DEPTH - 0.36);
+    for (let i = 0; i < 18; i++) {
+      const line = new THREE.Mesh(linearMarkerGeometry, markerMaterial);
+      line.visible = false;
+      markerGroup.add(line);
+      linearMarkers.push(line);
+    }
+
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    let pointerDown = null;
+    let waveType = "circular";
+    let paused = false;
+    let elapsed = 0;
+    let particleDragging = false;
+    const trackedParticlePosition = new THREE.Vector2(2.2, 0);
+    const circularSourcePosition = new THREE.Vector3(0, 0, 0);
+    let params = { frequency: 1.2, wavelength: 1.2, amplitude: 0.2, damping: 0.08 };
+
+    function resetCamera() {
+      camera.position.set(7.4, 6.1, 8.0);
+      controls.target.set(
+        sourceGroup.position.x,
+        WATER_Y + 0.12,
+        sourceGroup.position.z
+      );
+      controls.update();
+    }
+    resetCamera();
+
+    function heightAt(x, z, time) {
+      let distance;
+      if (waveType === "circular") {
+        distance = Math.hypot(x - sourceGroup.position.x, z - sourceGroup.position.z);
+      } else {
+        distance = Math.abs(x - sourceGroup.position.x);
+      }
+      const k = Math.PI * 2 / params.wavelength;
+      const omega = Math.PI * 2 * params.frequency;
+      const fade = Math.exp(-params.damping * distance);
+      let height = params.amplitude * Math.sin(k * distance - omega * time) * fade;
+
+      return height;
+    }
+
+    function updateWater() {
+      const position = waterGeometry.attributes.position;
+      const color = waterGeometry.attributes.color;
+      for (let i = 0; i < position.count; i++) {
+        const x = basePositions[i * 3];
+        const z = basePositions[i * 3 + 2];
+        const height = heightAt(x, z, elapsed);
+        position.setY(i, height);
+        const normalized = Math.max(-1, Math.min(1, height / Math.max(params.amplitude, 0.01)));
+        color.setXYZ(
+          i,
+          0.08 + Math.max(0, normalized) * 0.34,
+          0.53 + normalized * 0.18,
+          0.76 + normalized * 0.19
+        );
+      }
+      position.needsUpdate = true;
+      color.needsUpdate = true;
+      waterGeometry.computeVertexNormals();
+      const dip = Math.sin(Math.PI * 2 * params.frequency * elapsed);
+      pointDipper.position.y = 0.1 + dip * params.amplitude * 0.55;
+      lineDipper.position.y = pointDipper.position.y;
+      updateWaterVolume();
+      updateMarkers();
+    }
+
+    function updateWaterVolume() {
+      waterSides.forEach(side => {
+        const { axis, fixedCoordinate, segments } = side.userData;
+        const position = side.geometry.attributes.position;
+        for (let i = 0; i <= segments; i++) {
+          const ratio = i / segments;
+          const x = axis === "x" ? -TANK_WIDTH / 2 + ratio * TANK_WIDTH : fixedCoordinate;
+          const z = axis === "z" ? -TANK_DEPTH / 2 + ratio * TANK_DEPTH : fixedCoordinate;
+          const topY = heightAt(x, z, elapsed) - 0.006;
+          position.setXYZ(i * 2, x, topY, z);
+          position.setXYZ(i * 2 + 1, x, -0.76, z);
+        }
+        position.needsUpdate = true;
+      });
+    }
+
+    function updateMarkers() {
+      // sin(kd - wt) reaches a crest at d = vt + λ/4 + nλ.
+      const phase = (
+        elapsed * WAVE_SPEED + params.wavelength * 0.25
+      ) % params.wavelength;
+      circularMarkers.forEach((ring, index) => {
+        const radius = phase + index * params.wavelength;
+        ring.scale.set(radius, 1, radius);
+        ring.position.x = sourceGroup.position.x;
+        ring.position.y = params.amplitude * Math.exp(-params.damping * radius) + 0.012;
+        ring.position.z = sourceGroup.position.z;
+        ring.visible = waveType === "circular" && params.amplitude > 0 && radius > 0.08 && radius < 6.2;
+      });
+      linearMarkers.forEach((line, index) => {
+        const offset = phase + index * params.wavelength;
+        line.position.x = sourceGroup.position.x + offset;
+        const distance = Math.abs(line.position.x - sourceGroup.position.x);
+        line.position.y = params.amplitude * Math.exp(-params.damping * distance) + 0.012;
+        line.visible = waveType === "linear"
+          && params.amplitude > 0
+          && line.position.x < TANK_WIDTH / 2;
+      });
+    }
+
+    function getSampleRay() {
+      const startX = sourceGroup.position.x;
+      const direction = waveType === "linear" || startX <= 0 ? 1 : -1;
+      const endX = direction > 0 ? TANK_WIDTH / 2 - 0.2 : -TANK_WIDTH / 2 + 0.2;
+      return {
+        startX,
+        z: sourceGroup.position.z,
+        direction,
+        length: Math.max(0.2, Math.abs(endX - startX))
+      };
+    }
+
+    function updateSampleRay() {
+      const ray = getSampleRay();
+      const position = sampleRayGeometry.attributes.position;
+      for (let i = 0; i < SAMPLE_RAY_POINTS; i++) {
+        const distance = ray.length * i / (SAMPLE_RAY_POINTS - 1);
+        const x = ray.startX + ray.direction * distance;
+        const y = heightAt(x, ray.z, elapsed) + 0.04;
+        position.setXYZ(i * 2, x, y, ray.z - SAMPLE_RAY_HALF_WIDTH);
+        position.setXYZ(i * 2 + 1, x, y, ray.z + SAMPLE_RAY_HALF_WIDTH);
+      }
+      position.needsUpdate = true;
+      const tipX = ray.startX + ray.direction * ray.length;
+      rayTip.position.set(tipX, heightAt(tipX, ray.z, elapsed) + 0.07, ray.z);
+      rayTip.rotation.z = ray.direction > 0 ? -Math.PI / 2 : Math.PI / 2;
+    }
+
+    function updateTrackedParticle() {
+      const x = trackedParticlePosition.x;
+      const z = trackedParticlePosition.y;
+      const y = heightAt(x, z, elapsed);
+      particleGroup.position.set(x, 0, z);
+      trackedParticle.position.y = y;
+      const guideHeight = Math.max(0.55, params.amplitude * 2.5);
+      particleGuide.scale.y = guideHeight;
+      particleGuide.position.y = 0;
+    }
+
+    const crossSectionCanvas = document.getElementById("cross-section-canvas");
+    const crossSectionContext = crossSectionCanvas.getContext("2d");
+    function updateCrossSection() {
+      const ctx = crossSectionContext;
+      const width = crossSectionCanvas.width;
+      const height = crossSectionCanvas.height;
+      const left = 48;
+      const right = 14;
+      const top = 14;
+      const bottom = 36;
+      const plotWidth = width - left - right;
+      const plotHeight = height - top - bottom;
+      const midY = top + plotHeight / 2;
+      const scaleAmplitude = Math.max(0.05, params.amplitude * 1.15);
+      const ray = getSampleRay();
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.strokeStyle = "#dbeafe";
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const x = left + plotWidth * i / 4;
+        ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + plotHeight); ctx.stroke();
+      }
+      for (let i = 0; i <= 4; i++) {
+        const y = top + plotHeight * i / 4;
+        ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + plotWidth, y); ctx.stroke();
+      }
+
+      ctx.strokeStyle = "#64748b";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(left, midY); ctx.lineTo(left + plotWidth, midY); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(left, top); ctx.lineTo(left, top + plotHeight); ctx.stroke();
+
+      ctx.strokeStyle = "#f59e0b";
+      ctx.lineWidth = 8;
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      for (let i = 0; i <= 180; i++) {
+        const distance = ray.length * i / 180;
+        const xWorld = ray.startX + ray.direction * distance;
+        const displacement = heightAt(xWorld, ray.z, elapsed);
+        const px = left + plotWidth * i / 180;
+        const py = midY - displacement / scaleAmplitude * (plotHeight / 2);
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      ctx.fillStyle = "#64748b";
+      ctx.font = "20px Trebuchet MS, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("distance from source (m)", left + plotWidth / 2, height - 8);
+      ctx.save();
+      ctx.translate(16, top + plotHeight / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText("displacement", 0, 0);
+      ctx.restore();
+      ctx.textAlign = "right";
+      ctx.font = "18px Trebuchet MS, sans-serif";
+      ctx.fillText(ray.length.toFixed(1), left + plotWidth, midY + 24);
+
+      document.getElementById("wave-equation").textContent =
+        `y = ${params.amplitude.toFixed(2)} sin(2π(x/${params.wavelength.toFixed(2)} − ${params.frequency.toFixed(2)}t)) e^(−${params.damping.toFixed(2)}x)`;
+    }
+
+    function setWaveType(type) {
+      if (waveType === "circular") {
+        circularSourcePosition.copy(sourceGroup.position);
+      }
+      waveType = type;
+      if (type === "linear") {
+        sourceGroup.position.set(-TANK_WIDTH / 2 + 0.18, 0, 0);
+      } else {
+        sourceGroup.position.copy(circularSourcePosition);
+      }
+      document.getElementById("btn-circular").classList.toggle("active", type === "circular");
+      document.getElementById("btn-linear").classList.toggle("active", type === "linear");
+      pointDipper.visible = type === "circular";
+      lineDipper.visible = type === "linear";
+      document.getElementById("source-hint").textContent = type === "circular"
+        ? "Click water to move the point source."
+        : "Straight dipper fixed at left edge.";
+      document.getElementById("navigation-hint").textContent = type === "circular"
+        ? "Drag to rotate · Scroll to zoom · Click water to move source"
+        : "Drag to rotate · Scroll to zoom";
+      document.querySelector("#wave-badge span:last-child").textContent =
+        type === "circular" ? "Circular wavefronts" : "Linear wavefronts";
+    }
+
+    function bindRange(id, apply, format) {
+      const input = document.getElementById(id);
+      const output = document.getElementById(id + "-value");
+      const update = () => {
+        const value = Number(input.value);
+        apply(value);
+        output.textContent = format(value);
+      };
+      input.addEventListener("input", update);
+      update();
+    }
+    const frequencyInput = document.getElementById("frequency");
+    const wavelengthInput = document.getElementById("wavelength");
+    const frequencyValue = document.getElementById("frequency-value");
+    const wavelengthValue = document.getElementById("wavelength-value");
+
+    function setFrequency(rawValue) {
+      params.frequency = Number(rawValue) / 10;
+      params.wavelength = WAVE_SPEED / params.frequency;
+      wavelengthInput.value = Math.round(params.wavelength * 100);
+      frequencyValue.textContent = params.frequency.toFixed(1) + " Hz";
+      wavelengthValue.textContent = params.wavelength.toFixed(2) + " m";
+    }
+
+    function setWavelength(rawValue) {
+      params.wavelength = Number(rawValue) / 100;
+      params.frequency = WAVE_SPEED / params.wavelength;
+      frequencyInput.value = Math.round(params.frequency * 10);
+      frequencyValue.textContent = params.frequency.toFixed(2) + " Hz";
+      wavelengthValue.textContent = params.wavelength.toFixed(2) + " m";
+    }
+
+    frequencyInput.addEventListener("input", () => setFrequency(frequencyInput.value));
+    wavelengthInput.addEventListener("input", () => setWavelength(wavelengthInput.value));
+    setFrequency(frequencyInput.value);
+
+    bindRange("amplitude", v => params.amplitude = v / 100, v => (v / 100).toFixed(2) + " m");
+    bindRange("damping", v => params.damping = v / 100, v => v === 0 ? "None" : v < 10 ? "Low" : v < 21 ? "Medium" : "High");
+
+    document.getElementById("btn-circular").addEventListener("click", () => setWaveType("circular"));
+    document.getElementById("btn-linear").addEventListener("click", () => setWaveType("linear"));
+    document.getElementById("toggle-markers").addEventListener("change", e => markerGroup.visible = e.target.checked);
+    document.getElementById("toggle-cross-section").addEventListener("change", e => {
+      sampleRay.visible = e.target.checked;
+      rayTip.visible = e.target.checked;
+      document.getElementById("cross-section-panel").classList.toggle("hidden", !e.target.checked);
+    });
+    document.getElementById("toggle-particle").addEventListener("change", e => {
+      particleGroup.visible = e.target.checked;
+      document.getElementById("particle-hint").classList.toggle("hidden", !e.target.checked);
+    });
+    document.getElementById("btn-reset-view").addEventListener("click", resetCamera);
+    document.getElementById("btn-pause").addEventListener("click", () => {
+      paused = !paused;
+      document.getElementById("pause-label").textContent = paused ? "Resume" : "Pause";
+      document.getElementById("pause-icon").setAttribute("data-lucide", paused ? "play" : "pause");
+      lucide.createIcons();
+    });
+
+    document.getElementById("btn-toggle-sidebar").addEventListener("click", () => {
+      document.body.classList.toggle("sidebar-collapsed");
+      const collapsed = document.body.classList.contains("sidebar-collapsed");
+      const button = document.getElementById("btn-toggle-sidebar");
+      button.setAttribute("aria-label", collapsed ? "Expand controls" : "Collapse controls");
+      button.title = collapsed ? "Expand controls" : "Collapse controls";
+      document.getElementById("sidebar-icon").setAttribute("data-lucide", collapsed ? "panel-left-open" : "panel-left-close");
+      lucide.createIcons();
+      setTimeout(resize, 190);
+    });
+
+    function setPointerFromEvent(e) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+    }
+
+    renderer.domElement.addEventListener("pointerdown", e => {
+      pointerDown = { x: e.clientX, y: e.clientY };
+      if (particleGroup.visible) {
+        setPointerFromEvent(e);
+        if (raycaster.intersectObject(trackedParticle, false).length) {
+          particleDragging = true;
+          controls.enabled = false;
+          renderer.domElement.setPointerCapture(e.pointerId);
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    }, true);
+    renderer.domElement.addEventListener("pointermove", e => {
+      if (!particleDragging) return;
+      setPointerFromEvent(e);
+      const hit = raycaster.intersectObject(water)[0];
+      if (hit) {
+        trackedParticlePosition.set(
+          Math.max(-TANK_WIDTH / 2 + 0.18, Math.min(TANK_WIDTH / 2 - 0.18, hit.point.x)),
+          Math.max(-TANK_DEPTH / 2 + 0.18, Math.min(TANK_DEPTH / 2 - 0.18, hit.point.z))
+        );
+      }
+      e.preventDefault();
+    });
+    renderer.domElement.addEventListener("pointerup", e => {
+      if (particleDragging) {
+        particleDragging = false;
+        controls.enabled = true;
+        pointerDown = null;
+        renderer.domElement.releasePointerCapture(e.pointerId);
+        return;
+      }
+      if (!pointerDown || Math.hypot(e.clientX - pointerDown.x, e.clientY - pointerDown.y) > 5) return;
+      setPointerFromEvent(e);
+      const hit = raycaster.intersectObject(water)[0];
+      if (hit && waveType === "circular") {
+        sourceGroup.position.x = Math.max(-4.25, Math.min(4.25, hit.point.x));
+        sourceGroup.position.z = Math.max(-2.75, Math.min(2.75, hit.point.z));
+        circularSourcePosition.copy(sourceGroup.position);
+      }
+    });
+    renderer.domElement.addEventListener("pointercancel", () => {
+      particleDragging = false;
+      controls.enabled = true;
+      pointerDown = null;
+    });
+
+    function resize() {
+      const width = Math.max(1, viewport.clientWidth);
+      const height = Math.max(1, viewport.clientHeight);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height, false);
+    }
+    window.addEventListener("resize", resize);
+    const viewportResizeObserver = new ResizeObserver(resize);
+    viewportResizeObserver.observe(viewport);
+    resize();
+    requestAnimationFrame(() => {
+      resize();
+      resetCamera();
+    });
+    lucide.createIcons();
+
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = Math.min(clock.getDelta(), 0.04);
+      if (!paused) elapsed += delta;
+      updateWater();
+      updateSampleRay();
+      updateTrackedParticle();
+      updateCrossSection();
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
