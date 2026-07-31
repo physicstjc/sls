@@ -1302,6 +1302,7 @@
           base.visible = true;
           rebuildPhaseDistanceCache();
           restartWaves();
+          setCrossSectionAvailability(true);
           updateCrestAvailability();
         } else {
           const toggleByPage = {
@@ -1379,6 +1380,18 @@
       markerToggle.closest("div").classList.toggle("opacity-50", disabled || refractionEnabled);
     }
 
+    function setCrossSectionAvailability(enabled) {
+      const toggle = document.getElementById("toggle-cross-section");
+      toggle.disabled = !enabled;
+      toggle.closest("div").classList.toggle("opacity-50", !enabled);
+      if (!enabled) {
+        toggle.checked = false;
+        sampleRay.visible = false;
+        rayTip.visible = false;
+        document.getElementById("cross-section-panel").classList.add("hidden");
+      }
+    }
+
     function applyBoundaryControls() {
       depthRatio = Number(depthRatioInput.value) / 100;
       boundaryNearX = Number(boundaryNearInput.value) / 100;
@@ -1398,14 +1411,15 @@
       refractionEnabled = e.target.checked;
       experimentMode = refractionEnabled ? "refraction" : "none";
       if (refractionEnabled) {
+        setCrossSectionAvailability(true);
         setWaveType("linear");
         restartWaves();
         const crossSectionToggle = document.getElementById("toggle-cross-section");
-        if (!crossSectionToggle.checked) refractionAutoRay = true;
-        crossSectionToggle.checked = true;
-        sampleRay.visible = true;
-        rayTip.visible = true;
-        document.getElementById("cross-section-panel").classList.remove("hidden");
+        crossSectionToggle.checked = false;
+        sampleRay.visible = false;
+        rayTip.visible = false;
+        document.getElementById("cross-section-panel").classList.add("hidden");
+        refractionAutoRay = false;
       }
       boundaryGroup.visible = refractionEnabled;
       depthBottomGroup.visible = refractionEnabled;
@@ -1458,6 +1472,7 @@
       if (e.target.checked) {
         clearOtherExperiments("reflection");
         experimentMode = "reflection";
+        setCrossSectionAvailability(true);
         setWaveType("linear");
         restartWaves();
       } else if (experimentMode === "reflection") experimentMode = "none";
@@ -1490,6 +1505,7 @@
       if (e.target.checked) {
         clearOtherExperiments("diffraction");
         experimentMode = "diffraction";
+        setCrossSectionAvailability(false);
         setWaveType("linear");
         restartWaves();
       } else if (experimentMode === "diffraction") experimentMode = "none";
@@ -1511,6 +1527,7 @@
       if (e.target.checked) {
         clearOtherExperiments("interference");
         experimentMode = "interference";
+        setCrossSectionAvailability(false);
         restartWaves();
       } else if (experimentMode === "interference") experimentMode = "none";
       if (!e.target.checked) {
