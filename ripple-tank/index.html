@@ -1303,6 +1303,7 @@
           rebuildPhaseDistanceCache();
           restartWaves();
           setCrossSectionAvailability(true);
+          setCircularSourceAvailability(true);
           updateCrestAvailability();
         } else {
           const toggleByPage = {
@@ -1392,6 +1393,15 @@
       }
     }
 
+    function setCircularSourceAvailability(enabled) {
+      const button = document.getElementById("btn-circular");
+      button.disabled = !enabled;
+      button.classList.toggle("opacity-40", !enabled);
+      button.classList.toggle("cursor-not-allowed", !enabled);
+      button.querySelector("span").textContent = enabled ? "Circular" : "Not available";
+      button.title = enabled ? "Circular wave source" : "Circular source is not available for diffraction";
+    }
+
     function applyBoundaryControls() {
       depthRatio = Number(depthRatioInput.value) / 100;
       boundaryNearX = Number(boundaryNearInput.value) / 100;
@@ -1412,6 +1422,7 @@
       experimentMode = refractionEnabled ? "refraction" : "none";
       if (refractionEnabled) {
         setCrossSectionAvailability(true);
+        setCircularSourceAvailability(true);
         setWaveType("linear");
         restartWaves();
         const crossSectionToggle = document.getElementById("toggle-cross-section");
@@ -1473,6 +1484,7 @@
         clearOtherExperiments("reflection");
         experimentMode = "reflection";
         setCrossSectionAvailability(true);
+        setCircularSourceAvailability(true);
         setWaveType("linear");
         restartWaves();
       } else if (experimentMode === "reflection") experimentMode = "none";
@@ -1506,6 +1518,7 @@
         clearOtherExperiments("diffraction");
         experimentMode = "diffraction";
         setCrossSectionAvailability(false);
+        setCircularSourceAvailability(false);
         setWaveType("linear");
         restartWaves();
       } else if (experimentMode === "diffraction") experimentMode = "none";
@@ -1528,6 +1541,7 @@
         clearOtherExperiments("interference");
         experimentMode = "interference";
         setCrossSectionAvailability(false);
+        setCircularSourceAvailability(true);
         restartWaves();
       } else if (experimentMode === "interference") experimentMode = "none";
       if (!e.target.checked) {
