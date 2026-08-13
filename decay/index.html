@@ -366,6 +366,16 @@
             }
         }
     </style>
+
+    <script src="./lib/xapiwrapper.min.js"></script>
+    <script src="./lib/xAPI.js"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FSRBCRECMR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-FSRBCRECMR');
+  </script>
 </head>
 <body>
     <div class="container">
@@ -379,8 +389,8 @@
                 <label for="diceSlider">Number of Dice</label>
                 <div class="slider-container">
                     <span id="minValue">1</span>
-                    <input type="range" id="diceSlider" min="1" max="20" value="5" step="1">
-                    <span id="maxValue">400</span>
+                    <input type="range" id="diceSlider" min="1" max="50" value="5" step="1">
+                    <span id="maxValue">2500</span>
                 </div>
                 <span id="diceCount">25 dice</span>
             </div>
@@ -421,7 +431,7 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+    <script src="plotly.min.js"></script>
     <script>
         class RadioactiveDecaySimulation {
             constructor() {
@@ -431,11 +441,17 @@
                 this.isRolling = false;
                 this.fitSlope = null;
                 this.fitIntercept = null;
+                this.measuredHalfLifeValue = null;
+                this.measuredHalfLifeStatus = 'not_started';
+                this.sessionStartedAt = Date.now();
+                this.xapiActionLog = [];
+                this.xapiRunCounter = 0;
+                this.xapiRunHistory = [];
+                this.currentXAPIRun = null;
                 
                 this.initElements();
                 this.initGraph();
                 this.updateDiceCount();
-                this.resetSimulation();
             }
 
             initElements() {
@@ -451,7 +467,7 @@
 
                 this.diceSlider.addEventListener('input', () => this.updateDiceCount());
                 this.rollBtn.addEventListener('click', () => this.rollDice());
-                this.resetBtn.addEventListener('click', () => this.resetSimulation());
+                this.resetBtn.addEventListener('click', () => this.resetSimulation('simulation_reset'));
             }
 
             initGraph() {
@@ -469,7 +485,7 @@
                         if (this.dice.length > 0) {
                             const gridSize = Math.sqrt(this.dice.length);
                             this.createDice(this.dice.length, gridSize);
-                            this.resetSimulation();
+                            this.resetSimulation('layout_resize', false);
                         }
                     }, 100);
                 });
@@ -537,8 +553,9 @@
                 const sliderValue = parseInt(this.diceSlider.value);
                 const diceCount = sliderValue * sliderValue;
                 this.diceCountDisplay.textContent = `${diceCount} dice (${sliderValue}×${sliderValue})`;
+                this.finalizeCurrentXAPIRun('dice_count_changed');
                 this.createDice(diceCount, sliderValue);
-                this.resetSimulation();
+                this.resetSimulation('dice_count_changed', false);
             }
 
             createDice(count, gridSize) {
@@ -597,6 +614,7 @@
 
                 // Roll results
                 let decayedThisRound = 0;
+                const activeBeforeRoll = activeDice.length;
                 activeDice.forEach(die => {
                     const roll = Math.floor(Math.random() * 6) + 1;
                     die.value = roll;
@@ -620,6 +638,12 @@
 
                 this.updateStats();
                 this.updatePlot();
+                this.recordXAPIInteraction('dice_rolled', {
+                    cast: this.castNumber,
+                    activeBeforeRoll: activeBeforeRoll,
+                    activeAfterRoll: remainingDice,
+                    decayedThisRound: decayedThisRound
+                });
 
                 this.isRolling = false;
                 this.rollBtn.disabled = false;
@@ -640,6 +664,8 @@
             calculateMeasuredHalfLife() {
                 if (this.castData.length < 3) {
                     this.measuredHalfLifeDisplay.textContent = '-';
+                    this.measuredHalfLifeValue = null;
+                    this.measuredHalfLifeStatus = 'insufficient_data';
                     return;
                 }
 
@@ -665,11 +691,15 @@
                 
                 if (halfLifeCast !== null) {
                     this.measuredHalfLifeDisplay.textContent = halfLifeCast.toFixed(2) + ' casts';
+                    this.measuredHalfLifeValue = halfLifeCast;
+                    this.measuredHalfLifeStatus = 'measured';
                 } else if (this.castData[this.castData.length - 1].remaining < halfPoint) {
                     // If we've passed half-life, estimate based on exponential fit
                     this.fitExponentialCurve();
                 } else {
                     this.measuredHalfLifeDisplay.textContent = 'Not reached';
+                    this.measuredHalfLifeValue = null;
+                    this.measuredHalfLifeStatus = 'not_reached';
                 }
             }
 
@@ -709,7 +739,12 @@
                     const decayConstant = -slope;
                     const measuredHalfLife = Math.log(2) / decayConstant;
                     this.measuredHalfLifeDisplay.textContent = measuredHalfLife.toFixed(2) + ' casts';
+                    this.measuredHalfLifeValue = measuredHalfLife;
+                    this.measuredHalfLifeStatus = 'estimated_from_fit';
+                    return measuredHalfLife;
                 }
+
+                return null;
             }
 
             updatePlot() {
@@ -811,13 +846,19 @@
                 Plotly.react(this.plotDiv, data, layout);
             }
 
-            resetSimulation() {
+            resetSimulation(reason = 'simulation_reset', archiveCurrent = true) {
+                if (archiveCurrent) {
+                    this.finalizeCurrentXAPIRun(reason);
+                }
+
                 this.castData = [{cast: 0, remaining: this.dice.length}];
                 this.castNumber = 0;
                 this.isRolling = false;
                 this.rollBtn.disabled = false;
                 this.fitSlope = null;
                 this.fitIntercept = null;
+                this.measuredHalfLifeValue = null;
+                this.measuredHalfLifeStatus = 'not_started';
 
                 this.dice.forEach(die => {
                     die.active = true;
@@ -828,6 +869,190 @@
 
                 this.updateStats();
                 this.updatePlot();
+                this.startNewXAPIRun(reason);
+                this.recordXAPIInteraction(reason);
+            }
+
+            getCurrentXAPIRunSnapshot(status = 'in_progress') {
+                const activeDice = this.dice.filter(die => die.active).length;
+                const decayedDice = this.dice.length - activeDice;
+                const halfLife = this.measuredHalfLifeValue === null ? null : Number(this.measuredHalfLifeValue.toFixed(4));
+
+                return {
+                    runId: this.currentXAPIRun ? this.currentXAPIRun.runId : this.xapiRunCounter,
+                    status: status,
+                    numberOfDice: this.dice.length,
+                    numberOfRolls: this.castNumber,
+                    measuredHalfLife: halfLife,
+                    measuredHalfLifeUnit: 'casts',
+                    measuredHalfLifeStatus: this.measuredHalfLifeStatus,
+                    activeDice: activeDice,
+                    decayedDice: decayedDice,
+                    castData: this.castData.map(d => ({ cast: d.cast, remaining: d.remaining }))
+                };
+            }
+
+            startNewXAPIRun(reason) {
+                this.xapiRunCounter++;
+                this.currentXAPIRun = {
+                    runId: this.xapiRunCounter,
+                    startedAt: new Date().toISOString(),
+                    startReason: reason,
+                    numberOfDice: this.dice.length,
+                    numberOfRolls: 0,
+                    measuredHalfLife: null,
+                    measuredHalfLifeUnit: 'casts',
+                    measuredHalfLifeStatus: this.measuredHalfLifeStatus,
+                    activeDice: this.dice.length,
+                    decayedDice: 0,
+                    castData: this.castData.map(d => ({ cast: d.cast, remaining: d.remaining }))
+                };
+            }
+
+            updateCurrentXAPIRun(status = 'in_progress') {
+                if (!this.currentXAPIRun) {
+                    this.startNewXAPIRun('auto_started');
+                }
+
+                const snapshot = this.getCurrentXAPIRunSnapshot(status);
+                Object.assign(this.currentXAPIRun, snapshot);
+                return Object.assign({}, this.currentXAPIRun);
+            }
+
+            finalizeCurrentXAPIRun(reason) {
+                if (!this.currentXAPIRun || this.castNumber === 0) return;
+
+                const completedRun = this.updateCurrentXAPIRun('completed');
+                completedRun.completedAt = new Date().toISOString();
+                completedRun.completedReason = reason;
+                this.xapiRunHistory.push(completedRun);
+                this.currentXAPIRun = null;
+            }
+
+            getXAPIPayload(reason, rollSummary = null) {
+                const activeDice = this.dice.filter(die => die.active).length;
+                const decayedDice = this.dice.length - activeDice;
+                const elapsedSec = Math.round((Date.now() - this.sessionStartedAt) / 1000);
+                const halfLife = this.measuredHalfLifeValue === null ? null : Number(this.measuredHalfLifeValue.toFixed(4));
+                const currentRun = this.updateCurrentXAPIRun('in_progress');
+                const allRuns = this.xapiRunHistory.concat([currentRun]);
+                const runFeedback = allRuns.map(run => {
+                    const runHalfLife = run.measuredHalfLife === null
+                        ? run.measuredHalfLifeStatus
+                        : `${run.measuredHalfLife} ${run.measuredHalfLifeUnit}`;
+                    return [
+                        `Run ${run.runId}:`,
+                        `Dice: ${run.numberOfDice}`,
+                        `Rolls: ${run.numberOfRolls}`,
+                        `Measured half-life: ${runHalfLife}`,
+                        `Status: ${run.status}`
+                    ].join(' ');
+                });
+
+                return {
+                    reason: reason,
+                    feedback: [
+                        `Runs recorded: ${allRuns.length}`,
+                        ...runFeedback
+                    ].join('<br>'),
+                    summary: {
+                        interactions: this.castNumber,
+                        rolls: this.castNumber,
+                        diceCount: this.dice.length,
+                        activeDice: activeDice,
+                        decayedDice: decayedDice,
+                        measuredHalfLifeCasts: halfLife,
+                        measuredHalfLifeStatus: this.measuredHalfLifeStatus,
+                        runsRecorded: allRuns.length,
+                        elapsedSec: elapsedSec
+                    },
+                    details: {
+                        simulation: 'radioactive-decay-dice',
+                        numberOfDice: this.dice.length,
+                        numberOfRolls: this.castNumber,
+                        measuredHalfLife: halfLife,
+                        measuredHalfLifeUnit: 'casts',
+                        measuredHalfLifeStatus: this.measuredHalfLifeStatus,
+                        lastRoll: rollSummary,
+                        castData: this.castData,
+                        currentRun: currentRun,
+                        runHistory: allRuns
+                    },
+                    actionLog: this.xapiActionLog.slice(-100)
+                };
+            }
+
+            recordXAPIInteraction(reason, rollSummary = null) {
+                const entry = {
+                    t: Math.round((Date.now() - this.sessionStartedAt) / 1000),
+                    type: reason,
+                    label: reason === 'dice_rolled'
+                        ? `Roll ${this.castNumber}: ${rollSummary.decayedThisRound} decayed, ${rollSummary.activeAfterRoll} remaining`
+                        : reason
+                };
+                this.xapiActionLog.push(entry);
+
+                const payload = this.getXAPIPayload(reason, rollSummary);
+
+                if (typeof window.storeState === 'function') {
+                    try {
+                        window.storeState(payload);
+                    } catch (err) {
+                        console.warn('[xAPI] Unable to store simulation state:', err);
+                    }
+                }
+
+                this.sendXAPIInteractionStatement(payload);
+            }
+
+            sendXAPIInteractionStatement(payload) {
+                try {
+                    if (!window.XAPIUtils || !window.ADL || !window.ADL.XAPIWrapper) return;
+
+                    const params = window.XAPIUtils.getParameters();
+                    if (!params || !params.agent || !params.activityId || !params.endpoint) return;
+
+                    const extensions = {
+                        'https://iwant2study.org/xapi/extensions/numberOfDice': payload.details.numberOfDice,
+                        'https://iwant2study.org/xapi/extensions/numberOfRolls': payload.details.numberOfRolls,
+                        'https://iwant2study.org/xapi/extensions/measuredHalfLife': payload.details.measuredHalfLife,
+                        'https://iwant2study.org/xapi/extensions/measuredHalfLifeUnit': payload.details.measuredHalfLifeUnit,
+                        'https://iwant2study.org/xapi/extensions/measuredHalfLifeStatus': payload.details.measuredHalfLifeStatus,
+                        'https://iwant2study.org/xapi/extensions/activeDice': payload.summary.activeDice,
+                        'https://iwant2study.org/xapi/extensions/decayedDice': payload.summary.decayedDice,
+                        'https://iwant2study.org/xapi/extensions/lastRoll': payload.details.lastRoll,
+                        'https://iwant2study.org/xapi/extensions/runsRecorded': payload.summary.runsRecorded,
+                        'https://iwant2study.org/xapi/extensions/currentRun': payload.details.currentRun,
+                        'https://iwant2study.org/xapi/extensions/runHistory': payload.details.runHistory
+                    };
+
+                    window.ADL.XAPIWrapper.sendStatement({
+                        actor: params.agent,
+                        verb: {
+                            id: 'http://adlnet.gov/expapi/verbs/interacted',
+                            display: { 'en-US': 'interacted' }
+                        },
+                        object: {
+                            id: params.activityId,
+                            definition: {
+                                name: { 'en-US': 'Radioactive Decay Simulation' },
+                                type: 'http://adlnet.gov/expapi/activities/simulation'
+                            }
+                        },
+                        result: {
+                            response: payload.feedback,
+                            extensions: extensions
+                        },
+                        context: {
+                            extensions: {
+                                'https://iwant2study.org/xapi/extensions/reason': payload.reason
+                            }
+                        },
+                        timestamp: new Date().toISOString()
+                    });
+                } catch (err) {
+                    console.warn('[xAPI] Unable to send simulation interaction statement:', err);
+                }
             }
         }
 
