@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Radioactive Decay Simulation</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='52' font-size='52'%3E%E2%9A%9B%3C/text%3E%3C/svg%3E">
     <style>
         * {
             margin: 0;
@@ -431,7 +432,6 @@
         </div>
     </div>
 
-    <script src="plotly.min.js"></script>
     <script>
         class RadioactiveDecaySimulation {
             constructor() {
@@ -927,6 +927,50 @@
                 completedRun.completedReason = reason;
                 this.xapiRunHistory.push(completedRun);
                 this.currentXAPIRun = null;
+                this.sendXAPICompletedRunStatement(completedRun);
+            }
+
+            sendXAPICompletedRunStatement(run) {
+                try {
+                    if (!window.XAPIUtils || !window.ADL || !window.ADL.XAPIWrapper) return;
+
+                    const params = window.XAPIUtils.getParameters();
+                    if (!params || !params.agent || !params.activityId || !params.endpoint) return;
+
+                    window.ADL.XAPIWrapper.sendStatement({
+                        actor: params.agent,
+                        verb: {
+                            id: 'http://adlnet.gov/expapi/verbs/completed',
+                            display: { 'en-US': 'completed' }
+                        },
+                        object: {
+                            id: `${params.activityId}/simulation-run/${run.runId}`,
+                            definition: {
+                                name: { 'en-US': `Radioactive Decay Simulation Run ${run.runId}` },
+                                type: 'http://adlnet.gov/expapi/activities/simulation'
+                            }
+                        },
+                        result: {
+                            response: `Dice: ${run.numberOfDice}; Rolls: ${run.numberOfRolls}; Measured half-life: ${run.measuredHalfLife === null ? run.measuredHalfLifeStatus : `${run.measuredHalfLife} ${run.measuredHalfLifeUnit}`}`,
+                            extensions: {
+                                'https://iwant2study.org/xapi/extensions/runId': run.runId,
+                                'https://iwant2study.org/xapi/extensions/numberOfDice': run.numberOfDice,
+                                'https://iwant2study.org/xapi/extensions/numberOfRolls': run.numberOfRolls,
+                                'https://iwant2study.org/xapi/extensions/measuredHalfLife': run.measuredHalfLife,
+                                'https://iwant2study.org/xapi/extensions/measuredHalfLifeUnit': run.measuredHalfLifeUnit,
+                                'https://iwant2study.org/xapi/extensions/measuredHalfLifeStatus': run.measuredHalfLifeStatus
+                            }
+                        },
+                        context: {
+                            extensions: {
+                                'https://iwant2study.org/xapi/extensions/completedReason': run.completedReason
+                            }
+                        },
+                        timestamp: run.completedAt
+                    });
+                } catch (err) {
+                    console.warn('[xAPI] Unable to send completed simulation run:', err);
+                }
             }
 
             getXAPIPayload(reason, rollSummary = null) {
@@ -1056,10 +1100,48 @@
             }
         }
 
-        // Initialize the simulation when the page loads
-        window.addEventListener('load', () => {
-            new RadioactiveDecaySimulation();
-        });
+        // Load the bundled copy first. Some hosting environments omit large
+        // companion files, so use a version-matched CDN copy as a fallback.
+        function initializeSimulation() {
+            if (window.Plotly) {
+                new RadioactiveDecaySimulation();
+                return;
+            }
+
+            const graph = document.getElementById('plotlyGraph');
+            graph.textContent = 'Unable to load the graph library. Please reload the page.';
+            graph.style.cssText += ';padding: 1rem; color: #333; display: grid; place-items: center; text-align: center;';
+        }
+
+        function loadPlotly() {
+            const sources = [
+                './plotly.min.js',
+                'https://cdn.plot.ly/plotly-2.26.0.min.js'
+            ];
+
+            function loadNextSource() {
+                if (window.Plotly || sources.length === 0) {
+                    initializeSimulation();
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = sources.shift();
+                script.onload = () => {
+                    if (window.Plotly) {
+                        initializeSimulation();
+                    } else {
+                        loadNextSource();
+                    }
+                };
+                script.onerror = loadNextSource;
+                document.head.appendChild(script);
+            }
+
+            loadNextSource();
+        }
+
+        loadPlotly();
     </script>
 </body>
 </html>
