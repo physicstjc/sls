@@ -1952,7 +1952,6 @@
     async function exportPNG() {
       const wasGridVisible = state.showGrid;
       const oldSelected = [...state.selected];
-      const viewBox = svg.getAttribute('viewBox').trim().split(/\s+/).map(Number);
       state.showGrid = false;
       state.selected = [];
       render();
@@ -1962,70 +1961,50 @@
 
       try {
         const SCALE = 2;
-        const vb = viewBox.length === 4 ? viewBox : [0, 0, svg.clientWidth, svg.clientHeight];
-        const canvasW = Math.max(1, svg.clientWidth * SCALE);
-        const canvasH = Math.max(1, svg.clientHeight * SCALE);
+        // Labels are HTML inside foreignObjects, so include their rendered size in
+        // the crop rather than just the component geometry.
+        const bounds = contentBounds(true);
+        const padding = 8;
+        const vb = [
+          bounds.x - padding,
+          bounds.y - padding,
+          bounds.w + padding * 2,
+          bounds.h + padding * 2
+        ];
+        const canvasW = Math.max(1, Math.ceil(vb[2] * SCALE));
+        const canvasH = Math.max(1, Math.ceil(vb[3] * SCALE));
 
-        // --- Pass 1: Serialize the visible circuit (without labels) to canvas ---
+        // Rasterize the SVG itself. Labels remain in their original SVG
+        // foreignObjects, so their PNG positions are identical to the canvas.
         const svgClone = svg.cloneNode(true);
         svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        // Remove foreignObjects (labels), hitboxes, selection highlights
-        svgClone.querySelectorAll('foreignObject, .latex-hitbox, rect[stroke-dasharray]').forEach(el => el.remove());
         svgClone.setAttribute('viewBox', vb.join(' '));
-        svgClone.setAttribute('width', svg.clientWidth);
-        svgClone.setAttribute('height', svg.clientHeight);
+        svgClone.setAttribute('width', vb[2]);
+        svgClone.setAttribute('height', vb[3]);
+        svgClone.querySelectorAll('.latex-hitbox, rect[stroke-dasharray]').forEach(el => el.remove());
+
+        // A serialized SVG cannot read the page's KaTeX stylesheet. Inline the
+        // computed label styles so the native SVG image renderer matches canvas.
+        const sourceLabels = svg.querySelectorAll('foreignObject.latex-label');
+        const clonedLabels = svgClone.querySelectorAll('foreignObject.latex-label');
+        sourceLabels.forEach((label, index) => inlineComputedStyles(label, clonedLabels[index]));
 
         const svgString = new XMLSerializer().serializeToString(svgClone);
         const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
-
         const canvas = document.createElement('canvas');
         canvas.width = canvasW;
         canvas.height = canvasH;
         const ctx = canvas.getContext('2d');
-
         if (ui.exportBg.value === 'white') {
-          ctx.fillStyle = 'white';
+          ctx.fillStyle = '#ffffff';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
-
         await new Promise((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); resolve(); };
-          img.onerror = (e) => { console.error("SVG Image Load Error:", e); reject(e); };
-          img.src = svgDataUrl;
+          const image = new Image();
+          image.onload = () => { ctx.drawImage(image, 0, 0, canvas.width, canvas.height); resolve(); };
+          image.onerror = reject;
+          image.src = svgDataUrl;
         });
-
-        // --- Pass 2: Capture each rendered KaTeX label and composite it ---
-        const foreignObjects = svg.querySelectorAll('foreignObject.latex-label');
-        for (const fo of foreignObjects) {
-          const foX = parseFloat(fo.getAttribute('x'));
-          const foY = parseFloat(fo.getAttribute('y'));
-          const foW = parseFloat(fo.getAttribute('width'));
-          const foH = parseFloat(fo.getAttribute('height'));
-
-          const mathDiv = fo.querySelector('.math-container');
-          if (!mathDiv) continue;
-
-          // Map SVG coords → canvas pixel coords
-          const px = (foX - vb[0]) * SCALE;
-          const py = (foY - vb[1]) * SCALE;
-          const pw = foW * SCALE;
-          const ph = foH * SCALE;
-
-          // Render the already-typeset KaTeX HTML in an isolated off-screen div using html2canvas
-          try {
-            const labelCanvas = await html2canvas(mathDiv, {
-              backgroundColor: null,
-              scale: SCALE,
-              logging: false,
-              width: foW,
-              height: foH
-            });
-            ctx.drawImage(labelCanvas, 0, 0, labelCanvas.width, labelCanvas.height, px, py, pw, ph);
-          } catch (err) {
-            console.warn("Label Capture Failed:", err);
-          }
-        }
 
         // --- Download ---
         canvas.toBlob(blob => {
@@ -2053,7 +2032,6 @@
     async function exportSVG() {
       const wasGridVisible = state.showGrid;
       const oldSelected = [...state.selected];
-      const viewBox = svg.getAttribute('viewBox').trim().split(/\s+/).map(Number);
       state.showGrid = false;
       state.selected = [];
       render();
@@ -2061,13 +2039,26 @@
       await new Promise(r => setTimeout(r, 300));
 
       try {
-        const vb = viewBox.length === 4 ? viewBox : [0, 0, svg.clientWidth, svg.clientHeight];
+        const bounds = contentBounds(true);
+        const padding = 8;
+        const vb = [
+          bounds.x - padding,
+          bounds.y - padding,
+          bounds.w + padding * 2,
+          bounds.h + padding * 2
+        ];
         const svgClone = svg.cloneNode(true);
         svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
         svgClone.setAttribute('viewBox', vb.join(' '));
-        svgClone.setAttribute('width', svg.clientWidth);
-        svgClone.setAttribute('height', svg.clientHeight);
+        svgClone.setAttribute('width', vb[2]);
+        svgClone.setAttribute('height', vb[3]);
         svgClone.querySelectorAll('.latex-hitbox, rect[stroke-dasharray]').forEach(el => el.remove());
+
+        // Preserve KaTeX's hidden accessibility layer and visual math styling in
+        // the standalone SVG, preventing both layers from appearing as labels.
+        const sourceLabels = svg.querySelectorAll('foreignObject.latex-label');
+        const clonedLabels = svgClone.querySelectorAll('foreignObject.latex-label');
+        sourceLabels.forEach((label, index) => inlineComputedStyles(label, clonedLabels[index]));
 
         const blob = new Blob([new XMLSerializer().serializeToString(svgClone)], { type: 'image/svg+xml;charset=utf-8' });
         const a = document.createElement('a');
@@ -2088,13 +2079,57 @@
       }
     }
 
-    function contentBounds() {
+    function renderedLabelBounds(label) {
+      // The container is deliberately 200 × 60 SVG units for convenient label
+      // positioning. Crop to its visible content instead of that hit area.
+      const renderedMath = label.querySelector('.katex');
+      let labelRect;
+      if (renderedMath) {
+        labelRect = renderedMath.getBoundingClientRect();
+      } else {
+        const range = document.createRange();
+        range.selectNodeContents(label);
+        labelRect = range.getBoundingClientRect();
+      }
+      const svgRect = svg.getBoundingClientRect();
+      const viewBox = svg.viewBox.baseVal;
+      if (!labelRect.width || !labelRect.height || !svgRect.width || !svgRect.height) return null;
+
+      return {
+        x: viewBox.x + (labelRect.left - svgRect.left) * viewBox.width / svgRect.width,
+        y: viewBox.y + (labelRect.top - svgRect.top) * viewBox.height / svgRect.height,
+        w: labelRect.width * viewBox.width / svgRect.width,
+        h: labelRect.height * viewBox.height / svgRect.height
+      };
+    }
+
+    function inlineComputedStyles(source, clone) {
+      if (!source || !clone) return;
+      const computed = getComputedStyle(source);
+      let css = '';
+      for (const property of computed) css += `${property}:${computed.getPropertyValue(property)};`;
+      clone.setAttribute('style', css);
+
+      const sourceChildren = source.children;
+      const cloneChildren = clone.children;
+      for (let i = 0; i < sourceChildren.length; i++) {
+        inlineComputedStyles(sourceChildren[i], cloneChildren[i]);
+      }
+    }
+
+    function contentBounds(includeLabels = false) {
       const points = [];
       state.wires.forEach(w => points.push(w.a, w.b));
       state.components.forEach(c => {
         const b = getComponentBounds(c);
         points.push({ x: b.x, y: b.y }, { x: b.x + b.w, y: b.y + b.h });
       });
+      if (includeLabels) {
+        svg.querySelectorAll('foreignObject.latex-label .math-container').forEach(label => {
+          const b = renderedLabelBounds(label);
+          if (b) points.push({ x: b.x, y: b.y }, { x: b.x + b.w, y: b.y + b.h });
+        });
+      }
       if (!points.length) return { x: 0, y: 0, w: 400, h: 300 };
       const xs = points.map(p => p.x), ys = points.map(p => p.y);
       const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
