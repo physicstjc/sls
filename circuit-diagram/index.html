@@ -369,6 +369,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-FSRBCRECMR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-FSRBCRECMR');
+  </script>
 </head>
 <body>
   <aside class="sidebar">
@@ -459,8 +466,9 @@
         <option value="transparent">Transparent</option>
       </select>
     </div>
-    <div class="action-row" style="grid-template-columns: 1fr;">
+    <div class="action-row">
       <button class="action-btn" id="exportBtn">Export PNG</button>
+      <button class="action-btn" id="exportSvgBtn">Export SVG</button>
     </div>
 
     <div class="status" id="statusBox">Select component to drag. Use <strong>Wire</strong> for snapped segments. Crossings connect. <strong>\ohm</strong>, <strong>^</strong>, <strong>_</strong> for LaTeX symbols.</div>
@@ -540,6 +548,7 @@
       deleteBtn: document.getElementById('deleteBtn'),
       clearBtn: document.getElementById('clearBtn'),
       exportBtn: document.getElementById('exportBtn'),
+      exportSvgBtn: document.getElementById('exportSvgBtn'),
       exportBg: document.getElementById('exportBg'),
       fitBtn: document.getElementById('fitBtn'),
       zoomInBtn: document.getElementById('zoomInBtn'),
@@ -743,6 +752,7 @@
       render();
     });
     ui.exportBtn.addEventListener('click', exportPNG);
+    ui.exportSvgBtn.addEventListener('click', exportSVG);
     ui.fitBtn.addEventListener('click', centerView);
     ui.zoomInBtn.addEventListener('click', () => {
       state.zoom = Math.min(2.0, state.zoom + 0.1);
@@ -1702,6 +1712,7 @@
         txt.setAttribute('dominant-baseline', 'central');
         txt.setAttribute('font-size', '16px');
         txt.setAttribute('font-weight', 'bold');
+        txt.setAttribute('font-family', 'Arial, Helvetica, sans-serif');
         txt.setAttribute('fill', '#111827');
         txt.textContent = label;
         target.appendChild(txt);
@@ -1941,7 +1952,7 @@
     async function exportPNG() {
       const wasGridVisible = state.showGrid;
       const oldSelected = [...state.selected];
-      centerView();
+      const viewBox = svg.getAttribute('viewBox').trim().split(/\s+/).map(Number);
       state.showGrid = false;
       state.selected = [];
       render();
@@ -1950,28 +1961,19 @@
       await new Promise(r => setTimeout(r, 300));
 
       try {
-        const bounds = contentBounds();
-        const padding = 40;
         const SCALE = 2;
-        const vb = [
-          bounds.x - padding,
-          bounds.y - padding,
-          bounds.w + padding * 2,
-          bounds.h + padding * 2
-        ];
+        const vb = viewBox.length === 4 ? viewBox : [0, 0, svg.clientWidth, svg.clientHeight];
+        const canvasW = Math.max(1, svg.clientWidth * SCALE);
+        const canvasH = Math.max(1, svg.clientHeight * SCALE);
 
-        // Ensure canvas dimensions are valid
-        const canvasW = Math.max(1, vb[2] * SCALE);
-        const canvasH = Math.max(1, vb[3] * SCALE);
-
-        // --- Pass 1: Serialize the circuit (without labels) to canvas ---
+        // --- Pass 1: Serialize the visible circuit (without labels) to canvas ---
         const svgClone = svg.cloneNode(true);
         svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
         // Remove foreignObjects (labels), hitboxes, selection highlights
         svgClone.querySelectorAll('foreignObject, .latex-hitbox, rect[stroke-dasharray]').forEach(el => el.remove());
         svgClone.setAttribute('viewBox', vb.join(' '));
-        svgClone.setAttribute('width', vb[2]);
-        svgClone.setAttribute('height', vb[3]);
+        svgClone.setAttribute('width', svg.clientWidth);
+        svgClone.setAttribute('height', svg.clientHeight);
 
         const svgString = new XMLSerializer().serializeToString(svgClone);
         const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
@@ -2042,6 +2044,44 @@
         alert("Export failed: " + err.message);
       } finally {
         // Restore state
+        state.showGrid = wasGridVisible;
+        state.selected = oldSelected;
+        render();
+      }
+    }
+
+    async function exportSVG() {
+      const wasGridVisible = state.showGrid;
+      const oldSelected = [...state.selected];
+      const viewBox = svg.getAttribute('viewBox').trim().split(/\s+/).map(Number);
+      state.showGrid = false;
+      state.selected = [];
+      render();
+
+      await new Promise(r => setTimeout(r, 300));
+
+      try {
+        const vb = viewBox.length === 4 ? viewBox : [0, 0, svg.clientWidth, svg.clientHeight];
+        const svgClone = svg.cloneNode(true);
+        svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        svgClone.setAttribute('viewBox', vb.join(' '));
+        svgClone.setAttribute('width', svg.clientWidth);
+        svgClone.setAttribute('height', svg.clientHeight);
+        svgClone.querySelectorAll('.latex-hitbox, rect[stroke-dasharray]').forEach(el => el.remove());
+
+        const blob = new Blob([new XMLSerializer().serializeToString(svgClone)], { type: 'image/svg+xml;charset=utf-8' });
+        const a = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        a.href = url;
+        a.download = 'circuit-diagram.svg';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (err) {
+        console.error('SVG Export Error:', err);
+        alert('SVG export failed: ' + err.message);
+      } finally {
         state.showGrid = wasGridVisible;
         state.selected = oldSelected;
         render();
