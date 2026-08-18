@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two Nuclei Coulomb Scattering Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            cyan: '#0284c7',
+                            amber: '#d97706',
+                            purple: '#9333ea'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        input[type=range] {
+            accent-color: #0284c7;
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 text-slate-800 antialiased selection:bg-cyan-100 selection:text-cyan-900">
+
+    <!-- Fixed 1080px x 800px Application Container -->
+    <div class="relative w-[1080px] h-[800px] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+
+        <header class="h-[60px] border-b border-slate-200 bg-slate-50/90 backdrop-blur px-5 flex items-center justify-between z-20 shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-gradient-to-tr from-cyan-600 to-blue-600 rounded-xl shadow-md shadow-cyan-600/20 text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="3" stroke-width="2"/>
+                        <circle cx="12" cy="12" r="8" stroke-dasharray="3 3" stroke-width="1.5"/>
+                        <path d="M12 2v2m0 16v2M2 12h2m16 0h2" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-slate-900 leading-tight">
+                        Two Nuclei Coulomb Repulsion Dynamics
+                    </h1>
+                    <p class="text-[11px] text-slate-500">Straight-line head-on approach ($3m$ and $2m$ relative mass)</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- Quick Readouts -->
+                <div class="hidden sm:flex items-center gap-2 text-xs mono bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
+                    <div>
+                        <span class="text-slate-400">P:</span>
+                        <span id="header-momentum" class="text-emerald-600 font-semibold">+1.00 m·v</span>
+                    </div>
+                    <span class="text-slate-300">|</span>
+                    <div>
+                        <span class="text-slate-400">vCOM:</span>
+                        <span id="header-vcom" class="text-purple-600 font-semibold">+0.20 v</span>
+                    </div>
+                    <span class="text-slate-300">|</span>
+                    <div>
+                        <span class="text-slate-400">r:</span>
+                        <span id="header-dist" class="text-cyan-600 font-semibold">12.00 m</span>
+                    </div>
+                </div>
+
+                <!-- Controls Drawer Toggle Button -->
+                <button id="drawerToggleBtn" class="flex items-center gap-2 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-all active:scale-95">
+                    <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
+                    </svg>
+                    <span>Physics Parameters</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-1 flex flex-col p-3 gap-3 overflow-hidden bg-slate-50/50 relative">
+
+            <!-- Left Panel: Spatial Simulation & Controls -->
+            <div class="w-full flex flex-col gap-2 shrink-0">
+
+                <!-- 2D Spatial Canvas Box -->
+                <div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm flex flex-col gap-1.5 relative">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                            <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Spatial Simulation</h2>
+                        </div>
+                        <div class="flex items-center gap-3 text-[11px] font-medium">
+                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-cyan-600"></span> $3m$ Nucleus</span>
+                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> $2m$ Nucleus</span>
+                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-600"></span> COM</span>
+                        </div>
+                    </div>
+
+                    <div class="relative w-full h-[180px] bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
+                        <canvas id="simCanvas" class="w-full h-full block cursor-crosshair"></canvas>
+
+                        <!-- Spatial zoom controls -->
+                        <div class="absolute bottom-2 right-2 flex items-center rounded-lg border border-slate-300 bg-white/95 shadow-sm backdrop-blur-md overflow-hidden">
+                            <button id="zoomOutBtn" class="w-8 h-7 text-base font-semibold text-slate-600 hover:bg-slate-100" aria-label="Zoom out" title="Zoom out">−</button>
+                            <button id="zoomResetBtn" class="min-w-12 h-7 px-1 border-x border-slate-200 text-[10px] mono font-semibold text-slate-600 hover:bg-slate-100" aria-label="Reset zoom" title="Reset zoom">100%</button>
+                            <button id="zoomInBtn" class="w-8 h-7 text-base font-semibold text-slate-600 hover:bg-slate-100" aria-label="Zoom in" title="Zoom in">+</button>
+                        </div>
+
+                        <!-- Event Badge Overlay -->
+                        <div id="eventBadge" class="absolute top-2 left-1/2 -translate-x-1/2 opacity-0 transition-opacity duration-300 pointer-events-none px-3 py-1 rounded-full bg-white/95 border border-slate-300 text-xs font-medium text-slate-800 shadow-lg backdrop-blur-md flex items-center gap-1.5">
+                            <span id="badgeIcon">📍</span>
+                            <span id="badgeText">Closest Approach Reached</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Scrubber & Control Panel -->
+                <div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm flex flex-col gap-1.5">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-400 font-medium">Timeline Scrubber</span>
+                        <span id="timeDisplay" class="mono text-cyan-700 font-bold bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
+                            t = 0.00 s
+                        </span>
+                    </div>
+
+                    <input type="range" id="timeSlider" min="0" max="1000" value="0" step="1" 
+                           class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer focus:outline-none">
+
+                    <!-- Timeline Bookmark Markers -->
+                    <div class="relative w-full h-4 text-[10px] mono text-slate-400">
+                        <button id="markT1" class="absolute -translate-x-1/2 hover:text-cyan-600 font-medium cursor-pointer" style="left: 0%;">
+                            ▲ <span class="font-bold">t₁</span> ($v_2=0$)
+                        </button>
+                        <button id="markT3" class="absolute -translate-x-1/2 hover:text-purple-600 font-medium cursor-pointer" style="left: 0%;">
+                            ▲ <span class="font-bold">t₃</span> ($r_{\min}$)
+                        </button>
+                        <button id="markT2" class="absolute -translate-x-1/2 hover:text-amber-600 font-medium cursor-pointer" style="left: 0%;">
+                            ▲ <span class="font-bold">t₂</span> ($v_1=0$)
+                        </button>
+                    </div>
+
+                    <!-- Playback Controls -->
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-100">
+                        <div class="flex items-center gap-1.5">
+                            <button id="playBtn" class="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg text-xs shadow-sm transition-all flex items-center gap-1 active:scale-95">
+                                <svg id="playIcon" class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                <span id="playBtnText">Play</span>
+                            </button>
+                            <button id="resetBtn" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium border border-slate-300 transition-all active:scale-95">
+                                Reset
+                            </button>
+                            <button id="stepBackBtn" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs border border-slate-300 active:scale-95" title="Step Back">
+                                ◀
+                            </button>
+                            <button id="stepFwdBtn" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs border border-slate-300 active:scale-95" title="Step Forward">
+                                ▶
+                            </button>
+                        </div>
+
+                        <!-- Speed selector -->
+                        <div class="flex items-center gap-1 text-[11px] text-slate-500 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                            <span class="px-1 text-slate-400">Speed:</span>
+                            <button class="speed-btn px-2 py-0.5 rounded bg-white text-slate-800 font-bold shadow-sm" data-speed="0.5">0.5x</button>
+                            <button class="speed-btn px-2 py-0.5 rounded text-slate-600 hover:text-slate-900" data-speed="1">1x</button>
+                            <button class="speed-btn px-2 py-0.5 rounded text-slate-600 hover:text-slate-900" data-speed="2">2x</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Panel: Velocity Graph & Key Timestamp Cards -->
+            <div class="w-full flex flex-col gap-2 flex-1 min-h-0">
+
+                <!-- Velocity vs Time Graph Card -->
+                <div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm flex flex-col gap-1.5 flex-1 min-h-0">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18"/></svg>
+                            <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Velocity vs Time Graph</h2>
+                        </div>
+                        <span class="text-[10px] text-slate-400 mono">Click graph to jump time</span>
+                    </div>
+
+                    <!-- Custom Canvas Graph -->
+                    <div class="relative w-full flex-1 bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
+                        <canvas id="graphCanvas" class="w-full h-full block cursor-pointer"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Slide-over Drawer Backdrop & Panel for Controls -->
+            <div id="drawerOverlay" class="absolute inset-0 bg-slate-900/20 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-300 z-30"></div>
+
+            <aside id="controlsDrawer" class="absolute top-0 right-0 bottom-0 w-80 bg-white/95 backdrop-blur-md border-l border-slate-200 shadow-2xl z-40 transform translate-x-full transition-transform duration-300 ease-in-out p-5 flex flex-col justify-between overflow-y-auto">
+                <div class="flex flex-col gap-4">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                            <h2 class="text-sm font-bold text-slate-800">Physics Controls</h2>
+                        </div>
+                        <button id="closeDrawerBtn" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700 transition-colors">
+                            ✕
+                        </button>
+                    </div>
+
+                    <div class="space-y-4 text-xs">
+                        <!-- Mass Controls -->
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col gap-2">
+                            <div class="flex justify-between font-semibold">
+                                <span class="text-cyan-700">Nucleus 1 Mass ($m_1$):</span>
+                                <span id="m1Val" class="mono text-slate-800">3.0 m</span>
+                            </div>
+                            <input type="range" id="m1Input" min="1" max="5" step="0.5" value="3.0" class="w-full">
+
+                            <div class="flex justify-between font-semibold mt-1">
+                                <span class="text-amber-700">Nucleus 2 Mass ($m_2$):</span>
+                                <span id="m2Val" class="mono text-slate-800">2.0 m</span>
+                            </div>
+                            <input type="range" id="m2Input" min="1" max="5" step="0.5" value="2.0" class="w-full">
+                        </div>
+
+                        <!-- Initial Velocities -->
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col gap-2">
+                            <div class="flex justify-between font-semibold">
+                                <span class="text-cyan-700">Initial Velocity $v_1(0)$:</span>
+                                <span id="v1Val" class="mono text-slate-800">+1.00 v</span>
+                            </div>
+                            <input type="range" id="v1Input" min="0.2" max="2.0" step="0.1" value="1.0" class="w-full">
+
+                            <div class="flex justify-between font-semibold mt-1">
+                                <span class="text-amber-700">Initial Velocity $v_2(0)$:</span>
+                                <span id="v2Val" class="mono text-slate-800">-1.00 v</span>
+                            </div>
+                            <input type="range" id="v2Input" min="-2.0" max="-0.2" step="0.1" value="-1.0" class="w-full">
+                        </div>
+
+                        <!-- Coulomb Repulsion Strength -->
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col gap-2">
+                            <div class="flex justify-between font-semibold text-slate-700">
+                                <span>Coulomb Constant ($k q_1 q_2$):</span>
+                                <span id="kVal" class="mono text-slate-900">12.0</span>
+                            </div>
+                            <input type="range" id="kInput" min="4.0" max="30.0" step="1.0" value="12.0" class="w-full">
+                        </div>
+
+                        <!-- Initial Separation -->
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col gap-2">
+                            <div class="flex justify-between font-semibold text-slate-700">
+                                <span>Initial Separation ($r_0$):</span>
+                                <span id="r0Val" class="mono text-slate-900">12.0 m</span>
+                            </div>
+                            <input type="range" id="r0Input" min="6.0" max="20.0" step="0.5" value="12.0" class="w-full">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-200">
+                    <button id="applyCloseDrawerBtn" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold text-xs transition-all">
+                        Done & Apply
+                    </button>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <script>
+        // --- PHYSICS SIMULATION ENGINE ---
+        let params = {
+            m1: 3.0,
+            m2: 2.0,
+            v1_0: 1.0,
+            v2_0: -1.0,
+            K: 12.0,       // Coulomb constant k * q1 * q2
+            r0: 12.0,      // Initial separation
+            tMax: 12.0,    // Total time duration
+            dt: 0.002,     // Integration step size
+            playbackSpeed: 0.5
+        };
+
+        let trajectory = [];
+        let keyEvents = {
+            t1Index: -1, // when v2 crosses 0
+            t3Index: -1, // when v1 == v2 (closest approach)
+            t2Index: -1  // when v1 crosses 0
+        };
+
+        let currentFrameIndex = 0;
+        let isPlaying = false;
+        let animationFrameReq = null;
+        let simZoom = 1;
+        const MIN_SIM_ZOOM = 0.5;
+        const MAX_SIM_ZOOM = 4;
+
+        // DOM Elements
+        const simCanvas = document.getElementById('simCanvas');
+        const simCtx = simCanvas.getContext('2d');
+        const graphCanvas = document.getElementById('graphCanvas');
+        const graphCtx = graphCanvas.getContext('2d');
+
+        const timeSlider = document.getElementById('timeSlider');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const playBtn = document.getElementById('playBtn');
+        const playBtnText = document.getElementById('playBtnText');
+        const playIcon = document.getElementById('playIcon');
+        const resetBtn = document.getElementById('resetBtn');
+        const stepBackBtn = document.getElementById('stepBackBtn');
+        const stepFwdBtn = document.getElementById('stepFwdBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+        const zoomResetBtn = document.getElementById('zoomResetBtn');
+        const zoomInBtn = document.getElementById('zoomInBtn');
+
+        // Drawer DOM Elements
+        const drawerToggleBtn = document.getElementById('drawerToggleBtn');
+        const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+        const applyCloseDrawerBtn = document.getElementById('applyCloseDrawerBtn');
+        const controlsDrawer = document.getElementById('controlsDrawer');
+        const drawerOverlay = document.getElementById('drawerOverlay');
+
+        // Toggle Drawer Functions
+        function openDrawer() {
+            controlsDrawer.classList.remove('translate-x-full');
+            drawerOverlay.classList.remove('opacity-0', 'pointer-events-none');
+            drawerOverlay.classList.add('opacity-100');
+        }
+
+        function closeDrawer() {
+            controlsDrawer.classList.add('translate-x-full');
+            drawerOverlay.classList.remove('opacity-100');
+            drawerOverlay.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        drawerToggleBtn.addEventListener('click', openDrawer);
+        closeDrawerBtn.addEventListener('click', closeDrawer);
+        applyCloseDrawerBtn.addEventListener('click', closeDrawer);
+        drawerOverlay.addEventListener('click', closeDrawer);
+
+        /**
+         * Runge-Kutta 4th Order Integrator for 1D Coulomb Repulsion
+         */
+        function computeTrajectory() {
+            trajectory = [];
+            const N = Math.floor(params.tMax / params.dt);
+
+            let x1 = -params.r0 / 2;
+            let x2 = params.r0 / 2;
+            let v1 = params.v1_0;
+            let v2 = params.v2_0;
+
+            let prevV2 = v2;
+            let prevV1 = v1;
+            let prevVDiff = v1 - v2;
+
+            let t1Idx = -1;
+            let t3Idx = -1;
+            let t2Idx = -1;
+
+            for (let i = 0; i <= N; i++) {
+                let t = i * params.dt;
+                let r = x2 - x1;
+
+                trajectory.push({
+                    t, x1, x2, v1, v2, r,
+                    a1: -params.K / (params.m1 * r * r),
+                    a2: +params.K / (params.m2 * r * r)
+                });
+
+                // Key timestamps detection
+                if (t1Idx === -1 && prevV2 < 0 && v2 >= 0) t1Idx = i;
+
+                let vDiff = v1 - v2;
+                if (t3Idx === -1 && prevVDiff > 0 && vDiff <= 0) t3Idx = i;
+
+                if (t2Idx === -1 && prevV1 > 0 && v1 <= 0) t2Idx = i;
+
+                prevV2 = v2;
+                prevV1 = v1;
+                prevVDiff = vDiff;
+
+                // RK4 step
+                let derivatives = (rx1, rv1, rx2, rv2) => {
+                    let sep = rx2 - rx1;
+                    if (sep < 0.1) sep = 0.1;
+                    let force = params.K / (sep * sep);
+                    return [rv1, -force / params.m1, rv2, force / params.m2];
+                };
+
+                let h = params.dt;
+                let [dx1_1, dv1_1, dx2_1, dv2_1] = derivatives(x1, v1, x2, v2);
+                let [dx1_2, dv1_2, dx2_2, dv2_2] = derivatives(
+                    x1 + 0.5 * h * dx1_1, v1 + 0.5 * h * dv1_1,
+                    x2 + 0.5 * h * dx2_1, v2 + 0.5 * h * dv2_1
+                );
+                let [dx1_3, dv1_3, dx2_3, dv2_3] = derivatives(
+                    x1 + 0.5 * h * dx1_2, v1 + 0.5 * h * dv1_2,
+                    x2 + 0.5 * h * dx2_2, v2 + 0.5 * h * dv2_2
+                );
+                let [dx1_4, dv1_4, dx2_4, dv2_4] = derivatives(
+                    x1 + h * dx1_3, v1 + h * dv1_3,
+                    x2 + h * dx2_3, v2 + h * dv2_3
+                );
+
+                x1 += (h / 6) * (dx1_1 + 2*dx1_2 + 2*dx1_3 + dx1_4);
+                v1 += (h / 6) * (dv1_1 + 2*dv1_2 + 2*dv1_3 + dv1_4);
+                x2 += (h / 6) * (dx2_1 + 2*dx2_2 + 2*dx2_3 + dx2_4);
+                v2 += (h / 6) * (dv2_1 + 2*dv2_2 + 2*dv2_3 + dv2_4);
+            }
+
+            keyEvents.t1Index = t1Idx;
+            keyEvents.t3Index = t3Idx;
+            keyEvents.t2Index = t2Idx;
+
+            updateKeyTimeUI();
+        }
+
+        function updateKeyTimeUI() {
+            if (trajectory.length > 0) {
+                const totalT = trajectory[trajectory.length - 1].t;
+                const setMarkPos = (id, idx) => {
+                    const el = document.getElementById(id);
+                    if (idx >= 0) {
+                        const pct = (trajectory[idx].t / totalT) * 100;
+                        el.style.left = `${pct}%`;
+                        el.style.display = 'block';
+                    } else {
+                        el.style.display = 'none';
+                    }
+                };
+                setMarkPos('markT1', keyEvents.t1Index);
+                setMarkPos('markT3', keyEvents.t3Index);
+                setMarkPos('markT2', keyEvents.t2Index);
+            }
+
+            const pTotal = params.m1 * params.v1_0 + params.m2 * params.v2_0;
+            const vCom = pTotal / (params.m1 + params.m2);
+            document.getElementById('header-momentum').innerText = (pTotal >= 0 ? '+' : '') + pTotal.toFixed(2) + ' m·v';
+            document.getElementById('header-vcom').innerText = (vCom >= 0 ? '+' : '') + vCom.toFixed(2) + ' v';
+        }
+
+        function resizeCanvases() {
+            [simCanvas, graphCanvas].forEach(canvas => {
+                const rect = canvas.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+            });
+            render();
+        }
+
+        function drawSimulation() {
+            const width = simCanvas.width;
+            const height = simCanvas.height;
+            simCtx.clearRect(0, 0, width, height);
+
+            if (!trajectory || trajectory.length === 0) return;
+            const frame = trajectory[currentFrameIndex];
+
+            // Light background grid
+            simCtx.strokeStyle = '#e2e8f0';
+            simCtx.lineWidth = 1;
+            const gridSize = 25 * (window.devicePixelRatio || 1) * simZoom;
+            for (let x = 0; x < width; x += gridSize) {
+                simCtx.beginPath();
+                simCtx.moveTo(x, 0);
+                simCtx.lineTo(x, height);
+                simCtx.stroke();
+            }
+
+            // Central motion axis
+            const centerY = height / 2;
+            simCtx.strokeStyle = '#cbd5e1';
+            simCtx.lineWidth = 2;
+            simCtx.beginPath();
+            simCtx.moveTo(0, centerY);
+            simCtx.lineTo(width, centerY);
+            simCtx.stroke();
+
+            const pTotal = params.m1 * params.v1_0 + params.m2 * params.v2_0;
+            const vCom = pTotal / (params.m1 + params.m2);
+            const xComCurrent = vCom * frame.t;
+
+            const scale = ((width * 0.7) / (params.r0 * 1.5)) * simZoom;
+            const originX = width / 2 - xComCurrent * scale;
+
+            const px1 = originX + frame.x1 * scale;
+            const px2 = originX + frame.x2 * scale;
+            const pxCom = originX + xComCurrent * scale;
+
+            // Separation line
+            simCtx.strokeStyle = '#94a3b8';
+            simCtx.lineWidth = 1.5;
+            simCtx.setLineDash([4, 4]);
+            simCtx.beginPath();
+            simCtx.moveTo(px1, centerY - 35);
+            simCtx.lineTo(px2, centerY - 35);
+            simCtx.stroke();
+            simCtx.setLineDash([]);
+
+            // Separation label
+            simCtx.fillStyle = '#475569';
+            simCtx.font = `${11 * (window.devicePixelRatio || 1)}px JetBrains Mono`;
+            simCtx.textAlign = 'center';
+            simCtx.fillText(`r = ${frame.r.toFixed(2)} m`, (px1 + px2) / 2, centerY - 42);
+
+            // Center of Mass Marker
+            simCtx.fillStyle = '#9333ea';
+            simCtx.beginPath();
+            simCtx.arc(pxCom, centerY, 4 * (window.devicePixelRatio || 1), 0, Math.PI * 2);
+            simCtx.fill();
+            simCtx.fillText(`COM`, pxCom, centerY + 32);
+
+            const r1Radius = (6 + Math.cbrt(params.m1) * 2.5) * (window.devicePixelRatio || 1);
+            const r2Radius = (6 + Math.cbrt(params.m2) * 2.5) * (window.devicePixelRatio || 1);
+
+            // Nucleus 1 (Cyan/Blue)
+            drawNucleus(px1, centerY, r1Radius, '#0284c7', '#38bdf8', `${params.m1}m`, frame.v1);
+
+            // Nucleus 2 (Amber)
+            drawNucleus(px2, centerY, r2Radius, '#d97706', '#fbbf24', `${params.m2}m`, frame.v2);
+
+            // Velocity vectors
+            drawVelocityArrow(px1, centerY, r1Radius, frame.v1, '#0284c7');
+            drawVelocityArrow(px2, centerY, r2Radius, frame.v2, '#d97706');
+
+            document.getElementById('header-dist').innerText = frame.r.toFixed(2) + ' m';
+        }
+
+        function drawNucleus(x, y, radius, colorDark, colorLight, label, vel) {
+            simCtx.save();
+
+            const grad = simCtx.createRadialGradient(x - radius*0.3, y - radius*0.3, radius*0.1, x, y, radius);
+            grad.addColorStop(0, colorLight);
+            grad.addColorStop(1, colorDark);
+
+            simCtx.fillStyle = grad;
+            simCtx.beginPath();
+            simCtx.arc(x, y, radius, 0, Math.PI * 2);
+            simCtx.fill();
+
+            // Sub-atomic nucleon highlights
+            simCtx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            simCtx.beginPath();
+            simCtx.arc(x - radius * 0.3, y - radius * 0.2, radius * 0.25, 0, Math.PI * 2);
+            simCtx.arc(x + radius * 0.2, y + radius * 0.3, radius * 0.22, 0, Math.PI * 2);
+            simCtx.fill();
+
+            simCtx.fillStyle = colorDark;
+            simCtx.font = `bold ${10 * (window.devicePixelRatio || 1)}px Inter`;
+            simCtx.textAlign = 'center';
+            simCtx.textBaseline = 'middle';
+            simCtx.fillText(label, x, y + radius + 12 * (window.devicePixelRatio || 1));
+
+            simCtx.fillStyle = colorDark;
+            simCtx.font = `${10 * (window.devicePixelRatio || 1)}px JetBrains Mono`;
+            simCtx.fillText(`v = ${vel >= 0 ? '+' : ''}${vel.toFixed(2)}`, x, y - radius - 10 * (window.devicePixelRatio || 1));
+
+            simCtx.restore();
+        }
+
+        function drawVelocityArrow(x, y, radius, v, color) {
+            const dpr = window.devicePixelRatio || 1;
+            const arrowScale = 220 * (window.devicePixelRatio || 1);
+            const arrowLen = v * arrowScale;
+            if (Math.abs(arrowLen) < 2) return;
+
+            // Keep velocity vectors above the particle instead of drawing through it.
+            const arrowY = y - radius - 24 * dpr;
+
+            simCtx.save();
+            simCtx.strokeStyle = color;
+            simCtx.fillStyle = color;
+            simCtx.lineWidth = 2.5 * (window.devicePixelRatio || 1);
+
+            const startX = x - arrowLen / 2;
+            const endX = x + arrowLen / 2;
+            simCtx.beginPath();
+            simCtx.moveTo(startX, arrowY);
+            simCtx.lineTo(endX, arrowY);
+            simCtx.stroke();
+
+            const headLen = 7 * (window.devicePixelRatio || 1);
+            const dir = Math.sign(arrowLen);
+            simCtx.beginPath();
+            simCtx.moveTo(endX, arrowY);
+            simCtx.lineTo(endX - dir * headLen, arrowY - headLen * 0.6);
+            simCtx.lineTo(endX - dir * headLen, arrowY + headLen * 0.6);
+            simCtx.closePath();
+            simCtx.fill();
+
+            simCtx.restore();
+        }
+
+        function drawGraph() {
+            const width = graphCanvas.width;
+            const height = graphCanvas.height;
+            graphCtx.clearRect(0, 0, width, height);
+
+            if (!trajectory || trajectory.length === 0) return;
+
+            const dpr = window.devicePixelRatio || 1;
+            const padding = { left: 45 * dpr, right: 25 * dpr, top: 25 * dpr, bottom: 35 * dpr };
+            const plotWidth = width - padding.left - padding.right;
+            const plotHeight = height - padding.top - padding.bottom;
+
+            const vMin = -1.2;
+            const vMax = +1.8;
+            const tTotal = params.tMax;
+
+            const mapX = (t) => padding.left + (t / tTotal) * plotWidth;
+            const mapY = (v) => padding.top + (1 - (v - vMin) / (vMax - vMin)) * plotHeight;
+
+            // Zero velocity line
+            const yZero = mapY(0);
+            graphCtx.strokeStyle = '#64748b';
+            graphCtx.lineWidth = 1.5 * dpr;
+            graphCtx.beginPath();
+            graphCtx.moveTo(padding.left, yZero);
+            graphCtx.lineTo(width - padding.right, yZero);
+            graphCtx.stroke();
+
+            // Y-Axis
+            graphCtx.strokeStyle = '#cbd5e1';
+            graphCtx.lineWidth = 1 * dpr;
+            graphCtx.beginPath();
+            graphCtx.moveTo(padding.left, padding.top);
+            graphCtx.lineTo(padding.left, height - padding.bottom);
+            graphCtx.stroke();
+
+            // Asymptotic levels
+            const pTotal = params.m1 * params.v1_0 + params.m2 * params.v2_0;
+            const vCom = pTotal / (params.m1 + params.m2);
+
+            const dashedLevels = [
+                { val: params.v1_0, label: '+v' },
+                { val: params.v2_0, label: '-v' },
+                { val: vCom, label: 'vCOM' }
+            ];
+
+            graphCtx.setLineDash([4 * dpr, 4 * dpr]);
+            graphCtx.strokeStyle = '#cbd5e1';
+            graphCtx.fillStyle = '#64748b';
+            graphCtx.font = `${9 * dpr}px JetBrains Mono`;
+            graphCtx.textAlign = 'right';
+
+            dashedLevels.forEach(item => {
+                const y = mapY(item.val);
+                graphCtx.beginPath();
+                graphCtx.moveTo(padding.left, y);
+                graphCtx.lineTo(width - padding.right, y);
+                graphCtx.stroke();
+                graphCtx.fillText(item.label, padding.left - 4 * dpr, y + 3 * dpr);
+            });
+            graphCtx.setLineDash([]);
+
+            // Curve v1(t) - Cyan/Blue
+            graphCtx.strokeStyle = '#0284c7';
+            graphCtx.lineWidth = 2.5 * dpr;
+            graphCtx.beginPath();
+            for (let i = 0; i < trajectory.length; i++) {
+                const pt = trajectory[i];
+                const x = mapX(pt.t);
+                const y = mapY(pt.v1);
+                if (i === 0) graphCtx.moveTo(x, y);
+                else graphCtx.lineTo(x, y);
+            }
+            graphCtx.stroke();
+
+            // Curve v2(t) - Amber
+            graphCtx.strokeStyle = '#d97706';
+            graphCtx.lineWidth = 2.5 * dpr;
+            graphCtx.beginPath();
+            for (let i = 0; i < trajectory.length; i++) {
+                const pt = trajectory[i];
+                const x = mapX(pt.t);
+                const y = mapY(pt.v2);
+                if (i === 0) graphCtx.moveTo(x, y);
+                else graphCtx.lineTo(x, y);
+            }
+            graphCtx.stroke();
+
+            // Key Timestamp Lines
+            const drawKeyTimeLine = (idx, label, color) => {
+                if (idx < 0 || idx >= trajectory.length) return;
+                const pt = trajectory[idx];
+                const x = mapX(pt.t);
+
+                graphCtx.strokeStyle = color;
+                graphCtx.setLineDash([3 * dpr, 3 * dpr]);
+                graphCtx.lineWidth = 1.2 * dpr;
+                graphCtx.beginPath();
+                graphCtx.moveTo(x, padding.top);
+                graphCtx.lineTo(x, height - padding.bottom);
+                graphCtx.stroke();
+                graphCtx.setLineDash([]);
+
+                graphCtx.fillStyle = color;
+                graphCtx.font = `bold ${10 * dpr}px JetBrains Mono`;
+                graphCtx.textAlign = 'center';
+                graphCtx.fillText(label, x, height - padding.bottom + 12 * dpr);
+            };
+
+            drawKeyTimeLine(keyEvents.t1Index, 't₁', '#0284c7');
+            drawKeyTimeLine(keyEvents.t3Index, 't₃', '#9333ea');
+            drawKeyTimeLine(keyEvents.t2Index, 't₂', '#d97706');
+
+            // Scrub Line Indicator
+            const currentFrame = trajectory[currentFrameIndex];
+            const scrubX = mapX(currentFrame.t);
+
+            graphCtx.strokeStyle = '#0f172a';
+            graphCtx.lineWidth = 1.8 * dpr;
+            graphCtx.beginPath();
+            graphCtx.moveTo(scrubX, padding.top);
+            graphCtx.lineTo(scrubX, height - padding.bottom);
+            graphCtx.stroke();
+
+            // Indicator dots
+            const y1Current = mapY(currentFrame.v1);
+            const y2Current = mapY(currentFrame.v2);
+
+            graphCtx.fillStyle = '#0284c7';
+            graphCtx.beginPath();
+            graphCtx.arc(scrubX, y1Current, 4.5 * dpr, 0, Math.PI * 2);
+            graphCtx.fill();
+
+            graphCtx.fillStyle = '#d97706';
+            graphCtx.beginPath();
+            graphCtx.arc(scrubX, y2Current, 4.5 * dpr, 0, Math.PI * 2);
+            graphCtx.fill();
+        }
+
+        function updateCurrentFrame(index) {
+            currentFrameIndex = Math.max(0, Math.min(index, trajectory.length - 1));
+            const frame = trajectory[currentFrameIndex];
+
+            timeSlider.value = (currentFrameIndex / (trajectory.length - 1)) * 1000;
+            timeDisplay.innerText = `t = ${frame.t.toFixed(2)} s`;
+
+            checkBadgeOverlay();
+            render();
+        }
+
+        function checkBadgeOverlay() {
+            const badge = document.getElementById('eventBadge');
+            const badgeIcon = document.getElementById('badgeIcon');
+            const badgeText = document.getElementById('badgeText');
+
+            const threshold = 15;
+            if (Math.abs(currentFrameIndex - keyEvents.t1Index) < threshold) {
+                badgeIcon.innerText = '🛑';
+                badgeText.innerText = 't₁: Nucleus 2m momentarily at rest (v₂ = 0)';
+                badge.style.opacity = '1';
+            } else if (Math.abs(currentFrameIndex - keyEvents.t3Index) < threshold) {
+                badgeIcon.innerText = '⚡';
+                badgeText.innerText = 't₃: Point of Closest Approach (v₁ = v₂ = v_COM)';
+                badge.style.opacity = '1';
+            } else if (Math.abs(currentFrameIndex - keyEvents.t2Index) < threshold) {
+                badgeIcon.innerText = '🛑';
+                badgeText.innerText = 't₂: Nucleus 3m momentarily at rest (v₁ = 0)';
+                badge.style.opacity = '1';
+            } else {
+                badge.style.opacity = '0';
+            }
+        }
+
+        function render() {
+            drawSimulation();
+            drawGraph();
+        }
+
+        function animate() {
+            if (isPlaying) {
+                const step = Math.round(params.playbackSpeed * 4);
+                if (currentFrameIndex + step < trajectory.length) {
+                    updateCurrentFrame(currentFrameIndex + step);
+                    animationFrameReq = requestAnimationFrame(animate);
+                } else {
+                    updateCurrentFrame(trajectory.length - 1);
+                    pause();
+                }
+            }
+        }
+
+        function play() {
+            if (currentFrameIndex >= trajectory.length - 1) {
+                currentFrameIndex = 0;
+            }
+            isPlaying = true;
+            playBtnText.innerText = 'Pause';
+            playIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+            animate();
+        }
+
+        function pause() {
+            isPlaying = false;
+            playBtnText.innerText = 'Play';
+            playIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+            if (animationFrameReq) cancelAnimationFrame(animationFrameReq);
+        }
+
+        // Event Listeners
+        playBtn.addEventListener('click', () => { isPlaying ? pause() : play(); });
+        resetBtn.addEventListener('click', () => { pause(); updateCurrentFrame(0); });
+        stepBackBtn.addEventListener('click', () => { pause(); updateCurrentFrame(currentFrameIndex - 10); });
+        stepFwdBtn.addEventListener('click', () => { pause(); updateCurrentFrame(currentFrameIndex + 10); });
+
+        function setSimulationZoom(nextZoom) {
+            simZoom = Math.min(MAX_SIM_ZOOM, Math.max(MIN_SIM_ZOOM, nextZoom));
+            zoomResetBtn.innerText = `${Math.round(simZoom * 100)}%`;
+            zoomOutBtn.disabled = simZoom <= MIN_SIM_ZOOM;
+            zoomInBtn.disabled = simZoom >= MAX_SIM_ZOOM;
+            zoomOutBtn.classList.toggle('opacity-40', zoomOutBtn.disabled);
+            zoomInBtn.classList.toggle('opacity-40', zoomInBtn.disabled);
+            drawSimulation();
+        }
+
+        zoomOutBtn.addEventListener('click', () => setSimulationZoom(simZoom / 1.25));
+        zoomInBtn.addEventListener('click', () => setSimulationZoom(simZoom * 1.25));
+        zoomResetBtn.addEventListener('click', () => setSimulationZoom(1));
+        simCanvas.addEventListener('wheel', (event) => {
+            event.preventDefault();
+            setSimulationZoom(simZoom * (event.deltaY < 0 ? 1.12 : 1 / 1.12));
+        }, { passive: false });
+
+        timeSlider.addEventListener('input', (e) => {
+            pause();
+            const pct = parseFloat(e.target.value) / 1000;
+            const targetIdx = Math.round(pct * (trajectory.length - 1));
+            updateCurrentFrame(targetIdx);
+        });
+
+        // Click on key bookmark labels to jump directly
+        document.getElementById('markT1').addEventListener('click', () => { pause(); updateCurrentFrame(keyEvents.t1Index); });
+        document.getElementById('markT3').addEventListener('click', () => { pause(); updateCurrentFrame(keyEvents.t3Index); });
+        document.getElementById('markT2').addEventListener('click', () => { pause(); updateCurrentFrame(keyEvents.t2Index); });
+
+        // Speed Selector
+        document.querySelectorAll('.speed-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.speed-btn').forEach(b => {
+                    b.classList.remove('bg-white', 'text-slate-800', 'font-bold', 'shadow-sm');
+                    b.classList.add('text-slate-600');
+                });
+                btn.classList.add('bg-white', 'text-slate-800', 'font-bold', 'shadow-sm');
+                btn.classList.remove('text-slate-600');
+                params.playbackSpeed = parseFloat(btn.dataset.speed);
+            });
+        });
+
+        // Parameter Binding
+        function setupParamInputs() {
+            const bind = (id, valId, key, parseFn, suffix = '') => {
+                const input = document.getElementById(id);
+                const display = document.getElementById(valId);
+                input.addEventListener('input', (e) => {
+                    params[key] = parseFn(e.target.value);
+                    display.innerText = (params[key] >= 0 && key.startsWith('v') ? '+' : '') + params[key].toFixed(2) + suffix;
+                    recalculatePhysics();
+                });
+            };
+
+            bind('m1Input', 'm1Val', 'm1', parseFloat, ' m');
+            bind('m2Input', 'm2Val', 'm2', parseFloat, ' m');
+            bind('v1Input', 'v1Val', 'v1_0', parseFloat, ' v');
+            bind('v2Input', 'v2Val', 'v2_0', parseFloat, ' v');
+            bind('kInput', 'kVal', 'K', parseFloat, '');
+            bind('r0Input', 'r0Val', 'r0', parseFloat, ' m');
+        }
+
+        function recalculatePhysics() {
+            pause();
+            computeTrajectory();
+            updateCurrentFrame(0);
+        }
+
+        // Scrub by clicking on graph canvas
+        graphCanvas.addEventListener('click', (e) => {
+            const rect = graphCanvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const pct = clickX / rect.width;
+            const targetIdx = Math.round(pct * (trajectory.length - 1));
+            pause();
+            updateCurrentFrame(targetIdx);
+        });
+
+        // Initial setup
+        window.addEventListener('load', () => {
+            if (typeof renderMathInElement === 'function') {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false }
+                    ],
+                    throwOnError: false
+                });
+            }
+            setupParamInputs();
+            computeTrajectory();
+            resizeCanvases();
+            setSimulationZoom(1);
+            updateCurrentFrame(0);
+        });
+
+        window.addEventListener('resize', resizeCanvases);
+    </script>
+</body>
+</html>
