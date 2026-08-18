@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Two Nuclei Coulomb Scattering Simulation</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYQ8R8WR9M"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-LYQ8R8WR9M');
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
@@ -32,6 +40,11 @@
         .mono {
             font-family: 'JetBrains Mono', monospace;
         }
+        .text-xs { font-size: 13px !important; line-height: 18px !important; }
+        .text-sm { font-size: 15px !important; line-height: 20px !important; }
+        .text-base { font-size: 17px !important; line-height: 22px !important; }
+        [class~="text-[10px]"] { font-size: 12px !important; line-height: 16px !important; }
+        [class~="text-[11px]"] { font-size: 13px !important; line-height: 18px !important; }
         input[type=range] {
             accent-color: #0284c7;
         }
@@ -53,10 +66,10 @@
 </head>
 <body class="min-h-screen flex items-center justify-center p-2 text-slate-800 antialiased selection:bg-cyan-100 selection:text-cyan-900">
 
-    <!-- Fixed 1080px x 800px Application Container -->
-    <div class="relative w-[1080px] h-[800px] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+    <!-- Fixed 1080px x 640px Application Container -->
+    <div class="relative w-[1080px] h-[640px] bg-white flex flex-col overflow-hidden">
 
-        <header class="h-[60px] border-b border-slate-200 bg-slate-50/90 backdrop-blur px-5 flex items-center justify-between z-20 shrink-0">
+        <header class="h-[52px] border-b border-slate-200 bg-slate-50/90 backdrop-blur px-4 flex items-center justify-between z-20 shrink-0">
             <div class="flex items-center gap-3">
                 <div class="p-2 bg-gradient-to-tr from-cyan-600 to-blue-600 rounded-xl shadow-md shadow-cyan-600/20 text-white">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,13 +115,13 @@
             </div>
         </header>
 
-        <main class="flex-1 flex flex-col p-3 gap-3 overflow-hidden bg-slate-50/50 relative">
+        <main class="flex-1 flex flex-col p-2 gap-1.5 overflow-hidden bg-white relative">
 
             <!-- Left Panel: Spatial Simulation & Controls -->
             <div class="w-full flex flex-col gap-2 shrink-0">
 
                 <!-- 2D Spatial Canvas Box -->
-                <div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm flex flex-col gap-1.5 relative">
+                <div class="flex flex-col gap-1 relative">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse"></span>
@@ -127,7 +140,7 @@
                         </div>
                     </div>
 
-                    <div class="relative w-full h-[180px] bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
+                    <div class="relative w-full h-[120px] bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
                         <canvas id="simCanvas" class="w-full h-full block cursor-crosshair"></canvas>
 
                         <!-- Spatial zoom controls -->
@@ -138,7 +151,7 @@
                         </div>
 
                         <!-- Event Badge Overlay -->
-                        <div id="eventBadge" class="absolute top-2 left-1/2 -translate-x-1/2 opacity-0 transition-opacity duration-300 pointer-events-none px-3 py-1 rounded-full bg-white/95 border border-slate-300 text-xs font-medium text-slate-800 shadow-lg backdrop-blur-md flex items-center gap-1.5">
+                        <div id="eventBadge" class="absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 transition-opacity duration-300 pointer-events-none px-3 py-1 rounded-full bg-white/95 border border-slate-300 text-xs font-medium text-slate-800 shadow-lg backdrop-blur-md flex items-center gap-1.5">
                             <span id="badgeIcon">📍</span>
                             <span id="badgeText">Closest Approach Reached</span>
                         </div>
@@ -146,7 +159,7 @@
                 </div>
 
                 <!-- Timeline Scrubber & Control Panel -->
-                <div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm flex flex-col gap-1.5">
+                <div class="flex flex-col gap-1">
                     <div class="flex justify-between items-center text-xs">
                         <span class="text-slate-400 font-medium">Timeline Scrubber</span>
                         <span id="timeDisplay" class="mono text-cyan-700 font-bold bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
@@ -158,16 +171,10 @@
                            class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer focus:outline-none">
 
                     <!-- Timeline Bookmark Markers -->
-                    <div class="relative w-full h-4 text-[10px] mono text-slate-400">
-                        <button id="markT1" class="absolute -translate-x-1/2 hover:text-cyan-600 font-medium cursor-pointer" style="left: 0%;">
-                            ▲ <span class="font-bold">t₁</span> ($v_2=0$)
-                        </button>
-                        <button id="markT3" class="absolute -translate-x-1/2 hover:text-purple-600 font-medium cursor-pointer" style="left: 0%;">
-                            ▲ <span class="font-bold">t₃</span> ($r_{\min}$)
-                        </button>
-                        <button id="markT2" class="absolute -translate-x-1/2 hover:text-amber-600 font-medium cursor-pointer" style="left: 0%;">
-                            ▲ <span class="font-bold">t₂</span> ($v_1=0$)
-                        </button>
+                    <div class="relative w-full h-4">
+                        <button id="markT1" class="absolute top-0 h-4 w-3 border-l-2 border-cyan-500 cursor-pointer hover:border-cyan-700" style="left: 0%;" title="t₁: v₂ = 0" aria-label="Jump to t1, where velocity 2 equals zero"></button>
+                        <button id="markT3" class="absolute top-0 h-4 w-3 border-l-2 border-purple-500 cursor-pointer hover:border-purple-700" style="left: 0%;" title="t₃: minimum separation" aria-label="Jump to t3, the point of minimum separation"></button>
+                        <button id="markT2" class="absolute top-0 h-4 w-3 border-l-2 border-amber-500 cursor-pointer hover:border-amber-700" style="left: 0%;" title="t₂: v₁ = 0" aria-label="Jump to t2, where velocity 1 equals zero"></button>
                     </div>
 
                     <!-- Playback Controls -->
@@ -204,13 +211,19 @@
             <div class="w-full flex flex-col gap-2 flex-1 min-h-0">
 
                 <!-- Velocity vs Time Graph Card -->
-                <div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm flex flex-col gap-1.5 flex-1 min-h-0">
+                <div class="flex flex-col gap-1 flex-1 min-h-0">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <svg class="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18"/></svg>
-                            <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Velocity vs Time Graph</h2>
+                            <h2 id="graphTitle" class="text-xs font-bold text-slate-700 uppercase tracking-wider">Velocity vs Time Graph</h2>
                         </div>
-                        <span class="text-[10px] text-slate-400 mono">Click graph to jump time</span>
+                        <div class="flex items-center gap-2">
+                            <select id="graphModeSelect" class="h-6 rounded-md border border-slate-300 bg-white px-1.5 text-[10px] font-semibold text-slate-700 focus:border-cyan-500 focus:outline-none" aria-label="Graph quantity">
+                                <option value="velocity">Velocity–time</option>
+                                <option value="momentum">Momentum–time</option>
+                            </select>
+                            <span class="text-[10px] text-slate-400 mono">Click graph to jump time</span>
+                        </div>
                     </div>
 
                     <!-- Custom Canvas Graph -->
@@ -322,6 +335,7 @@
         let animationFrameReq = null;
         let simZoom = 1;
         let referenceFrame = 'lab';
+        let graphMode = 'velocity';
         const MIN_SIM_ZOOM = 0.5;
         const MAX_SIM_ZOOM = 4;
 
@@ -343,6 +357,8 @@
         const zoomResetBtn = document.getElementById('zoomResetBtn');
         const zoomInBtn = document.getElementById('zoomInBtn');
         const referenceFrameSelect = document.getElementById('referenceFrameSelect');
+        const graphModeSelect = document.getElementById('graphModeSelect');
+        const graphTitle = document.getElementById('graphTitle');
 
         // Drawer DOM Elements
         const drawerToggleBtn = document.getElementById('drawerToggleBtn');
@@ -509,12 +525,10 @@
             simCtx.lineTo(width, centerY);
             simCtx.stroke();
 
-            const pTotal = params.m1 * params.v1_0 + params.m2 * params.v2_0;
-            const vCom = pTotal / (params.m1 + params.m2);
             const xComCurrent = (params.m1 * frame.x1 + params.m2 * frame.x2) / (params.m1 + params.m2);
 
             const scale = ((width * 0.7) / (params.r0 * 1.5)) * simZoom;
-            let frameOrigin = 0;
+            let frameOrigin = xComCurrent;
             if (referenceFrame === 'particle1') frameOrigin = frame.x1;
             if (referenceFrame === 'particle2') frameOrigin = frame.x2;
             const frameAnchorX = referenceFrame === 'particle1' ? width * 0.3
@@ -537,7 +551,7 @@
 
             // Separation label
             simCtx.fillStyle = '#475569';
-            simCtx.font = `${11 * (window.devicePixelRatio || 1)}px JetBrains Mono`;
+            simCtx.font = `${13 * (window.devicePixelRatio || 1)}px JetBrains Mono`;
             simCtx.textAlign = 'center';
             simCtx.fillText(`r = ${frame.r.toFixed(2)} m`, (px1 + px2) / 2, centerY - 42);
 
@@ -586,14 +600,14 @@
             simCtx.fill();
 
             simCtx.fillStyle = colorDark;
-            simCtx.font = `bold ${10 * (window.devicePixelRatio || 1)}px Inter`;
+            simCtx.font = `bold ${12 * (window.devicePixelRatio || 1)}px Inter`;
             simCtx.textAlign = 'center';
             simCtx.textBaseline = 'middle';
             simCtx.fillText(label, x, y + radius + 12 * (window.devicePixelRatio || 1));
 
             if (vel !== null) {
                 simCtx.fillStyle = colorDark;
-                simCtx.font = `${10 * (window.devicePixelRatio || 1)}px JetBrains Mono`;
+                simCtx.font = `${12 * (window.devicePixelRatio || 1)}px JetBrains Mono`;
                 const velocityLabel = referenceFrame === 'lab' ? 'v' : 'v rel';
                 simCtx.fillText(`${velocityLabel} = ${vel >= 0 ? '+' : ''}${vel.toFixed(2)}`, x, y - radius - 10 * (window.devicePixelRatio || 1));
             }
@@ -646,8 +660,21 @@
             const plotWidth = width - padding.left - padding.right;
             const plotHeight = height - padding.top - padding.bottom;
 
-            const vMin = -1.2;
-            const vMax = +1.8;
+            const value1 = (pt) => graphMode === 'momentum' ? params.m1 * pt.v1 : pt.v1;
+            const value2 = (pt) => graphMode === 'momentum' ? params.m2 * pt.v2 : pt.v2;
+            let vMin = -1.2;
+            let vMax = +1.8;
+            if (graphMode === 'momentum') {
+                vMin = 0;
+                vMax = 0;
+                for (const pt of trajectory) {
+                    vMin = Math.min(vMin, value1(pt), value2(pt));
+                    vMax = Math.max(vMax, value1(pt), value2(pt));
+                }
+                const momentumPadding = Math.max(0.5, (vMax - vMin) * 0.12);
+                vMin -= momentumPadding;
+                vMax += momentumPadding;
+            }
             const tTotal = params.tMax;
 
             const mapX = (t) => padding.left + (t / tTotal) * plotWidth;
@@ -674,7 +701,10 @@
             const pTotal = params.m1 * params.v1_0 + params.m2 * params.v2_0;
             const vCom = pTotal / (params.m1 + params.m2);
 
-            const dashedLevels = [
+            const dashedLevels = graphMode === 'momentum' ? [
+                { val: params.m1 * params.v1_0, label: 'p₁(0)' },
+                { val: params.m2 * params.v2_0, label: 'p₂(0)' }
+            ] : [
                 { val: params.v1_0, label: '+v' },
                 { val: params.v2_0, label: '-v' },
                 { val: vCom, label: 'vCOM' }
@@ -683,7 +713,7 @@
             graphCtx.setLineDash([4 * dpr, 4 * dpr]);
             graphCtx.strokeStyle = '#cbd5e1';
             graphCtx.fillStyle = '#64748b';
-            graphCtx.font = `${9 * dpr}px JetBrains Mono`;
+            graphCtx.font = `${11 * dpr}px JetBrains Mono`;
             graphCtx.textAlign = 'right';
 
             dashedLevels.forEach(item => {
@@ -703,7 +733,7 @@
             for (let i = 0; i < trajectory.length; i++) {
                 const pt = trajectory[i];
                 const x = mapX(pt.t);
-                const y = mapY(pt.v1);
+                const y = mapY(value1(pt));
                 if (i === 0) graphCtx.moveTo(x, y);
                 else graphCtx.lineTo(x, y);
             }
@@ -716,7 +746,7 @@
             for (let i = 0; i < trajectory.length; i++) {
                 const pt = trajectory[i];
                 const x = mapX(pt.t);
-                const y = mapY(pt.v2);
+                const y = mapY(value2(pt));
                 if (i === 0) graphCtx.moveTo(x, y);
                 else graphCtx.lineTo(x, y);
             }
@@ -738,7 +768,7 @@
                 graphCtx.setLineDash([]);
 
                 graphCtx.fillStyle = color;
-                graphCtx.font = `bold ${10 * dpr}px JetBrains Mono`;
+                graphCtx.font = `bold ${12 * dpr}px JetBrains Mono`;
                 graphCtx.textAlign = 'center';
                 graphCtx.fillText(label, x, height - padding.bottom + 12 * dpr);
             };
@@ -759,8 +789,8 @@
             graphCtx.stroke();
 
             // Indicator dots
-            const y1Current = mapY(currentFrame.v1);
-            const y2Current = mapY(currentFrame.v2);
+            const y1Current = mapY(value1(currentFrame));
+            const y2Current = mapY(value2(currentFrame));
 
             graphCtx.fillStyle = '#0284c7';
             graphCtx.beginPath();
@@ -864,6 +894,11 @@
         referenceFrameSelect.addEventListener('change', (event) => {
             referenceFrame = event.target.value;
             drawSimulation();
+        });
+        graphModeSelect.addEventListener('change', (event) => {
+            graphMode = event.target.value;
+            graphTitle.innerText = graphMode === 'momentum' ? 'Momentum vs Time Graph' : 'Velocity vs Time Graph';
+            drawGraph();
         });
         simCanvas.addEventListener('wheel', (event) => {
             event.preventDefault();
