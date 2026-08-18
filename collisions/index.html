@@ -114,7 +114,13 @@
                             <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse"></span>
                             <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Spatial Simulation</h2>
                         </div>
-                        <div class="flex items-center gap-3 text-[11px] font-medium">
+                        <div class="flex items-center gap-2 text-[11px] font-medium">
+                            <label for="referenceFrameSelect" class="text-slate-500">Frame:</label>
+                            <select id="referenceFrameSelect" class="h-6 rounded-md border border-slate-300 bg-white px-1.5 text-[10px] font-semibold text-slate-700 focus:border-cyan-500 focus:outline-none">
+                                <option value="lab">Lab frame</option>
+                                <option value="particle1">Particle 1 frame</option>
+                                <option value="particle2">Particle 2 frame</option>
+                            </select>
                             <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-cyan-600"></span> $3m$ Nucleus</span>
                             <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> $2m$ Nucleus</span>
                             <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-600"></span> COM</span>
@@ -315,6 +321,7 @@
         let isPlaying = false;
         let animationFrameReq = null;
         let simZoom = 1;
+        let referenceFrame = 'lab';
         const MIN_SIM_ZOOM = 0.5;
         const MAX_SIM_ZOOM = 4;
 
@@ -335,6 +342,7 @@
         const zoomOutBtn = document.getElementById('zoomOutBtn');
         const zoomResetBtn = document.getElementById('zoomResetBtn');
         const zoomInBtn = document.getElementById('zoomInBtn');
+        const referenceFrameSelect = document.getElementById('referenceFrameSelect');
 
         // Drawer DOM Elements
         const drawerToggleBtn = document.getElementById('drawerToggleBtn');
@@ -501,12 +509,15 @@
             simCtx.lineTo(width, centerY);
             simCtx.stroke();
 
-            const pTotal = params.m1 * params.v1_0 + params.m2 * params.v2_0;
-            const vCom = pTotal / (params.m1 + params.m2);
-            const xComCurrent = vCom * frame.t;
+            const xComCurrent = (params.m1 * frame.x1 + params.m2 * frame.x2) / (params.m1 + params.m2);
 
             const scale = ((width * 0.7) / (params.r0 * 1.5)) * simZoom;
-            const originX = width / 2 - xComCurrent * scale;
+            let frameOrigin = 0;
+            if (referenceFrame === 'particle1') frameOrigin = frame.x1;
+            if (referenceFrame === 'particle2') frameOrigin = frame.x2;
+            const frameAnchorX = referenceFrame === 'particle1' ? width * 0.3
+                : referenceFrame === 'particle2' ? width * 0.7 : width / 2;
+            const originX = frameAnchorX - frameOrigin * scale;
 
             const px1 = originX + frame.x1 * scale;
             const px2 = originX + frame.x2 * scale;
@@ -538,15 +549,17 @@
             const r1Radius = (6 + Math.cbrt(params.m1) * 2.5) * (window.devicePixelRatio || 1);
             const r2Radius = (6 + Math.cbrt(params.m2) * 2.5) * (window.devicePixelRatio || 1);
 
-            // Nucleus 1 (Cyan/Blue)
-            drawNucleus(px1, centerY, r1Radius, '#0284c7', '#38bdf8', `${params.m1}m`, frame.v1);
+            const v1Display = referenceFrame === 'particle2' ? frame.v1 - frame.v2
+                : referenceFrame === 'particle1' ? null : frame.v1;
+            const v2Display = referenceFrame === 'particle1' ? frame.v2 - frame.v1
+                : referenceFrame === 'particle2' ? null : frame.v2;
 
-            // Nucleus 2 (Amber)
-            drawNucleus(px2, centerY, r2Radius, '#d97706', '#fbbf24', `${params.m2}m`, frame.v2);
+            // Nuclei and velocities in the selected spatial reference frame.
+            drawNucleus(px1, centerY, r1Radius, '#0284c7', '#38bdf8', `${params.m1}m`, v1Display);
+            drawNucleus(px2, centerY, r2Radius, '#d97706', '#fbbf24', `${params.m2}m`, v2Display);
 
-            // Velocity vectors
-            drawVelocityArrow(px1, centerY, r1Radius, frame.v1, '#0284c7');
-            drawVelocityArrow(px2, centerY, r2Radius, frame.v2, '#d97706');
+            if (v1Display !== null) drawVelocityArrow(px1, centerY, r1Radius, v1Display, '#0284c7');
+            if (v2Display !== null) drawVelocityArrow(px2, centerY, r2Radius, v2Display, '#d97706');
 
             document.getElementById('header-dist').innerText = frame.r.toFixed(2) + ' m';
         }
@@ -576,9 +589,12 @@
             simCtx.textBaseline = 'middle';
             simCtx.fillText(label, x, y + radius + 12 * (window.devicePixelRatio || 1));
 
-            simCtx.fillStyle = colorDark;
-            simCtx.font = `${10 * (window.devicePixelRatio || 1)}px JetBrains Mono`;
-            simCtx.fillText(`v = ${vel >= 0 ? '+' : ''}${vel.toFixed(2)}`, x, y - radius - 10 * (window.devicePixelRatio || 1));
+            if (vel !== null) {
+                simCtx.fillStyle = colorDark;
+                simCtx.font = `${10 * (window.devicePixelRatio || 1)}px JetBrains Mono`;
+                const velocityLabel = referenceFrame === 'lab' ? 'v' : 'v rel';
+                simCtx.fillText(`${velocityLabel} = ${vel >= 0 ? '+' : ''}${vel.toFixed(2)}`, x, y - radius - 10 * (window.devicePixelRatio || 1));
+            }
 
             simCtx.restore();
         }
@@ -843,6 +859,10 @@
         zoomOutBtn.addEventListener('click', () => setSimulationZoom(simZoom / 1.25));
         zoomInBtn.addEventListener('click', () => setSimulationZoom(simZoom * 1.25));
         zoomResetBtn.addEventListener('click', () => setSimulationZoom(1));
+        referenceFrameSelect.addEventListener('change', (event) => {
+            referenceFrame = event.target.value;
+            drawSimulation();
+        });
         simCanvas.addEventListener('wheel', (event) => {
             event.preventDefault();
             setSimulationZoom(simZoom * (event.deltaY < 0 ? 1.12 : 1 / 1.12));
