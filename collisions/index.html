@@ -32,6 +32,11 @@
         .mono {
             font-family: 'JetBrains Mono', monospace;
         }
+        .text-xs { font-size: 13px !important; line-height: 18px !important; }
+        .text-sm { font-size: 15px !important; line-height: 20px !important; }
+        .text-base { font-size: 17px !important; line-height: 22px !important; }
+        [class~="text-[10px]"] { font-size: 12px !important; line-height: 16px !important; }
+        [class~="text-[11px]"] { font-size: 13px !important; line-height: 18px !important; }
         input[type=range] {
             accent-color: #0284c7;
         }
@@ -53,10 +58,10 @@
 </head>
 <body class="min-h-screen flex items-center justify-center p-2 text-slate-800 antialiased selection:bg-cyan-100 selection:text-cyan-900">
 
-    <!-- Fixed 1080px x 800px Application Container -->
-    <div class="relative w-[1080px] h-[800px] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+    <!-- Fixed 1080px x 640px Application Container -->
+    <div class="relative w-[1080px] h-[640px] bg-white flex flex-col overflow-hidden">
 
-        <header class="h-[60px] border-b border-slate-200 bg-slate-50/90 backdrop-blur px-5 flex items-center justify-between z-20 shrink-0">
+        <header class="h-[52px] border-b border-slate-200 bg-slate-50/90 backdrop-blur px-4 flex items-center justify-between z-20 shrink-0">
             <div class="flex items-center gap-3">
                 <div class="p-2 bg-gradient-to-tr from-cyan-600 to-blue-600 rounded-xl shadow-md shadow-cyan-600/20 text-white">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,13 +107,13 @@
             </div>
         </header>
 
-        <main class="flex-1 flex flex-col p-3 gap-3 overflow-hidden bg-slate-50/50 relative">
+        <main class="flex-1 flex flex-col p-2 gap-1.5 overflow-hidden bg-white relative">
 
             <!-- Left Panel: Spatial Simulation & Controls -->
             <div class="w-full flex flex-col gap-2 shrink-0">
 
                 <!-- 2D Spatial Canvas Box -->
-                <div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm flex flex-col gap-1.5 relative">
+                <div class="flex flex-col gap-1 relative">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse"></span>
@@ -127,7 +132,7 @@
                         </div>
                     </div>
 
-                    <div class="relative w-full h-[180px] bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
+                    <div class="relative w-full h-[120px] bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
                         <canvas id="simCanvas" class="w-full h-full block cursor-crosshair"></canvas>
 
                         <!-- Spatial zoom controls -->
@@ -146,7 +151,7 @@
                 </div>
 
                 <!-- Timeline Scrubber & Control Panel -->
-                <div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm flex flex-col gap-1.5">
+                <div class="flex flex-col gap-1">
                     <div class="flex justify-between items-center text-xs">
                         <span class="text-slate-400 font-medium">Timeline Scrubber</span>
                         <span id="timeDisplay" class="mono text-cyan-700 font-bold bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
@@ -204,7 +209,7 @@
             <div class="w-full flex flex-col gap-2 flex-1 min-h-0">
 
                 <!-- Velocity vs Time Graph Card -->
-                <div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm flex flex-col gap-1.5 flex-1 min-h-0">
+                <div class="flex flex-col gap-1 flex-1 min-h-0">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <svg class="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18"/></svg>
@@ -535,7 +540,7 @@
 
             // Separation label
             simCtx.fillStyle = '#475569';
-            simCtx.font = `${11 * (window.devicePixelRatio || 1)}px JetBrains Mono`;
+            simCtx.font = `${13 * (window.devicePixelRatio || 1)}px JetBrains Mono`;
             simCtx.textAlign = 'center';
             simCtx.fillText(`r = ${frame.r.toFixed(2)} m`, (px1 + px2) / 2, centerY - 42);
 
@@ -584,14 +589,14 @@
             simCtx.fill();
 
             simCtx.fillStyle = colorDark;
-            simCtx.font = `bold ${10 * (window.devicePixelRatio || 1)}px Inter`;
+            simCtx.font = `bold ${12 * (window.devicePixelRatio || 1)}px Inter`;
             simCtx.textAlign = 'center';
             simCtx.textBaseline = 'middle';
             simCtx.fillText(label, x, y + radius + 12 * (window.devicePixelRatio || 1));
 
             if (vel !== null) {
                 simCtx.fillStyle = colorDark;
-                simCtx.font = `${10 * (window.devicePixelRatio || 1)}px JetBrains Mono`;
+                simCtx.font = `${12 * (window.devicePixelRatio || 1)}px JetBrains Mono`;
                 const velocityLabel = referenceFrame === 'lab' ? 'v' : 'v rel';
                 simCtx.fillText(`${velocityLabel} = ${vel >= 0 ? '+' : ''}${vel.toFixed(2)}`, x, y - radius - 10 * (window.devicePixelRatio || 1));
             }
@@ -681,7 +686,7 @@
             graphCtx.setLineDash([4 * dpr, 4 * dpr]);
             graphCtx.strokeStyle = '#cbd5e1';
             graphCtx.fillStyle = '#64748b';
-            graphCtx.font = `${9 * dpr}px JetBrains Mono`;
+            graphCtx.font = `${11 * dpr}px JetBrains Mono`;
             graphCtx.textAlign = 'right';
 
             dashedLevels.forEach(item => {
@@ -736,7 +741,7 @@
                 graphCtx.setLineDash([]);
 
                 graphCtx.fillStyle = color;
-                graphCtx.font = `bold ${10 * dpr}px JetBrains Mono`;
+                graphCtx.font = `bold ${12 * dpr}px JetBrains Mono`;
                 graphCtx.textAlign = 'center';
                 graphCtx.fillText(label, x, height - padding.bottom + 12 * dpr);
             };
