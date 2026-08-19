@@ -526,9 +526,14 @@
             simCtx.stroke();
 
             const xComCurrent = (params.m1 * frame.x1 + params.m2 * frame.x2) / (params.m1 + params.m2);
+            const initialFrame = trajectory[0];
+            const xComInitial = (params.m1 * initialFrame.x1 + params.m2 * initialFrame.x2) / (params.m1 + params.m2);
+            const vCom = (params.m1 * params.v1_0 + params.m2 * params.v2_0) / (params.m1 + params.m2);
 
             const scale = ((width * 0.7) / (params.r0 * 1.5)) * simZoom;
-            let frameOrigin = xComCurrent;
+            // Keep the lab coordinates fixed so a non-zero centre-of-mass
+            // velocity is visible. Particle frames instead follow their particle.
+            let frameOrigin = xComInitial;
             if (referenceFrame === 'particle1') frameOrigin = frame.x1;
             if (referenceFrame === 'particle2') frameOrigin = frame.x2;
             const frameAnchorX = referenceFrame === 'particle1' ? width * 0.3
@@ -560,7 +565,10 @@
             simCtx.beginPath();
             simCtx.arc(pxCom, centerY, 4 * (window.devicePixelRatio || 1), 0, Math.PI * 2);
             simCtx.fill();
-            simCtx.fillText(`COM`, pxCom, centerY + 32);
+            const frameVelocity = referenceFrame === 'particle1' ? frame.v1
+                : referenceFrame === 'particle2' ? frame.v2 : 0;
+            const vComDisplay = vCom - frameVelocity;
+            simCtx.fillText(`COM  v = ${vComDisplay >= 0 ? '+' : ''}${vComDisplay.toFixed(2)}`, pxCom, centerY + 32);
 
             const r1Radius = (6 + Math.cbrt(params.m1) * 2.5) * (window.devicePixelRatio || 1);
             const r2Radius = (6 + Math.cbrt(params.m2) * 2.5) * (window.devicePixelRatio || 1);
