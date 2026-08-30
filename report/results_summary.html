@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Question Results Summary</title>
+  <style>
+    :root{color-scheme:dark;--bg:#07101d;--card:#0d1929;--card2:#101f32;--line:rgba(148,163,184,.18);--text:#f4f7fb;--muted:#91a2b8;--accent:#2dd4bf;--good:#4ade80;--bad:#fb7185;--blank:#64748b}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 8% -10%,rgba(45,212,191,.15),transparent 32rem),radial-gradient(circle at 100% 0,rgba(59,130,246,.1),transparent 28rem),var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    header{border-bottom:1px solid var(--line);background:rgba(7,16,29,.82);backdrop-filter:blur(18px)}.header-inner,main{width:min(1180px,calc(100% - 32px));margin:auto}.header-inner{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{display:flex;gap:13px;align-items:center}.brand-mark{width:42px;height:42px;display:grid;place-items:center;border:1px solid rgba(45,212,191,.3);border-radius:13px;background:rgba(45,212,191,.11);color:#5eead4;font-size:20px}h1{font-size:18px;margin:0;letter-spacing:-.02em}.subtitle{margin:3px 0 0;color:var(--muted);font-size:12px}
+    a.button,button,select{min-height:40px;padding:8px 13px;border:1px solid var(--line);border-radius:10px;background:rgba(148,163,184,.07);color:#dce6f2;font:inherit;font-weight:650;text-decoration:none;cursor:pointer}a.button:hover,button:hover{border-color:rgba(45,212,191,.5);background:rgba(45,212,191,.09)}button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid rgba(45,212,191,.2);outline-offset:2px}.actions{display:flex;gap:8px;flex-wrap:wrap}
+    main{padding:32px 0 60px}.hero{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:20px}.eyebrow{color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.hero h2{margin:5px 0 5px;font-size:clamp(25px,4vw,38px);letter-spacing:-.04em}.hero p{margin:0;color:var(--muted);font-size:14px}.controls{display:flex;align-items:center;gap:8px}.controls label{color:var(--muted);font-size:13px}
+    .notice{padding:28px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--muted);text-align:center}.notice strong{display:block;margin-bottom:5px;color:var(--text);font-size:17px}.notice a{color:#5eead4}
+    .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}.metric{padding:18px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(180deg,rgba(17,31,50,.96),rgba(11,24,40,.97))}.metric-label{color:var(--muted);font-size:11px;font-weight:750;letter-spacing:.09em;text-transform:uppercase}.metric-value{margin-top:4px;font-size:25px;font-weight:780;letter-spacing:-.03em}.metric-note{margin-top:2px;color:var(--muted);font-size:12px}
+    .questions{display:grid;gap:12px}.question{display:grid;grid-template-columns:110px minmax(150px,1fr) minmax(280px,2.1fr);gap:22px;align-items:center;padding:18px 20px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,rgba(16,31,50,.96),rgba(11,24,40,.97))}.q-title{font-size:17px;font-weight:760}.answer{margin-top:5px;color:var(--muted);font-size:12px}.answer strong{color:#5eead4}.rate{display:flex;align-items:baseline;gap:8px}.rate-number{font-size:27px;font-weight:800;letter-spacing:-.04em}.rate-count{color:var(--muted);font-size:12px}.track{height:7px;margin-top:8px;overflow:hidden;border-radius:999px;background:rgba(148,163,184,.13)}.track span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#14b8a6,#5eead4)}
+    .choices{display:grid;grid-template-columns:repeat(6,minmax(38px,1fr));gap:7px}.choice{min-width:0;padding:8px 6px;border:1px solid var(--line);border-radius:9px;background:rgba(3,10,20,.35);text-align:center}.choice.correct{border-color:rgba(74,222,128,.42);background:rgba(74,222,128,.08)}.choice-label{display:block;color:var(--muted);font-size:10px;font-weight:750}.choice.correct .choice-label{color:var(--good)}.choice-value{display:block;margin-top:2px;font-size:14px;font-weight:760}.choice-percent{display:block;color:var(--muted);font-size:9px}.question.needs-key .track span{background:var(--blank)}
+    @media(max-width:800px){.metrics{grid-template-columns:repeat(2,1fr)}.question{grid-template-columns:90px 1fr}.choices{grid-column:1/-1}.hero{align-items:flex-start;flex-direction:column}.controls{width:100%;justify-content:space-between}}
+    @media(max-width:520px){.header-inner{padding:12px 0;align-items:flex-start;flex-direction:column}.actions{width:100%}.actions a{flex:1;text-align:center}.metrics{grid-template-columns:1fr 1fr}.question{grid-template-columns:1fr;gap:12px}.choices{grid-column:auto;grid-template-columns:repeat(3,1fr)}main{padding-top:24px}}
+    @media print{body{background:#fff;color:#111}header,.controls{display:none}.hero p,.metric-note,.rate-count,.answer,.choice-label,.choice-percent{color:#555}.metric,.question,.choice{background:#fff;border-color:#ccc}.questions{gap:8px}main{width:100%;padding:0}.question{break-inside:avoid}.track{border:1px solid #aaa}}
+  </style>
+</head>
+<body>
+  <header><div class="header-inner"><div class="brand"><div class="brand-mark" aria-hidden="true">▥</div><div><h1>Question Results Summary</h1><p class="subtitle">Optical Mark Sheet Scanner</p></div></div><div class="actions"><a class="button" href="scanner.html">Back to scanner</a><button id="printButton" type="button">Print summary</button></div></div></header>
+  <main>
+    <div class="hero"><div><div class="eyebrow">Item analysis</div><h2>How did each question perform?</h2><p id="description">A question-by-question breakdown of all stored responses.</p></div><div class="controls"><label for="sort">Sort by</label><select id="sort"><option value="number">Question number</option><option value="lowest">Lowest score first</option><option value="highest">Highest score first</option><option value="blank">Most blanks first</option></select></div></div>
+    <div id="content" aria-live="polite"><div class="notice">Loading stored results…</div></div>
+  </main>
+  <script>
+    const RESULTS_KEY="oms.results",ANSWER_KEY="oms.answerKey",INDEX_COLUMNS=4;
+    const content=document.getElementById("content"),sortSelect=document.getElementById("sort");
+    let summaries=[];
+    function readJSON(key,fallback){try{const value=JSON.parse(localStorage.getItem(key));return value??fallback}catch{return fallback}}
+    function normalizeAnswer(value){const letters=String(value||"").toUpperCase().match(/[A-E]/g)||[];return[...new Set(letters)].sort().join("+")}
+    function loadData(){
+      const raw=readJSON(RESULTS_KEY,[]),key=readJSON(ANSWER_KEY,[]);
+      if(!Array.isArray(raw)||!raw.length){content.innerHTML='<div class="notice"><strong>No results yet</strong>Process answer sheets in the <a href="scanner.html">scanner</a>, then return here to view the breakdown.</div>';return}
+      const rows=raw.map(line=>String(line).split(";").slice(1+INDEX_COLUMNS).map(normalizeAnswer));
+      const questionCount=Math.max(Array.isArray(key)?key.length:0,...rows.map(row=>row.length));
+      summaries=Array.from({length:questionCount},(_,index)=>{
+        const correct=normalizeAnswer(Array.isArray(key)?key[index]:""),counts={A:0,B:0,C:0,D:0,E:0,Blank:0,Other:0};let correctCount=0;
+        rows.forEach(row=>{const answer=row[index]||"";if(!answer)counts.Blank++;else if(Object.hasOwn(counts,answer))counts[answer]++;else counts.Other++;if(correct&&answer===correct)correctCount++});
+        return{number:index+1,correct,counts,correctCount,total:rows.length,rate:correct?correctCount/rows.length:null,blankRate:counts.Blank/rows.length};
+      });
+      const marked=summaries.filter(item=>item.rate!==null),answered=rows.reduce((sum,row)=>sum+row.filter(Boolean).length,0),possible=rows.length*questionCount,average=marked.length?marked.reduce((sum,item)=>sum+item.rate,0)/marked.length:null;
+      document.getElementById("description").textContent=`Based on ${rows.length} ${rows.length===1?"student":"students"} and ${questionCount} ${questionCount===1?"question":"questions"}.`;
+      const metrics=`<section class="metrics"><div class="metric"><div class="metric-label">Students</div><div class="metric-value">${rows.length}</div><div class="metric-note">Stored answer sheets</div></div><div class="metric"><div class="metric-label">Questions</div><div class="metric-value">${questionCount}</div><div class="metric-note">Across all sheets</div></div><div class="metric"><div class="metric-label">Average accuracy</div><div class="metric-value">${average===null?"—":Math.round(average*100)+"%"}</div><div class="metric-note">${marked.length?`Across ${marked.length} keyed questions`:"Save an answer key to calculate"}</div></div><div class="metric"><div class="metric-label">Completion</div><div class="metric-value">${possible?Math.round(answered/possible*100):0}%</div><div class="metric-note">${possible-answered} blank ${possible-answered===1?"response":"responses"}</div></div></section>`;
+      content.innerHTML=metrics+'<section class="questions" id="questions"></section>';renderQuestions();
+    }
+    function renderQuestions(){
+      const list=[...summaries],mode=sortSelect.value;
+      if(mode==="lowest")list.sort((a,b)=>(a.rate??2)-(b.rate??2)||a.number-b.number);else if(mode==="highest")list.sort((a,b)=>(b.rate??-1)-(a.rate??-1)||a.number-b.number);else if(mode==="blank")list.sort((a,b)=>b.blankRate-a.blankRate||a.number-b.number);
+      document.getElementById("questions").innerHTML=list.map(item=>{
+        const rate=item.rate===null?null:Math.round(item.rate*100),choiceNames=["A","B","C","D","E","Blank"],extra=item.counts.Other?`<div class="choice"><span class="choice-label">MULTI</span><span class="choice-value">${item.counts.Other}</span><span class="choice-percent">${Math.round(item.counts.Other/item.total*100)}%</span></div>`:"";
+        const choices=choiceNames.map(name=>`<div class="choice ${item.correct===name?"correct":""}"><span class="choice-label">${name.toUpperCase()}</span><span class="choice-value">${item.counts[name]}</span><span class="choice-percent">${Math.round(item.counts[name]/item.total*100)}%</span></div>`).join("")+extra;
+        return `<article class="question ${rate===null?"needs-key":""}"><div><div class="q-title">Question ${item.number}</div><div class="answer">Correct answer: <strong>${item.correct||"Not set"}</strong></div></div><div><div class="rate"><span class="rate-number">${rate===null?"—":rate+"%"}</span><span class="rate-count">${rate===null?"Not marked":`${item.correctCount} of ${item.total} correct`}</span></div><div class="track" aria-hidden="true"><span style="width:${rate??0}%"></span></div></div><div class="choices">${choices}</div></article>`;
+      }).join("");
+    }
+    sortSelect.addEventListener("change",renderQuestions);document.getElementById("printButton").addEventListener("click",()=>window.print());window.addEventListener("storage",loadData);loadData();
+  </script>
+</body>
+</html>
