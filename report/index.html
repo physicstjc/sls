@@ -190,7 +190,11 @@
       return rows.slice(1).map(cells => ({
         pageTag: String(cells[sourceColumn] || "").trim(),
         index: normalizeIndex(cells[indexColumn]),
-        answers: questionColumns.map(item => String(cells[item.column] || "").trim().toUpperCase())
+        answers: questionColumns.map(item => ({
+          chosen: String(cells[item.column] || "").trim().toUpperCase(),
+          result: String(cells[headers.indexOf(`${item.heading} result`)] || "").trim(),
+          correction: String(cells[headers.indexOf(`${item.heading} correct answer`)] || "").trim().toUpperCase()
+        }))
       }));
     }
 
@@ -208,9 +212,11 @@
       const row = matches[0];
       const student = Array.isArray(students) ? students.find(item => String(item.id || "").toUpperCase() === index) : null;
       const answers = row.answers.map((answer, i) => {
-        const correct = Array.isArray(key) ? String(key[i] || "").toUpperCase() : "";
-        const chosen = String(answer || "").toUpperCase();
-        return { question: i + 1, chosen, correct, isCorrect: Boolean(correct) && chosen === correct };
+        const savedCorrect = Array.isArray(key) ? String(key[i] || "").toUpperCase() : "";
+        const correct = answer.correction || (answer.result === "Correct" ? answer.chosen : savedCorrect);
+        const chosen = answer.chosen;
+        const isCorrect = answer.result ? answer.result === "Correct" : Boolean(correct) && chosen === correct;
+        return { question: i + 1, chosen, correct, isCorrect };
       });
       const assessed = answers.filter(item => item.correct);
       const marks = assessed.filter(item => item.isCorrect).length;
