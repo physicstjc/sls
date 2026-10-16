@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projectile Physics Lab - Gorilla Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         
@@ -12,7 +13,8 @@
             background-color: #1a202c;
             color: #e2e8f0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
             touch-action: manipulation;
         }
 
@@ -24,7 +26,7 @@
             width: 100%;
             max-width: 800px;
             height: auto;
-            max-height: 70vh;
+            max-height: 60vh;
         }
 
         .glass {
@@ -42,17 +44,155 @@
         input[type=range] {
             accent-color: #fbbf24;
         }
+
+        .mode-button[aria-pressed="true"] {
+            background: #fbbf24;
+            color: #111827;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
     </style>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-FSRBCRECMR"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-FSRBCRECMR');
+  </script>
 </head>
 <body class="flex flex-col items-center justify-start min-h-screen p-4">
 
-    <div class="mb-4 text-center">
+    <header class="mb-5 w-full max-w-4xl text-center">
         <h1 class="text-2xl font-bold text-yellow-400">PROJECTILE PHYSICS LAB</h1>
-    </div>
+        <p class="mt-2 text-sm text-gray-300">Learn how motion in two dimensions builds on one-dimensional equations of motion.</p>
+        <nav class="mt-4 flex flex-wrap justify-center gap-2" aria-label="Learning modes">
+            <button class="mode-button rounded-lg border border-yellow-400 px-4 py-2 font-bold text-yellow-200" type="button" data-mode="game" aria-pressed="true">Projectile game</button>
+            <button class="mode-button rounded-lg border border-yellow-400 px-4 py-2 font-bold text-yellow-200" type="button" data-mode="lesson" aria-pressed="false">Lesson</button>
+            <button class="mode-button rounded-lg border border-yellow-400 px-4 py-2 font-bold text-yellow-200" type="button" data-mode="example" aria-pressed="false">Worked example</button>
+        </nav>
+    </header>
 
+    <main class="w-full max-w-4xl">
+        <section id="lessonMode" class="glass mb-6 hidden rounded-xl p-5 shadow-2xl" aria-labelledby="lessonHeading" hidden>
+            <h2 id="lessonHeading" class="mb-3 text-xl font-bold text-yellow-300">Lesson: one dimension vs two</h2>
+            <p class="mb-4 text-gray-200">In one-dimensional motion, an object moves along one axis, so one set of signed quantities describes its displacement, velocity and acceleration. In two-dimensional motion, motion happens along two perpendicular axes. Resolve the initial velocity into components, then solve each axis separately; both components share the same elapsed time.</p>
+
+            <div class="mb-4 grid gap-4 md:grid-cols-3">
+                <article class="rounded-lg border border-blue-400/40 bg-blue-950/40 p-4">
+                    <h3 class="mb-2 font-bold text-blue-300">1D: one axis</h3>
+                    <p class="mb-3 text-sm">Use the signed values along the direction of motion. For constant acceleration, the four equations are:</p>
+                    <ul class="space-y-1 font-mono text-sm text-white">
+                        <li>\(v = u + at\)</li>
+                        <li>\(v^2 = u^2 + 2as\)</li>
+                        <li>\(s = \frac{1}{2}(u + v)t\)</li>
+                        <li>\(s = ut + \frac{1}{2}at^2\)</li>
+                    </ul>
+                </article>
+                <article class="rounded-lg border border-red-400/40 bg-red-950/30 p-4 md:col-span-2">
+                    <h3 class="mb-2 font-bold text-red-300">2D: two independent axes</h3>
+                    <p class="mb-2 text-sm">For a projectile (ignoring air resistance), horizontal acceleration is zero and vertical acceleration is gravity:</p>
+                    <ul class="space-y-1 font-mono text-sm text-white">
+                        <li>\(a_x = 0\)</li>
+                        <li>\(a_y = -g\)</li>
+                        <li>\(u_x = u\cos\theta\)</li>
+                        <li>\(u_y = u\sin\theta\)</li>
+                    </ul>
+                    <p class="mt-3 text-sm">The same four equations work on each axis. Substitute the matching components:</p>
+                    <div class="mt-2 overflow-x-auto rounded-lg border border-white/10">
+                        <table class="w-full min-w-[32rem] border-collapse text-left text-xs text-white" aria-label="Equations of motion for horizontal and vertical components">
+                            <thead class="bg-white/10 uppercase tracking-wide text-yellow-200">
+                                <tr>
+                                    <th scope="col" class="p-2">Horizontal (x)</th>
+                                    <th scope="col" class="p-2">Vertical (y)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="font-mono">
+                                <tr class="border-t border-white/10">
+                                    <td class="p-2">\(v_x = u_x + a_xt\)</td>
+                                    <td class="p-2">\(v_y = u_y + a_yt\)</td>
+                                </tr>
+                                <tr class="border-t border-white/10">
+                                    <td class="p-2">\(v_x^2 = u_x^2 + 2a_xs_x\)</td>
+                                    <td class="p-2">\(v_y^2 = u_y^2 + 2a_ys_y\)</td>
+                                </tr>
+                                <tr class="border-t border-white/10">
+                                    <td class="p-2">\(s_x = \frac{1}{2}(u_x + v_x)t\)</td>
+                                    <td class="p-2">\(s_y = \frac{1}{2}(u_y + v_y)t\)</td>
+                                </tr>
+                                <tr class="border-t border-white/10">
+                                    <td class="p-2">\(s_x = u_xt + \frac{1}{2}a_xt^2\)</td>
+                                    <td class="p-2">\(s_y = u_yt + \frac{1}{2}a_yt^2\)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="mt-2 text-sm">Both axes use the same time. For a projectile, \(a_x = 0\) while \(a_y = -g\).</p>
+                </article>
+            </div>
+
+        </section>
+
+        <section id="exampleMode" class="glass mb-6 hidden rounded-xl p-5 shadow-2xl" aria-labelledby="exampleHeading" hidden>
+            <h2 id="exampleHeading" class="mb-3 text-xl font-bold text-yellow-300">Worked example</h2>
+            <div class="rounded-lg border border-yellow-400/40 bg-black/30 p-4">
+                <p class="text-sm">Launch at \(10\,\mathrm{m/s}\) and \(37^\circ\) above horizontal. Use \(\sin 37^\circ \approx 0.6\), \(\cos 37^\circ \approx 0.8\) and \(g = 9.81\,\mathrm{m/s^2}\).</p>
+                <p class="mt-3 text-sm">Resolve velocity first: \(u_x = 10(0.8) = 8.0\,\mathrm{m/s}\) and \(u_y = 10(0.6) = 6.0\,\mathrm{m/s}\). Find the displacement after \(t = 2\,\mathrm{s}\).</p>
+                <div class="mt-3 overflow-x-auto rounded-lg border border-white/10">
+                    <table class="w-full min-w-[32rem] border-collapse text-left text-sm text-white" aria-label="Known horizontal and vertical values">
+                        <caption class="p-2 text-left font-bold text-blue-200">Known values and unknowns</caption>
+                        <thead class="bg-white/10 text-yellow-200">
+                            <tr><th scope="col" class="p-3">Horizontal (x)</th><th scope="col" class="p-3">Vertical (y)</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-t border-white/10"><td class="p-3">\(u_x = 8.0\,\mathrm{m/s}\)</td><td class="p-3">\(u_y = 6.0\,\mathrm{m/s}\)</td></tr>
+                            <tr class="border-t border-white/10"><td class="p-3">\(a_x = 0\,\mathrm{m/s^2}\)</td><td class="p-3">\(a_y = -9.81\,\mathrm{m/s^2}\)</td></tr>
+                            <tr class="border-t border-white/10"><td class="p-3">\(t = 2\,\mathrm{s}\)</td><td class="p-3">\(t = 2\,\mathrm{s}\)</td></tr>
+                            <tr class="border-t border-white/10"><td class="p-3">Find \(s_x\); \(v_x\) is unknown.</td><td class="p-3">Find \(s_y\); \(v_y\) is unknown.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p id="exampleEquationNote" class="mt-4 text-sm text-yellow-200">The highlighted equations marked “Used” give displacement directly from the known initial velocity, acceleration and time. Other equations retain the unknown final velocity.</p>
+                <div class="mt-2 overflow-x-auto rounded-lg border border-white/10">
+                    <table class="w-full min-w-[40rem] border-collapse text-left text-sm text-white" aria-label="Worked example equations with known values substituted" aria-describedby="exampleEquationNote">
+                        <thead class="bg-white/10 text-yellow-200">
+                            <tr><th scope="col" class="p-3">Horizontal (x)</th><th scope="col" class="p-3">Vertical (y)</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-t border-white/10">
+                                <td class="p-3"><p>\(v_x = u_x + a_xt\)</p><p class="mt-2">\(v_x = 8 + 0(2)\)</p></td>
+                                <td class="p-3"><p>\(v_y = u_y + a_yt\)</p><p class="mt-2">\(v_y = 6 + (-9.81)(2)\)</p></td>
+                            </tr>
+                            <tr class="border-t border-white/10">
+                                <td class="p-3"><p>\(v_x^2 = u_x^2 + 2a_xs_x\)</p><p class="mt-2">\(v_x^2 = 8^2 + 2(0)s_x\)</p></td>
+                                <td class="p-3"><p>\(v_y^2 = u_y^2 + 2a_ys_y\)</p><p class="mt-2">\(v_y^2 = 6^2 + 2(-9.81)s_y\)</p></td>
+                            </tr>
+                            <tr class="border-t border-white/10">
+                                <td class="p-3"><p>\(s_x = \frac{1}{2}(u_x + v_x)t\)</p><p class="mt-2">\(s_x = \frac{1}{2}(8 + v_x)(2)\)</p></td>
+                                <td class="p-3"><p>\(s_y = \frac{1}{2}(u_y + v_y)t\)</p><p class="mt-2">\(s_y = \frac{1}{2}(6 + v_y)(2)\)</p></td>
+                            </tr>
+                            <tr class="border-t-2 border-yellow-400 bg-yellow-400/15 text-yellow-100">
+                                <td class="p-3"><strong class="text-yellow-300">Used — horizontal displacement</strong><p class="mt-2">\(s_x = u_xt + \frac{1}{2}a_xt^2\)</p><p class="mt-2">\(s_x = 8(2) + \frac{1}{2}(0)(2^2)\)</p><p class="mt-2 font-bold">\(s_x = 16\,\mathrm{m}\)</p></td>
+                                <td class="p-3"><strong class="text-yellow-300">Used — vertical displacement</strong><p class="mt-2">\(s_y = u_yt + \frac{1}{2}a_yt^2\)</p><p class="mt-2">\(s_y = 6(2) + \frac{1}{2}(-9.81)(2^2)\)</p><p class="mt-2 font-bold">\(s_y = -7.6\,\mathrm{m}\)</p></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="mt-3 text-sm">After 2 s, the projectile is 16 m horizontally from the launch point and 7.6 m below its launch height.</p>
+                <p class="mt-3 text-sm text-yellow-200">All answers are given to 2 significant figures; intermediate values are kept unrounded.</p>
+                <p class="mt-3 text-xs text-gray-400">Choose an equation based on which quantities you know. Keep the sign convention consistent: upward is positive here, so gravity is negative.</p>
+            </div>
+        </section>
+
+        <section id="gameMode" class="flex flex-col items-center" aria-label="Projectile physics game">
     <div class="relative w-full max-w-4xl flex justify-center">
         <canvas id="gameCanvas"></canvas>
     </div>
+    <p class="mt-2 w-full max-w-[800px] text-center text-xs text-cyan-200">Dotted cyan arc shows the first half of your predicted flight. Adjust angle, speed, and gravity to line up your shot.</p>
 
     <!-- Integrated Control Panel -->
     <div class="control-panel glass p-6 rounded-xl shadow-2xl">
@@ -89,7 +229,7 @@
                 <div class="col-span-2 pt-1 border-t border-white/10">
                     <p class="text-[10px] text-gray-500 uppercase">Gravity</p>
                     <select id="gravityInput" class="bg-transparent text-xs font-mono text-yellow-200 outline-none w-full cursor-pointer">
-                        <option value="9.8" class="bg-gray-800">Earth: 9.8 m/s²</option>
+                        <option value="9.81" class="bg-gray-800" selected>Earth: 9.81 m/s²</option>
                         <option value="1.6" class="bg-gray-800">Moon: 1.6 m/s²</option>
                         <option value="3.7" class="bg-gray-800">Mars: 3.7 m/s²</option>
                         <option value="24.8" class="bg-gray-800">Jupiter: 24.8 m/s²</option>
@@ -103,8 +243,33 @@
             </button>
         </div>
     </div>
+        </section>
+    </main>
 
     <script>
+        const modeButtons = document.querySelectorAll('.mode-button');
+        const modeSections = {
+            lesson: document.getElementById('lessonMode'),
+            example: document.getElementById('exampleMode'),
+            game: document.getElementById('gameMode')
+        };
+        function setMode(mode) {
+            for (const [name, section] of Object.entries(modeSections)) {
+                section.hidden = name !== mode;
+                section.classList.toggle('hidden', name !== mode);
+            }
+            modeButtons.forEach(button => {
+                button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
+            });
+            if (mode === 'game' && gameState.turn === 2 && !gameState.isProjectileActive) {
+                scheduleComputerTurn();
+            }
+        }
+
+        modeButtons.forEach(button => {
+            button.addEventListener('click', () => setMode(button.dataset.mode));
+        });
+
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const angleInput = document.getElementById('angleInput');
@@ -123,7 +288,9 @@
             turn: 1,
             isProjectileActive: false,
             projectile: null,
-            gravity: 9.8
+            gravity: 9.81,
+            player1Attempts: 0,
+            computerTurnScheduled: false
         };
 
         function init() {
@@ -191,23 +358,54 @@
             document.getElementById('height-calc').textContent = `${dy.toFixed(1)} m`;
         }
 
-        function throwProjectile() {
-            if (gameState.isProjectileActive) return;
-            const v0 = parseInt(velocityInput.value);
-            const displayAngle = parseInt(angleInput.value);
-            
-            // Mirror logic: P1 shoots 0-90 (right), P2 shoots 180 - (0-90) (left)
-            const worldAngle = gameState.turn === 1 ? displayAngle : (180 - displayAngle);
+        function startProjectile(displayAngle, v0, ignoreTarget = false) {
             const activePlayer = gameState.turn === 1 ? gameState.p1 : gameState.p2;
-            
+            const worldAngle = gameState.turn === 1 ? displayAngle : (180 - displayAngle);
+
             gameState.projectile = {
                 startX: activePlayer.x, startY: activePlayer.y,
                 x: activePlayer.x, y: activePlayer.y,
-                v0: v0, angle: worldAngle, time: 0, path: []
+                v0, angle: worldAngle, time: 0, path: [], ignoreTarget
             };
             gameState.isProjectileActive = true;
             throwBtn.disabled = true;
             throwBtn.style.opacity = "0.5";
+        }
+
+        function throwProjectile() {
+            if (gameState.isProjectileActive || gameState.turn !== 1) return;
+            gameState.player1Attempts++;
+            startProjectile(parseInt(angleInput.value), parseInt(velocityInput.value));
+        }
+
+        function scheduleComputerTurn() {
+            if (gameState.computerTurnScheduled || gameState.isProjectileActive) return;
+            gameState.computerTurnScheduled = true;
+            throwBtn.disabled = true;
+            throwBtn.textContent = 'Computer thinking...';
+            setTimeout(() => {
+                gameState.computerTurnScheduled = false;
+                if (gameState.turn !== 2 || gameState.isProjectileActive) return;
+
+                const shouldMiss = gameState.player1Attempts < 3;
+                let displayAngle = 75;
+                let velocity = 45;
+
+                if (!shouldMiss) {
+                    velocity = 120;
+                    const dx = Math.abs(gameState.p1.x - gameState.p2.x) / 5;
+                    const dy = (gameState.p2.y - gameState.p1.y) / 5;
+                    const gravity = gameState.gravity;
+                    const discriminant = velocity ** 4 - gravity * (gravity * dx ** 2 + 2 * dy * velocity ** 2);
+
+                    if (discriminant >= 0 && dx > 0) {
+                        const angleRadians = Math.atan((velocity ** 2 - Math.sqrt(discriminant)) / (gravity * dx));
+                        displayAngle = Math.max(1, Math.min(89, angleRadians * 180 / Math.PI));
+                    }
+                }
+
+                startProjectile(displayAngle, velocity, shouldMiss);
+            }, 700);
         }
 
         function checkCollision(x, y) {
@@ -216,23 +414,32 @@
                 if (x >= b.x && x <= b.x + b.w && y >= b.y) return 'building';
             }
             const target = gameState.turn === 1 ? gameState.p2 : gameState.p1;
-            if (Math.hypot(x - target.x, y - (target.y - 5)) < 18) return 'hit';
+            if (!gameState.projectile.ignoreTarget && Math.hypot(x - target.x, y - (target.y - 5)) < 18) return 'hit';
             return null;
         }
 
         function endTurn(result) {
             gameState.isProjectileActive = false;
-            throwBtn.disabled = false;
-            throwBtn.style.opacity = "1";
+            gameState.projectile = null;
 
             if (result === 'hit') {
-                if (gameState.turn === 1) gameState.p1.score++; else gameState.p2.score++;
+                if (gameState.turn === 1) {
+                    gameState.p1.score++;
+                } else {
+                    gameState.p2.score++;
+                }
                 generateBuildings();
                 resetPositions();
             }
 
             gameState.turn = gameState.turn === 1 ? 2 : 1;
             updatePhysicsDisplay();
+            throwBtn.disabled = gameState.turn !== 1;
+            throwBtn.style.opacity = gameState.turn === 1 ? "1" : "0.5";
+            throwBtn.textContent = gameState.turn === 1 ? 'Throw!' : 'Computer turn';
+            if (gameState.turn === 2) {
+                scheduleComputerTurn();
+            }
         }
 
         function drawHUD() {
@@ -270,7 +477,7 @@
             ctx.font = 'bold 12px sans-serif';
             ctx.textAlign = 'right';
             ctx.fillStyle = '#f87171';
-            ctx.fillText('PLAYER 2', gameState.width - 20, 18);
+            ctx.fillText('PLAYER 2 (CPU)', gameState.width - 20, 18);
             ctx.fillStyle = 'white';
             ctx.font = 'bold 18px monospace';
             ctx.fillText(`Score: ${gameState.p2.score}`, gameState.width - 20, 34);
@@ -279,7 +486,7 @@
             ctx.font = 'bold 12px sans-serif';
             ctx.textAlign = 'center';
             ctx.fillStyle = turnColor;
-            ctx.fillText(`PLAYER ${gameState.turn} TURN`, gameState.width / 2, 18);
+            ctx.fillText(gameState.turn === 1 ? 'PLAYER 1 TURN' : 'COMPUTER TURN', gameState.width / 2, 18);
             
             ctx.textAlign = 'start';
             ctx.lineWidth = 1;
@@ -296,6 +503,37 @@
             ctx.fillRect(x + 1, y - 16, 2, 2);
         }
 
+        function drawAimPreview() {
+            if (gameState.turn !== 1 || gameState.isProjectileActive) return;
+
+            const speed = Number(velocityInput.value);
+            const angle = Number(angleInput.value) * Math.PI / 180;
+            const vx = speed * Math.cos(angle);
+            const vy = speed * Math.sin(angle);
+            const halfFlightTime = vy / gameState.gravity;
+            const sampleCount = 40;
+
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(34, 211, 238, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 6]);
+
+            for (let i = 0; i <= sampleCount; i++) {
+                const t = halfFlightTime * i / sampleCount;
+                const x = gameState.p1.x + vx * t * 5;
+                const y = gameState.p1.y - (vy * t - 0.5 * gameState.gravity * t * t) * 5;
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.lineWidth = 1;
+        }
+
         function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -308,6 +546,7 @@
                 });
             });
 
+            drawAimPreview();
             drawHUD();
             drawGorilla(gameState.p1.x, gameState.p1.y, '#3b82f6');
             drawGorilla(gameState.p2.x, gameState.p2.y, '#ef4444');
@@ -366,6 +605,13 @@
         velocityInput.addEventListener('input', updatePhysicsDisplay);
         gravityInput.addEventListener('change', updatePhysicsDisplay);
         throwBtn.addEventListener('click', throwProjectile);
+        renderMathInElement(document.body, {
+            delimiters: [
+                { left: '\\(', right: '\\)', display: false },
+                { left: '\\[', right: '\\]', display: true }
+            ],
+            throwOnError: false
+        });
         init();
     </script>
 </body>
