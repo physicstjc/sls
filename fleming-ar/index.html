@@ -8,10 +8,10 @@
   <title>Motor Lab · Fleming’s left-hand rule</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=feedback-4">
+  <link rel="stylesheet" href="style.css?v=view-7">
   <script defer src="vendor/three.r128.min.js"></script>
   <script defer src="vendor/OrbitControls.r128.js"></script>
-  <script type="module" src="app.js?v=camera-6"></script>
+  <script type="module" src="app.js?v=view-7"></script>
 </head>
 <body>
   <header class="topbar">
@@ -25,7 +25,7 @@
       <div class="stage-grid" aria-hidden="true"></div>
       <div id="scene"></div>
       <canvas id="landmarks" aria-hidden="true"></canvas>
-      <div class="stage-top"><span class="status-pill" id="camera-status">○ 3D MODEL VIEW</span><button class="stage-button" id="reset-view">↺ Reset view</button></div>
+      <div class="stage-top"><span class="status-pill" id="camera-status">○ 3D MODEL VIEW</span><div class="view-actions"><button class="stage-button" id="toggle-controls" aria-expanded="false" aria-controls="control-panel">Show controls</button><button class="stage-button" id="reset-view" aria-label="Reset camera view">↺</button></div></div>
       <div class="scene-heading"><span class="eyebrow">THE MOTOR EFFECT</span><h1>Make the connection.</h1><p id="scene-caption">A current. A field. A force.</p></div>
       <div id="target-card" class="target-card" hidden>
         <span class="eyebrow">MATCH THESE DIRECTIONS</span>
@@ -45,7 +45,7 @@
       <div class="stage-bottom"><span id="view-hint">Drag to orbit · pinch or scroll to zoom</span><span class="model-note">Idealised DC motor</span></div>
       <div id="scene-error" class="scene-error" hidden></div>
     </section>
-    <aside class="panel">
+    <aside class="panel" id="control-panel">
       <div class="panel-intro"><h2>Try the left-hand rule</h2><p>Use your left hand to match the three arrows.</p></div>
       <div class="mode-switch" role="group" aria-label="Activity mode"><button id="practice-mode" class="active" aria-pressed="true">Practise</button><button id="explore-mode" aria-pressed="false">Explore motor</button></div>
       <section id="practice-panel">

@@ -110,9 +110,16 @@ export function createMotor(container){
     i.name='current-'+(n===0?'a':'b');f.name='force-'+(n===0?'a':'b');
   }
   const state={field:1,current:1,side:'a',phase:0,power:60,practice:false,paused:false,lines:true,ar:false};
-  let theta=.35,previous=performance.now();
-  function resetView(){controls.reset();camera.position.set(state.practice?0:6,state.practice?2.1:4.5,state.practice?14.6:11.5);controls.target.set(0,state.ar?-1.1:-.25,0);camera.lookAt(controls.target);controls.update();}
-  function resize(){const w=Math.max(1,container.clientWidth),h=Math.max(1,container.clientHeight);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false);}
+  let theta=.35,previous=performance.now(),viewFit=1;
+  function resetView(){controls.reset();camera.position.set(state.practice?0:6,state.practice?2.1:4.5,state.practice?14.6:11.5);controls.target.set(0,state.ar?-1.1:-.25,0);camera.position.sub(controls.target).multiplyScalar(viewFit).add(controls.target);camera.lookAt(controls.target);controls.update();}
+  function resize(){
+    const w=Math.max(1,container.clientWidth),h=Math.max(1,container.clientHeight);
+    camera.aspect=w/h;const fit=Math.max(1,.85/camera.aspect);
+    camera.position.sub(controls.target).multiplyScalar(fit/viewFit).add(controls.target);viewFit=fit;
+    controls.maxDistance=22*viewFit;camera.updateProjectionMatrix();renderer.setSize(w,h,false);
+    // Preserve room around the apparatus in a tall, full-height phone viewport.
+    renderer.render(scene,camera);
+  }
   const observer=new ResizeObserver(resize);observer.observe(container);resize();resetView();
   function sync(changes){
     const practiceChanged='practice'in changes&&changes.practice!==state.practice;

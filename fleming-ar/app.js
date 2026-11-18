@@ -1,10 +1,12 @@
-import {createMotor} from './motor.js?v=terminals-5';
+import {createMotor} from './motor.js?v=view-7';
 import {assessHand,targets,LIMITS} from './assessment.js?v=feedback-4';
 import {coilCircuit} from './circuit.js?v=feedback-4';
 import {AttemptFeedback,MATCH_HOLD_SECONDS} from './feedback.js?v=feedback-4';
 
 const $=id=>document.getElementById(id);
 const stage=document.querySelector('.stage'),video=$('camera'),canvas=$('landmarks'),ctx=canvas.getContext('2d');
+const workspace=document.querySelector('.workspace');
+let controlsCollapsed=false;
 const state={field:1,current:1,side:'a',phase:0,power:60,practice:false,paused:false,lines:true};
 const attempt=new AttemptFeedback(),completed=new Set();
 let motor,landmarker,trackerLoading,stream=null,starting=false,cameraActive=false,facing='environment',session=0,confirmedLabel=null,candidate=null,lastResultAt=0,lastInference=0,lastVideoTime=-1,feedbackKey='',lastAnnouncement=0,challenge=0;
@@ -50,6 +52,13 @@ function sync(){
   $('reverse-current').textContent=state.current===1?'⇄ + on left brush':'⇄ + on right brush';
   for(const s of ['a','b']){$('wire-'+s).classList.toggle('active',state.side===s);$('wire-'+s).setAttribute('aria-pressed',state.side===s);}
 }
+function setControlsCollapsed(collapsed){
+  controlsCollapsed=collapsed;workspace.classList.toggle('controls-collapsed',collapsed);
+  $('control-panel').inert=collapsed;
+  $('toggle-controls').textContent=collapsed?'Show controls':'Hide controls';
+  $('toggle-controls').setAttribute('aria-expanded',String(!collapsed));
+}
+$('toggle-controls').onclick=()=>setControlsCollapsed(!controlsCollapsed);
 function setMode(practice){
   if(!practice)stopCamera();
   state.practice=practice;
@@ -61,6 +70,7 @@ function setMode(practice){
   $('view-hint').textContent=practice?'Fixed front view · outlined coil side selected':'Drag to orbit · pinch or scroll to zoom';
   $('scene-caption').textContent=practice?'Use your left hand to predict the force.':'A current. A field. A force.';
   resetTask();sync();
+  setControlsCollapsed(practice);
   if(practice&&!document.hidden)return startCamera();
 }
 $('explore-mode').onclick=()=>setMode(false);$('practice-mode').onclick=$('try-practice').onclick=()=>setMode(true);
@@ -113,7 +123,7 @@ function stopCamera(){
 }
 async function startCamera(){
   if(starting||cameraActive)return;
-  if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia){setFeedback('A secure camera connection is needed.','Open this app over HTTPS (GitHub Pages), or use localhost on a computer.','warning');return;}
+  if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia){setControlsCollapsed(false);setFeedback('A secure camera connection is needed.','Open this app over HTTPS (GitHub Pages), or use localhost on a computer.','warning');return;}
   const token=++session;starting=true;cameraUI();setFeedback('Opening your camera…','Allow camera access. Tracking runs on this device; no microphone is requested.');
   try{
     const acquired=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:640},height:{ideal:480}}});
@@ -133,6 +143,7 @@ async function startCamera(){
   }catch(error){
     if(token!==session)return;
     stopCamera();
+    setControlsCollapsed(false);
     const messages={NotAllowedError:'Camera access was declined. Allow camera access in your browser settings, then try again.',NotFoundError:'No camera was found. You can still explore the 3D motor.',NotReadableError:'The camera may be in use by another app. Close it there and try again.',OverconstrainedError:'This camera could not use the requested settings. Try switching cameras.'};
     setFeedback('Camera or tracking unavailable.',messages[error.name]||'The local hand model could not start. Reload the page, or try a current Safari or Chrome browser. You can still explore the motor.','warning');
     console.error('Camera/tracker startup:',error);
