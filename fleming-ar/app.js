@@ -1,4 +1,5 @@
-import {createMotor} from './motor.js?v=view-7';
+import {createMotor} from './motor.js?v=orbit-9';
+import {directionLabel} from './view-directions.js?v=orbit-9';
 import {assessHand,targets,LIMITS} from './assessment.js?v=feedback-4';
 import {coilCircuit} from './circuit.js?v=feedback-4';
 import {AttemptFeedback,MATCH_HOLD_SECONDS} from './feedback.js?v=feedback-4';
@@ -9,8 +10,8 @@ const workspace=document.querySelector('.workspace');
 let controlsCollapsed=false;
 const state={field:1,current:1,side:'a',phase:0,power:60,practice:false,paused:false,lines:true};
 const attempt=new AttemptFeedback(),completed=new Set();
-let motor,landmarker,trackerLoading,stream=null,starting=false,cameraActive=false,facing='environment',session=0,confirmedLabel=null,candidate=null,lastResultAt=0,lastInference=0,lastVideoTime=-1,feedbackKey='',lastAnnouncement=0,challenge=0;
-try{motor=createMotor($('scene'));}catch(error){$('scene-error').hidden=false;$('scene-error').textContent=error.message;}
+let motor,landmarker,trackerLoading,stream=null,starting=false,cameraActive=false,viewMoving=false,facing='environment',session=0,confirmedLabel=null,candidate=null,lastResultAt=0,lastInference=0,lastVideoTime=-1,feedbackKey='',lastAnnouncement=0,challenge=0;
+try{motor=createMotor($('scene'),{onViewChange:handleViewChange});}catch(error){$('scene-error').hidden=false;$('scene-error').textContent=error.message;}
 $('scene').addEventListener('scene-failed',event=>{$('scene-error').hidden=false;$('scene-error').textContent=event.detail;});
 
 function setFeedback(title,message,kind='neutral'){
@@ -32,13 +33,22 @@ function contactReadout(theta){
     if($(id).textContent!==text)$(id).textContent=text;
   }
 }
+function updateTargetDirections(){
+  const t=motor?.getTargets()||targets(state);
+  const labels={b:directionLabel(t.b),i:!t.energised?t.reason==='gap'?'No current · gap':'No current · off':directionLabel(t.i),f:!t.energised?'No force':directionLabel(t.f)};
+  for(const k of ['b','i','f'])if($('target-'+k).textContent!==labels[k])$('target-'+k).textContent=labels[k];
+}
+function handleViewChange({moving=false}={}){
+  viewMoving=moving;
+  if(!state.practice)return;
+  const frameTime=lastResultAt;resetEvidence();lastResultAt=frameTime;updateTargetDirections();
+  if(cameraActive)setFeedback(moving?'Rotate the model.':'View changed — try your hand.',moving?'Release the model to check your hand.':'Match B, I and F for this view.');
+}
 function sync(){
   motor?.sync(state);
   const t=targets(state);
-  $('target-b').textContent=state.field===1?'→ Right':'← Left';
-  $('target-i').textContent=!t.energised?t.reason==='gap'?'No current · gap':'No current · off':t.i[2]>0?'⊙ Toward you':'⊗ Away from you';
-  $('target-f').textContent=!t.energised?'No force':t.f[1]>0?'↑ Up':'↓ Down';
-  $('target-side').textContent='Checking '+(state.side==='a'?'A · red half':'B · black half');
+  updateTargetDirections();
+  $('target-side').textContent=(state.side==='a'?'Red half':'Black half')+' · drag model to rotate';
   $('phase-value').textContent=state.phase+'°';$('coil-phase').value=state.phase;
   contactReadout(state.phase*Math.PI/180);
   if(state.practice&&!t.energised)setFeedback(t.reason==='gap'?'The brushes are at a gap.':'The supply is off.',t.reason==='gap'?'There is no current to check here. Turn the coil slightly to restore contact.':'Increase the supply to practise the force direction.');
@@ -67,7 +77,7 @@ function setMode(practice){
   $('live-coach').hidden=!practice;
   $('motor-options').open=!practice;
   for(const [id,on]of [['practice-mode',practice],['explore-mode',!practice]]){$(id).classList.toggle('active',on);$(id).setAttribute('aria-pressed',on);}
-  $('view-hint').textContent=practice?'Fixed front view · outlined coil side selected':'Drag to orbit · pinch or scroll to zoom';
+  $('view-hint').textContent='Drag to rotate · pinch or scroll to zoom';
   $('scene-caption').textContent=practice?'Use your left hand to predict the force.':'A current. A field. A force.';
   resetTask();sync();
   setControlsCollapsed(practice);
@@ -211,6 +221,7 @@ function renderAssessment(assessment,now){
 }
 export function processResult(result,now){
   lastResultAt=now;const hands=result.landmarks||[];drawHands(hands);candidate=null;$('confirm-left').disabled=true;
+  if(viewMoving){setFeedback('Rotate the model.','Release the model to check your hand.');return;}
   if(hands.length!==1){
     renderAssessment({code:'missing',match:false,angles:null,message:hands.length>1?'Keep just one left hand in view.':'Show your left hand in the camera.'},now);return;
   }
@@ -221,6 +232,7 @@ export function processResult(result,now){
   renderAssessment(assessment,now);
 }
 function tick(now){
+  if(state.practice)updateTargetDirections();
   if(!state.practice&&motor)contactReadout(motor.getState().theta);
   if(cameraActive&&!starting&&landmarker&&video.readyState>=2&&video.currentTime!==lastVideoTime&&now-lastInference>80){
     lastVideoTime=video.currentTime;lastInference=now;

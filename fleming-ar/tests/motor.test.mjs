@@ -3,24 +3,32 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {createMotor} from '../motor.js';
+import {assessHand} from '../assessment.js';
+import {pose} from './hand-fixture.mjs';
 
 // Exercise real Three.js geometry and transforms; replace only browser rendering.
 const context={exports:{},console};
 context.module={exports:context.exports};
 vm.runInNewContext(fs.readFileSync(new URL('../vendor/three.r128.min.js',import.meta.url),'utf8'),context);
 const T=context.exports;
-let nextFrame,renderedScene,renderedCamera;
+let nextFrame,renderedScene,renderedCamera,orbitControls;
 T.WebGLRenderer=class{
   constructor(){this.domElement={setAttribute(){},addEventListener(){}};}
   setPixelRatio(){}setClearColor(){}setSize(){}dispose(){}
   render(scene,camera){renderedScene=scene;renderedCamera=camera;}
 };
-T.OrbitControls=class{constructor(camera){this.camera=camera;this.target=new T.Vector3();}reset(){}update(){this.camera.lookAt(this.target);}dispose(){}};
+T.OrbitControls=class{
+  constructor(camera){orbitControls=this;this.camera=camera;this.target=new T.Vector3();this.enabled=true;this.listeners={};}
+  reset(){}update(){this.camera.lookAt(this.target);this.dispatchEvent({type:'change'});}dispose(){}
+  addEventListener(type,listener){(this.listeners[type]||=[]).push(listener);}
+  dispatchEvent(event){for(const listener of this.listeners[event.type]||[])listener(event);}
+};
 globalThis.window={THREE:T};globalThis.devicePixelRatio=1;
 globalThis.document={createElement:()=>({width:0,height:0,getContext:()=>({fillText(){},beginPath(){},arc(){},fill(){},stroke(){}})})};
 globalThis.ResizeObserver=class{observe(){}disconnect(){}};
 globalThis.requestAnimationFrame=fn=>{nextFrame=fn;return 1;};globalThis.cancelAnimationFrame=()=>{};
-const motor=createMotor({appendChild(){},clientWidth:1000,clientHeight:700});
+const viewChanges=[];
+const motor=createMotor({appendChild(){},clientWidth:1000,clientHeight:700},{onViewChange:event=>viewChanges.push(event)});
 const frame=()=>nextFrame(performance.now());
 const object=name=>renderedScene.getObjectByName(name);
 const direction=arrow=>new T.Vector3(0,1,0).applyQuaternion(arrow.quaternion);
@@ -55,4 +63,27 @@ test('hand assessment targets agree with rendered current and force in camera co
       assert.ok(cameraDirection.distanceTo(new T.Vector3(...target[key]))<1e-9);
     }
   }
+});
+test('practice permits orbiting and updates B, I, F targets at side, rear and elevated views',()=>{
+  motor.sync({practice:true,phase:0,side:'a',field:1,current:1});assert.equal(orbitControls.enabled,true);
+  orbitControls.dispatchEvent({type:'start'});
+  for(const position of [[0,2.1,14.6],[14.6,2.1,0],[0,2.1,-14.6],[-14.6,2.1,0],[3,14,6]]){
+    renderedCamera.position.set(...position);orbitControls.update();frame();const target=motor.getTargets();
+    const expectedB=new T.Vector3(1,0,0).applyQuaternion(renderedCamera.quaternion.clone().invert());
+    assert.ok(expectedB.distanceTo(new T.Vector3(...target.b))<1e-9);
+    for(const [name,key]of [['current-','i'],['force-','f']]){
+      const shown=direction(object(name+'a')).applyQuaternion(renderedCamera.quaternion.clone().invert());
+      assert.ok(shown.distanceTo(new T.Vector3(...target[key]))<1e-9);
+    }
+    assert.equal(assessHand(pose(target)).match,true,'matching the rotated vectors should pass');
+  }
+  orbitControls.dispatchEvent({type:'end'});
+  assert.ok(viewChanges.some(event=>event.moving));assert.equal(viewChanges.at(-1).moving,false);
+});
+test('an old front-view hand pose fails after orbiting to the rear',()=>{
+  motor.sync({practice:true,phase:0,side:'a',field:1,current:1});motor.resetView();frame();
+  const original=pose(motor.getTargets());assert.equal(assessHand(original).match,true);
+  renderedCamera.position.set(0,2.1,-14.6);orbitControls.update();frame();
+  assert.equal(assessHand({...original,target:motor.getTargets()}).match,false);
+  assert.equal(assessHand(pose(motor.getTargets())).match,true);
 });

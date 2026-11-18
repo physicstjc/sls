@@ -1,6 +1,6 @@
 import {coilCircuit,COMMUTATION_GAP} from './circuit.js?v=feedback-4';
 
-export function createMotor(container){
+export function createMotor(container,{onViewChange}={}){
   const T=window.THREE;
   if(!T)throw new Error('The 3D library could not load. Reload the page.');
   const scene=new T.Scene();
@@ -125,7 +125,7 @@ export function createMotor(container){
     const practiceChanged='practice'in changes&&changes.practice!==state.practice;
     const phaseChanged='phase'in changes&&changes.phase!==state.phase;
     Object.assign(state,changes);updateLeads(state.current);
-    if(practiceChanged){if(state.practice)theta=state.phase*Math.PI/180;controls.enabled=!state.practice;resetView();}
+    if(practiceChanged){if(state.practice)theta=state.phase*Math.PI/180;resetView();}
     else if(state.practice&&phaseChanged)theta=state.phase*Math.PI/180;
     if('ar'in changes){root.position.y=state.ar?-1.45:0;root.scale.setScalar(state.ar?.72:1);resetView();}
     animate(performance.now(),false);
@@ -149,6 +149,18 @@ export function createMotor(container){
   }
   let animation;
   animate(performance.now());
+  let viewInteracting=false;
+  const previousView=camera.quaternion.clone();
+  controls.addEventListener('start',()=>{viewInteracting=true;onViewChange?.({moving:true});});
+  controls.addEventListener('end',()=>{viewInteracting=false;onViewChange?.({moving:false});});
+  controls.addEventListener('change',()=>{
+    // A zoom changes the model's size, not the physical direction targets.
+    // Clear pose evidence after a meaningful change in viewing orientation.
+    if(previousView.angleTo(camera.quaternion)>Math.PI/360){
+      previousView.copy(camera.quaternion);onViewChange?.({moving:viewInteracting});
+    }
+    renderer.render(scene,camera);
+  });
   renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();container.dispatchEvent(new CustomEvent('scene-failed',{detail:'The 3D graphics context was interrupted. Reload to restore the motor.'}));});
   function getTargets(){
     const circuit=coilCircuit({...state,theta});const inverse=camera.quaternion.clone().invert();
