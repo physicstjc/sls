@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#102c2c">
+  <meta name="description" content="Explore a 3D DC motor and practise Fleming’s left-hand rule with private, on-device finger tracking.">
+  <title>Motor Lab · Fleming’s left-hand rule</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="vendor/three.r128.min.js"></script>
+  <script defer src="vendor/OrbitControls.r128.js"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-icon" aria-hidden="true">↗</span><div>Motor Lab<small>FLEMING’S LEFT-HAND RULE</small></div></div>
+    <span class="header-note">A little motion. A lot of physics.</span>
+    <button class="quiet" id="help-button" aria-label="Open learning guide">? <span>Guide</span></button>
+  </header>
+  <main class="workspace">
+    <section class="stage" aria-label="Interactive DC motor and camera view">
+      <video id="camera" autoplay playsinline muted aria-hidden="true"></video>
+      <div class="stage-grid" aria-hidden="true"></div>
+      <div id="scene"></div>
+      <canvas id="landmarks" aria-hidden="true"></canvas>
+      <div class="stage-top"><span class="status-pill" id="camera-status">○ 3D MODEL VIEW</span><button class="stage-button" id="reset-view">↺ Reset view</button></div>
+      <div class="scene-heading"><span class="eyebrow">THE MOTOR EFFECT</span><h1>Make the connection.</h1><p id="scene-caption">A current. A field. A force.</p></div>
+      <div id="target-card" class="target-card" hidden>
+        <span class="eyebrow">MATCH THESE DIRECTIONS</span>
+        <div><span class="dot field"></span>First finger · field <strong id="target-b">→ Right</strong></div>
+        <div><span class="dot current"></span>Second finger · current <strong id="target-i">⊙ Toward you</strong></div>
+        <div><span class="dot force"></span>Thumb · force <strong id="target-f">↑ Up</strong></div>
+        <small>⊙ out of the screen · ⊗ into the screen</small>
+      </div>
+      <div id="live-coach" class="live-coach" hidden><strong id="live-coach-title">Ready when you are.</strong><span id="live-coach-message">Show your left hand.</span><div class="live-hold"><div id="live-hold-fill"></div></div></div>
+      <div class="stage-bottom"><span id="view-hint">Drag to orbit · pinch or scroll to zoom</span><span class="model-note">Idealised DC motor</span></div>
+      <div id="scene-error" class="scene-error" hidden></div>
+    </section>
+    <aside class="panel">
+      <div class="panel-intro"><span class="eyebrow">YOUR POCKET PHYSICS LAB</span><h2>From fingers to force.</h2><p>Explore the motor, then use your left hand to predict the motion.</p></div>
+      <div class="mode-switch" role="group" aria-label="Activity mode"><button id="explore-mode" class="active" aria-pressed="true">01 <span>Explore</span></button><button id="practice-mode" aria-pressed="false">02 <span>Practise</span></button></div>
+      <section class="control-section">
+        <div class="section-title"><h3>Set up the motor</h3><span id="run-state" class="tiny-tag">RUNNING</span></div>
+        <div class="control-row"><span>Magnetic field <small>N → S</small></span><button id="reverse-field" class="outline">⇄ Reverse field</button></div>
+        <div class="control-row"><span>Conventional current</span><button id="reverse-current" class="outline">⇄ Reverse current</button></div>
+        <div class="slider-label"><label for="power">Supply strength</label><output for="power" id="power-value">60%</output></div><input id="power" type="range" min="0" max="100" value="60">
+        <div class="button-pair"><button id="play-pause" class="outline">Ⅱ Pause motor</button><button id="field-lines" class="outline" aria-pressed="true">Field lines on</button></div>
+      </section>
+      <section id="practice-panel" hidden>
+        <div class="section-title"><h3>Choose a coil side</h3><span class="tiny-tag">ROTOR HELD</span></div>
+        <div class="wire-switch" role="group" aria-label="Coil side"><button id="wire-a" class="active" aria-pressed="true">A · left side</button><button id="wire-b" aria-pressed="false">B · right side</button></div>
+        <p class="small-note">The highlighted wire is the one to check. The two sides feel opposite forces.</p>
+        <button class="primary" id="start-camera">◉ Start camera & hand tracking</button>
+        <div class="button-pair" id="camera-controls" hidden><button class="outline" id="flip-camera">⇄ Switch camera</button><button class="outline" id="stop-camera">Stop camera</button></div>
+        <p id="camera-message" class="small-note">Use a phone stand. Show your left hand, with all three fingers visible. Camera view is not mirrored.</p>
+        <button id="confirm-left" class="outline full" disabled>Confirm: this is my LEFT hand</button>
+        <div class="feedback" id="feedback" aria-live="polite" aria-atomic="true"><div class="feedback-top"><span class="feedback-icon" id="feedback-icon">↗</span><strong id="feedback-title">Ready when you are.</strong></div><p id="feedback-message">Start the camera to get feedback on your real hand.</p></div>
+        <div class="metric-list">
+          <div><span><i class="dot field"></i>First finger <small>Field B</small></span><strong id="metric-b">—</strong></div>
+          <div><span><i class="dot current"></i>Second finger <small>Current I</small></span><strong id="metric-i">—</strong></div>
+          <div><span><i class="dot force"></i>Thumb <small>Force F</small></span><strong id="metric-f">—</strong></div>
+        </div>
+        <div class="hold-row"><span id="hold-label">Hold a matching pose for 1.2 seconds</span><span id="match-count">0 matched</span></div><progress id="hold-progress" max="1.2" value="0" aria-label="Matching pose hold time"></progress>
+        <button id="next-challenge" class="outline full">↻ Try another direction</button>
+      </section>
+      <section id="explore-note" class="learning-card"><span class="eyebrow">WHY DOES IT TURN?</span><h3>Two forces. One turning effect.</h3><p>The current flows in opposite directions along the two sides of the coil. In the same magnetic field, their forces form a couple.</p><p>The split-ring commutator reverses the coil current every half-turn, keeping the torque in the same rotational direction.</p><button id="try-practice" class="text-link">Try it with your left hand ↗</button></section>
+      <div class="finger-key"><span><i class="dot field"></i>Field</span><span><i class="dot current"></i>Current</span><span><i class="dot force"></i>Force</span></div>
+      <footer>On-device tracking. No camera frames saved or uploaded.<br><span>Estimated 3D finger directions · formative feedback</span></footer>
+    </aside>
+  </main>
+  <dialog id="guide"><button id="close-guide" class="close" aria-label="Close guide">×</button><span class="eyebrow">THREE FINGERS. THREE DIRECTIONS.</span><h2>Your left hand is the key.</h2><ol><li><strong>First finger → magnetic field.</strong> Point from the north pole to the south pole.</li><li><strong>Second finger → conventional current.</strong> Point in the direction of positive charge flow, not electron flow.</li><li><strong>Thumb → force.</strong> This gives the force on the highlighted current-carrying wire.</li></ol><p>Arrange the three fingers at right angles. In Practise, the model faces you and the rotor is held at a fixed position. Match the target card, then hold steady.</p><p><strong>Depth matters:</strong> ⊙ means toward you; ⊗ means away from you. Keep the middle finger slightly angled so its joints remain visible. A single camera estimates depth and can be wrong when fingers overlap.</p><p><strong>Confirm your left hand</strong> once the camera finds it. This calibration avoids relying on camera mirroring conventions. Reconfirm after switching cameras. Show just one hand.</p><p>This is camera-overlay AR: the 3D motor is anchored to the screen, not a detected table. Phone movement does not place it in the room. Model rotation is illustrative; supply strength controls animation speed, not a calibrated RPM.</p><p>Tracking is a practice aid, not a grade. If feedback seems wrong, spread the fingers, improve lighting, and try another view. Ring and little fingers are not assessed.</p><p class="small-note">Camera permission requires HTTPS or localhost. No microphone is used. All model and runtime files are hosted with this app.</p></dialog>
+  <noscript>This activity needs JavaScript for the 3D motor and camera tracking.</noscript>
+</body>
+</html>

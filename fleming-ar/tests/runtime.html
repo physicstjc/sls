@@ -1,0 +1,12 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Motor Lab runtime check</title><style>body{font:16px system-ui;padding:30px;background:#f4f7ef;color:#244837}pre{white-space:pre-wrap}</style><h1>MediaPipe runtime check</h1><p>No webcam is used. Loads the bundled model and processes a blank image.</p><pre id="result">Loading local runtime and model…</pre><script type="module">
+import {FilesetResolver,HandLandmarker} from '../vendor/vision_bundle.mjs';
+const output=document.getElementById('result');
+try{
+ const files=await FilesetResolver.forVisionTasks(new URL('../vendor',location.href).href);
+ const tracker=await HandLandmarker.createFromOptions(files,{baseOptions:{modelAssetPath:new URL('../vendor/hand_landmarker.task',location.href).href,delegate:'CPU'},runningMode:'IMAGE',numHands:2});
+ const canvas=document.createElement('canvas');canvas.width=640;canvas.height=480;const ctx=canvas.getContext('2d');ctx.fillStyle='#777';ctx.fillRect(0,0,640,480);
+ const result=tracker.detect(canvas);tracker.close();
+ if(result.landmarks.length!==0)throw new Error('Unexpected hand on a blank image');
+ output.textContent='PASS — Local WASM and model loaded. Blank image inference returned zero hands. No camera access or external requests required.';
+}catch(error){output.textContent='FAIL — '+error.message;console.error(error);}
+</script></html>
