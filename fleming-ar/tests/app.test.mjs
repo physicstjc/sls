@@ -62,7 +62,7 @@ test('a matching landmark result produces immediate positive feedback after hand
   processResult(result,now);assert.notEqual($('feedback-title').textContent,'Correct! ✓');
   assert.equal($('confirm-left').disabled,false);$('confirm-left').onclick();
   processResult(result,now+100);assert.equal($('feedback-title').textContent,'Good match!');
-  assert.match($('live-coach').className,/success/);assert.equal($('check-b').textContent,'Field ✓');
+  assert.match($('live-coach').className,/success/);assert.equal($('check-b').textContent,'B ✓');
   for(const t of [250,400,550])processResult(result,now+t);
   assert.equal($('live-coach-title').textContent,'Correct! ✓');assert.equal($('match-count').textContent,'1 matched');
 });

@@ -8,10 +8,10 @@
   <title>Motor Lab · Fleming’s left-hand rule</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=view-7">
+  <link rel="stylesheet" href="style.css?v=labels-8">
   <script defer src="vendor/three.r128.min.js"></script>
   <script defer src="vendor/OrbitControls.r128.js"></script>
-  <script type="module" src="app.js?v=view-7"></script>
+  <script type="module" src="app.js?v=labels-8"></script>
 </head>
 <body>
   <header class="topbar">
@@ -29,16 +29,16 @@
       <div class="scene-heading"><span class="eyebrow">THE MOTOR EFFECT</span><h1>Make the connection.</h1><p id="scene-caption">A current. A field. A force.</p></div>
       <div id="target-card" class="target-card" hidden>
         <span class="eyebrow">MATCH THESE DIRECTIONS</span>
-        <div><span class="dot field"></span>First finger · field <strong id="target-b">→ Right</strong></div>
-        <div><span class="dot current"></span>Second finger · current <strong id="target-i">⊙ Toward you</strong></div>
-        <div><span class="dot force"></span>Thumb · force <strong id="target-f">↑ Up</strong></div>
+        <div><span class="quantity-symbol quantity-b" title="Magnetic field · first finger">B</span> <strong id="target-b">→ Right</strong></div>
+        <div><span class="quantity-symbol quantity-i" title="Conventional current · middle finger">I</span> <strong id="target-i">⊙ Toward you</strong></div>
+        <div><span class="quantity-symbol quantity-f" title="Force · thumb">F</span> <strong id="target-f">↑ Up</strong></div>
         <small>⊙ out of the screen · ⊗ into the screen</small>
         <small id="target-side">Checking A · red half</small>
       </div>
       <div id="live-coach" class="live-coach" hidden>
         <strong id="live-coach-title">Show your left hand.</strong>
         <span id="live-coach-message">Match the three directions above.</span>
-        <div class="direction-checks"><span id="check-b">Field</span><span id="check-i">Current</span><span id="check-f">Force</span></div>
+        <div class="direction-checks"><span id="check-b">B</span><span id="check-i">I</span><span id="check-f">F</span></div>
         <button id="confirm-left" class="primary" disabled hidden>This is my LEFT hand</button>
         <div class="live-hold"><div id="live-hold-fill"></div></div>
       </div>

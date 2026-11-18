@@ -22,7 +22,7 @@ function setFeedback(title,message,kind='neutral'){
   $('live-coach').className='live-coach '+kind;
   stage.classList.toggle('pose-correct',kind==='success'&&attempt.complete);
 }
-function clearMetrics(){for(const [k,name]of [['b','Field'],['i','Current'],['f','Force']]){$('metric-'+k).textContent='—';$('check-'+k).textContent=name;$('check-'+k).className='';}}
+function clearMetrics(){for(const [k,name]of [['b','B'],['i','I'],['f','F']]){$('metric-'+k).textContent='—';$('check-'+k).textContent=name;$('check-'+k).className='';}}
 function resetEvidence(){attempt.reset();$('hold-progress').value=0;$('live-hold-fill').style.width='0%';clearMetrics();candidate=null;$('confirm-left').disabled=true;lastResultAt=0;}
 function resetTask(){resetEvidence();if(cameraActive)setFeedback('New directions. Same rule.','Match the target card with your three fingers.');}
 function contactReadout(theta){
@@ -170,16 +170,24 @@ function drawHands(hands){
   for(const hand of hands){
     for(const [a,b]of connections){ctx.strokeStyle=b<=4?'#f7a2bd':b<=8?'#72c8ff':b<=12?'#ffcf69':'#d3e5df88';ctx.beginPath();ctx.moveTo(...point(hand[a]));ctx.lineTo(...point(hand[b]));ctx.stroke();}
     hand.forEach((p,k)=>{ctx.fillStyle=k===4?'#f7a2bd':k===8?'#72c8ff':k===12?'#ffcf69':'#f3fff0';ctx.beginPath();ctx.arc(...point(p),[4,8,12].includes(k)?5:2.5,0,Math.PI*2);ctx.fill();});
-    for(const [k,text,color]of [[4,'THUMB · F','#f7a2bd'],[8,'FIRST · B','#72c8ff'],[12,'SECOND · I','#ffcf69']]){
-      const [x,y]=point(hand[k]);ctx.font='600 10px system-ui';const tw=ctx.measureText(text).width;const tx=Math.max(5,Math.min(width-tw-14,x+9)),ty=Math.max(18,Math.min(height-10,y-10));
-      ctx.fillStyle='#102c2de8';ctx.fillRect(tx-4,ty-12,tw+8,18);ctx.fillStyle=color;ctx.fillText(text,tx,ty);
+    const badges=[],radius=21;
+    for(const [k,text,color]of [[4,'F','#f7a2bd'],[8,'B','#72c8ff'],[12,'I','#ffcf69']]){
+      const [x,y]=point(hand[k]);if(!Number.isFinite(x)||!Number.isFinite(y))continue;
+      const clamp=(value,max)=>Math.max(radius+4,Math.min(max-radius-4,value));
+      const candidates=[[30,-30],[-30,-30],[38,30],[-38,30],[0,-62],[0,62]].map(([dx,dy])=>[clamp(x+dx,width),clamp(y+dy,height)]);
+      const [cx,cy]=candidates.find(([a,b])=>badges.every(([u,v])=>Math.hypot(a-u,b-v)>radius*2+5))||candidates[0];
+      badges.push([cx,cy]);
+      ctx.lineWidth=3;ctx.strokeStyle=color;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(cx,cy);ctx.stroke();
+      ctx.shadowColor='#00000099';ctx.shadowBlur=8;ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+      ctx.shadowBlur=0;ctx.strokeStyle='#ffffff';ctx.lineWidth=3;ctx.stroke();
+      ctx.font='800 28px ui-monospace, Menlo, monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#102c2d';ctx.fillText(text,cx,cy+1);
     }
   }
 }
 function renderAssessment(assessment,now){
   const view=attempt.update(assessment,now),shown=view.assessment;
   if(shown.angles){
-    for(const [k,name]of [['b','Field'],['i','Current'],['f','Force']]){
+    for(const [k,name]of [['b','B'],['i','I'],['f','F']]){
       const matched=shown.angles[k]<=LIMITS.direction;
       $('metric-'+k).textContent=Math.round(shown.angles[k])+'° off'+(matched?' ✓':'');
       $('check-'+k).textContent=name+(matched?' ✓':' ↗');$('check-'+k).className=matched?'matched':'';

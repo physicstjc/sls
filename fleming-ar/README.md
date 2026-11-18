@@ -17,7 +17,7 @@ Open `http://localhost:8080`. Camera access on a phone requires **HTTPS**; an or
 
 1. Practise opens by default with the control panel collapsed, giving the AR view the full available screen. Tap Show controls to adjust the activity. Choose the red or black coil half; use Turn coil 180° for the opposite contact orientation.
 2. Entering Practise (including initial page load) requests camera access automatically. After granting browser permission, show only the real left hand. Tap the confirmation button directly on the camera view. Reconfirm after changing cameras; the image is unmirrored.
-3. Point the first finger along B, the second along conventional current and the thumb along force. Matching directions immediately show green “Good match!” feedback and individual Field/Current/Force ticks.
+3. Point the first finger along B, the second along conventional current and the thumb along force. Matching directions immediately show green “Good match!” feedback and individual B/I/F ticks.
 4. A 0.45-second hold confirms “Correct!”. Brief tracking wobble up to 250 ms does not erase pending progress. The completed result stays visible until the task, camera or calibration is reset; it is not overwritten when the hand moves away. Select Next challenge to continue.
 5. On phones, Show controls opens a compact drawer below the view; hide it again to return to the large AR workspace. More options contains field/connection reversal, supply strength, coil angle and contact readouts. Explore motor opens the animation and these settings. Tracking details contains numerical angles and left-hand recalibration.
 
