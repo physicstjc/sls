@@ -1,4 +1,4 @@
-import {createMotor} from './motor.js?v=feedback-4';
+import {createMotor} from './motor.js?v=terminals-5';
 import {assessHand,targets,LIMITS} from './assessment.js?v=feedback-4';
 import {coilCircuit} from './circuit.js?v=feedback-4';
 import {AttemptFeedback,MATCH_HOLD_SECONDS} from './feedback.js?v=feedback-4';

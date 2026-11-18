@@ -73,7 +73,17 @@ export function createMotor(container){
   // swap moves their brush endpoints; it does not recolour the leads or the coil.
   box(2.15,.22,.85,white,-1.35,-1.98,3.15);
   box(.72,.025,.12,red,-1.85,-1.85,3.15);box(.72,.025,.12,black,-.85,-1.85,3.15);
-  label('+','#f4858f',-1.85,-1.63,3.15,.27);label('−','#d3e1dc',-.85,-1.63,3.15,.27);
+  function terminalSign(sign,color,x){
+    const canvas=document.createElement('canvas');canvas.width=canvas.height=256;
+    const ctx=canvas.getContext('2d');
+    ctx.beginPath();ctx.arc(128,128,112,0,Math.PI*2);ctx.fillStyle='#ffffff';ctx.fill();
+    ctx.lineWidth=14;ctx.strokeStyle=color;ctx.stroke();
+    ctx.fillStyle=color;ctx.font='900 178px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(sign,128,120);
+    const badge=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(canvas),depthTest:false,depthWrite:false}));
+    badge.scale.set(.68,.68,1);badge.position.set(x,-1.17,3.2);badge.renderOrder=20;root.add(badge);
+    rod(v(x,-1.8,3.15),v(x,-1.48,3.2),.018,silver);
+  }
+  terminalSign('+','#b61930',-1.85);terminalSign('−','#101820',-.85);
   label('CELL','#d0dfd8',-1.35,-2.27,3.3,.2);
   const pos=v(-1.85,-1.82,3.15),neg=v(-.85,-1.82,3.15);
   let redLead,blackLead,lastSupply=null;

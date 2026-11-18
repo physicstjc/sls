@@ -17,7 +17,7 @@ T.WebGLRenderer=class{
 };
 T.OrbitControls=class{constructor(camera){this.camera=camera;this.target=new T.Vector3();}reset(){}update(){this.camera.lookAt(this.target);}dispose(){}};
 globalThis.window={THREE:T};globalThis.devicePixelRatio=1;
-globalThis.document={createElement:()=>({width:0,height:0,getContext:()=>({fillText(){}})})};
+globalThis.document={createElement:()=>({width:0,height:0,getContext:()=>({fillText(){},beginPath(){},arc(){},fill(){},stroke(){}})})};
 globalThis.ResizeObserver=class{observe(){}disconnect(){}};
 globalThis.requestAnimationFrame=fn=>{nextFrame=fn;return 1;};globalThis.cancelAnimationFrame=()=>{};
 const motor=createMotor({appendChild(){},clientWidth:1000,clientHeight:700});
