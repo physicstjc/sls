@@ -11,7 +11,7 @@ export function createMotor(container,{onViewChange}={}){
   renderer.domElement.setAttribute('aria-label','Teaching DC motor on a clear stand: red positive lead, black negative lead, permanent red and black coil halves, rear split-ring commutator, N and S poles');
   const camera=new T.PerspectiveCamera(37,1,.1,100);
   const controls=new T.OrbitControls(camera,renderer.domElement);
-  controls.enableDamping=true;controls.enablePan=false;controls.minDistance=9;controls.maxDistance=22;controls.maxPolarAngle=Math.PI*.85;
+  controls.enableDamping=true;controls.enablePan=false;controls.enableZoom=true;controls.touches.TWO=T.TOUCH.DOLLY_PAN;controls.minDistance=9;controls.maxDistance=22;controls.maxPolarAngle=Math.PI*.85;
   scene.add(new T.HemisphereLight(0xe2fff6,0x344c46,.8));
   const light=new T.DirectionalLight(0xfff6df,1);light.position.set(3,7,7);scene.add(light);
   const fill=new T.DirectionalLight(0x83d7ff,.35);fill.position.set(-6,2,-4);scene.add(fill);
@@ -168,11 +168,5 @@ export function createMotor(container,{onViewChange}={}){
     const convert=a=>new T.Vector3(...a).applyQuaternion(inverse).toArray();
     return {...circuit,b:convert(circuit.b),i:convert(circuit.i),f:convert(circuit.f),reason:!circuit.connected?'gap':state.power===0?'off':null};
   }
-  function setCameraPinch(active){
-    controls.enabled=!active;
-    // r128 uses touchend to clear its private gesture state. Reset it after
-    // camera pinching or cancellation without changing the model viewpoint.
-    if(!active)renderer.domElement.dispatchEvent?.(new Event('touchend'));
-  }
-  return {sync,resetView,getTargets,setCameraPinch,getState:()=>({...state,theta}),destroy(){cancelAnimationFrame(animation);observer.disconnect();controls.dispose();renderer.dispose();}};
+  return {sync,resetView,getTargets,getState:()=>({...state,theta}),destroy(){cancelAnimationFrame(animation);observer.disconnect();controls.dispose();renderer.dispose();}};
 }

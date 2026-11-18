@@ -8,10 +8,10 @@
   <title>Motor Lab · Fleming’s left-hand rule</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=pinch-11">
+  <link rel="stylesheet" href="style.css?v=buttons-12">
   <script defer src="vendor/three.r128.min.js"></script>
   <script defer src="vendor/OrbitControls.r128.js"></script>
-  <script type="module" src="app.js?v=pinch-11"></script>
+  <script type="module" src="app.js?v=buttons-12"></script>
 </head>
 <body>
   <header class="topbar">
@@ -26,6 +26,7 @@
       <div id="scene"></div>
       <canvas id="landmarks" aria-hidden="true"></canvas>
       <div class="stage-top"><span class="status-pill" id="camera-status">○ 3D MODEL VIEW</span><div class="view-actions"><button class="stage-button" id="toggle-controls" aria-expanded="false" aria-controls="control-panel">Show controls</button><button class="stage-button" id="reset-view" aria-label="Reset camera view">↺</button></div></div>
+      <div id="camera-zoom-buttons" class="camera-zoom-buttons" role="group" aria-label="Camera view zoom" hidden><span>Camera</span><button id="camera-zoom-in" aria-label="Zoom camera in">+</button><output id="camera-zoom-readout" aria-live="polite">1.0×</output><button id="camera-zoom-out" aria-label="Zoom camera out">−</button></div>
       <div class="scene-heading"><span class="eyebrow">THE MOTOR EFFECT</span><h1>Make the connection.</h1><p id="scene-caption">A current. A field. A force.</p></div>
       <div id="target-card" class="target-card" hidden>
         <span class="eyebrow">MATCH THESE DIRECTIONS</span>
@@ -93,7 +94,7 @@
     <p>Use the <strong>outlined long side of the coil</strong>—not the cell leads or short links.</p>
     <div class="welcome-fingers"><span><b class="quantity-b">B</b> First finger<br><small>N → S</small></span><span><b class="quantity-i">I</b> Middle finger<br><small>Current in this wire</small></span><span><b class="quantity-f">F</b> Thumb<br><small>Force on this wire</small></span></div>
     <p>Confirm your <strong>left hand</strong>, then match the arrows. Hold for <strong>Correct!</strong></p>
-    <p class="small-note">One finger rotates the model. Pinch with two fingers to zoom the camera.</p>
+    <p class="small-note">Drag to rotate the model. Pinch to zoom the model. Use + / − to zoom the camera.</p>
     <button id="dismiss-guide" class="primary" autofocus>Got it</button>
   </dialog>
   <noscript>This activity needs JavaScript for the 3D motor and camera tracking.</noscript>

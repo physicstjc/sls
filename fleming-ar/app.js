@@ -1,5 +1,5 @@
-import {createMotor} from './motor.js?v=pinch-11';
-import {cameraFrame,landmarkPoint,installCameraPinch} from './camera-zoom.js?v=pinch-11';
+import {createMotor} from './motor.js?v=buttons-12';
+import {cameraFrame,landmarkPoint,MAX_CAMERA_ZOOM} from './camera-zoom.js?v=buttons-12';
 import {directionLabel} from './view-directions.js?v=orbit-9';
 import {assessHand,targets,LIMITS} from './assessment.js?v=feedback-4';
 import {coilCircuit} from './circuit.js?v=feedback-4';
@@ -9,20 +9,11 @@ const $=id=>document.getElementById(id);
 const stage=document.querySelector('.stage'),video=$('camera'),canvas=$('landmarks'),ctx=canvas.getContext('2d');
 const workspace=document.querySelector('.workspace');
 let controlsCollapsed=false;
-let cameraZoom=1,cameraPinching=false,displayedHands=[];
+let cameraZoom=1,displayedHands=[];
 const state={field:1,current:1,side:'a',phase:0,power:60,practice:false,paused:false,lines:true};
 const attempt=new AttemptFeedback(),completed=new Set();
 let motor,landmarker,trackerLoading,stream=null,starting=false,cameraActive=false,viewMoving=false,facing='environment',session=0,confirmedLabel=null,candidate=null,lastResultAt=0,lastInference=0,lastVideoTime=-1,feedbackKey='',lastAnnouncement=0,challenge=0;
 try{motor=createMotor($('scene'),{onViewChange:handleViewChange});}catch(error){$('scene-error').hidden=false;$('scene-error').textContent=error.message;}
-const cameraPinch=installCameraPinch(stage,{
-  enabled:()=>cameraActive,
-  getZoom:()=>cameraZoom,
-  onZoom:setCameraZoom,
-  onGesture:active=>{
-    cameraPinching=active;motor?.setCameraPinch(active);viewMoving=false;
-    if(!attempt.complete)setFeedback(active?'Zoom the camera.':'Match the arrows.',active?'Pinch in or out to frame your hand.':'Camera view adjusted. Match B, I and F.');
-  }
-});
 $('scene').addEventListener('scene-failed',event=>{$('scene-error').hidden=false;$('scene-error').textContent=event.detail;});
 
 function setFeedback(title,message,kind='neutral'){
@@ -89,7 +80,7 @@ function setMode(practice){
   $('live-coach').hidden=!practice;
   $('motor-options').open=!practice;
   for(const [id,on]of [['practice-mode',practice],['explore-mode',!practice]]){$(id).classList.toggle('active',on);$(id).setAttribute('aria-pressed',on);}
-  $('view-hint').textContent=practice?'Drag to rotate · pinch to zoom camera':'Drag to rotate · pinch or scroll to zoom motor';
+  $('view-hint').textContent='Drag to rotate · pinch to zoom model · +/− zoom camera';
   $('scene-caption').textContent=practice?'Use your left hand to predict the force.':'A current. A field. A force.';
   resetTask();sync();
   setControlsCollapsed(practice);
@@ -131,6 +122,10 @@ function cameraUI(){
   $('start-camera').textContent=starting?'Loading tracker…':'Start camera';
   $('camera-controls').hidden=!cameraActive;
   $('reset-camera-zoom').disabled=!cameraActive;
+  $('camera-zoom-buttons').hidden=!cameraActive;
+  const zoomFrame=cameraFrame(stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight,cameraZoom);
+  $('camera-zoom-in').disabled=!cameraActive||!zoomFrame||cameraZoom>=MAX_CAMERA_ZOOM-1e-6;
+  $('camera-zoom-out').disabled=!cameraActive||!zoomFrame||cameraZoom<=zoomFrame.minZoom+1e-6;
   $('camera-status').textContent=cameraActive?(starting?'● CAMERA LIVE · LOADING TRACKER':'● LIVE · VIEW '+cameraZoom.toFixed(1)+'×'):starting?'◌ STARTING CAMERA':'○ 3D MODEL VIEW';
   stage.classList.toggle('camera-on',cameraActive);
   $('live-coach').hidden=!state.practice;
@@ -142,15 +137,18 @@ function updateCameraPreview(){
   cameraZoom=frame.zoom;
   Object.assign(video.style,{inset:'auto',left:frame.left+'px',top:frame.top+'px',width:frame.width+'px',height:frame.height+'px',objectFit:'fill'});
   $('camera-zoom-value').textContent=cameraZoom.toFixed(1)+'×';
+  $('camera-zoom-readout').textContent=cameraZoom.toFixed(1)+'×';
   if(cameraActive)drawHands(displayedHands);
   return frame;
 }
 function setCameraZoom(value){cameraZoom=value;updateCameraPreview();cameraUI();}
 $('reset-camera-zoom').onclick=()=>setCameraZoom(1);
-video.addEventListener('resize',()=>{if(cameraActive)updateCameraPreview();});
-const cameraViewportObserver=new ResizeObserver(()=>{if(cameraActive)updateCameraPreview();});cameraViewportObserver.observe(stage);
+$('camera-zoom-in').onclick=()=>setCameraZoom(cameraZoom*1.2);
+$('camera-zoom-out').onclick=()=>setCameraZoom(cameraZoom/1.2);
+video.addEventListener('resize',()=>{if(cameraActive){updateCameraPreview();cameraUI();}});
+const cameraViewportObserver=new ResizeObserver(()=>{if(cameraActive){updateCameraPreview();cameraUI();}});cameraViewportObserver.observe(stage);
 function stopCamera(){
-  cameraPinch.cancel();cameraZoom=1;cameraPinching=false;displayedHands=[];$('camera-zoom-value').textContent='1.0×';
+  cameraZoom=1;displayedHands=[];$('camera-zoom-value').textContent='1.0×';$('camera-zoom-readout').textContent='1.0×';
   session++;starting=false;cameraActive=false;
   if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;
   confirmedLabel=null;resetEvidence();ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -250,7 +248,6 @@ function renderAssessment(assessment,now){
 }
 export function processResult(result,now){
   lastResultAt=now;const hands=result.landmarks||[];displayedHands=hands;drawHands(hands);candidate=null;$('confirm-left').disabled=true;
-  if(cameraPinching)return;
   if(viewMoving){setFeedback('Rotate the model.','Release the model to check your hand.');return;}
   if(hands.length!==1){
     renderAssessment({code:'missing',match:false,angles:null,message:hands.length>1?'Keep just one left hand in view.':'Show your left hand in the camera.'},now);return;

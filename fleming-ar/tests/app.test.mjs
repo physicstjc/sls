@@ -96,6 +96,15 @@ test('the camera preview appears before the tracker finishes loading',async()=>{
   const pending=$('practice-mode').onclick();await Promise.resolve();await Promise.resolve();
   assert.equal($('camera-controls').hidden,false);assert.match($('camera-status').textContent,/CAMERA LIVE/);
   assert.match($('feedback-title').textContent,/Camera is on/);assert.equal($('confirm-left').hidden,true);
+  assert.equal($('camera-zoom-buttons').hidden,false);
+  const originalWidth=parseFloat($('camera').style.width),target=$('target-i').textContent;
+  $('camera-zoom-in').onclick();assert.equal($('camera-zoom-readout').textContent,'1.2×');assert.ok(Math.abs(parseFloat($('camera').style.width)-originalWidth*1.2)<1e-6);
+  assert.equal($('target-i').textContent,target);
+  $('camera-zoom-out').onclick();assert.equal($('camera-zoom-readout').textContent,'1.0×');
+  for(let i=0;i<20;i++)$('camera-zoom-in').onclick();assert.equal($('camera-zoom-in').disabled,true);
+  $('reset-camera-zoom').onclick();assert.equal($('camera-zoom-readout').textContent,'1.0×');
+  for(let i=0;i<20;i++)$('camera-zoom-out').onclick();assert.equal($('camera-zoom-out').disabled,true);
+
   $('explore-mode').onclick();await pending;assert.equal(stops,1);
 });
 test('initial page load in Practise requests camera permission without a Start click',async()=>{

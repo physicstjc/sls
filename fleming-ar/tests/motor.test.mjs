@@ -18,7 +18,7 @@ T.WebGLRenderer=class{
   render(scene,camera){renderedScene=scene;renderedCamera=camera;}
 };
 T.OrbitControls=class{
-  constructor(camera){orbitControls=this;this.camera=camera;this.target=new T.Vector3();this.enabled=true;this.listeners={};}
+  constructor(camera){orbitControls=this;this.camera=camera;this.target=new T.Vector3();this.enabled=true;this.touches={};this.listeners={};}
   reset(){}update(){this.camera.lookAt(this.target);this.dispatchEvent({type:'change'});}dispose(){}
   addEventListener(type,listener){(this.listeners[type]||=[]).push(listener);}
   dispatchEvent(event){for(const listener of this.listeners[event.type]||[])listener(event);}
@@ -89,10 +89,8 @@ test('an old front-view hand pose fails after orbiting to the rear',()=>{
   assert.equal(assessHand({...original,target:motor.getTargets()}).match,false);
   assert.equal(assessHand(pose(motor.getTargets())).match,true);
 });
-test('camera pinching suspends orbit controls without changing model view or hand targets',()=>{
-  motor.sync({practice:true,phase:0,side:'a'});frame();
-  const position=renderedCamera.position.clone(),before=motor.getTargets();
-  motor.setCameraPinch(true);frame();assert.equal(orbitControls.enabled,false);
-  assert.ok(renderedCamera.position.distanceTo(position)<1e-9);assert.deepEqual(motor.getTargets(),before);
-  motor.setCameraPinch(false);assert.equal(orbitControls.enabled,true);
+test('two-finger pinch remains assigned to model zoom in practice',()=>{
+  motor.sync({practice:true,phase:0});frame();
+  assert.equal(orbitControls.enabled,true);assert.equal(orbitControls.enableZoom,true);
+  assert.equal(orbitControls.touches.TWO,T.TOUCH.DOLLY_PAN);
 });
