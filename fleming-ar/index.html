@@ -8,15 +8,15 @@
   <title>Motor Lab · Fleming’s left-hand rule</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=relaxed-3">
+  <link rel="stylesheet" href="style.css?v=feedback-4">
   <script defer src="vendor/three.r128.min.js"></script>
   <script defer src="vendor/OrbitControls.r128.js"></script>
-  <script type="module" src="app.js?v=relaxed-3"></script>
+  <script type="module" src="app.js?v=feedback-4"></script>
 </head>
 <body>
   <header class="topbar">
     <div class="brand"><span class="brand-icon" aria-hidden="true">↗</span><div>Motor Lab<small>FLEMING’S LEFT-HAND RULE</small></div></div>
-    <span class="header-note">A little motion. A lot of physics.</span>
+    
     <button class="quiet" id="help-button" aria-label="Open learning guide">? <span>Guide</span></button>
   </header>
   <main class="workspace">
@@ -35,46 +35,49 @@
         <small>⊙ out of the screen · ⊗ into the screen</small>
         <small id="target-side">Checking A · red half</small>
       </div>
-      <div id="live-coach" class="live-coach" hidden><strong id="live-coach-title">Ready when you are.</strong><span id="live-coach-message">Show your left hand.</span><div class="live-hold"><div id="live-hold-fill"></div></div></div>
+      <div id="live-coach" class="live-coach" hidden>
+        <strong id="live-coach-title">Show your left hand.</strong>
+        <span id="live-coach-message">Match the three directions above.</span>
+        <div class="direction-checks"><span id="check-b">Field</span><span id="check-i">Current</span><span id="check-f">Force</span></div>
+        <button id="confirm-left" class="primary" disabled hidden>This is my LEFT hand</button>
+        <div class="live-hold"><div id="live-hold-fill"></div></div>
+      </div>
       <div class="stage-bottom"><span id="view-hint">Drag to orbit · pinch or scroll to zoom</span><span class="model-note">Idealised DC motor</span></div>
       <div id="scene-error" class="scene-error" hidden></div>
     </section>
     <aside class="panel">
-      <div class="panel-intro"><span class="eyebrow">YOUR POCKET PHYSICS LAB</span><h2>From fingers to force.</h2><p>Explore the motor, then use your left hand to predict the motion.</p></div>
-      <div class="mode-switch" role="group" aria-label="Activity mode"><button id="explore-mode" class="active" aria-pressed="true">01 <span>Explore</span></button><button id="practice-mode" aria-pressed="false">02 <span>Practise</span></button></div>
-      <section class="control-section">
-        <div class="section-title"><h3>Set up the motor</h3><span id="run-state" class="tiny-tag">RUNNING</span></div>
-        <div class="control-row"><span>Magnetic field <small>N → S</small></span><button id="reverse-field" class="outline">⇄ Reverse field</button></div>
-        <div class="control-row"><span>Brush connections<small>Red lead + · black lead −</small></span><button id="reverse-current" class="outline">⇄ Swap connections</button></div>
-        <div class="slider-label"><label for="power">Supply strength</label><output for="power" id="power-value">60%</output></div><input id="power" type="range" min="0" max="100" value="60">
-        <div class="button-pair"><button id="play-pause" class="outline">Ⅱ Pause motor</button><button id="field-lines" class="outline" aria-pressed="true">Field lines on</button></div>
-        <div class="contact-readout"><span class="eyebrow">LIVE COMMUTATOR CONTACT</span><p id="red-contact">Red half → positive brush · current out from commutator</p><p id="black-contact">Black half → negative brush · current into commutator</p><small>Coil colours stay fixed. Current follows the brush contact.</small></div>
+      <div class="panel-intro"><h2>Try the left-hand rule</h2><p>Use your left hand to match the three arrows.</p></div>
+      <div class="mode-switch" role="group" aria-label="Activity mode"><button id="practice-mode" class="active" aria-pressed="true">Practise</button><button id="explore-mode" aria-pressed="false">Explore motor</button></div>
+      <section id="practice-panel">
+        <button class="primary" id="start-camera">Start camera</button>
+        <div class="button-pair" id="camera-controls" hidden><button class="outline" id="flip-camera">Switch camera</button><button class="outline" id="stop-camera">Stop camera</button></div>
+        <p id="camera-message" class="small-note">Show one left hand. Camera images stay on your device.</p>
+        <div class="section-title"><h3>Check this coil side</h3></div>
+        <div class="wire-switch" role="group" aria-label="Coil side"><button id="wire-a" class="active" aria-pressed="true">Red half</button><button id="wire-b" aria-pressed="false">Black half</button></div>
+        <div class="button-pair practice-actions"><button id="turn-coil" class="outline">Turn coil 180°</button><button id="next-challenge" class="outline">Next challenge →</button></div>
+        <div class="feedback" id="feedback" aria-live="polite" aria-atomic="true"><div class="feedback-top"><span class="feedback-icon" id="feedback-icon">↗</span><strong id="feedback-title">Show your left hand.</strong></div><p id="feedback-message">Start the camera to get feedback.</p></div>
+        <details class="tracking-details"><summary>Tracking details <span id="match-count">0 matched</span></summary>
+          <div class="metric-list"><div><span>First finger · field</span><strong id="metric-b">—</strong></div><div><span>Second finger · current</span><strong id="metric-i">—</strong></div><div><span>Thumb · force</span><strong id="metric-f">—</strong></div></div>
+          <div class="hold-row"><span id="hold-label">Hold briefly to confirm</span></div><progress id="hold-progress" max="0.45" value="0" aria-label="Matching pose hold time"></progress>
+          <button class="outline full" id="recalibrate">Reconfirm left hand</button>
+        </details>
       </section>
-      <section id="practice-panel" hidden>
-        <div class="section-title"><h3>Choose a coil side</h3><span class="tiny-tag">ROTOR HELD</span></div>
-        <div class="wire-switch" role="group" aria-label="Coil side"><button id="wire-a" class="active" aria-pressed="true">A · red half</button><button id="wire-b" aria-pressed="false">B · black half</button></div>
-        <p class="small-note">The outlined side is the one to check. Red and black identify the same physical halves throughout rotation.</p>
-        <div class="slider-label"><label for="coil-phase">Coil orientation</label><output id="phase-value" for="coil-phase">0°</output></div><input id="coil-phase" type="range" min="0" max="360" step="1" value="0">
-        <p class="small-note">Compare 0° and 180°. At 90° and 270°, the brushes meet the insulating gaps. The commutator is behind the loop; “out” runs along the loop toward you.</p>
-        <button class="primary" id="start-camera">◉ Start camera & hand tracking</button>
-        <div class="button-pair" id="camera-controls" hidden><button class="outline" id="flip-camera">⇄ Switch camera</button><button class="outline" id="stop-camera">Stop camera</button></div>
-        <p id="camera-message" class="small-note">Use a phone stand. Show your left hand, with all three fingers visible. Camera view is not mirrored.</p>
-        <button id="confirm-left" class="outline full" disabled>Confirm: this is my LEFT hand</button>
-        <div class="feedback" id="feedback" aria-live="polite" aria-atomic="true"><div class="feedback-top"><span class="feedback-icon" id="feedback-icon">↗</span><strong id="feedback-title">Ready when you are.</strong></div><p id="feedback-message">Start the camera to get feedback on your real hand.</p></div>
-        <div class="metric-list">
-          <div><span><i class="dot field"></i>First finger <small>Field B</small></span><strong id="metric-b">—</strong></div>
-          <div><span><i class="dot current"></i>Second finger <small>Current I</small></span><strong id="metric-i">—</strong></div>
-          <div><span><i class="dot force"></i>Thumb <small>Force F</small></span><strong id="metric-f">—</strong></div>
-        </div>
-        <div class="hold-row"><span id="hold-label">Hold a matching pose for 1.2 seconds</span><span id="match-count">0 matched</span></div><progress id="hold-progress" max="1.2" value="0" aria-label="Matching pose hold time"></progress>
-        <button id="next-challenge" class="outline full">↻ Try another direction</button>
-      </section>
-      <section id="explore-note" class="learning-card"><span class="eyebrow">WHY DOES IT TURN?</span><h3>Same colours. Changing current.</h3><p>The red lead is connected to the cell’s positive terminal; the black lead is negative. The red and black coil halves rotate with the split ring.</p><p>When the red half meets the brush fed by the red lead, conventional current runs out from the commutator along that half. Half a turn later it meets the negative brush, so current runs back into the commutator.</p><p>The opposite forces form a couple. Commutation reverses the current relative to the coloured halves every half-turn, keeping the turning effect in the same sense.</p><button id="try-practice" class="text-link">Try it with your left hand ↗</button></section>
-      <div class="finger-key"><span><i class="dot field"></i>Field</span><span><i class="dot current"></i>Current</span><span><i class="dot force"></i>Force</span></div>
+      <section id="explore-note" class="learning-card" hidden><h3>Follow the brush contact</h3><p>The red lead is positive; black is negative. The coil halves keep their colours, but current reverses relative to them every half-turn.</p><button id="try-practice" class="text-link">Practise with your hand →</button></section>
+      <details id="motor-options" class="motor-options"><summary>More options</summary>
+        <section class="control-section">
+          <div class="section-title"><h3>Motor settings</h3><span id="run-state" class="tiny-tag">ROTOR HELD</span></div>
+          <div class="control-row"><span>Field direction</span><button id="reverse-field" class="outline">Reverse field</button></div>
+          <div class="control-row"><span>Brush connections</span><button id="reverse-current" class="outline">Swap connections</button></div>
+          <div class="slider-label"><label for="power">Supply strength</label><output for="power" id="power-value">60%</output></div><input id="power" type="range" min="0" max="100" value="60">
+          <div class="button-pair"><button id="play-pause" class="outline">Pause motor</button><button id="field-lines" class="outline" aria-pressed="true">Field lines on</button></div>
+          <div class="slider-label"><label for="coil-phase">Coil orientation</label><output id="phase-value" for="coil-phase">0°</output></div><input id="coil-phase" type="range" min="0" max="360" value="0" step="1">
+          <div class="contact-readout"><p id="red-contact"></p><p id="black-contact"></p></div>
+        </section>
+      </details>
       <footer>On-device tracking. No camera frames saved or uploaded.<br><span>Estimated 3D finger directions · formative feedback</span></footer>
     </aside>
   </main>
-  <dialog id="guide"><button id="close-guide" class="close" aria-label="Close guide">×</button><span class="eyebrow">THREE FINGERS. THREE DIRECTIONS.</span><h2>Your left hand is the key.</h2><ol><li><strong>First finger → magnetic field.</strong> Point from the north pole to the south pole.</li><li><strong>Second finger → conventional current.</strong> Point in the direction of positive charge flow, not electron flow.</li><li><strong>Thumb → force.</strong> This gives the force on the highlighted current-carrying wire.</li></ol><p>Arrange the three fingers at right angles. In Practise, the model faces you and the rotor is held at the angle you choose. Use the orientation slider to compare 0° and 180°, then match the target card and hold steady.</p><p><strong>Follow the contacts, not the colours.</strong> The red supply lead stays positive and the black lead stays negative. The coil’s red and black halves keep their colours as they turn. When the red half contacts the positive brush, current runs out from the rear commutator along that half. After half a turn it contacts the negative brush and current runs into the commutator. At the insulating gaps, current briefly stops. Swapping brush connections moves the lead endpoints while retaining their cell polarity.</p><p><strong>Depth matters:</strong> ⊙ means toward you; ⊗ means away from you. Keep the middle finger slightly angled so its joints remain visible. A single camera estimates depth and can be wrong when fingers overlap.</p><p><strong>Confirm your left hand</strong> once the camera finds it. This calibration avoids relying on camera mirroring conventions. Reconfirm after switching cameras. Show just one hand.</p><p>This is camera-overlay AR: the 3D motor is anchored to the screen, not a detected table. Phone movement does not place it in the room. Model rotation is illustrative; supply strength controls animation speed, not a calibrated RPM.</p><p>Tracking is a practice aid, not a grade. If feedback seems wrong, spread the fingers, improve lighting, and try another view. Ring and little fingers are not assessed.</p><p class="small-note">Camera permission requires HTTPS or localhost. No microphone is used. All model and runtime files are hosted with this app.</p></dialog>
+  <dialog id="guide"><button id="close-guide" class="close" aria-label="Close guide">×</button><span class="eyebrow">THREE FINGERS. THREE DIRECTIONS.</span><h2>Your left hand is the key.</h2><ol><li><strong>First finger → magnetic field.</strong> Point from the north pole to the south pole.</li><li><strong>Second finger → conventional current.</strong> Point in the direction of positive charge flow, not electron flow.</li><li><strong>Thumb → force.</strong> This gives the force on the highlighted current-carrying wire.</li></ol><p>Arrange the three fingers at right angles. In Practise, the model faces you and the rotor is held at the angle you choose. Use the orientation slider to compare 0° and 180°, then match the target card and hold steady.</p><p><strong>Follow the contacts, not the colours.</strong> The red supply lead stays positive and the black lead stays negative. The coil’s red and black halves keep their colours as they turn. When the red half contacts the positive brush, current runs out from the rear commutator along that half. After half a turn it contacts the negative brush and current runs into the commutator. At the insulating gaps, current briefly stops. Swapping brush connections moves the lead endpoints while retaining their cell polarity.</p><p><strong>Depth matters:</strong> ⊙ means toward you; ⊗ means away from you. The second finger can point directly toward or away from the camera. Depth is estimated from one camera, so tracking can be imperfect.</p><p><strong>Confirm your left hand</strong> once the camera finds it. This calibration avoids relying on camera mirroring conventions. Reconfirm after switching cameras. Show just one hand.</p><p>This is camera-overlay AR: the 3D motor is anchored to the screen, not a detected table. Phone movement does not place it in the room. Model rotation is illustrative; supply strength controls animation speed, not a calibrated RPM.</p><p>Tracking is a practice aid, not a grade. If feedback seems wrong, spread the fingers, improve lighting, and try another view. Ring and little fingers are not assessed.</p><p class="small-note">Camera permission requires HTTPS or localhost. No microphone is used. All model and runtime files are hosted with this app.</p></dialog>
   <noscript>This activity needs JavaScript for the 3D motor and camera tracking.</noscript>
 </body>
 </html>

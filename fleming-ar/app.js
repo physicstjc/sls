@@ -1,11 +1,12 @@
-import {createMotor} from './motor.js?v=relaxed-3';
-import {assessHand,targets,HoldTracker,LIMITS} from './assessment.js?v=relaxed-3';
-import {coilCircuit} from './circuit.js?v=relaxed-3';
+import {createMotor} from './motor.js?v=feedback-4';
+import {assessHand,targets,LIMITS} from './assessment.js?v=feedback-4';
+import {coilCircuit} from './circuit.js?v=feedback-4';
+import {AttemptFeedback,MATCH_HOLD_SECONDS} from './feedback.js?v=feedback-4';
 
 const $=id=>document.getElementById(id);
 const stage=document.querySelector('.stage'),video=$('camera'),canvas=$('landmarks'),ctx=canvas.getContext('2d');
 const state={field:1,current:1,side:'a',phase:0,power:60,practice:false,paused:false,lines:true};
-const hold=new HoldTracker(),completed=new Set();
+const attempt=new AttemptFeedback(),completed=new Set();
 let motor,landmarker,trackerLoading,stream=null,starting=false,cameraActive=false,facing='environment',session=0,confirmedLabel=null,candidate=null,lastResultAt=0,lastInference=0,lastVideoTime=-1,feedbackKey='',lastAnnouncement=0,challenge=0;
 try{motor=createMotor($('scene'));}catch(error){$('scene-error').hidden=false;$('scene-error').textContent=error.message;}
 $('scene').addEventListener('scene-failed',event=>{$('scene-error').hidden=false;$('scene-error').textContent=event.detail;});
@@ -16,9 +17,11 @@ function setFeedback(title,message,kind='neutral'){
   $('live-coach-title').textContent=title;$('live-coach-message').textContent=message;
   $('feedback').className='feedback'+(kind==='neutral'?'':' '+kind);
   $('feedback-icon').textContent=kind==='success'?'✓':kind==='warning'?'!':'↗';
+  $('live-coach').className='live-coach '+kind;
+  stage.classList.toggle('pose-correct',kind==='success'&&attempt.complete);
 }
-function clearMetrics(){for(const k of ['b','i','f'])$('metric-'+k).textContent='—';}
-function resetEvidence(){hold.reset();$('hold-progress').value=0;$('live-hold-fill').style.width='0%';clearMetrics();candidate=null;$('confirm-left').disabled=true;lastResultAt=0;}
+function clearMetrics(){for(const [k,name]of [['b','Field'],['i','Current'],['f','Force']]){$('metric-'+k).textContent='—';$('check-'+k).textContent=name;$('check-'+k).className='';}}
+function resetEvidence(){attempt.reset();$('hold-progress').value=0;$('live-hold-fill').style.width='0%';clearMetrics();candidate=null;$('confirm-left').disabled=true;lastResultAt=0;}
 function resetTask(){resetEvidence();if(cameraActive)setFeedback('New directions. Same rule.','Match the target card with your three fingers.');}
 function contactReadout(theta){
   for(const [side,id,name]of [['a','red-contact','Red'],['b','black-contact','Black']]){
@@ -52,6 +55,8 @@ function setMode(practice){
   state.practice=practice;
   $('practice-panel').hidden=!practice;$('target-card').hidden=!practice;$('explore-note').hidden=practice;
   stage.classList.toggle('practice',practice);
+  $('live-coach').hidden=!practice;
+  $('motor-options').open=!practice;
   for(const [id,on]of [['practice-mode',practice],['explore-mode',!practice]]){$(id).classList.toggle('active',on);$(id).setAttribute('aria-pressed',on);}
   $('view-hint').textContent=practice?'Fixed front view · outlined coil side selected':'Drag to orbit · pinch or scroll to zoom';
   $('scene-caption').textContent=practice?'Use your left hand to predict the force.':'A current. A field. A force.';
@@ -64,6 +69,8 @@ $('power').oninput=e=>{state.power=Number(e.target.value);resetTask();sync();};
 $('play-pause').onclick=()=>{state.paused=!state.paused;sync();};
 $('field-lines').onclick=()=>{state.lines=!state.lines;sync();};
 $('coil-phase').oninput=e=>{state.phase=Number(e.target.value);resetTask();sync();};
+$('turn-coil').onclick=()=>{state.phase=Math.cos(state.phase*Math.PI/180)>=0?180:0;resetTask();sync();};
+$('recalibrate').onclick=()=>{confirmedLabel=null;resetEvidence();$('confirm-left').hidden=!cameraActive;setFeedback('Confirm your left hand.','Show your left hand, then tap the button on the camera view.');};
 $('reset-view').onclick=()=>motor?.resetView();
 for(const s of ['a','b'])$('wire-'+s).onclick=()=>{state.side=s;resetTask();sync();};
 $('next-challenge').onclick=()=>{
@@ -87,18 +94,19 @@ async function loadTracker(){
 }
 function cameraUI(){
   $('start-camera').disabled=starting;$('start-camera').hidden=cameraActive;
-  $('start-camera').textContent=starting?'Loading on-device tracking…':'◉ Start camera & hand tracking';
+  $('start-camera').textContent=starting?'Loading tracker…':'Start camera';
   $('camera-controls').hidden=!cameraActive;
   $('camera-status').textContent=cameraActive?'● CAMERA OVERLAY · LIVE':starting?'◌ STARTING CAMERA':'○ 3D MODEL VIEW';
   stage.classList.toggle('camera-on',cameraActive);
-  $('live-coach').hidden=!cameraActive;
+  $('live-coach').hidden=!state.practice;
+  $('confirm-left').hidden=!cameraActive||!!confirmedLabel;
 }
 function stopCamera(){
   session++;starting=false;cameraActive=false;
   if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;
   confirmedLabel=null;resetEvidence();ctx.clearRect(0,0,canvas.width,canvas.height);
-  $('confirm-left').textContent='Confirm: this is my LEFT hand';
-  $('camera-message').textContent='Use a phone stand. Show your left hand, with all three fingers visible. Camera view is not mirrored.';
+  $('confirm-left').textContent='This is my LEFT hand';
+  $('camera-message').textContent='Show one left hand. Camera images stay on your device.';
   motor?.sync({ar:false});cameraUI();
   setFeedback('Ready when you are.','Start the camera to get feedback on your real hand.');
 }
@@ -116,8 +124,8 @@ async function startCamera(){
     cameraActive=true;starting=false;lastVideoTime=-1;lastInference=0;lastResultAt=performance.now();
     motor?.sync({ar:true});cameraUI();
     if(matchMedia('(max-width:760px)').matches)stage.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth'});
-    $('camera-message').textContent='Camera is live and not mirrored. Show only your LEFT hand, then confirm below. Keep your wrist and finger joints visible.';
-    setFeedback('Show your left hand.','We will trace your thumb, first finger and second finger. Keep the middle finger slightly angled so its joints remain visible.');
+    $('camera-message').textContent='Camera is live. Confirm your left hand on the image.';
+    setFeedback('Show your left hand.','Tap “This is my LEFT hand” on the image, then match the arrows.');
     const track=stream.getVideoTracks()[0];track.addEventListener('ended',()=>{if(cameraActive){stopCamera();setFeedback('Camera disconnected.','Start the camera again to continue.','warning');}});
   }catch(error){
     if(token!==session)return;
@@ -131,10 +139,10 @@ $('start-camera').onclick=startCamera;$('stop-camera').onclick=stopCamera;
 $('flip-camera').onclick=async()=>{stopCamera();facing=facing==='environment'?'user':'environment';await startCamera();};
 $('confirm-left').onclick=()=>{
   if(!candidate||performance.now()-lastResultAt>400)return;
-  confirmedLabel=candidate.label;hold.reset();$('hold-progress').value=0;
-  $('confirm-left').textContent='✓ Left hand confirmed · tap to recalibrate';
-  $('camera-message').textContent='Left hand confirmed by you. Match the target directions. The view is not mirrored; depth is estimated.';
-  setFeedback('Left hand confirmed.','First finger = field. Second finger = current. Thumb = force. Match the target card.');
+  confirmedLabel=candidate.label;attempt.reset();$('hold-progress').value=0;
+  $('confirm-left').hidden=true;
+  $('camera-message').textContent='Left hand confirmed. Match the three directions.';
+  setFeedback('Ready — match the arrows.','First finger: field. Second finger: current. Thumb: force.');
 };
 
 const connections=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[0,17],[17,18],[18,19],[19,20]];
@@ -154,25 +162,41 @@ function drawHands(hands){
     }
   }
 }
-function processResult(result,now){
-  lastResultAt=now;const hands=result.landmarks||[];drawHands(hands);candidate=null;$('confirm-left').disabled=true;
-  if(hands.length!==1){hold.update(false,now);$('hold-progress').value=0;$('live-hold-fill').style.width='0%';clearMetrics();setFeedback(hands.length>1?'One hand at a time.':'Looking for your hand.',hands.length>1?'Keep just your left hand in view so the feedback has a single clear subject.':'Show your wrist and all three fingers. Try a plain background and brighter lighting.');return;}
-  const category=result.handedness?.[0]?.[0];
-  if(category?.score>=LIMITS.handedness){candidate={label:category.categoryName};$('confirm-left').disabled=false;}
-  const assessment=assessHand({landmarks:hands[0],world:result.worldLandmarks?.[0],handedness:category?.categoryName,confidence:category?.score||0,confirmedLabel,target:motor?.getTargets()||targets(state)});
-  if(assessment.angles){for(const k of ['b','i','f'])$('metric-'+k).textContent=Math.round(assessment.angles[k])+'° off'+(assessment.angles[k]<=LIMITS.direction?' ✓':'');}else clearMetrics();
-  const progress=hold.update(assessment.match,now);$('hold-progress').value=progress.elapsed;
-  $('live-hold-fill').style.width=(progress.elapsed/LIMITS.hold*100)+'%';
-  if(progress.complete){
-    completed.add([state.field,state.current,state.side,targets(state).contact].join('/'));
-    $('match-count').textContent=completed.size+' matched';
-    setFeedback('That’s a matching pose!','Your estimated finger directions agree with F = Iℓ × B. Try the other coil side or reverse one direction.','success');
-  }else if(assessment.match)setFeedback('Looking good. Hold steady.',assessment.message,'success');
+function renderAssessment(assessment,now){
+  const view=attempt.update(assessment,now),shown=view.assessment;
+  if(shown.angles){
+    for(const [k,name]of [['b','Field'],['i','Current'],['f','Force']]){
+      const matched=shown.angles[k]<=LIMITS.direction;
+      $('metric-'+k).textContent=Math.round(shown.angles[k])+'° off'+(matched?' ✓':'');
+      $('check-'+k).textContent=name+(matched?' ✓':' ↗');$('check-'+k).className=matched?'matched':'';
+    }
+  }else clearMetrics();
+  $('hold-progress').value=view.elapsed;
+  $('live-hold-fill').style.width=(view.elapsed/MATCH_HOLD_SECONDS*100)+'%';
+  if(view.phase==='correct'){
+    if(view.newAward){
+      completed.add([state.field,state.current,state.side,targets(state).contact].join('/'));
+      $('match-count').textContent=completed.size+' matched';
+    }
+    setFeedback('Correct! ✓','Field, current and force matched. Try the next challenge.','success');
+  }else if(view.phase==='matching')setFeedback('Good match!','All three directions match. Hold briefly…','success');
   else{
-    const titles={confirm:'Is this your left hand?',uncertain:'Let’s get a clearer view.',occluded:'Show the second finger’s joints.', 'wrong-hand':'Use your left hand.',frame:'Keep the whole hand in view.',small:'Move a little closer.',index:'Check your first finger.',middle:'Check your second finger.',thumb:'Check your thumb.',spread:'Make three right angles.',off:'The supply is off.',gap:'The brushes are at a gap.',direction:'Adjust your hand direction.',missing:'Looking for your hand.'};
-    // Do not announce transient classification changes on every camera frame.
-    if(now-lastAnnouncement>600){setFeedback(titles[assessment.code]||'Adjust your hand.',assessment.message,assessment.code==='wrong-hand'?'warning':'neutral');lastAnnouncement=now;}
+    const titles={confirm:'Confirm your left hand.',uncertain:'Adjust your hand slightly.', 'wrong-hand':'Use your left hand.',frame:'Move your hand into view.',small:'Move a little closer.',off:'The supply is off.',gap:'No current at this angle.',direction:'Match the arrows.',missing:'Show your left hand.'};
+    if(now-lastAnnouncement>400||assessment.code==='confirm'){
+      setFeedback(titles[assessment.code]||'Match the arrows.',assessment.message,assessment.code==='wrong-hand'?'warning':'neutral');lastAnnouncement=now;
+    }
   }
+}
+export function processResult(result,now){
+  lastResultAt=now;const hands=result.landmarks||[];drawHands(hands);candidate=null;$('confirm-left').disabled=true;
+  if(hands.length!==1){
+    renderAssessment({code:'missing',match:false,angles:null,message:hands.length>1?'Keep just one left hand in view.':'Show your left hand in the camera.'},now);return;
+  }
+  const category=(result.handedness||result.handednesses)?.[0]?.[0];
+  if(category?.score>=LIMITS.handedness){candidate={label:category.categoryName};$('confirm-left').disabled=false;}
+  $('confirm-left').hidden=!cameraActive||!!confirmedLabel;
+  const assessment=assessHand({landmarks:hands[0],world:result.worldLandmarks?.[0],handedness:category?.categoryName,confidence:category?.score||0,confirmedLabel,target:motor?.getTargets()||targets(state)});
+  renderAssessment(assessment,now);
 }
 function tick(now){
   if(!state.practice&&motor)contactReadout(motor.getState().theta);
@@ -180,10 +204,10 @@ function tick(now){
     lastVideoTime=video.currentTime;lastInference=now;
     try{processResult(landmarker.detectForVideo(video,now),now);}catch(error){stopCamera();setFeedback('Tracking was interrupted.','Restart the camera. If this repeats, reload or try another browser.','warning');console.error(error);}
   }
-  if(cameraActive&&now-lastResultAt>500){resetEvidence();ctx.clearRect(0,0,canvas.width,canvas.height);setFeedback('Waiting for a fresh camera frame.','Hold steady. Feedback will resume when the live image updates.');}
+  if(cameraActive&&now-lastResultAt>500){ctx.clearRect(0,0,canvas.width,canvas.height);if(!attempt.complete){resetEvidence();setFeedback('Waiting for the camera.','Feedback resumes when the image updates.');}}
   requestAnimationFrame(tick);
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&(cameraActive||starting)){stopCamera();setFeedback('Camera paused for privacy.','Start it again when you are ready to continue.');}});
 window.addEventListener('pagehide',()=>{stopCamera();landmarker?.close();landmarker=null;});
 window.addEventListener('resize',()=>{if(cameraActive){ctx.clearRect(0,0,canvas.width,canvas.height);resetEvidence();}});
-sync();requestAnimationFrame(tick);
+setMode(true);requestAnimationFrame(tick);

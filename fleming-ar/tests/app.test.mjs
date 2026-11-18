@@ -1,15 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {pose} from './hand-fixture.mjs';
 
 // Unit-test activity state and camera cancellation without a browser or webcam.
 const nodes=new Map(),listeners=new Map();
-function element(){return {hidden:false,disabled:false,value:0,textContent:'',style:{},classList:{toggle(){}},setAttribute(){},addEventListener(){},getContext(){return {clearRect(){}};}};}
+function element(){return {hidden:false,disabled:false,value:0,textContent:'',style:{},clientWidth:400,clientHeight:600,videoWidth:640,videoHeight:480,classList:{toggle(){}},setAttribute(){},addEventListener(){},getContext(){return {clearRect(){},setTransform(){},beginPath(){},moveTo(){},lineTo(){},stroke(){},arc(){},fill(){},fillRect(){},fillText(){},measureText(){return {width:70};}};}};}
 globalThis.document={hidden:false,getElementById(id){if(!nodes.has(id))nodes.set(id,element());return nodes.get(id);},querySelector(){return element();},addEventListener(name,fn){listeners.set(name,fn);}};
 globalThis.window={isSecureContext:false,addEventListener(){}};
-globalThis.requestAnimationFrame=()=>0;
+globalThis.requestAnimationFrame=()=>0;globalThis.devicePixelRatio=1;
 let getMedia;
 Object.defineProperty(globalThis,'navigator',{configurable:true,value:{mediaDevices:{getUserMedia:(...args)=>getMedia(...args)}}});
-await import('../app.js');
+const {processResult}=await import('../app.js');
 const $=id=>nodes.get(id);
 
 test('practice holds rotor and exposes consistent direction targets',()=>{
@@ -46,4 +47,30 @@ test('hiding activity cancels a pending camera permission response',async()=>{
   const starting=$('start-camera').onclick();document.hidden=true;listeners.get('visibilitychange')();
   resolve({getTracks:()=>[{stop(){stops++;}}]});await starting;document.hidden=false;
   assert.equal(stops,1);assert.match($('feedback-title').textContent,/privacy/);
+});
+
+function arrangeMatchingPose(){
+  $('practice-mode').onclick();$('wire-a').onclick();$('coil-phase').oninput({target:{value:'0'}});
+  if($('target-b').textContent!=='→ Right')$('reverse-field').onclick();
+  if($('target-i').textContent!=='⊙ Toward you')$('reverse-current').onclick();
+  const p=pose();for(const k of [10,11,12])p.landmarks[k]={...p.landmarks[9]};
+  return {landmarks:[p.landmarks],worldLandmarks:[p.world],handedness:[[{categoryName:'Left',score:.98}]]};
+}
+test('a matching landmark result produces immediate positive feedback after hand confirmation',()=>{
+  const result=arrangeMatchingPose(),now=performance.now();
+  processResult(result,now);assert.notEqual($('feedback-title').textContent,'Correct! ✓');
+  assert.equal($('confirm-left').disabled,false);$('confirm-left').onclick();
+  processResult(result,now+100);assert.equal($('feedback-title').textContent,'Good match!');
+  assert.match($('live-coach').className,/success/);assert.equal($('check-b').textContent,'Field ✓');
+  for(const t of [250,400,550])processResult(result,now+t);
+  assert.equal($('live-coach-title').textContent,'Correct! ✓');assert.equal($('match-count').textContent,'1 matched');
+});
+test('success remains visible after the hand leaves and is not counted twice',()=>{
+  processResult({landmarks:[]},performance.now()+1000);
+  assert.equal($('live-coach-title').textContent,'Correct! ✓');assert.equal($('match-count').textContent,'1 matched');
+});
+test('changing the coil side clears the previous success instead of accepting the old pose',()=>{
+  $('wire-b').onclick();assert.notEqual($('live-coach-title').textContent,'Correct! ✓');
+  const p=pose();processResult({landmarks:[p.landmarks],worldLandmarks:[p.world],handedness:[[{categoryName:'Left',score:.98}]]},performance.now()+2000);
+  assert.notEqual($('live-coach-title').textContent,'Correct! ✓');
 });

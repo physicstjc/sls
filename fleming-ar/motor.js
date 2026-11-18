@@ -1,4 +1,4 @@
-import {coilCircuit,COMMUTATION_GAP} from './circuit.js?v=relaxed-3';
+import {coilCircuit,COMMUTATION_GAP} from './circuit.js?v=feedback-4';
 
 export function createMotor(container){
   const T=window.THREE;
@@ -111,8 +111,9 @@ export function createMotor(container){
     if(practiceChanged){if(state.practice)theta=state.phase*Math.PI/180;controls.enabled=!state.practice;resetView();}
     else if(state.practice&&phaseChanged)theta=state.phase*Math.PI/180;
     if('ar'in changes){root.position.y=state.ar?-1.45:0;root.scale.setScalar(state.ar?.72:1);resetView();}
+    animate(performance.now(),false);
   }
-  function animate(now){
+  function animate(now,queue=true){
     const dt=Math.min((now-previous)/1000,.04);previous=now;
     // Constant illustrative speed represents inertia carrying the coil across gaps.
     if(!state.practice&&!state.paused&&state.power>0)theta-=dt*(.3+state.power*.022)*state.field*state.current;
@@ -127,9 +128,10 @@ export function createMotor(container){
     }
     selectionA.visible=state.practice&&state.side==='a';selectionB.visible=state.practice&&state.side==='b';
     la.visible=lb.visible=state.practice;
-    controls.update();renderer.render(scene,camera);animation=requestAnimationFrame(animate);
+    controls.update();renderer.render(scene,camera);if(queue)animation=requestAnimationFrame(animate);
   }
-  let animation=requestAnimationFrame(animate);
+  let animation;
+  animate(performance.now());
   renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();container.dispatchEvent(new CustomEvent('scene-failed',{detail:'The 3D graphics context was interrupted. Reload to restore the motor.'}));});
   function getTargets(){
     const circuit=coilCircuit({...state,theta});const inverse=camera.quaternion.clone().invert();

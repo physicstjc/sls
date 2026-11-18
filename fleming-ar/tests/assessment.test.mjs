@@ -2,13 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {targets,assessHand,HoldTracker,angle,unit} from '../assessment.js';
 
-function pose(target=targets()){
-  const p=Array.from({length:21},()=>[0,0,0]);
-  p[0]=[0,-.06,0];p[5]=[-.025,0,0];p[9]=[0,0,0];p[17]=[.035,-.01,0];p[2]=[-.04,-.025,0];
-  const digit=(base,indices,dir,len)=>indices.forEach((k,n)=>p[k]=p[base].map((v,j)=>v+dir[j]*len*(n+1)/indices.length));
-  digit(5,[6,7,8],target.b,.075);digit(9,[10,11,12],unit([.18,0,target.i[2]]),.085);digit(2,[3,4],target.f,.055);
-  return {world:p.map(([x,y,z])=>({x,y:-y,z:-z})),landmarks:p.map(([x,y])=>({x:.5+x*2,y:.5-y*2,z:0})),handedness:'Left',confidence:.98,confirmedLabel:'Left',target};
-}
+import {pose} from './hand-fixture.mjs';
+
 test('all eight polarity / conductor combinations obey I cross B',()=>{
   for(const field of [1,-1])for(const current of [1,-1])for(const side of ['a','b']){
     const t=targets({field,current,side});const r=assessHand(pose(t));assert.equal(r.match,true,JSON.stringify({field,current,side,r}));
@@ -38,13 +33,13 @@ test('bent joints pass when the overall finger directions match',()=>{
 });
 test('indeterminate and nonperpendicular finger directions cannot pass',()=>{
   let p=pose();p.world[8]={...p.world[5]};assert.equal(assessHand(p).code,'uncertain');
-  p=pose();p.world[12]={x:p.world[9].x+.08,y:0,z:0};p.world[10]={x:.03,y:0,z:0};assert.equal(assessHand(p).code,'spread');
+  p=pose();p.world[12]={x:p.world[9].x+.08,y:0,z:0};p.world[10]={x:.03,y:0,z:0};assert.equal(assessHand(p).code,'direction');
 });
 test('zero supply cannot be awarded a force match',()=>{
   const p=pose();p.target=targets({power:0});assert.equal(assessHand(p).code,'off');
 });
-test('a collapsed middle finger projection withholds depth feedback',()=>{
-  const p=pose();for(const k of [10,11,12])p.landmarks[k]={...p.landmarks[9]};assert.equal(assessHand(p).code,'occluded');
+test('an end-on middle finger can match using its estimated 3D direction',()=>{
+  const p=pose();for(const k of [10,11,12])p.landmarks[k]={...p.landmarks[9]};assert.equal(assessHand(p).match,true);
 });
 test('continuous hold awards after 1.2 seconds and only once while held',()=>{
   const h=new HoldTracker();let r;for(let t=0;t<=1300;t+=100)r=h.update(true,t);assert.equal(r.complete,true);assert.equal(h.update(true,1400).newAward,false);

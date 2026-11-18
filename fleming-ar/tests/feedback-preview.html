@@ -1,0 +1,13 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Synthetic feedback test · no camera</title><style>body{margin:0;font:13px system-ui;background:#fff4c9}header{height:42px;display:flex;align-items:center;justify-content:center;padding:6px 15px}iframe{display:block;width:100%;height:calc(100dvh - 42px);border:0}</style><header>SYNTHETIC LANDMARK TEST · no webcam · validates the feedback display, not real-hand accuracy</header><iframe title="Motor Lab feedback display test" src="../index.html"></iframe><script>
+const frame=document.querySelector('iframe');
+frame.onload=()=>{
+ const script=frame.contentDocument.createElement('script');script.type='module';
+ script.textContent=`import {processResult} from './app.js?v=feedback-4';
+ import {pose} from './tests/hand-fixture.mjs';
+ const p=pose();for(const k of [10,11,12])p.landmarks[k]={...p.landmarks[9]};
+ const result={landmarks:[p.landmarks],worldLandmarks:[p.world],handedness:[[{categoryName:'Left',score:.98}]]};
+ const now=performance.now();processResult(result,now);document.getElementById('confirm-left').click();
+ for(const delay of [100,250,400,550,700])setTimeout(()=>processResult(result,performance.now()),delay);`;
+ frame.contentDocument.body.appendChild(script);
+};
+</script></html>
