@@ -89,3 +89,10 @@ test('an old front-view hand pose fails after orbiting to the rear',()=>{
   assert.equal(assessHand({...original,target:motor.getTargets()}).match,false);
   assert.equal(assessHand(pose(motor.getTargets())).match,true);
 });
+test('camera pinching suspends orbit controls without changing model view or hand targets',()=>{
+  motor.sync({practice:true,phase:0,side:'a'});frame();
+  const position=renderedCamera.position.clone(),before=motor.getTargets();
+  motor.setCameraPinch(true);frame();assert.equal(orbitControls.enabled,false);
+  assert.ok(renderedCamera.position.distanceTo(position)<1e-9);assert.deepEqual(motor.getTargets(),before);
+  motor.setCameraPinch(false);assert.equal(orbitControls.enabled,true);
+});

@@ -1,4 +1,5 @@
-import {createMotor} from './motor.js?v=welcome-10';
+import {createMotor} from './motor.js?v=pinch-11';
+import {cameraFrame,landmarkPoint,installCameraPinch} from './camera-zoom.js?v=pinch-11';
 import {directionLabel} from './view-directions.js?v=orbit-9';
 import {assessHand,targets,LIMITS} from './assessment.js?v=feedback-4';
 import {coilCircuit} from './circuit.js?v=feedback-4';
@@ -8,10 +9,20 @@ const $=id=>document.getElementById(id);
 const stage=document.querySelector('.stage'),video=$('camera'),canvas=$('landmarks'),ctx=canvas.getContext('2d');
 const workspace=document.querySelector('.workspace');
 let controlsCollapsed=false;
+let cameraZoom=1,cameraPinching=false,displayedHands=[];
 const state={field:1,current:1,side:'a',phase:0,power:60,practice:false,paused:false,lines:true};
 const attempt=new AttemptFeedback(),completed=new Set();
 let motor,landmarker,trackerLoading,stream=null,starting=false,cameraActive=false,viewMoving=false,facing='environment',session=0,confirmedLabel=null,candidate=null,lastResultAt=0,lastInference=0,lastVideoTime=-1,feedbackKey='',lastAnnouncement=0,challenge=0;
 try{motor=createMotor($('scene'),{onViewChange:handleViewChange});}catch(error){$('scene-error').hidden=false;$('scene-error').textContent=error.message;}
+const cameraPinch=installCameraPinch(stage,{
+  enabled:()=>cameraActive,
+  getZoom:()=>cameraZoom,
+  onZoom:setCameraZoom,
+  onGesture:active=>{
+    cameraPinching=active;motor?.setCameraPinch(active);viewMoving=false;
+    if(!attempt.complete)setFeedback(active?'Zoom the camera.':'Match the arrows.',active?'Pinch in or out to frame your hand.':'Camera view adjusted. Match B, I and F.');
+  }
+});
 $('scene').addEventListener('scene-failed',event=>{$('scene-error').hidden=false;$('scene-error').textContent=event.detail;});
 
 function setFeedback(title,message,kind='neutral'){
@@ -78,7 +89,7 @@ function setMode(practice){
   $('live-coach').hidden=!practice;
   $('motor-options').open=!practice;
   for(const [id,on]of [['practice-mode',practice],['explore-mode',!practice]]){$(id).classList.toggle('active',on);$(id).setAttribute('aria-pressed',on);}
-  $('view-hint').textContent='Drag to rotate · pinch or scroll to zoom';
+  $('view-hint').textContent=practice?'Drag to rotate · pinch to zoom camera':'Drag to rotate · pinch or scroll to zoom motor';
   $('scene-caption').textContent=practice?'Use your left hand to predict the force.':'A current. A field. A force.';
   resetTask();sync();
   setControlsCollapsed(practice);
@@ -119,12 +130,27 @@ function cameraUI(){
   $('start-camera').disabled=starting;$('start-camera').hidden=cameraActive;
   $('start-camera').textContent=starting?'Loading tracker…':'Start camera';
   $('camera-controls').hidden=!cameraActive;
-  $('camera-status').textContent=cameraActive?(starting?'● CAMERA LIVE · LOADING TRACKER':'● CAMERA OVERLAY · LIVE'):starting?'◌ STARTING CAMERA':'○ 3D MODEL VIEW';
+  $('reset-camera-zoom').disabled=!cameraActive;
+  $('camera-status').textContent=cameraActive?(starting?'● CAMERA LIVE · LOADING TRACKER':'● LIVE · VIEW '+cameraZoom.toFixed(1)+'×'):starting?'◌ STARTING CAMERA':'○ 3D MODEL VIEW';
   stage.classList.toggle('camera-on',cameraActive);
   $('live-coach').hidden=!state.practice;
   $('confirm-left').hidden=!cameraActive||starting||!!confirmedLabel;
 }
+function updateCameraPreview(){
+  const frame=cameraFrame(stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight,cameraZoom);
+  if(!frame)return null;
+  cameraZoom=frame.zoom;
+  Object.assign(video.style,{inset:'auto',left:frame.left+'px',top:frame.top+'px',width:frame.width+'px',height:frame.height+'px',objectFit:'fill'});
+  $('camera-zoom-value').textContent=cameraZoom.toFixed(1)+'×';
+  if(cameraActive)drawHands(displayedHands);
+  return frame;
+}
+function setCameraZoom(value){cameraZoom=value;updateCameraPreview();cameraUI();}
+$('reset-camera-zoom').onclick=()=>setCameraZoom(1);
+video.addEventListener('resize',()=>{if(cameraActive)updateCameraPreview();});
+const cameraViewportObserver=new ResizeObserver(()=>{if(cameraActive)updateCameraPreview();});cameraViewportObserver.observe(stage);
 function stopCamera(){
+  cameraPinch.cancel();cameraZoom=1;cameraPinching=false;displayedHands=[];$('camera-zoom-value').textContent='1.0×';
   session++;starting=false;cameraActive=false;
   if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;
   confirmedLabel=null;resetEvidence();ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -142,7 +168,7 @@ async function startCamera(){
     if(token!==session){acquired.getTracks().forEach(t=>t.stop());return;}
     stream=acquired;video.srcObject=stream;await video.play();
     if(token!==session)return;
-    cameraActive=true;motor?.sync({ar:true});cameraUI();
+    cameraActive=true;cameraZoom=1;updateCameraPreview();motor?.sync({ar:true});cameraUI();
     const track=stream.getVideoTracks()[0];track.addEventListener('ended',()=>{if(cameraActive){stopCamera();setFeedback('Camera disconnected.','Start the camera again to continue.','warning');}});
     $('camera-message').textContent='Loading the hand model. The first load may take a moment…';
     setFeedback('Camera is on.','Loading hand tracking…');
@@ -176,15 +202,16 @@ function drawHands(hands){
   const width=stage.clientWidth,height=stage.clientHeight,dpr=Math.min(devicePixelRatio,2);
   if(canvas.width!==Math.round(width*dpr)||canvas.height!==Math.round(height*dpr)){canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);}
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);
-  const scale=Math.max(width/video.videoWidth,height/video.videoHeight),vw=video.videoWidth*scale,vh=video.videoHeight*scale;
-  const point=p=>[p.x*vw+(width-vw)/2,p.y*vh+(height-vh)/2];
+  const frame=cameraFrame(width,height,video.videoWidth,video.videoHeight,cameraZoom);
+  if(!frame)return;
+  const point=p=>landmarkPoint(p,frame);
   ctx.lineWidth=2.5;ctx.lineCap='round';
   for(const hand of hands){
     for(const [a,b]of connections){ctx.strokeStyle=b<=4?'#f7a2bd':b<=8?'#72c8ff':b<=12?'#ffcf69':'#d3e5df88';ctx.beginPath();ctx.moveTo(...point(hand[a]));ctx.lineTo(...point(hand[b]));ctx.stroke();}
     hand.forEach((p,k)=>{ctx.fillStyle=k===4?'#f7a2bd':k===8?'#72c8ff':k===12?'#ffcf69':'#f3fff0';ctx.beginPath();ctx.arc(...point(p),[4,8,12].includes(k)?5:2.5,0,Math.PI*2);ctx.fill();});
     const badges=[],radius=21;
     for(const [k,text,color]of [[4,'F','#f7a2bd'],[8,'B','#72c8ff'],[12,'I','#ffcf69']]){
-      const [x,y]=point(hand[k]);if(!Number.isFinite(x)||!Number.isFinite(y))continue;
+      const [x,y]=point(hand[k]);if(!Number.isFinite(x)||!Number.isFinite(y)||x<0||x>width||y<0||y>height)continue;
       const clamp=(value,max)=>Math.max(radius+4,Math.min(max-radius-4,value));
       const candidates=[[30,-30],[-30,-30],[38,30],[-38,30],[0,-62],[0,62]].map(([dx,dy])=>[clamp(x+dx,width),clamp(y+dy,height)]);
       const [cx,cy]=candidates.find(([a,b])=>badges.every(([u,v])=>Math.hypot(a-u,b-v)>radius*2+5))||candidates[0];
@@ -222,7 +249,8 @@ function renderAssessment(assessment,now){
   }
 }
 export function processResult(result,now){
-  lastResultAt=now;const hands=result.landmarks||[];drawHands(hands);candidate=null;$('confirm-left').disabled=true;
+  lastResultAt=now;const hands=result.landmarks||[];displayedHands=hands;drawHands(hands);candidate=null;$('confirm-left').disabled=true;
+  if(cameraPinching)return;
   if(viewMoving){setFeedback('Rotate the model.','Release the model to check your hand.');return;}
   if(hands.length!==1){
     renderAssessment({code:'missing',match:false,angles:null,message:hands.length>1?'Keep just one left hand in view.':'Show your left hand in the camera.'},now);return;
@@ -240,7 +268,7 @@ function tick(now){
     lastVideoTime=video.currentTime;lastInference=now;
     try{processResult(landmarker.detectForVideo(video,now),now);}catch(error){stopCamera();setFeedback('Tracking was interrupted.','Restart the camera. If this repeats, reload or try another browser.','warning');console.error(error);}
   }
-  if(cameraActive&&!starting&&now-lastResultAt>500){ctx.clearRect(0,0,canvas.width,canvas.height);if(!attempt.complete){resetEvidence();setFeedback('Waiting for the camera.','Feedback resumes when the image updates.');}}
+  if(cameraActive&&!starting&&now-lastResultAt>500){displayedHands=[];ctx.clearRect(0,0,canvas.width,canvas.height);if(!attempt.complete){resetEvidence();setFeedback('Waiting for the camera.','Feedback resumes when the image updates.');}}
   requestAnimationFrame(tick);
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&(cameraActive||starting)){stopCamera();setFeedback('Camera paused for privacy.','Start it again when you are ready to continue.');}});

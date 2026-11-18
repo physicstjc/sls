@@ -168,5 +168,11 @@ export function createMotor(container,{onViewChange}={}){
     const convert=a=>new T.Vector3(...a).applyQuaternion(inverse).toArray();
     return {...circuit,b:convert(circuit.b),i:convert(circuit.i),f:convert(circuit.f),reason:!circuit.connected?'gap':state.power===0?'off':null};
   }
-  return {sync,resetView,getTargets,getState:()=>({...state,theta}),destroy(){cancelAnimationFrame(animation);observer.disconnect();controls.dispose();renderer.dispose();}};
+  function setCameraPinch(active){
+    controls.enabled=!active;
+    // r128 uses touchend to clear its private gesture state. Reset it after
+    // camera pinching or cancellation without changing the model viewpoint.
+    if(!active)renderer.domElement.dispatchEvent?.(new Event('touchend'));
+  }
+  return {sync,resetView,getTargets,setCameraPinch,getState:()=>({...state,theta}),destroy(){cancelAnimationFrame(animation);observer.disconnect();controls.dispose();renderer.dispose();}};
 }

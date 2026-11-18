@@ -8,10 +8,10 @@
   <title>Motor Lab · Fleming’s left-hand rule</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=welcome-10">
+  <link rel="stylesheet" href="style.css?v=pinch-11">
   <script defer src="vendor/three.r128.min.js"></script>
   <script defer src="vendor/OrbitControls.r128.js"></script>
-  <script type="module" src="app.js?v=welcome-10"></script>
+  <script type="module" src="app.js?v=pinch-11"></script>
 </head>
 <body>
   <header class="topbar">
@@ -66,6 +66,7 @@
       <details id="motor-options" class="motor-options"><summary>More options</summary>
         <section class="control-section">
           <div class="section-title"><h3>Motor settings</h3><span id="run-state" class="tiny-tag">ROTOR HELD</span></div>
+          <div class="control-row"><span>Camera view <output id="camera-zoom-value">1.0×</output></span><button id="reset-camera-zoom" class="outline">Reset zoom</button></div>
           <div class="control-row"><span>Field direction</span><button id="reverse-field" class="outline">Reverse field</button></div>
           <div class="control-row"><span>Brush connections</span><button id="reverse-current" class="outline">Swap connections</button></div>
           <div class="slider-label"><label for="power">Supply strength</label><output for="power" id="power-value">60%</output></div><input id="power" type="range" min="0" max="100" value="60">
@@ -92,7 +93,7 @@
     <p>Use the <strong>outlined long side of the coil</strong>—not the cell leads or short links.</p>
     <div class="welcome-fingers"><span><b class="quantity-b">B</b> First finger<br><small>N → S</small></span><span><b class="quantity-i">I</b> Middle finger<br><small>Current in this wire</small></span><span><b class="quantity-f">F</b> Thumb<br><small>Force on this wire</small></span></div>
     <p>Confirm your <strong>left hand</strong>, then match the arrows. Hold for <strong>Correct!</strong></p>
-    <p class="small-note">Drag to rotate; feedback follows your view.</p>
+    <p class="small-note">One finger rotates the model. Pinch with two fingers to zoom the camera.</p>
     <button id="dismiss-guide" class="primary" autofocus>Got it</button>
   </dialog>
   <noscript>This activity needs JavaScript for the 3D motor and camera tracking.</noscript>

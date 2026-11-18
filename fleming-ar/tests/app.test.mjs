@@ -8,6 +8,7 @@ function element(){return {hidden:false,disabled:false,value:0,textContent:'',st
 globalThis.document={hidden:false,getElementById(id){if(!nodes.has(id))nodes.set(id,element());return nodes.get(id);},querySelector(){return element();},addEventListener(name,fn){listeners.set(name,fn);}};
 globalThis.window={isSecureContext:false,addEventListener(){}};
 globalThis.requestAnimationFrame=()=>0;globalThis.devicePixelRatio=1;
+globalThis.ResizeObserver=class{observe(){}disconnect(){}};
 let getMedia;
 Object.defineProperty(globalThis,'navigator',{configurable:true,value:{mediaDevices:{getUserMedia:(...args)=>getMedia(...args)}}});
 const {processResult}=await import('../app.js');
