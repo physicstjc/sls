@@ -1,4 +1,4 @@
-import {coilCircuit} from './circuit.js';
+import {coilCircuit} from './circuit.js?v=apparatus-2';
 // Pure camera-space geometry. Camera axes: x right, y up, z toward viewer.
 export const LIMITS = Object.freeze({direction:36, perpendicular:30, handedness:0.8, hold:1.2});
 export const sub=(a,b)=>a.map((v,i)=>v-b[i]);
