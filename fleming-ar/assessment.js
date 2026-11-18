@@ -1,4 +1,4 @@
-import {coilCircuit} from './circuit.js?v=apparatus-2';
+import {coilCircuit} from './circuit.js?v=relaxed-3';
 // Pure camera-space geometry. Camera axes: x right, y up, z toward viewer.
 export const LIMITS = Object.freeze({direction:36, perpendicular:30, handedness:0.8, hold:1.2});
 export const sub=(a,b)=>a.map((v,i)=>v-b[i]);
@@ -28,11 +28,9 @@ export function assessHand({landmarks,world,handedness,confidence,confirmedLabel
   const p=world.map(v=>[v.x,-v.y,-v.z]);
   const palm=length(sub(p[9],p[0]));
   if(palm<.015||palm>.2)return fail('uncertain','The hand estimate is unstable. Hold steady with a plain background.');
-  // MCP-to-tip vectors include the whole digit; joint tests reject curled digits.
+  // Judge the overall direction, allowing natural bends at the finger joints.
   const b=sub(p[8],p[5]),i=sub(p[12],p[9]),f=sub(p[4],p[2]);
-  if(length(b)<palm*.5||angle(sub(p[6],p[5]),sub(p[8],p[6]))>42)return fail('index','Straighten your first finger. It represents the magnetic field.');
-  if(length(i)<palm*.5||angle(sub(p[10],p[9]),sub(p[12],p[10]))>42)return fail('middle','Straighten your second finger. It represents conventional current.');
-  if(length(f)<palm*.35||angle(sub(p[3],p[2]),sub(p[4],p[3]))>50)return fail('thumb','Extend your thumb. It represents the force on the wire.');
+  if([b,i,f].some(vector=>length(vector)<palm*.12))return fail('uncertain','A finger’s overall direction is unclear. Reposition your hand so the camera can see where each finger points; a slight bend is fine.');
   const pairs=[angle(b,i),angle(b,f),angle(i,f)];
   if(pairs.some(a=>Math.abs(90-a)>LIMITS.perpendicular))return fail('spread','Spread thumb, first finger and second finger to roughly 90° in 3D. Keep their joints visible.');
   const angles={b:angle(b,target.b),i:angle(i,target.i),f:angle(f,target.f)};

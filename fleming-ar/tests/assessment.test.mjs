@@ -32,8 +32,12 @@ test('missing, low-confidence, clipped and nonfinite inputs withhold assessment'
   let p=pose();p.landmarks[8].x=.999;assert.equal(assessHand(p).code,'frame');
   p=pose();p.world[4].z=NaN;assert.equal(assessHand(p).code,'uncertain');
 });
-test('curled fingers and nonperpendicular fingers cannot pass',()=>{
-  let p=pose();p.world[8]={...p.world[5]};assert.equal(assessHand(p).code,'index');
+test('bent joints pass when the overall finger directions match',()=>{
+  const p=pose();p.world[6].y+=.035;p.world[10].x+=.035;p.world[3].x+=.035;
+  assert.equal(assessHand(p).match,true);
+});
+test('indeterminate and nonperpendicular finger directions cannot pass',()=>{
+  let p=pose();p.world[8]={...p.world[5]};assert.equal(assessHand(p).code,'uncertain');
   p=pose();p.world[12]={x:p.world[9].x+.08,y:0,z:0};p.world[10]={x:.03,y:0,z:0};assert.equal(assessHand(p).code,'spread');
 });
 test('zero supply cannot be awarded a force match',()=>{

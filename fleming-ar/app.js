@@ -1,6 +1,6 @@
-import {createMotor} from './motor.js?v=apparatus-2';
-import {assessHand,targets,HoldTracker,LIMITS} from './assessment.js?v=apparatus-2';
-import {coilCircuit} from './circuit.js?v=apparatus-2';
+import {createMotor} from './motor.js?v=relaxed-3';
+import {assessHand,targets,HoldTracker,LIMITS} from './assessment.js?v=relaxed-3';
+import {coilCircuit} from './circuit.js?v=relaxed-3';
 
 const $=id=>document.getElementById(id);
 const stage=document.querySelector('.stage'),video=$('camera'),canvas=$('landmarks'),ctx=canvas.getContext('2d');

@@ -1,4 +1,4 @@
-import {coilCircuit,COMMUTATION_GAP} from './circuit.js?v=apparatus-2';
+import {coilCircuit,COMMUTATION_GAP} from './circuit.js?v=relaxed-3';
 
 export function createMotor(container){
   const T=window.THREE;
