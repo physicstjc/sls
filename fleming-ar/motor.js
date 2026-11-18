@@ -97,7 +97,8 @@ export function createMotor(container,{onViewChange}={}){
   }
   updateLeads(1);
 
-  const la=label('A · RED','#ffb0b8',-R,.4,.3,.21,rotor),lb=label('B · BLACK','#eef4ee',R,.4,.3,.21,rotor);
+  const la=label('THIS WIRE','#d8ffac',-R,.45,.1,.42,rotor),lb=label('THIS WIRE','#d8ffac',R,.45,.1,.42,rotor);
+  la.name='selected-red-wire-label';lb.name='selected-black-wire-label';
   // A separate outline selects a wire without overwriting its permanent colour.
   const selectMaterial=new T.MeshBasicMaterial({color:0xc8ed9d,wireframe:true,transparent:true,opacity:.85});
   const selectionA=box(.23,.29,2.7,selectMaterial,-R,0,0,rotor),selectionB=box(.23,.29,2.7,selectMaterial,R,0,0,rotor);
@@ -144,7 +145,7 @@ export function createMotor(container,{onViewChange}={}){
       forceArrows[n].position.set(x,y,0);if(i)forceArrows[n].setDirection(v(0,i*state.field,0));forceArrows[n].visible=circuit.energised;
     }
     selectionA.visible=state.practice&&state.side==='a';selectionB.visible=state.practice&&state.side==='b';
-    la.visible=lb.visible=state.practice;
+    la.visible=state.practice&&state.side==='a';lb.visible=state.practice&&state.side==='b';
     controls.update();renderer.render(scene,camera);if(queue)animation=requestAnimationFrame(animate);
   }
   let animation;

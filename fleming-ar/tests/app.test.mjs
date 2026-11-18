@@ -4,7 +4,7 @@ import {pose} from './hand-fixture.mjs';
 
 // Unit-test activity state and camera cancellation without a browser or webcam.
 const nodes=new Map(),listeners=new Map();
-function element(){return {hidden:false,disabled:false,value:0,textContent:'',style:{},clientWidth:400,clientHeight:600,videoWidth:640,videoHeight:480,classList:{toggle(){}},setAttribute(){},addEventListener(){},getContext(){return {clearRect(){},setTransform(){},beginPath(){},moveTo(){},lineTo(){},stroke(){},arc(){},fill(){},fillRect(){},fillText(){},measureText(){return {width:70};}};}};}
+function element(){return {hidden:false,disabled:false,value:0,textContent:'',style:{},clientWidth:400,clientHeight:600,videoWidth:640,videoHeight:480,classList:{toggle(){}},setAttribute(){},showModal(){this.open=true;},close(){this.open=false;},addEventListener(){},getContext(){return {clearRect(){},setTransform(){},beginPath(){},moveTo(){},lineTo(){},stroke(){},arc(){},fill(){},fillRect(){},fillText(){},measureText(){return {width:70};}};}};}
 globalThis.document={hidden:false,getElementById(id){if(!nodes.has(id))nodes.set(id,element());return nodes.get(id);},querySelector(){return element();},addEventListener(name,fn){listeners.set(name,fn);}};
 globalThis.window={isSecureContext:false,addEventListener(){}};
 globalThis.requestAnimationFrame=()=>0;globalThis.devicePixelRatio=1;
@@ -13,6 +13,10 @@ Object.defineProperty(globalThis,'navigator',{configurable:true,value:{mediaDevi
 const {processResult}=await import('../app.js');
 const $=id=>nodes.get(id);
 
+test('short instructions open on load, dismiss with Got it, and reopen from Guide',()=>{
+  assert.equal($('guide').open,true);$('dismiss-guide').onclick();assert.equal($('guide').open,false);
+  $('help-button').onclick();assert.equal($('guide').open,true);$('close-guide').onclick();assert.equal($('guide').open,false);
+});
 test('practice holds rotor and exposes consistent direction targets',()=>{
   $('practice-mode').onclick();assert.equal($('practice-panel').hidden,false);assert.equal($('play-pause').disabled,true);
   assert.equal($('target-b').textContent,'→ Right');assert.equal($('target-f').textContent,'↑ Up');

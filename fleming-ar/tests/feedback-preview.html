@@ -2,8 +2,9 @@
 const frame=document.querySelector('iframe');
 frame.onload=()=>{
  const script=frame.contentDocument.createElement('script');script.type='module';
- script.textContent=`import {processResult} from './app.js?v=orbit-9';
+ script.textContent=`import {processResult} from './app.js?v=welcome-10';
  import {pose} from './tests/hand-fixture.mjs';
+ document.getElementById('dismiss-guide').click();
  const p=pose();for(const k of [10,11,12])p.landmarks[k]={...p.landmarks[9]};
  const result={landmarks:[p.landmarks],worldLandmarks:[p.world],handedness:[[{categoryName:'Left',score:.98}]]};
  const now=performance.now();processResult(result,now);document.getElementById('confirm-left').click();

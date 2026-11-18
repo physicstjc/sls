@@ -8,10 +8,10 @@
   <title>Motor Lab · Fleming’s left-hand rule</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=labels-8">
+  <link rel="stylesheet" href="style.css?v=welcome-10">
   <script defer src="vendor/three.r128.min.js"></script>
   <script defer src="vendor/OrbitControls.r128.js"></script>
-  <script type="module" src="app.js?v=orbit-9"></script>
+  <script type="module" src="app.js?v=welcome-10"></script>
 </head>
 <body>
   <header class="topbar">
@@ -52,8 +52,8 @@
         <button class="primary" id="start-camera">Start camera</button>
         <div class="button-pair" id="camera-controls" hidden><button class="outline" id="flip-camera">Switch camera</button><button class="outline" id="stop-camera">Stop camera</button></div>
         <p id="camera-message" class="small-note">Show one left hand. Camera images stay on your device.</p>
-        <div class="section-title"><h3>Check this coil side</h3></div>
-        <div class="wire-switch" role="group" aria-label="Coil side"><button id="wire-a" class="active" aria-pressed="true">Red half</button><button id="wire-b" aria-pressed="false">Black half</button></div>
+        <div class="section-title"><h3>Choose a straight coil side</h3></div>
+        <div class="wire-switch" role="group" aria-label="Coil side"><button id="wire-a" class="active" aria-pressed="true">Red side</button><button id="wire-b" aria-pressed="false">Black side</button></div>
         <div class="button-pair practice-actions"><button id="turn-coil" class="outline">Turn coil 180°</button><button id="next-challenge" class="outline">Next challenge →</button></div>
         <div class="feedback" id="feedback" aria-live="polite" aria-atomic="true"><div class="feedback-top"><span class="feedback-icon" id="feedback-icon">↗</span><strong id="feedback-title">Show your left hand.</strong></div><p id="feedback-message">Start the camera to get feedback.</p></div>
         <details class="tracking-details"><summary>Tracking details <span id="match-count">0 matched</span></summary>
@@ -77,7 +77,24 @@
       <footer>On-device tracking. No camera frames saved or uploaded.<br><span>Estimated 3D finger directions · formative feedback</span></footer>
     </aside>
   </main>
-  <dialog id="guide"><button id="close-guide" class="close" aria-label="Close guide">×</button><span class="eyebrow">THREE FINGERS. THREE DIRECTIONS.</span><h2>Your left hand is the key.</h2><ol><li><strong>First finger → magnetic field.</strong> Point from the north pole to the south pole.</li><li><strong>Second finger → conventional current.</strong> Point in the direction of positive charge flow, not electron flow.</li><li><strong>Thumb → force.</strong> This gives the force on the highlighted current-carrying wire.</li></ol><p>Arrange the three fingers at right angles. In Practise, drag the model to rotate the view. B, I and F hints and hand feedback follow the view. The coil itself stays at the angle you choose. Use the orientation slider to compare 0° and 180°, then match the target card and hold steady.</p><p><strong>Follow the contacts, not the colours.</strong> The red supply lead stays positive and the black lead stays negative. The coil’s red and black halves keep their colours as they turn. When the red half contacts the positive brush, current runs out from the rear commutator along that half. After half a turn it contacts the negative brush and current runs into the commutator. At the insulating gaps, current briefly stops. Swapping brush connections moves the lead endpoints while retaining their cell polarity.</p><p><strong>Depth matters:</strong> ⊙ means toward you; ⊗ means away from you. The second finger can point directly toward or away from the camera. Depth is estimated from one camera, so tracking can be imperfect.</p><p><strong>Confirm your left hand</strong> once the camera finds it. This calibration avoids relying on camera mirroring conventions. Reconfirm after switching cameras. Show just one hand.</p><p>This is camera-overlay AR: the 3D motor is anchored to the screen, not a detected table. Phone movement does not place it in the room. Model rotation is illustrative; supply strength controls animation speed, not a calibrated RPM.</p><p>Tracking is a practice aid, not a grade. If feedback seems wrong, spread the fingers, improve lighting, and try another view. Ring and little fingers are not assessed.</p><p class="small-note">Camera permission requires HTTPS or localhost. No microphone is used. All model and runtime files are hosted with this app.</p></dialog>
+  <dialog id="guide" class="welcome" aria-labelledby="welcome-title">
+    <button id="close-guide" class="close" aria-label="Close instructions">×</button>
+    <h2 id="welcome-title">Use this wire</h2>
+    <svg id="wire-example" viewBox="0 0 320 150" role="img" aria-label="A coil loop with one long straight side outlined in green">
+      <defs><marker id="wire-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#447d28"/></marker></defs>
+      <path class="example-red" d="M90 110 130 45" stroke="#a9e97c" stroke-width="18" fill="none" stroke-linecap="round"/>
+      <path class="example-black" d="M230 110 270 45" stroke="#a9e97c" stroke-width="18" fill="none" stroke-linecap="round"/>
+      <path d="M170 45H130L90 110H160" stroke="#c7293d" stroke-width="7" fill="none" stroke-linejoin="round"/>
+      <path d="M170 45H270L230 110H160" stroke="#171d24" stroke-width="7" fill="none" stroke-linejoin="round"/>
+      <g class="example-red"><text x="6" y="50" fill="#447d28" font-size="13" font-weight="700">THIS WIRE</text><path d="M17 61 104 85" stroke="#447d28" stroke-width="2.5" fill="none" marker-end="url(#wire-arrow)"/></g>
+      <g class="example-black"><text x="226" y="140" fill="#447d28" font-size="13" font-weight="700">THIS WIRE</text><path d="M273 121 248 83" stroke="#447d28" stroke-width="2.5" fill="none" marker-end="url(#wire-arrow)"/></g>
+    </svg>
+    <p>Use the <strong>outlined long side of the coil</strong>—not the cell leads or short links.</p>
+    <div class="welcome-fingers"><span><b class="quantity-b">B</b> First finger<br><small>N → S</small></span><span><b class="quantity-i">I</b> Middle finger<br><small>Current in this wire</small></span><span><b class="quantity-f">F</b> Thumb<br><small>Force on this wire</small></span></div>
+    <p>Confirm your <strong>left hand</strong>, then match the arrows. Hold for <strong>Correct!</strong></p>
+    <p class="small-note">Drag to rotate; feedback follows your view.</p>
+    <button id="dismiss-guide" class="primary" autofocus>Got it</button>
+  </dialog>
   <noscript>This activity needs JavaScript for the 3D motor and camera tracking.</noscript>
 </body>
 </html>

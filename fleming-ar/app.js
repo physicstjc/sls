@@ -1,4 +1,4 @@
-import {createMotor} from './motor.js?v=orbit-9';
+import {createMotor} from './motor.js?v=welcome-10';
 import {directionLabel} from './view-directions.js?v=orbit-9';
 import {assessHand,targets,LIMITS} from './assessment.js?v=feedback-4';
 import {coilCircuit} from './circuit.js?v=feedback-4';
@@ -48,7 +48,8 @@ function sync(){
   motor?.sync(state);
   const t=targets(state);
   updateTargetDirections();
-  $('target-side').textContent=(state.side==='a'?'Red half':'Black half')+' · drag model to rotate';
+  $('target-side').textContent=(state.side==='a'?'Red straight side':'Black straight side')+' · drag to rotate';
+  $('wire-example').classList.toggle('black-selected',state.side==='b');
   $('phase-value').textContent=state.phase+'°';$('coil-phase').value=state.phase;
   contactReadout(state.phase*Math.PI/180);
   if(state.practice&&!t.energised)setFeedback(t.reason==='gap'?'The brushes are at a gap.':'The supply is off.',t.reason==='gap'?'There is no current to check here. Turn the coil slightly to restore contact.':'Increase the supply to practise the force direction.');
@@ -99,6 +100,7 @@ $('next-challenge').onclick=()=>{
   const c=combinations[challenge++%combinations.length];[state.field,state.current,state.side,state.phase]=c;if(!state.power)state.power=60;resetTask();sync();
 };
 $('help-button').onclick=()=>$('guide').showModal();$('close-guide').onclick=()=>$('guide').close();
+$('dismiss-guide').onclick=()=>$('guide').close();
 $('guide').onclick=e=>{if(e.target===$('guide')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();}};
 
 async function loadTracker(){
@@ -244,4 +246,4 @@ function tick(now){
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&(cameraActive||starting)){stopCamera();setFeedback('Camera paused for privacy.','Start it again when you are ready to continue.');}});
 window.addEventListener('pagehide',()=>{stopCamera();landmarker?.close();landmarker=null;});
 window.addEventListener('resize',()=>{if(cameraActive){ctx.clearRect(0,0,canvas.width,canvas.height);resetEvidence();}});
-setMode(true);requestAnimationFrame(tick);
+setMode(true);$('guide').showModal();requestAnimationFrame(tick);

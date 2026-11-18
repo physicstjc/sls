@@ -38,6 +38,8 @@ test('permanent red and black coil meshes retain their materials through rotatio
     motor.sync({practice:true,phase,side});frame();
     assert.equal(object('coil-red').material.color.getHex(),0xc7293d);
     assert.equal(object('coil-black').material.color.getHex(),0x171d24);
+    assert.equal(object('selected-red-wire-label').visible,side==='a');
+    assert.equal(object('selected-black-wire-label').visible,side==='b');
     assert.ok(Math.abs(object('rotor').rotation.z-phase*Math.PI/180)<1e-9);
   }
 });
