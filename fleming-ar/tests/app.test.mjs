@@ -22,6 +22,14 @@ test('practice holds rotor and exposes consistent direction targets',()=>{
 test('insecure context explains camera requirement without requesting access',async()=>{
   let requested=false;getMedia=()=>{requested=true;};await $('start-camera').onclick();assert.equal(requested,false);assert.match($('feedback-title').textContent,/secure/);
 });
+test('coil orientation updates contacts and assessment targets for the same selected coloured half',()=>{
+  $('practice-mode').onclick();
+  $('coil-phase').oninput({target:{value:'180'}});
+  assert.match($('red-contact').textContent,/negative/);assert.match($('black-contact').textContent,/positive/);
+  $('coil-phase').oninput({target:{value:'90'}});assert.match($('target-i').textContent,/gap/);assert.equal($('target-f').textContent,'No force');
+  $('coil-phase').oninput({target:{value:'0'}});assert.match($('red-contact').textContent,/positive/);
+  $('explore-mode').onclick();
+});
 test('camera rejection leaves a recoverable app with no confirmed hand',async()=>{
   window.isSecureContext=true;getMedia=async()=>{throw Object.assign(new Error('Test denial'),{name:'NotAllowedError'});};
   const original=console.error;console.error=()=>{};try{await $('start-camera').onclick();}finally{console.error=original;}

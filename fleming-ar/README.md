@@ -15,10 +15,10 @@ Open `http://localhost:8080`. Camera access on a phone requires **HTTPS**; an or
 
 ## Learning flow
 
-1. Explore the rotating rectangular coil, permanent magnets, brushes and split-ring commutator. Reverse the field or supply to reverse rotation; reverse both to preserve it.
-2. Choose Practise. The rotor is held at a fixed front-view position; select coil side A or B. The highlighted wire and target card define the assessed directions.
+1. Explore the rotating rectangular coil, permanent magnets, brushes and split-ring commutator. Reverse the field or swap the brush connections to reverse rotation; change both to preserve it. Red supply wire always remains on cell positive; black always remains on negative.
+2. Choose Practise. The rotor is held at a chosen front-view angle; select A (permanent red half) or B (permanent black half). A separate outline selects the side without recolouring it. The orientation slider and target card define the assessed directions.
 3. Start the camera, show only the real left hand, and explicitly confirm it. Reconfirm after changing cameras. The camera feed is unmirrored.
-4. Point the first finger along B (N to S), the second along conventional current, and the thumb along force. Hold a matching pose for 1.2 seconds. Try another direction to practise the eight combinations.
+4. Point the first finger along B (N to S), the second along conventional current, and the thumb along force. Hold a matching pose for 1.2 seconds. Try another direction, change the coil angle, or swap brush connections to explore how commutation changes the current relative to the coloured coil.
 
 The motor is screen-anchored over the camera image. It does not detect surfaces, use WebXR, or maintain a world-space anchor when the phone moves. The scene is true 3D mesh geometry. Runtime camera access is requested only by the Start button, without audio. Camera tracks stop when the activity is hidden, stopped, or returned to Explore.
 
@@ -30,7 +30,7 @@ The motor is screen-anchored over the camera image. It does not detect surfaces,
 - The student's explicit left-hand confirmation calibrates which model label to accept, avoiding assumptions about selfie mirroring. This is self-confirmation, not independent proof that the physical hand is left. The other classified hand is then rejected.
 - Success requires a continuous 1.2-second match; missing, multiple or stale hands reset the timer. Unique target combinations are counted only in session memory. Nothing is stored or uploaded.
 - A monocular camera estimates depth. Overlap, occlusion, lighting, foreshortening, unusual hand poses and model bias can cause incorrect feedback. Keep the joints visible and treat feedback as a practice aid. Ring/little finger posture is not assessed. Classroom validation with real hands and multiple phones remains necessary.
-- Rotation and supply strength are illustrative. This is not an electrical circuit solver, calibrated motor dynamics, or an RPM measurement. The current reverses each half-turn and the indicated force couple gives the same torque sense. Zero supply hides current/force arrows and cannot earn a match.
+- Rotation and supply strength are illustrative. This is not an electrical circuit solver, calibrated motor dynamics, or an RPM measurement. The current reverses relative to each physical coil half every half-turn and the indicated force couple gives the same torque sense. Insulating gaps (90°/270°, with a small angular width) break the circuit; no current/force arrows or pose matches are produced there. The animation represents inertia carrying the coil across these gaps. Zero supply also hides current/force arrows and cannot earn a match.
 
 ## Assets and privacy
 
@@ -45,4 +45,10 @@ Official references: [MediaPipe Hand Landmarker](https://ai.google.dev/edge/medi
 
 ## Checks
 
-Run `npm test` here. The 16 unit tests cover all polarity/side combinations, incorrect direction, calibration, uncertain/occluded inputs, curled fingers, supply-off behaviour, hold continuity, permission rejection and cancellation. `tests/runtime.html` loads the real bundled model and runs inference on a blank image without a webcam; it passed in Chrome. The app was visually checked in desktop and 400 px mobile-emulation views with no console errors observed. These checks do not validate real-world MediaPipe accuracy or physical mobile-camera compatibility.
+Run `npm test` here. The 28 unit tests cover all polarity/side combinations, incorrect direction, calibration, uncertain/occluded inputs, curled fingers, supply-off behaviour, hold continuity, permission rejection and cancellation. Additional checks exercise commutator contact before/after a half-turn, the gaps, fixed mesh colours, fixed cell-terminal attachment during lead swapping, and agreement between real Three.js arrow transforms and assessment targets. `tests/runtime.html` loads the real bundled model and runs inference on a blank image without a webcam; it passed in Chrome. The app was visually checked in desktop and 400 px mobile-emulation views with no console errors observed. These checks do not validate real-world MediaPipe accuracy or physical mobile-camera compatibility.
+
+## Reference apparatus and sign convention
+
+The virtual apparatus follows the supplied classroom motor references: clear stand and rear drum, permanent red/black square-loop halves, fixed red-positive and black-negative cell leads, carbon brushes, split-ring commutator, and explicitly labelled N/S poles. Geometry is schematic rather than a dimensionally exact replica. It does not automatically recognise or measure a physical motor in the camera image.
+
+The commutator is behind the loop at negative z. At 0° the red half A is left, touching the left brush fed by the positive red lead. Its current runs out from the commutator (+z); black half B returns current toward it (−z). At 180°, A touches the negative brush and its current is −z. Coil colours do not change. `circuit.js` is the shared authority for contacts, current, force and gap states used by the 3D model, contact readout and hand assessment.

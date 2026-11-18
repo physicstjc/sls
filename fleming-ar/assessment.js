@@ -1,3 +1,4 @@
+import {coilCircuit} from './circuit.js';
 // Pure camera-space geometry. Camera axes: x right, y up, z toward viewer.
 export const LIMITS = Object.freeze({direction:36, perpendicular:30, handedness:0.8, hold:1.2});
 export const sub=(a,b)=>a.map((v,i)=>v-b[i]);
@@ -6,12 +7,13 @@ export const length=a=>Math.hypot(...a);
 export const unit=a=>length(a)>1e-7?a.map(v=>v/length(a)):null;
 export const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 export function angle(a,b){const u=unit(a),v=unit(b);return u&&v?Math.acos(Math.max(-1,Math.min(1,dot(u,v))))*180/Math.PI:180;}
-export function targets({field=1,current=1,side='a',power=60}={}){
-  const b=[field,0,0],i=[0,0,current*(side==='a'?1:-1)];
-  return {b,i,f:cross(i,b),energised:power>0};
+export function targets({field=1,current=1,side='a',power=60,phase=0}={}){
+  const circuit=coilCircuit({theta:phase*Math.PI/180,field,current,side,power});
+  return {...circuit,reason:!circuit.connected?'gap':power===0?'off':null};
 }
 export function assessHand({landmarks,world,handedness,confidence,confirmedLabel,target}){
   const fail=(code,message)=>({code,message,match:false,angles:null});
+  if(!target.energised)return target.reason==='gap'?fail('gap','A brush is over an insulating gap. Turn the coil slightly: there is no current or magnetic force to match here.'):fail('off','Increase the supply above zero: there is no magnetic force on the wire at zero current.');
   if(!landmarks||!world||world.length!==21||landmarks.length!==21)return fail('missing','Show one whole hand, with your wrist and all three fingers in view.');
   if(!world.every(p=>[p.x,p.y,p.z].every(Number.isFinite)))return fail('uncertain','The depth estimate is unstable. Spread your fingers and try again.');
   if(!landmarks.every(p=>[p.x,p.y].every(Number.isFinite)))return fail('uncertain','The image estimate is unstable. Hold steady with all finger joints visible.');
@@ -33,7 +35,6 @@ export function assessHand({landmarks,world,handedness,confidence,confirmedLabel
   if(length(f)<palm*.35||angle(sub(p[3],p[2]),sub(p[4],p[3]))>50)return fail('thumb','Extend your thumb. It represents the force on the wire.');
   const pairs=[angle(b,i),angle(b,f),angle(i,f)];
   if(pairs.some(a=>Math.abs(90-a)>LIMITS.perpendicular))return fail('spread','Spread thumb, first finger and second finger to roughly 90° in 3D. Keep their joints visible.');
-  if(!target.energised)return fail('off','Increase the supply above zero: there is no magnetic force on the wire at zero current.');
   const angles={b:angle(b,target.b),i:angle(i,target.i),f:angle(f,target.f)};
   const match=Object.values(angles).every(a=>a<=LIMITS.direction);
   const worst=Object.entries(angles).sort((a,b)=>b[1]-a[1])[0][0];

@@ -1,9 +1,10 @@
 import {createMotor} from './motor.js';
 import {assessHand,targets,HoldTracker,LIMITS} from './assessment.js';
+import {coilCircuit} from './circuit.js';
 
 const $=id=>document.getElementById(id);
 const stage=document.querySelector('.stage'),video=$('camera'),canvas=$('landmarks'),ctx=canvas.getContext('2d');
-const state={field:1,current:1,side:'a',power:60,practice:false,paused:false,lines:true};
+const state={field:1,current:1,side:'a',phase:0,power:60,practice:false,paused:false,lines:true};
 const hold=new HoldTracker(),completed=new Set();
 let motor,landmarker,trackerLoading,stream=null,starting=false,cameraActive=false,facing='environment',session=0,confirmedLabel=null,candidate=null,lastResultAt=0,lastInference=0,lastVideoTime=-1,feedbackKey='',lastAnnouncement=0,challenge=0;
 try{motor=createMotor($('scene'));}catch(error){$('scene-error').hidden=false;$('scene-error').textContent=error.message;}
@@ -19,19 +20,31 @@ function setFeedback(title,message,kind='neutral'){
 function clearMetrics(){for(const k of ['b','i','f'])$('metric-'+k).textContent='—';}
 function resetEvidence(){hold.reset();$('hold-progress').value=0;$('live-hold-fill').style.width='0%';clearMetrics();candidate=null;$('confirm-left').disabled=true;lastResultAt=0;}
 function resetTask(){resetEvidence();if(cameraActive)setFeedback('New directions. Same rule.','Match the target card with your three fingers.');}
+function contactReadout(theta){
+  for(const [side,id,name]of [['a','red-contact','Red'],['b','black-contact','Black']]){
+    const c=coilCircuit({...state,theta,side});
+    const text=!c.connected?name+' half → insulating gap · no current':state.power===0?name+' half → '+c.terminal+' brush · supply off':name+' half → '+c.terminal+' brush · current '+(c.direction>0?'out from':'into')+' commutator';
+    if($(id).textContent!==text)$(id).textContent=text;
+  }
+}
 function sync(){
   motor?.sync(state);
   const t=targets(state);
   $('target-b').textContent=state.field===1?'→ Right':'← Left';
-  $('target-i').textContent=t.i[2]>0?'⊙ Toward you':'⊗ Away from you';
-  $('target-f').textContent=state.power===0?'No force':t.f[1]>0?'↑ Up':'↓ Down';
+  $('target-i').textContent=!t.energised?t.reason==='gap'?'No current · gap':'No current · off':t.i[2]>0?'⊙ Toward you':'⊗ Away from you';
+  $('target-f').textContent=!t.energised?'No force':t.f[1]>0?'↑ Up':'↓ Down';
+  $('target-side').textContent='Checking '+(state.side==='a'?'A · red half':'B · black half');
+  $('phase-value').textContent=state.phase+'°';$('coil-phase').value=state.phase;
+  contactReadout(state.phase*Math.PI/180);
+  if(state.practice&&!t.energised)setFeedback(t.reason==='gap'?'The brushes are at a gap.':'The supply is off.',t.reason==='gap'?'There is no current to check here. Turn the coil slightly to restore contact.':'Increase the supply to practise the force direction.');
+  else if(state.practice&&!cameraActive)setFeedback('Ready when you are.','Start the camera to get feedback on your real hand.');
   $('run-state').textContent=state.practice?'ROTOR HELD':state.power===0?'SUPPLY OFF':state.paused?'PAUSED':'RUNNING';
   $('play-pause').textContent=state.paused?'▶ Run motor':'Ⅱ Pause motor';
   $('play-pause').disabled=state.practice;
   $('power-value').textContent=state.power+'%';$('power').value=state.power;
   $('field-lines').textContent='Field lines '+(state.lines?'on':'off');$('field-lines').setAttribute('aria-pressed',state.lines);
   $('reverse-field').textContent=state.field===1?'⇄ N → S':'⇄ S ← N';
-  $('reverse-current').textContent=state.current===1?'⇄ Supply + / −':'⇄ Supply − / +';
+  $('reverse-current').textContent=state.current===1?'⇄ + on left brush':'⇄ + on right brush';
   for(const s of ['a','b']){$('wire-'+s).classList.toggle('active',state.side===s);$('wire-'+s).setAttribute('aria-pressed',state.side===s);}
 }
 function setMode(practice){
@@ -40,7 +53,7 @@ function setMode(practice){
   $('practice-panel').hidden=!practice;$('target-card').hidden=!practice;$('explore-note').hidden=practice;
   stage.classList.toggle('practice',practice);
   for(const [id,on]of [['practice-mode',practice],['explore-mode',!practice]]){$(id).classList.toggle('active',on);$(id).setAttribute('aria-pressed',on);}
-  $('view-hint').textContent=practice?'Fixed front view · green wire is selected':'Drag to orbit · pinch or scroll to zoom';
+  $('view-hint').textContent=practice?'Fixed front view · outlined coil side selected':'Drag to orbit · pinch or scroll to zoom';
   $('scene-caption').textContent=practice?'Use your left hand to predict the force.':'A current. A field. A force.';
   resetTask();sync();
 }
@@ -50,11 +63,12 @@ $('reverse-current').onclick=()=>{state.current*=-1;resetTask();sync();};
 $('power').oninput=e=>{state.power=Number(e.target.value);resetTask();sync();};
 $('play-pause').onclick=()=>{state.paused=!state.paused;sync();};
 $('field-lines').onclick=()=>{state.lines=!state.lines;sync();};
+$('coil-phase').oninput=e=>{state.phase=Number(e.target.value);resetTask();sync();};
 $('reset-view').onclick=()=>motor?.resetView();
 for(const s of ['a','b'])$('wire-'+s).onclick=()=>{state.side=s;resetTask();sync();};
 $('next-challenge').onclick=()=>{
-  const combinations=[[1,-1,'a'],[-1,-1,'a'],[-1,1,'b'],[1,1,'b'],[-1,1,'a'],[1,-1,'b'],[-1,-1,'b'],[1,1,'a']];
-  const c=combinations[challenge++%combinations.length];[state.field,state.current,state.side]=c;if(!state.power)state.power=60;resetTask();sync();
+  const combinations=[[1,1,'a',180],[1,1,'b',180],[-1,1,'a',0],[-1,1,'b',180],[1,-1,'a',0],[1,-1,'b',180],[-1,-1,'b',0],[1,1,'a',0]];
+  const c=combinations[challenge++%combinations.length];[state.field,state.current,state.side,state.phase]=c;if(!state.power)state.power=60;resetTask();sync();
 };
 $('help-button').onclick=()=>$('guide').showModal();$('close-guide').onclick=()=>$('guide').close();
 $('guide').onclick=e=>{if(e.target===$('guide')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();}};
@@ -150,17 +164,18 @@ function processResult(result,now){
   const progress=hold.update(assessment.match,now);$('hold-progress').value=progress.elapsed;
   $('live-hold-fill').style.width=(progress.elapsed/LIMITS.hold*100)+'%';
   if(progress.complete){
-    completed.add([state.field,state.current,state.side].join('/'));
+    completed.add([state.field,state.current,state.side,targets(state).contact].join('/'));
     $('match-count').textContent=completed.size+' matched';
     setFeedback('That’s a matching pose!','Your estimated finger directions agree with F = Iℓ × B. Try the other coil side or reverse one direction.','success');
   }else if(assessment.match)setFeedback('Looking good. Hold steady.',assessment.message,'success');
   else{
-    const titles={confirm:'Is this your left hand?',uncertain:'Let’s get a clearer view.',occluded:'Show the second finger’s joints.', 'wrong-hand':'Use your left hand.',frame:'Keep the whole hand in view.',small:'Move a little closer.',index:'Check your first finger.',middle:'Check your second finger.',thumb:'Check your thumb.',spread:'Make three right angles.',off:'The supply is off.',direction:'Adjust your hand direction.',missing:'Looking for your hand.'};
+    const titles={confirm:'Is this your left hand?',uncertain:'Let’s get a clearer view.',occluded:'Show the second finger’s joints.', 'wrong-hand':'Use your left hand.',frame:'Keep the whole hand in view.',small:'Move a little closer.',index:'Check your first finger.',middle:'Check your second finger.',thumb:'Check your thumb.',spread:'Make three right angles.',off:'The supply is off.',gap:'The brushes are at a gap.',direction:'Adjust your hand direction.',missing:'Looking for your hand.'};
     // Do not announce transient classification changes on every camera frame.
     if(now-lastAnnouncement>600){setFeedback(titles[assessment.code]||'Adjust your hand.',assessment.message,assessment.code==='wrong-hand'?'warning':'neutral');lastAnnouncement=now;}
   }
 }
 function tick(now){
+  if(!state.practice&&motor)contactReadout(motor.getState().theta);
   if(cameraActive&&video.readyState>=2&&video.currentTime!==lastVideoTime&&now-lastInference>80){
     lastVideoTime=video.currentTime;lastInference=now;
     try{processResult(landmarker.detectForVideo(video,now),now);}catch(error){stopCamera();setFeedback('Tracking was interrupted.','Restart the camera. If this repeats, reload or try another browser.','warning');console.error(error);}
