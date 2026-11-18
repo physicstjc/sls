@@ -37,19 +37,20 @@ test('camera rejection leaves a recoverable app with no confirmed hand',async()=
   assert.match($('feedback-message').textContent,/declined/);assert.equal($('start-camera').disabled,false);assert.equal($('confirm-left').disabled,true);
 });
 test('a permission response arriving after Explore stops its camera tracks',async()=>{
-  $('practice-mode').onclick();let resolve,stops=0;getMedia=()=>new Promise(r=>resolve=r);
-  const starting=$('start-camera').onclick();assert.equal($('start-camera').disabled,true);
+  let resolve,stops=0;getMedia=()=>new Promise(r=>resolve=r);
+  const starting=$('practice-mode').onclick();assert.equal($('start-camera').disabled,true);
   $('explore-mode').onclick();resolve({getTracks:()=>[{stop(){stops++;}}]});await starting;
   assert.equal(stops,1);assert.equal($('camera-controls').hidden,true);assert.equal($('camera').srcObject,null);
 });
 test('hiding activity cancels a pending camera permission response',async()=>{
-  $('practice-mode').onclick();let resolve,stops=0;getMedia=()=>new Promise(r=>resolve=r);
-  const starting=$('start-camera').onclick();document.hidden=true;listeners.get('visibilitychange')();
+  let resolve,stops=0;getMedia=()=>new Promise(r=>resolve=r);
+  const starting=$('practice-mode').onclick();document.hidden=true;listeners.get('visibilitychange')();
   resolve({getTracks:()=>[{stop(){stops++;}}]});await starting;document.hidden=false;
   assert.equal(stops,1);assert.match($('feedback-title').textContent,/privacy/);
 });
 
 function arrangeMatchingPose(){
+  window.isSecureContext=false;
   $('practice-mode').onclick();$('wire-a').onclick();$('coil-phase').oninput({target:{value:'0'}});
   if($('target-b').textContent!=='→ Right')$('reverse-field').onclick();
   if($('target-i').textContent!=='⊙ Toward you')$('reverse-current').onclick();
@@ -73,4 +74,29 @@ test('changing the coil side clears the previous success instead of accepting th
   $('wire-b').onclick();assert.notEqual($('live-coach-title').textContent,'Correct! ✓');
   const p=pose();processResult({landmarks:[p.landmarks],worldLandmarks:[p.world],handedness:[[{categoryName:'Left',score:.98}]]},performance.now()+2000);
   assert.notEqual($('live-coach-title').textContent,'Correct! ✓');
+});
+
+test('entering Practise requests the camera automatically and avoids duplicate requests',async()=>{
+  window.isSecureContext=true;let requests=0,resolve,stops=0;
+  getMedia=()=>{requests++;return new Promise(r=>resolve=r);};
+  const pending=$('practice-mode').onclick();assert.equal(requests,1);
+  $('practice-mode').onclick();assert.equal(requests,1);
+  $('explore-mode').onclick();resolve({getTracks:()=>[{stop(){stops++;}}]});await pending;assert.equal(stops,1);
+});
+test('the camera preview appears before the tracker finishes loading',async()=>{
+  window.isSecureContext=true;let stops=0;
+  const track={stop(){stops++;},addEventListener(){}};
+  getMedia=async()=>({getTracks:()=>[track],getVideoTracks:()=>[track]});
+  $('camera').play=async()=>{};
+  const pending=$('practice-mode').onclick();await Promise.resolve();await Promise.resolve();
+  assert.equal($('camera-controls').hidden,false);assert.match($('camera-status').textContent,/CAMERA LIVE/);
+  assert.match($('feedback-title').textContent,/Camera is on/);assert.equal($('confirm-left').hidden,true);
+  $('explore-mode').onclick();await pending;assert.equal(stops,1);
+});
+test('initial page load in Practise requests camera permission without a Start click',async()=>{
+  window.isSecureContext=true;let requests=0,resolve,stops=0;
+  getMedia=()=>{requests++;return new Promise(r=>resolve=r);};
+  await import('../app.js?initial-camera-test');assert.equal(requests,1);
+  $('explore-mode').onclick();resolve({getTracks:()=>[{stop(){stops++;}}]});
+  await new Promise(r=>setImmediate(r));assert.equal(stops,1);
 });

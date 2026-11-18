@@ -61,6 +61,7 @@ function setMode(practice){
   $('view-hint').textContent=practice?'Fixed front view · outlined coil side selected':'Drag to orbit · pinch or scroll to zoom';
   $('scene-caption').textContent=practice?'Use your left hand to predict the force.':'A current. A field. A force.';
   resetTask();sync();
+  if(practice&&!document.hidden)return startCamera();
 }
 $('explore-mode').onclick=()=>setMode(false);$('practice-mode').onclick=$('try-practice').onclick=()=>setMode(true);
 $('reverse-field').onclick=()=>{state.field*=-1;resetTask();sync();};
@@ -96,10 +97,10 @@ function cameraUI(){
   $('start-camera').disabled=starting;$('start-camera').hidden=cameraActive;
   $('start-camera').textContent=starting?'Loading tracker…':'Start camera';
   $('camera-controls').hidden=!cameraActive;
-  $('camera-status').textContent=cameraActive?'● CAMERA OVERLAY · LIVE':starting?'◌ STARTING CAMERA':'○ 3D MODEL VIEW';
+  $('camera-status').textContent=cameraActive?(starting?'● CAMERA LIVE · LOADING TRACKER':'● CAMERA OVERLAY · LIVE'):starting?'◌ STARTING CAMERA':'○ 3D MODEL VIEW';
   stage.classList.toggle('camera-on',cameraActive);
   $('live-coach').hidden=!state.practice;
-  $('confirm-left').hidden=!cameraActive||!!confirmedLabel;
+  $('confirm-left').hidden=!cameraActive||starting||!!confirmedLabel;
 }
 function stopCamera(){
   session++;starting=false;cameraActive=false;
@@ -119,14 +120,16 @@ async function startCamera(){
     if(token!==session){acquired.getTracks().forEach(t=>t.stop());return;}
     stream=acquired;video.srcObject=stream;await video.play();
     if(token!==session)return;
+    cameraActive=true;motor?.sync({ar:true});cameraUI();
+    const track=stream.getVideoTracks()[0];track.addEventListener('ended',()=>{if(cameraActive){stopCamera();setFeedback('Camera disconnected.','Start the camera again to continue.','warning');}});
     $('camera-message').textContent='Loading the hand model. The first load may take a moment…';
+    setFeedback('Camera is on.','Loading hand tracking…');
     await loadTracker();if(token!==session)return;
     cameraActive=true;starting=false;lastVideoTime=-1;lastInference=0;lastResultAt=performance.now();
-    motor?.sync({ar:true});cameraUI();
+    cameraUI();
     if(matchMedia('(max-width:760px)').matches)stage.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth'});
     $('camera-message').textContent='Camera is live. Confirm your left hand on the image.';
     setFeedback('Show your left hand.','Tap “This is my LEFT hand” on the image, then match the arrows.');
-    const track=stream.getVideoTracks()[0];track.addEventListener('ended',()=>{if(cameraActive){stopCamera();setFeedback('Camera disconnected.','Start the camera again to continue.','warning');}});
   }catch(error){
     if(token!==session)return;
     stopCamera();
@@ -200,11 +203,11 @@ export function processResult(result,now){
 }
 function tick(now){
   if(!state.practice&&motor)contactReadout(motor.getState().theta);
-  if(cameraActive&&video.readyState>=2&&video.currentTime!==lastVideoTime&&now-lastInference>80){
+  if(cameraActive&&!starting&&landmarker&&video.readyState>=2&&video.currentTime!==lastVideoTime&&now-lastInference>80){
     lastVideoTime=video.currentTime;lastInference=now;
     try{processResult(landmarker.detectForVideo(video,now),now);}catch(error){stopCamera();setFeedback('Tracking was interrupted.','Restart the camera. If this repeats, reload or try another browser.','warning');console.error(error);}
   }
-  if(cameraActive&&now-lastResultAt>500){ctx.clearRect(0,0,canvas.width,canvas.height);if(!attempt.complete){resetEvidence();setFeedback('Waiting for the camera.','Feedback resumes when the image updates.');}}
+  if(cameraActive&&!starting&&now-lastResultAt>500){ctx.clearRect(0,0,canvas.width,canvas.height);if(!attempt.complete){resetEvidence();setFeedback('Waiting for the camera.','Feedback resumes when the image updates.');}}
   requestAnimationFrame(tick);
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&(cameraActive||starting)){stopCamera();setFeedback('Camera paused for privacy.','Start it again when you are ready to continue.');}});
