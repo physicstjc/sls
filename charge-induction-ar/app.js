@@ -2,8 +2,23 @@ const $=id=>document.getElementById(id),P=window.ChargePhysics,T=window.THREE;
 const state={gap:1.4,grounded:false,paused:false,missing:0,relax:0};
 const viewport=$('viewport'),scene=new T.Scene(),camera=new T.PerspectiveCamera(42,1,.1,100);
 const renderer=new T.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputEncoding=T.sRGBEncoding;renderer.shadowMap.enabled=true;$('scene').append(renderer.domElement);
-const controls=new T.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=6;controls.maxDistance=24;controls.maxPolarAngle=Math.PI*.49;
-function resetView(){camera.position.set(7,5.4,10);controls.target.set(.6,1.6,0);controls.update();}resetView();
+const controls=new T.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=6;controls.maxDistance=40;controls.maxPolarAngle=Math.PI*.49;
+function fitView(defaultAngle=false){
+ const box=new T.Box3().setFromObject(apparatus).expandByObject(rod);
+ if(state.grounded)box.expandByObject(earthSymbol);
+ const midpoint=box.getCenter(new T.Vector3()),halfY=T.MathUtils.degToRad(camera.fov/2),halfX=Math.atan(Math.tan(halfY)*camera.aspect);
+ const direction=defaultAngle?new T.Vector3(5,3.8,10):camera.position.clone().sub(controls.target);
+ if(direction.lengthSq()<.01)direction.set(5,3.8,10);
+ direction.normalize();camera.position.copy(midpoint).add(direction);camera.lookAt(midpoint);
+ const inverse=camera.quaternion.clone().invert();let distance=0;
+ for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z]){
+  const p=new T.Vector3(x,y,z).sub(midpoint).applyQuaternion(inverse);
+  distance=Math.max(distance,Math.abs(p.x)/Math.tan(halfX)+p.z,Math.abs(p.y)/Math.tan(halfY)+p.z);
+ }
+ distance=Math.min(39,Math.max(6,distance*1.16));
+ controls.target.copy(midpoint);camera.position.copy(midpoint).addScaledVector(direction,distance);controls.update();
+}
+function resetView(){fitView(true);}
 scene.add(new T.HemisphereLight(0xffffff,0x8fabb9,1));const light=new T.DirectionalLight(0xffffff,1);light.position.set(3,8,5);light.castShadow=true;scene.add(light);
 const mat=(color,extra={})=>new T.MeshStandardMaterial({color,...extra});
 function mesh(geo,material,parent,pos){const m=new T.Mesh(geo,material);m.position.set(...pos);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
@@ -40,8 +55,8 @@ $('gap').oninput=e=>setGap(e.target.value);$('ground').onchange=e=>{state.ground
 $('pause').onclick=()=>{state.paused=!state.paused;$('pause').textContent=state.paused?'Resume charges':'Pause charges';};
 $('reset').onclick=()=>{Object.assign(state,{gap:1.4,grounded:false,paused:false,missing:0,relax:0});$('ground').checked=false;$('pause').textContent='Pause charges';apparatus.position.set(-1,0,0);rod.position.set(3.15,2.25,0);travel.fill(0);for(let i=0;i<P.COUNT;i++)electrons[i].position.copy(center()).addScaledVector(ions[i].userData.n,1.065);setGap(1.4);updateWire();endGrab();};
 $('view').onclick=resetView;function rotate(angle){const offset=camera.position.clone().sub(controls.target);offset.applyAxisAngle(new T.Vector3(0,1,0),angle);camera.position.copy(controls.target).add(offset);controls.update();}$('left').onclick=()=>rotate(-Math.PI/8);$('right').onclick=()=>rotate(Math.PI/8);
-$('collapse').onclick=()=>{const collapsed=document.body.classList.toggle('collapsed');$('collapse').setAttribute('aria-label',collapsed?'Expand controls':'Collapse controls');};
-new ResizeObserver(()=>{const w=viewport.clientWidth,h=viewport.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();$('hands').width=w;$('hands').height=h;}).observe(viewport);
+$('collapse').onclick=()=>{const collapsed=document.body.classList.toggle('collapsed');$('collapse').textContent=collapsed?'Show controls':'Hide controls';$('collapse').setAttribute('aria-expanded',String(!collapsed));$('panel').inert=collapsed;};
+new ResizeObserver(()=>{const w=viewport.clientWidth,h=viewport.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();fitView();$('hands').width=w;$('hands').height=h;}).observe(viewport);
 let tracking=false,starting=false,stream=null,landmarker=null,lastVideo=-1,lastDetect=0,pinched=false;
 function background(){const on=tracking&&$('ar').checked;$('video').style.display=on?'block':'none';document.body.classList.toggle('ar',on);grid.visible=!on;floor.visible=!on;}$('ar').onchange=background;
 function stopCamera(){tracking=false;stream?.getTracks().forEach(t=>t.stop());stream=null;$('video').srcObject=null;landmarker?.close();landmarker=null;pinched=false;endGrab();$('cursor').hidden=true;$('hands').getContext('2d').clearRect(0,0,$('hands').width,$('hands').height);$('camera').textContent='Enable camera + hand tracking';$('status').textContent='Camera off · mouse and touch ready';background();}
@@ -52,6 +67,6 @@ window.addEventListener('pagehide',stopCamera);
 function label(id,pos){const p=pos.clone().project(camera),el=$(id);el.style.left=(p.x+1)*.5*viewport.clientWidth+'px';el.style.top=(1-p.y)*.5*viewport.clientHeight+'px';el.style.display=Math.abs(p.x)>1||Math.abs(p.y)>1||p.z>1?'none':'block';}
 let previous=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-previous)/1000,.05);previous=now;P.advance(state,dt);const c=center(),away=c.clone().sub(rod.position).normalize(),bias=P.strength(state.gap)*1.55;for(let i=0;i<P.COUNT;i++){const n=ions[i].userData.n;ions[i].position.copy(c).addScaledVector(n,1.012);if(!state.paused){let target;const inEarth=i<state.missing;travel[i]=T.MathUtils.clamp(travel[i]+(inEarth?1:-1)*dt*.9,0,1);if(travel[i]>0){target=wireCurve.getPoint(travel[i]);if(travel[i]>.93)target.add(new T.Vector3((i/28-.5)*.6,0,(i%3)*.1));}else{target=n.clone().addScaledVector(away,bias).normalize().multiplyScalar(1.065).add(c);}electrons[i].position.lerp(target,1-Math.exp(-dt*8));}electrons[i].visible=i>=state.missing||state.grounded||travel[i]<.99;}
 controls.update();detect(now);readout();label('sphereLabel',c.clone().add(new T.Vector3(0,1.35,0)));label('rodLabel',rod.position.clone().add(new T.Vector3(0,.55,0)));renderer.render(scene,camera);}
-setGap(1.4);updateWire();requestAnimationFrame(frame);
+setGap(1.4);updateWire();resetView();requestAnimationFrame(frame);
 // Exposed read-only diagnostics for classroom/browser verification.
 window.chargeLab={snapshot:()=>({...state,electronCount:electrons.length,ionCount:ions.length,tracking}),renderer};
