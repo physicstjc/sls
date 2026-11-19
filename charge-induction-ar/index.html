@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Charge Lab · Induction in your hands</title><link rel="stylesheet" href="style.css?v=view-2"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Charge Lab · Induction in your hands</title><link rel="stylesheet" href="style.css?v=rear-3"></head>
 <body class="collapsed">
 <header class="topbar"><h1>⊖ Charge Lab <span>Electrostatic induction</span></h1><button id="collapse" aria-expanded="false" aria-controls="panel">Show controls</button></header>
 <aside id="panel" inert><div id="contents">
 <section><h2>Explore induction</h2><p>The glass stand is always insulating. Connecting earth adds a separate conducting wire from the sphere.</p><div class="buttons"><button id="pause">Pause charges</button><button id="reset">Reset experiment</button></div></section>
-<section><h2>Camera and hand controls</h2><label class="switch"><input id="ar" type="checkbox" checked> Camera background (AR overlay)</label><p>Point at the selected object. Pinch thumb + index finger to grab, move your hand, then release to drop.</p><p>Drag the apparatus with mouse or touch. Drag empty space to rotate, pinch or scroll to zoom, and right-drag to pan.</p></section>
+<section><h2>Camera and hand controls</h2><label class="switch"><input id="ar" type="checkbox" checked> Camera background (AR overlay)</label><p>The rear camera is preferred. Hold your hand in front of it and point at the selected object. Pinch thumb + index finger to grab, move your hand, then release to drop.</p><p>Drag the apparatus with mouse or touch. Drag empty space to rotate, pinch or scroll to zoom, and right-drag to pan.</p></section>
 <section><h2>Read the charges</h2><div class="legend"><span class="positive">⊕ Fixed positive ions</span><span class="negative">⊖ Mobile electrons</span></div><div class="meter"><div id="balance"></div></div><p id="explain"></p><details open><summary>Try charging by induction</summary><ol><li>Bring the negative rod close.</li><li>Connect to earth: electrons escape.</li><li>Disconnect earth first.</li><li>Move the rod away. The sphere stays positive.</li></ol></details><p class="footnote">Qualitative model: 64 representative ion/electron symbols, exaggerated redistribution and finite relaxation. Symbols show charge distribution, not individual atomic trajectories. Rod never touches sphere.</p></section>
 </div></aside>
 <main id="viewport" aria-label="Interactive sphere, rod and camera view"><video id="video" autoplay playsinline muted></video><div id="scene"></div><canvas id="hands"></canvas>
@@ -18,4 +18,4 @@
 <div class="target-control"><label for="target">Move</label><select id="target"><option value="rod">Negative rod</option><option value="sphere">Sphere + stand</option></select></div>
 <button id="camera" class="primary">Enable camera + hand tracking</button>
 <div id="status" role="status">Camera off · mouse and touch ready</div>
-</footer><script src="vendor/three.r128.min.js"></script><script src="vendor/OrbitControls.r128.js"></script><script src="physics.js"></script><script type="module" src="app.js?v=view-2"></script></body></html>
+</footer><script src="vendor/three.r128.min.js"></script><script src="vendor/OrbitControls.r128.js"></script><script src="physics.js"></script><script type="module" src="app.js?v=rear-3"></script></body></html>
