@@ -1,0 +1,324 @@
+// !$*UTF8*$!
+{
+	"archiveVersion" = "1";
+	"classes" = {
+	};
+	"objectVersion" = "56";
+	"objects" = {
+		"51FC8589354354A47A49E5DA" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ChargeLabApp.swift";
+			"sourceTree" = "<group>";
+		};
+		"9727B9EED8ACD2EE46E136A0" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ContentView.swift";
+			"sourceTree" = "<group>";
+		};
+		"D0968C622F4ED762F791EA00" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "LabStore.swift";
+			"sourceTree" = "<group>";
+		};
+		"13C636CCAC6B8CBC60F2A50D" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ExperimentEntity.swift";
+			"sourceTree" = "<group>";
+		};
+		"76E68FA2A1C79764C3E73181" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "LabARView.swift";
+			"sourceTree" = "<group>";
+		};
+		"4122FA5D51210850D2213D8B" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ChargePhysics.swift";
+			"sourceTree" = "<group>";
+		};
+		"3C3B0F03DC089F93B8457928" = {
+			"isa" = "PBXGroup";
+			"children" = (
+				"51FC8589354354A47A49E5DA",
+				"9727B9EED8ACD2EE46E136A0",
+				"D0968C622F4ED762F791EA00",
+				"13C636CCAC6B8CBC60F2A50D",
+				"76E68FA2A1C79764C3E73181",
+			);
+			"path" = "ChargeLab";
+			"sourceTree" = "<group>";
+		};
+		"CE4578BB0A03D1B29E8D406D" = {
+			"isa" = "PBXGroup";
+			"children" = (
+				"4122FA5D51210850D2213D8B",
+			);
+			"path" = "ChargePhysics";
+			"sourceTree" = "<group>";
+		};
+		"8309DD304D804F9D7F6302F5" = {
+			"isa" = "PBXGroup";
+			"children" = (
+				"3C3B0F03DC089F93B8457928",
+				"CE4578BB0A03D1B29E8D406D",
+			);
+			"path" = "Sources";
+			"sourceTree" = "<group>";
+		};
+		"3685E330EC5277A9DD5661C6" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "folder.assetcatalog";
+			"path" = "Assets.xcassets";
+			"sourceTree" = "<group>";
+		};
+		"96ED5C5789B174A01557791C" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.xml";
+			"path" = "PrivacyInfo.xcprivacy";
+			"sourceTree" = "<group>";
+		};
+		"59BD0A3FF43B32849B319E64" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.plist.xml";
+			"path" = "Info.plist";
+			"sourceTree" = "<group>";
+		};
+		"50F0FC3AFD5FBC981B5A0DDD" = {
+			"isa" = "PBXGroup";
+			"children" = (
+				"3685E330EC5277A9DD5661C6",
+				"96ED5C5789B174A01557791C",
+				"59BD0A3FF43B32849B319E64",
+			);
+			"path" = "Resources";
+			"sourceTree" = "<group>";
+		};
+		"38A007151ABE87CC01A5B6E9" = {
+			"isa" = "PBXFileReference";
+			"explicitFileType" = "wrapper.application";
+			"includeInIndex" = "0";
+			"path" = "ChargeLab.app";
+			"sourceTree" = "BUILT_PRODUCTS_DIR";
+		};
+		"FBDC4F23F93125BBEEAE800C" = {
+			"isa" = "PBXGroup";
+			"children" = (
+				"38A007151ABE87CC01A5B6E9",
+			);
+			"name" = "Products";
+			"sourceTree" = "<group>";
+		};
+		"B28B7AF69320201D1CF206EB" = {
+			"isa" = "PBXGroup";
+			"children" = (
+				"8309DD304D804F9D7F6302F5",
+				"50F0FC3AFD5FBC981B5A0DDD",
+				"FBDC4F23F93125BBEEAE800C",
+			);
+			"sourceTree" = "<group>";
+		};
+		"5BF5319FD6E918EB700E16F8" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "51FC8589354354A47A49E5DA";
+		};
+		"D5327CF7D45D2E936F790837" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "9727B9EED8ACD2EE46E136A0";
+		};
+		"3395BCA9DC9520ECD1D2C1EF" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "D0968C622F4ED762F791EA00";
+		};
+		"6F49DC059DD980E653C29B3F" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "13C636CCAC6B8CBC60F2A50D";
+		};
+		"CD8EB04F88120C0470C92878" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "76E68FA2A1C79764C3E73181";
+		};
+		"7CBC66D55AF34CC791303AE5" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "4122FA5D51210850D2213D8B";
+		};
+		"A1C3CEACCD4F322048E69D2D" = {
+			"isa" = "PBXSourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+				"5BF5319FD6E918EB700E16F8",
+				"D5327CF7D45D2E936F790837",
+				"3395BCA9DC9520ECD1D2C1EF",
+				"6F49DC059DD980E653C29B3F",
+				"CD8EB04F88120C0470C92878",
+				"7CBC66D55AF34CC791303AE5",
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"E40A39AAA1AD99B4CF467843" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "3685E330EC5277A9DD5661C6";
+		};
+		"4FA6978DE6C0F7AE3CFBC936" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "96ED5C5789B174A01557791C";
+		};
+		"FF4A15EEA61D4A3B097C1C27" = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+				"E40A39AAA1AD99B4CF467843",
+				"4FA6978DE6C0F7AE3CFBC936",
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"7561BFB015D8F536760CB671" = {
+			"isa" = "PBXFrameworksBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"ED8772ADEC3A6C25161BC957" = {
+			"isa" = "XCBuildConfiguration";
+			"buildSettings" = {
+				"CLANG_ENABLE_MODULES" = "YES";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
+				"SDKROOT" = "iphoneos";
+				"SWIFT_VERSION" = "5.0";
+				"CLANG_ENABLE_OBJC_ARC" = "YES";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG";
+			};
+			"name" = "Debug";
+		};
+		"4D8F54E7CBAF670D9F6C230D" = {
+			"isa" = "XCBuildConfiguration";
+			"buildSettings" = {
+				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"CURRENT_PROJECT_VERSION" = "1";
+				"GENERATE_INFOPLIST_FILE" = "NO";
+				"INFOPLIST_FILE" = "Resources/Info.plist";
+				"LD_RUNPATH_SEARCH_PATHS" = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"MARKETING_VERSION" = "1.0";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "com.physicstjc.ChargeLab";
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"SUPPORTS_MACCATALYST" = "NO";
+				"SWIFT_EMIT_LOC_STRINGS" = "YES";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"ENABLE_PREVIEWS" = "YES";
+			};
+			"name" = "Debug";
+		};
+		"00F209874A1F7309F6DCEAA7" = {
+			"isa" = "XCBuildConfiguration";
+			"buildSettings" = {
+				"CLANG_ENABLE_MODULES" = "YES";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
+				"SDKROOT" = "iphoneos";
+				"SWIFT_VERSION" = "5.0";
+				"CLANG_ENABLE_OBJC_ARC" = "YES";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-O";
+			};
+			"name" = "Release";
+		};
+		"1A6EFC2CD0AF63DD14BE0438" = {
+			"isa" = "XCBuildConfiguration";
+			"buildSettings" = {
+				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"CURRENT_PROJECT_VERSION" = "1";
+				"GENERATE_INFOPLIST_FILE" = "NO";
+				"INFOPLIST_FILE" = "Resources/Info.plist";
+				"LD_RUNPATH_SEARCH_PATHS" = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"MARKETING_VERSION" = "1.0";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "com.physicstjc.ChargeLab";
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"SUPPORTS_MACCATALYST" = "NO";
+				"SWIFT_EMIT_LOC_STRINGS" = "YES";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"ENABLE_PREVIEWS" = "YES";
+			};
+			"name" = "Release";
+		};
+		"96316AF13F45443E4E9C4BA0" = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = (
+				"ED8772ADEC3A6C25161BC957",
+				"00F209874A1F7309F6DCEAA7",
+			);
+			"defaultConfigurationIsVisible" = "0";
+			"defaultConfigurationName" = "Release";
+		};
+		"EAD1C478648BB5F4F725A516" = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = (
+				"4D8F54E7CBAF670D9F6C230D",
+				"1A6EFC2CD0AF63DD14BE0438",
+			);
+			"defaultConfigurationIsVisible" = "0";
+			"defaultConfigurationName" = "Release";
+		};
+		"0E8A3AD980EC179856012B7E" = {
+			"isa" = "PBXNativeTarget";
+			"buildConfigurationList" = "EAD1C478648BB5F4F725A516";
+			"buildPhases" = (
+				"A1C3CEACCD4F322048E69D2D",
+				"7561BFB015D8F536760CB671",
+				"FF4A15EEA61D4A3B097C1C27",
+			);
+			"buildRules" = (
+			);
+			"dependencies" = (
+			);
+			"name" = "ChargeLab";
+			"productName" = "ChargeLab";
+			"productReference" = "38A007151ABE87CC01A5B6E9";
+			"productType" = "com.apple.product-type.application";
+		};
+		"98F54143AB4E86B28C3AFEE0" = {
+			"isa" = "PBXProject";
+			"attributes" = {
+				"BuildIndependentTargetsInParallel" = "YES";
+				"LastSwiftUpdateCheck" = "1500";
+				"LastUpgradeCheck" = "1500";
+				"TargetAttributes" = {
+					"0E8A3AD980EC179856012B7E" = {
+						"CreatedOnToolsVersion" = "15.0";
+					};
+				};
+			};
+			"buildConfigurationList" = "96316AF13F45443E4E9C4BA0";
+			"compatibilityVersion" = "Xcode 14.0";
+			"developmentRegion" = "en";
+			"hasScannedForEncodings" = "0";
+			"knownRegions" = (
+				"en",
+				"Base",
+			);
+			"mainGroup" = "B28B7AF69320201D1CF206EB";
+			"productRefGroup" = "FBDC4F23F93125BBEEAE800C";
+			"projectDirPath" = "";
+			"projectRoot" = "";
+			"targets" = (
+				"0E8A3AD980EC179856012B7E",
+			);
+		};
+	};
+	"rootObject" = "98F54143AB4E86B28C3AFEE0";
+}
