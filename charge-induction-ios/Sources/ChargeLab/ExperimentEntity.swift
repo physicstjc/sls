@@ -60,7 +60,7 @@ final class ExperimentEntity {
             text.draw(at: CGPoint(x: (128 - dimensions.width) / 2, y: (128 - dimensions.height) / 2 - 2), withAttributes: attributes)
         }
         guard let cgImage = image.cgImage else { throw CocoaError(.fileReadCorruptFile) }
-        let texture = try TextureResource.generate(from: cgImage, options: .init(semantic: .color))
+        let texture = try TextureResource(image: cgImage, options: .init(semantic: .color))
         var material = UnlitMaterial()
         material.color = .init(tint: .white, texture: .init(texture))
         material.blending = .transparent(opacity: .init(floatLiteral: 1))

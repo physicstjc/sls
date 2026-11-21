@@ -1,6 +1,6 @@
 # Charge Lab for iPhone
 
-Native SwiftUI + ARKit + RealityKit version of the electrostatic induction experiment. The project targets **iOS 17 or later** and an ARKit-capable iPhone. No third-party packages, API keys, printed markers, or browser WebXR support are required.
+Native SwiftUI + ARKit + RealityKit version of the electrostatic induction experiment. The project targets **iOS 18 or later** and an ARKit-capable iPhone. No third-party packages, API keys, printed markers, or browser WebXR support are required.
 
 ## Run on your iPhone
 
@@ -57,7 +57,7 @@ xcodebuild -project ChargeLab.xcodeproj -scheme ChargeLab \
   CODE_SIGNING_ALLOWED=NO build
 ```
 
-**Validation limit:** this Mac currently has Command Line Tools but no full Xcode or iOS SDK. The portable physics checks and syntax/metadata checks were run; an iOS SDK build, SwiftUI layout rendering, RealityKit materials, touch interaction, camera permissions and physical AR tracking have not been validated. The source project is provided for opening and building in Xcode, not as a signed or precompiled iPhone app.
+**Build validation:** after installing Xcode 27.2, the iOS app compiled successfully for a generic iOS device, and Xcode also completed a signed build with the locally selected development team. The Issue Navigator was empty after rebuilding. The project now requires iOS 18 or later to match RealityKit cylinder mesh availability and uses the current texture initializer. Camera permissions, touch interaction, RealityKit appearance, and physical AR tracking still need checking on the iPhone; a successful build does not validate those behaviours.
 
 Before relying on a device build, check: permission denial/recovery, a detected table, placement, rod and stand dragging, minimum/maximum gap, earth on/off, the induction sequence, pause/reset, two-finger rotation/scale, portrait/landscape rotation, app background/foreground, and tracking interruption/recovery.
 
